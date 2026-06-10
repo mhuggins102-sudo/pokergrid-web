@@ -5,6 +5,8 @@ import styles from './LinesPanel.module.css';
 export interface LinesPanelProps {
   report: ScoreReport;
   title?: string;
+  /** Render rows only — no panel chrome (for nesting in accordions). */
+  bare?: boolean;
 }
 
 /**
@@ -12,10 +14,13 @@ export interface LinesPanelProps {
  * plan, what used to be a tap-to-open modal). Used in-game and on the
  * result view.
  */
-export function LinesPanel({ report, title = 'Lines' }: LinesPanelProps) {
+export function LinesPanel({ report, title = 'Lines', bare = false }: LinesPanelProps) {
   return (
-    <section className={styles.panel} aria-label="Line breakdown">
-      <h2 className={`text-section ${styles.heading}`}>{title}</h2>
+    <section
+      className={bare ? undefined : styles.panel}
+      aria-label="Line breakdown"
+    >
+      {!bare && <h2 className={`text-section ${styles.heading}`}>{title}</h2>}
       {report.lines.map(line => (
         <div key={`${line.kind}-${line.index}`} className={styles.line}>
           <span className={styles.label}>{lineLabel(line.kind, line.index)}</span>

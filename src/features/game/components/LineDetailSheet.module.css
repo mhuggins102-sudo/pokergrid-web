@@ -1,0 +1,64 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.cardCell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+}
+
+.emptyCell {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  background: var(--paper-sunken);
+  border: 1px dashed var(--rule);
+}
+
+.math {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rowLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bonus {
+  color: var(--accent);
+}
+
+.penalty {
+  color: var(--danger);
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.total {
+  font-weight: 700;
+  font-size: 15px;
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-sm);
+  margin-top: var(--space-xs);
+}

@@ -105,6 +105,32 @@
   display: none;
 }
 
+/* Full table tucked behind an accordion inside Score math (phones —
+   the desktop layout shows the persistent panel instead). */
+.linesAccordion {
+  margin-top: var(--space-sm);
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--space-sm);
+}
+
+.linesSummary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  list-style-position: inside;
+}
+
+.linesSummary:hover {
+  color: var(--ink);
+}
+
+@media (min-width: 1024px) {
+  .linesAccordion {
+    display: none;
+  }
+}
+
 /* Bottom dock, same pattern as the game screen: secondary links above
    a full-width primary, pinned to the bottom edge. */
 .dock {

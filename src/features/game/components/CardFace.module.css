@@ -28,11 +28,13 @@
 
 .rank {
   position: absolute;
-  top: 4cqh;
+  top: 6cqh;
   left: 9cqw;
-  font-family: var(--font-display);
-  font-weight: 660;
-  font-size: 46cqh;
+  /* Inter, not Fraunces: the display serif's wonky letterforms (its
+     swashy J especially) read as crooked at tile sizes. */
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 42cqh;
   line-height: 1.1;
   letter-spacing: -0.02em;
 }

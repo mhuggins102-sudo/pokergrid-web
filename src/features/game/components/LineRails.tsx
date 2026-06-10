@@ -7,8 +7,8 @@ import styles from './LineRails.module.css';
 export interface LineRailsProps {
   grid: Grid;
   report: ScoreReport;
-  /** Tapping any total opens the full breakdown (hand names etc.). */
-  onLineTap?: () => void;
+  /** Tapping a total opens that line's calculation. */
+  onLineTap?: (line: ScoredLine) => void;
 }
 
 const toneOf = (line: ScoredLine): string =>
@@ -33,7 +33,7 @@ export function LineRails({ grid, report, onLineTap }: LineRailsProps) {
       key={`${line.kind}-${line.index}`}
       type="button"
       className={`${styles.chip} ${toneOf(line)}`}
-      onClick={onLineTap}
+      onClick={() => onLineTap?.(line)}
       aria-label={chipLabel(line)}
     >
       {line.total}

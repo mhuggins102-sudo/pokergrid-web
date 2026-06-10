@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { bonusShapleyValues, scoreGrid } from '../../../game/scoring';
-import { Button, Sheet } from '../../../design/primitives';
+import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
+import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
 import { useTargetsStore } from '../../targets/targetsStore';
 import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
+import { LineDetailSheet } from './LineDetailSheet';
 import { BonusCardStrip } from './BonusCardStrip';
 import { RewardsResult, RewardsSheet } from './RewardsSheet';
 import styles from './ResultView.module.css';
@@ -26,7 +27,7 @@ export interface ResultViewProps {
 export function ResultView({ onReplay }: ResultViewProps) {
   const { state, mode, setup } = useGameSession();
   const targets = useTargetsStore();
-  const [linesOpen, setLinesOpen] = useState(false);
+  const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
 
   const { report, shapley } = useMemo(() => {
     const options = {
@@ -161,11 +162,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
       </section>
 
       <div className={styles.boardSlot}>
-        <LineRails
-          grid={state.grid}
-          report={report}
-          onLineTap={() => setLinesOpen(true)}
-        />
+        <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />
       </div>
 
       <section className={`${styles.math} ${styles.mathSlot}`} aria-label="Score math">
@@ -196,6 +193,10 @@ export function ResultView({ onReplay }: ResultViewProps) {
           <span>Total</span>
           <span>{report.total}</span>
         </div>
+        <details className={styles.linesAccordion}>
+          <summary className={styles.linesSummary}>All ten lines</summary>
+          <LinesPanel report={report} bare />
+        </details>
       </section>
 
       {state.bonusCards.length > 0 && (
@@ -237,9 +238,12 @@ export function ResultView({ onReplay }: ResultViewProps) {
         />
       )}
 
-      <Sheet open={linesOpen} onClose={() => setLinesOpen(false)} title="Lines">
-        <LinesPanel report={report} />
-      </Sheet>
+      <LineDetailSheet
+        line={detailLine}
+        bonusCards={state.bonusCards}
+        allLines={report.lines}
+        onClose={() => setDetailLine(null)}
+      />
     </div>
   );
 }
