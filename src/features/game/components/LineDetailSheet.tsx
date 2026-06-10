@@ -10,6 +10,13 @@ export interface LineDetailSheetProps {
   bonusCards: BonusCard[];
   /** Full set of scored lines — cross-line bonus cards need it. */
   allLines: ScoredLine[];
+  /**
+   * True when grid-level bonuses (Speedrun, grid achievements…) changed
+   * the final total — they don't belong to any one line, so the sheet
+   * points the reader at Score math instead of leaving the multiplier
+   * unaccounted for.
+   */
+  gridBonusesApplied?: boolean;
   onClose: () => void;
 }
 
@@ -27,6 +34,7 @@ export function LineDetailSheet({
   line,
   bonusCards,
   allLines,
+  gridBonusesApplied = false,
   onClose,
 }: LineDetailSheetProps) {
   const applied =
@@ -107,6 +115,12 @@ export function LineDetailSheet({
               <span>Line total</span>
               <span>{line.total}</span>
             </div>
+            {gridBonusesApplied && (
+              <p className={styles.gridNote}>
+                Grid-level bonuses also multiplied the final total at game
+                end — see Score math.
+              </p>
+            )}
           </div>
         </div>
       )}

@@ -242,6 +242,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
         line={detailLine}
         bonusCards={state.bonusCards}
         allLines={report.lines}
+        gridBonusesApplied={report.gridMultiplier !== 1 || report.gridFlat !== 0}
         onClose={() => setDetailLine(null)}
       />
     </div>
