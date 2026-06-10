@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { scoreGrid } from '../../../game/scoring';
-import { INCOMPLETE_LINE_PENALTY } from '../../../game/scoring';
 import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import styles from './ScoreBar.module.css';
@@ -13,9 +12,9 @@ export interface ScoreBarProps {
 }
 
 /**
- * Live score / target readout. The live number ignores the incomplete-line
- * penalty (it only applies at game end); once the deck runs low a warning
- * spells out what the open lines would cost.
+ * Live score / target readout. The live number ignores the
+ * incomplete-line penalty — it only applies at game end, and the
+ * Lines view shows which lines are still open.
  */
 export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
   const { state, dispatch, canUndo, maxUndos } = useGameSession();
@@ -31,11 +30,6 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
     [state]
   );
 
-  const hasPatience = state.bonusCards.some(c => c.negatesIncompletePenalty);
-  const openLines = report.lines.filter(l => l.incomplete).length;
-  const showPenalty =
-    state.deck.length <= 10 && openLines > 0 && !hasPatience;
-
   return (
     <div className={styles.bar}>
       <div className={styles.scoreBlock}>
@@ -48,12 +42,6 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
           </span>
           <span className={styles.kicker}>{state.difficulty}</span>
         </div>
-        {showPenalty && (
-          <span className={styles.penalty} role="status">
-            {openLines} line{openLines === 1 ? '' : 's'} open ·{' '}
-            {openLines * INCOMPLETE_LINE_PENALTY} at game end
-          </span>
-        )}
       </div>
       <div className={styles.controls}>
         <Button

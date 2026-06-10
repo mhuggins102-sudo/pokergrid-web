@@ -105,28 +105,55 @@
   display: none;
 }
 
-/* Full table tucked behind an accordion inside Score math (phones —
-   the desktop layout shows the persistent panel instead). */
-.linesAccordion {
-  margin-top: var(--space-sm);
-  border-top: 1px solid var(--hairline);
-  padding-top: var(--space-sm);
+/* "Lines subtotal" doubles as the disclosure for the full ten-line
+   table — no separate accordion row. */
+.linesSummary {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  list-style: none;
 }
 
-.linesSummary {
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
-  list-style-position: inside;
+.linesSummary::-webkit-details-marker {
+  display: none;
 }
 
 .linesSummary:hover {
-  color: var(--ink);
+  color: var(--accent);
 }
 
+.summaryLabel {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+}
+
+.summaryCaret {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--ink-3);
+  transition: transform 120ms ease;
+}
+
+.linesDetails[open] .summaryCaret {
+  transform: rotate(90deg);
+}
+
+.linesBody {
+  padding: var(--space-sm) 0 var(--space-xs);
+}
+
+/* Desktop shows the persistent line-breakdown panel, so the subtotal
+   row stays a plain row there. */
 @media (min-width: 1024px) {
-  .linesAccordion {
+  .linesSummary {
+    pointer-events: none;
+  }
+
+  .summaryCaret {
     display: none;
   }
 }

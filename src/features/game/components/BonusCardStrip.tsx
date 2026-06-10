@@ -65,6 +65,11 @@ export interface BonusCardStripProps {
    * cards.
    */
   onUse?: (index: number) => void;
+  /**
+   * Live numbers behind a card's condition ("Suit perks spent so far:
+   * 7") — rendered in the detail sheet under the description.
+   */
+  liveContext?: (card: BonusCard) => string[];
 }
 
 /**
@@ -80,6 +85,7 @@ export function BonusCardStrip({
   layout = 'panel',
   onSlotTap,
   onUse,
+  liveContext,
 }: BonusCardStripProps) {
   const [detail, setDetail] = useState<{ card: BonusCard; index: number } | null>(
     null
@@ -95,6 +101,7 @@ export function BonusCardStrip({
       detail={detail}
       onClose={() => setDetail(null)}
       onUse={onUse}
+      liveContext={liveContext}
     />
   );
 
@@ -155,13 +162,16 @@ function DetailSheet({
   detail,
   onClose,
   onUse,
+  liveContext,
 }: {
   detail: { card: BonusCard; index: number } | null;
   onClose: () => void;
   onUse?: (index: number) => void;
+  liveContext?: (card: BonusCard) => string[];
 }) {
   const card = detail?.card ?? null;
   const detailStyle = card ? styleFor(card) : null;
+  const contextLines = card && liveContext ? liveContext(card) : [];
   const usable =
     card !== null &&
     onUse !== undefined &&
@@ -179,6 +189,13 @@ function DetailSheet({
             {detailStyle.icon} {detailStyle.label}
           </span>
           <p className="text-body">{card.description}</p>
+          {contextLines.length > 0 && (
+            <div className={styles.detailContext}>
+              {contextLines.map(line => (
+                <span key={line}>{line}</span>
+              ))}
+            </div>
+          )}
           {card.used && (
             <p className="text-label">Already used this run.</p>
           )}

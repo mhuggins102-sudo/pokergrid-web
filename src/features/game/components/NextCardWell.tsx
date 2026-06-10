@@ -19,11 +19,21 @@ export function NextCardWell({ onPeekDeck }: NextCardWellProps) {
   const drawn = state.drawn;
   const canPeek = canPreviewDeck(state.difficulty);
 
+  const cardLabel = drawn
+    ? `Drawn card: ${cardAriaLabel(drawn)}`
+    : 'No card drawn';
+
+  // On Easy/Medium the deck is peekable — tapping the card/deck area is
+  // the natural gesture for it, with the Peek link as the discoverable
+  // affordance.
+  const SlotTag = canPeek ? 'button' : 'div';
+
   return (
     <div className={styles.well}>
-      <div
+      <SlotTag
+        {...(canPeek ? { type: 'button' as const, onClick: onPeekDeck } : {})}
         className={styles.cardSlot}
-        aria-label={drawn ? `Drawn card: ${cardAriaLabel(drawn)}` : 'No card drawn'}
+        aria-label={canPeek ? `${cardLabel}. Peek at the remaining deck` : cardLabel}
       >
         <AnimatePresence>
           {drawn && (
@@ -39,7 +49,7 @@ export function NextCardWell({ onPeekDeck }: NextCardWellProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </SlotTag>
       <div className={styles.meta}>
         <span className={styles.deckCount}>{state.deck.length} left</span>
         {canPeek && (

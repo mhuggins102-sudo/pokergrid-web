@@ -140,3 +140,16 @@
   font-weight: 600;
   color: var(--chip-tone, var(--ink-2));
 }
+
+.detailContext {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--paper-sunken);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}

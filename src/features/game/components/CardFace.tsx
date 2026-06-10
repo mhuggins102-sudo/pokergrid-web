@@ -1,4 +1,6 @@
 import { Card, Suit, isJoker } from '../../../game/cards';
+import { colors } from '../../../design/tokens';
+import { useSettingsStore } from '../../settings/settingsStore';
 import styles from './CardFace.module.css';
 
 const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
@@ -29,7 +31,16 @@ export const cardAriaLabel = (card: Card): string => {
 export const cardLayoutId = (card: Card): string | undefined =>
   isJoker(card) ? undefined : `card-${card.rank}${card.suit}`;
 
+// Four-color suit palette for the two-color-deck=off setting.
+const SUIT_COLOR: Record<Suit, string> = {
+  H: colors.suitH,
+  D: colors.suitD,
+  C: colors.suitC,
+  S: colors.suitS,
+};
+
 export function CardFace({ card }: { card: Card }) {
+  const twoColorDeck = useSettingsStore(s => s.twoColorDeck);
   if (isJoker(card)) {
     return (
       <div className={`${styles.card} ${styles.joker}`}>
@@ -42,7 +53,10 @@ export function CardFace({ card }: { card: Card }) {
   }
   const tone = card.suit === 'H' || card.suit === 'D' ? styles.red : styles.black;
   return (
-    <div className={`${styles.card} ${tone}`}>
+    <div
+      className={`${styles.card} ${tone}`}
+      style={twoColorDeck ? undefined : { color: SUIT_COLOR[card.suit] }}
+    >
       <span className={styles.rank} aria-hidden="true">
         {card.rank}
       </span>

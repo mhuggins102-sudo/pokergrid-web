@@ -9,6 +9,7 @@ import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
 import { LineDetailSheet } from './LineDetailSheet';
 import { BonusCardStrip } from './BonusCardStrip';
+import { bonusCardLiveContext } from '../bonusCardLiveContext';
 import { RewardsResult, RewardsSheet } from './RewardsSheet';
 import styles from './ResultView.module.css';
 
@@ -167,10 +168,20 @@ export function ResultView({ onReplay }: ResultViewProps) {
 
       <section className={`${styles.math} ${styles.mathSlot}`} aria-label="Score math">
         <h2 className="text-section">Score math</h2>
-        <div className={styles.mathRow}>
-          <span>Lines subtotal</span>
-          <span>{report.subtotal}</span>
-        </div>
+        <details className={styles.linesDetails}>
+          <summary className={styles.linesSummary}>
+            <span className={styles.summaryLabel}>
+              <span className={styles.summaryCaret} aria-hidden="true">
+                ▸
+              </span>
+              Lines subtotal
+            </span>
+            <span>{report.subtotal}</span>
+          </summary>
+          <div className={styles.linesBody}>
+            <LinesPanel report={report} bare />
+          </div>
+        </details>
         {report.incompletePenalty !== 0 && (
           <div className={`${styles.mathRow} ${styles.mathPenalty}`}>
             <span>Unfinished lines</span>
@@ -193,22 +204,24 @@ export function ResultView({ onReplay }: ResultViewProps) {
           <span>Total</span>
           <span>{report.total}</span>
         </div>
-        <details className={styles.linesAccordion}>
-          <summary className={styles.linesSummary}>All ten lines</summary>
-          <LinesPanel report={report} bare />
-        </details>
       </section>
 
       {state.bonusCards.length > 0 && (
         <>
           <div className={styles.bonusRowSlot}>
-            <BonusCardStrip layout="row" cards={state.bonusCards} values={shapley} />
+            <BonusCardStrip
+              layout="row"
+              cards={state.bonusCards}
+              values={shapley}
+              liveContext={card => bonusCardLiveContext(card, state)}
+            />
           </div>
           <div className={styles.bonusPanelSlot}>
             <BonusCardStrip
               cards={state.bonusCards}
               values={shapley}
               title="Bonus contribution"
+              liveContext={card => bonusCardLiveContext(card, state)}
             />
           </div>
         </>

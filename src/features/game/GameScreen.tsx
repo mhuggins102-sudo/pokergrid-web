@@ -4,6 +4,7 @@ import { scoreGrid } from '../../game/scoring';
 import { Button, Sheet } from '../../design/primitives';
 import { useGameSession } from './GameSessionProvider';
 import { usePhaseUI } from './usePhaseUI';
+import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { GridBoard } from './components/GridBoard';
 import { NextCardWell } from './components/NextCardWell';
 import { ScoreBar } from './components/ScoreBar';
@@ -89,7 +90,6 @@ export function GameScreen({ onReplay }: GameScreenProps) {
               <BonusCardStrip
                 layout="row"
                 cards={state.bonusCards}
-                bonusDeckSize={state.bonusDeck.length}
                 onSlotTap={
                   ui.bonusSlotPick
                     ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
@@ -100,6 +100,7 @@ export function GameScreen({ onReplay }: GameScreenProps) {
                     ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
                     : undefined
                 }
+                liveContext={card => bonusCardLiveContext(card, state)}
               />
             </div>
           )}
@@ -138,7 +139,6 @@ export function GameScreen({ onReplay }: GameScreenProps) {
             <div className={styles.bonusSlot}>
               <BonusCardStrip
                 cards={state.bonusCards}
-                bonusDeckSize={state.bonusDeck.length}
                 onSlotTap={
                   ui.bonusSlotPick
                     ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
@@ -149,6 +149,7 @@ export function GameScreen({ onReplay }: GameScreenProps) {
                     ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
                     : undefined
                 }
+                liveContext={card => bonusCardLiveContext(card, state)}
               />
             </div>
           )}

@@ -85,7 +85,9 @@ export function LineDetailSheet({
                 </div>
                 {applied.map(({ card, mult, flat }, i) => (
                   <div key={`${card.id}-${i}`} className={`${styles.row} ${styles.bonus}`}>
-                    <span className={styles.rowLabel}>{card.name}</span>
+                    {/* title, not name — names carry "×N (each)" suffixes
+                        that would double up with the computed value. */}
+                    <span className={styles.rowLabel}>{card.title}</span>
                     <span>
                       {mult !== 1 ? fmtMult(mult) : ''}
                       {mult !== 1 && flat !== 0 ? ' ' : ''}
