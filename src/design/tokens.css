@@ -1,0 +1,77 @@
+/*
+ * PokerGrid "Morning Paper" editorial tokens.
+ *
+ * Single source of truth for the visual system. The typed mirror in
+ * tokens.ts must stay in sync — every value here has a counterpart there.
+ *
+ * Scoped to [data-theme] so a dark theme can later override the same
+ * variable names without touching any component CSS.
+ */
+:root,
+[data-theme='paper'] {
+  /* ---- Surfaces ---- */
+  --paper: #faf7f1;
+  --paper-raised: #ffffff;
+  --paper-sunken: #f2ecdf;
+  /* Board accent surface — use sparingly. */
+  --felt: #1f5d43;
+
+  /* ---- Ink ---- */
+  --ink: #1a1a1a;
+  --ink-2: #5f5a51;
+  --ink-3: #938c7d;
+  --hairline: rgba(26, 26, 26, 0.14);
+  --rule: #d9d1c0;
+
+  /* ---- Card faces ---- */
+  --card-face: #fffdf8;
+  --card-red: #b3262e;
+  --card-black: #1f1f1f;
+  /* Engraved navy pattern base. */
+  --card-back: #28486e;
+
+  /* ---- Suit chips ---- */
+  --suit-h: #b3262e;
+  --suit-d: #1d5fa0;
+  --suit-c: #2f7d4f;
+  --suit-s: #1f2937;
+  --joker: #6d4fa3;
+
+  /* ---- Signals ---- */
+  --accent: #1f5d43;
+  --warn: #b07d2e;
+  --danger: #9a2433;
+  --success: #2f7d4f;
+
+  /* ---- Difficulty ---- */
+  --difficulty-easy: #2f7d4f;
+  --difficulty-medium: #b07d2e;
+  --difficulty-hard: #c2542e;
+  --difficulty-extreme: #9a2433;
+
+  /* ---- Spacing (names carried over from the old theme) ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-xxxl: 48px;
+
+  /* ---- Radius ---- */
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ---- Shadows — soft ink, never glows ---- */
+  --shadow-sm: 0 1px 2px rgba(26, 26, 26, 0.08);
+  --shadow-md: 0 2px 8px rgba(26, 26, 26, 0.1);
+  --shadow-lg: 0 8px 24px rgba(26, 26, 26, 0.14);
+
+  /* ---- Type families ---- */
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI',
+    sans-serif;
+}
