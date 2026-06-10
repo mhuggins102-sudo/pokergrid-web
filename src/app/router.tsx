@@ -9,7 +9,9 @@ import { DailyArchivePage } from '../features/daily/DailyArchivePage';
 import { StatsPage } from '../features/stats/StatsPage';
 import { AchievementsPage } from '../features/achievements/AchievementsPage';
 import { ChallengesPage } from '../features/challenges/ChallengesPage';
+import { ChallengePlayPage } from '../features/challenges/ChallengePlayPage';
 import { TargetsPage } from '../features/targets/TargetsPage';
+import { TargetsPlayPage } from '../features/targets/TargetsPlayPage';
 import { RulesPage } from '../features/rules/RulesPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { TokenGalleryPage } from '../design/gallery/TokenGalleryPage';
@@ -28,7 +30,9 @@ export const router = createBrowserRouter([
       { path: 'stats', element: <StatsPage /> },
       { path: 'achievements', element: <AchievementsPage /> },
       { path: 'challenges', element: <ChallengesPage /> },
+      { path: 'challenges/:id', element: <ChallengePlayPage /> },
       { path: 'targets', element: <TargetsPage /> },
+      { path: 'targets/play', element: <TargetsPlayPage /> },
       { path: 'rules', element: <RulesPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'design', element: <TokenGalleryPage /> },

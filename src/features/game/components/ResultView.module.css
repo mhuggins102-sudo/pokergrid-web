@@ -52,6 +52,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+.achievements {
+  margin-top: var(--space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warn);
+}
+
+.commitLink {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+}
+
 .boardSlot {
   width: min(100%, 440px);
   margin: 0 auto;

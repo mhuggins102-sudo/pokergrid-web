@@ -1,7 +1,7 @@
 import { CSSProperties, useState } from 'react';
-import { BonusCard } from '../../../game/bonusCards';
+import { BonusCard, isPlaceholder, isSpecialCard } from '../../../game/bonusCards';
 import { styleFor } from '../../../lib/bonusCardCategory';
-import { Sheet } from '../../../design/primitives';
+import { Button, Sheet } from '../../../design/primitives';
 import styles from './BonusCardStrip.module.css';
 
 export function BonusChip({
@@ -15,15 +15,21 @@ export function BonusChip({
   value?: number;
 }) {
   const cat = styleFor(card);
+  const dimmed = card.used || isPlaceholder(card);
   return (
     <button
       type="button"
-      className={styles.chip}
+      className={[styles.chip, dimmed ? styles.chipDimmed : null]
+        .filter(Boolean)
+        .join(' ')}
       style={{ '--chip-tone': cat.borderColor } as CSSProperties}
       onClick={onClick}
-      aria-label={`Bonus card: ${card.name}`}
+      aria-label={`Bonus card: ${card.name}${card.used ? ' (used)' : ''}`}
     >
-      <span className={styles.chipTitle}>{card.title}</span>
+      <span className={styles.chipTitle}>
+        {card.title}
+        {card.used ? ' ✓' : ''}
+      </span>
       <span className={styles.chipMult}>{card.mult}</span>
       {value !== undefined && (
         <span className={styles.chipValue}>
@@ -48,11 +54,23 @@ export interface BonusCardStripProps {
    * and the cap is legible without any scrolling.
    */
   layout?: 'panel' | 'row';
+  /**
+   * Mixed Bag slot pick: when set, tapping a chip reports its slot
+   * index instead of opening the detail sheet.
+   */
+  onSlotTap?: (slot: number) => void;
+  /**
+   * Three Tricks: activate the special card at this hand index. When
+   * provided, the detail sheet shows a Use button for unspent special
+   * cards.
+   */
+  onUse?: (index: number) => void;
 }
 
 /**
  * Held bonus cards as tappable chips; tapping opens the detail dialog
- * with the card's full description and category.
+ * with the card's full description and category (or, during the Mixed
+ * Bag slot choice, picks the slot).
  */
 export function BonusCardStrip({
   cards,
@@ -60,9 +78,25 @@ export function BonusCardStrip({
   values,
   title = 'Bonus cards',
   layout = 'panel',
+  onSlotTap,
+  onUse,
 }: BonusCardStripProps) {
-  const [detail, setDetail] = useState<BonusCard | null>(null);
-  const detailStyle = detail ? styleFor(detail) : null;
+  const [detail, setDetail] = useState<{ card: BonusCard; index: number } | null>(
+    null
+  );
+
+  const tapChip = (card: BonusCard, index: number) => {
+    if (onSlotTap) onSlotTap(index);
+    else setDetail({ card, index });
+  };
+
+  const detailDialog = (
+    <DetailSheet
+      detail={detail}
+      onClose={() => setDetail(null)}
+      onUse={onUse}
+    />
+  );
 
   if (layout === 'row') {
     const emptySlots = Math.max(0, 3 - cards.length);
@@ -73,7 +107,7 @@ export function BonusCardStrip({
             key={`${card.id}-${i}`}
             card={card}
             value={values?.[i]}
-            onClick={() => setDetail(card)}
+            onClick={() => tapChip(card, i)}
           />
         ))}
         {Array.from({ length: emptySlots }, (_, i) => (
@@ -84,11 +118,7 @@ export function BonusCardStrip({
         {bonusDeckSize !== undefined && (
           <span className={styles.deckHint}>♣{bonusDeckSize}</span>
         )}
-        <DetailDialog
-          detail={detail}
-          detailStyle={detailStyle}
-          onClose={() => setDetail(null)}
-        />
+        {detailDialog}
       </div>
     );
   }
@@ -112,31 +142,35 @@ export function BonusCardStrip({
             key={`${card.id}-${i}`}
             card={card}
             value={values?.[i]}
-            onClick={() => setDetail(card)}
+            onClick={() => tapChip(card, i)}
           />
         ))}
       </div>
-      <DetailDialog
-        detail={detail}
-        detailStyle={detailStyle}
-        onClose={() => setDetail(null)}
-      />
+      {detailDialog}
     </section>
   );
 }
 
-function DetailDialog({
+function DetailSheet({
   detail,
-  detailStyle,
   onClose,
+  onUse,
 }: {
-  detail: BonusCard | null;
-  detailStyle: ReturnType<typeof styleFor> | null;
+  detail: { card: BonusCard; index: number } | null;
   onClose: () => void;
+  onUse?: (index: number) => void;
 }) {
+  const card = detail?.card ?? null;
+  const detailStyle = card ? styleFor(card) : null;
+  const usable =
+    card !== null &&
+    onUse !== undefined &&
+    isSpecialCard(card) &&
+    !card.used &&
+    !isPlaceholder(card);
   return (
-    <Sheet open={detail !== null} onClose={onClose} title={detail?.name ?? ''}>
-      {detail && detailStyle && (
+    <Sheet open={detail !== null} onClose={onClose} title={card?.name ?? ''}>
+      {card && detailStyle && (
         <div
           className={styles.detailBody}
           style={{ '--chip-tone': detailStyle.borderColor } as CSSProperties}
@@ -144,7 +178,21 @@ function DetailDialog({
           <span className={styles.detailCategory}>
             {detailStyle.icon} {detailStyle.label}
           </span>
-          <p className="text-body">{detail.description}</p>
+          <p className="text-body">{card.description}</p>
+          {card.used && (
+            <p className="text-label">Already used this run.</p>
+          )}
+          {usable && detail && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                onClose();
+                onUse(detail.index);
+              }}
+            >
+              Use card
+            </Button>
+          )}
         </div>
       )}
     </Sheet>

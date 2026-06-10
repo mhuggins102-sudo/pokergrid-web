@@ -33,7 +33,7 @@ export function PlayPage() {
   return (
     <GameSessionProvider
       key={`${difficultyParam}-${seedParam ?? 'random'}-${runId}`}
-      difficulty={difficultyParam}
+      mode={{ kind: 'free', difficulty: difficultyParam }}
       seed={seed}
     >
       <GameScreen onReplay={() => setRunId(n => n + 1)} />

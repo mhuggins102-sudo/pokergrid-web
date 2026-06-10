@@ -59,6 +59,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.chipDimmed {
+  opacity: 0.55;
+}
+
 .chipValue {
   font-size: 12px;
   font-weight: 600;

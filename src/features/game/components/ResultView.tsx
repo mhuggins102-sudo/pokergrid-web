@@ -1,11 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { bonusShapleyValues, scoreGrid } from '../../../game/scoring';
 import { Button, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
+import { useRecordResult } from '../../progress/useRecordResult';
+import { useTargetsStore } from '../../targets/targetsStore';
 import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
 import { BonusCardStrip } from './BonusCardStrip';
+import { RewardsResult, RewardsSheet } from './RewardsSheet';
 import styles from './ResultView.module.css';
 
 export interface ResultViewProps {
@@ -15,12 +18,14 @@ export interface ResultViewProps {
 /**
  * Game-over view, verdict first. The board carries its ten line totals
  * as rails (tap any total for the full hand breakdown); score math and
- * the Shapley attribution of each bonus card follow; Play again is
- * pinned in the bottom dock on phones. Desktop spreads the same pieces
- * across the three-panel layout.
+ * the Shapley attribution of each bonus card follow; the commit action
+ * is pinned in the bottom dock on phones. Mode-aware: free play offers
+ * a replay, challenges report completion, Targets-Up runs the S/SS
+ * reward picks and advances (or ends) the ladder.
  */
 export function ResultView({ onReplay }: ResultViewProps) {
-  const { state } = useGameSession();
+  const { state, mode, setup } = useGameSession();
+  const targets = useTargetsStore();
   const [linesOpen, setLinesOpen] = useState(false);
 
   const { report, shapley } = useMemo(() => {
@@ -35,20 +40,124 @@ export function ResultView({ onReplay }: ResultViewProps) {
     };
   }, [state]);
 
-  const won = report.total >= state.target;
+  const { won, tier, newAchievements } = useRecordResult(report, shapley);
+
+  // ---- Targets-Up ladder lifecycle ----
+  const isTargets = mode.kind === 'targets';
+  const wantsRewards = isTargets && won && (tier === 'SS' || tier === 'S');
+  const [rewardsPending, setRewardsPending] = useState(wantsRewards);
+  const tuDoneRef = useRef(false);
+
+  const finishTargets = (result: RewardsResult) => {
+    if (mode.kind !== 'targets' || tuDoneRef.current) return;
+    tuDoneRef.current = true;
+    const extras = result.poweredBonus
+      ? [...mode.deckExtras, result.poweredBonus]
+      : mode.deckExtras;
+    const charged = result.superchargedCard
+      ? [...mode.superchargedDeckCards, result.superchargedCard]
+      : mode.superchargedDeckCards;
+    const lastKept = result.poweredBonus
+      ? result.poweredBonus.id.replace(/-pwr\d+$/, '')
+      : (targets.save?.lastKeptBaseId ?? null);
+    targets.saveProgress(
+      mode.level + 1,
+      (targets.save?.wins ?? mode.level - 1) + 1,
+      extras,
+      charged,
+      lastKept
+    );
+    setRewardsPending(false);
+  };
+  const finishRef = useRef(finishTargets);
+  finishRef.current = finishTargets;
+
+  useEffect(() => {
+    if (!isTargets || tuDoneRef.current) return;
+    if (won && !wantsRewards) finishRef.current({});
+    if (!won) {
+      tuDoneRef.current = true;
+      useTargetsStore.getState().clearProgress();
+    }
+  }, [isTargets, won, wantsRewards]);
+
+  // ---- Mode-specific copy + commit actions ----
+  const verdict =
+    mode.kind === 'challenge'
+      ? won
+        ? `${setup.challenge?.name} — complete!`
+        : `${setup.challenge?.name} — failed`
+      : mode.kind === 'targets'
+        ? won
+          ? `Level ${mode.level} cleared`
+          : `Run over at level ${mode.level}`
+        : won
+          ? 'Target beaten'
+          : 'Target missed';
+
+  const contextLine =
+    mode.kind === 'challenge'
+      ? `goal ${state.target} · hard ruleset`
+      : mode.kind === 'targets'
+        ? `level ${mode.level} · target ${state.target} · ${state.difficulty}`
+        : `target ${state.target} · ${state.difficulty}`;
+
+  const commit =
+    mode.kind === 'targets' ? (
+      won ? (
+        <Button
+          variant="primary"
+          className={styles.commitButton}
+          disabled={rewardsPending}
+          onClick={onReplay}
+        >
+          Next level — {mode.level + 1}
+        </Button>
+      ) : (
+        <Link to="/targets" className={styles.commitLink}>
+          <Button variant="primary" className={styles.commitButton}>
+            Back to Targets Up
+          </Button>
+        </Link>
+      )
+    ) : (
+      <Button variant="primary" className={styles.commitButton} onClick={onReplay}>
+        {mode.kind === 'challenge' ? (won ? 'Play it again' : 'Retry challenge') : 'Play again'}
+      </Button>
+    );
+
+  const secondary =
+    mode.kind === 'challenge' ? (
+      <Link to="/challenges" className={styles.dockLink}>
+        All challenges
+      </Link>
+    ) : mode.kind === 'targets' ? (
+      <Link to="/targets" className={styles.dockLink}>
+        Targets Up home
+      </Link>
+    ) : (
+      <Link to="/play" className={styles.dockLink}>
+        Change difficulty
+      </Link>
+    );
 
   return (
     <div className={styles.wrap}>
       <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Final result">
         <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
-          {won ? 'Target beaten' : 'Target missed'}
+          {verdict}
         </span>
         <span className={styles.finalScore} data-testid="final-score">
           {report.total}
         </span>
         <span className={`text-body ${styles.targetLine}`}>
-          target {state.target} · {state.difficulty}
+          {contextLine} · tier {tier}
         </span>
+        {newAchievements.length > 0 && (
+          <span className={styles.achievements} role="status">
+            🏆 {newAchievements.map(a => a.name).join(' · ')}
+          </span>
+        )}
       </section>
 
       <div className={styles.boardSlot}>
@@ -92,11 +201,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
       {state.bonusCards.length > 0 && (
         <>
           <div className={styles.bonusRowSlot}>
-            <BonusCardStrip
-              layout="row"
-              cards={state.bonusCards}
-              values={shapley}
-            />
+            <BonusCardStrip layout="row" cards={state.bonusCards} values={shapley} />
           </div>
           <div className={styles.bonusPanelSlot}>
             <BonusCardStrip
@@ -114,21 +219,23 @@ export function ResultView({ onReplay }: ResultViewProps) {
 
       <div className={styles.dock}>
         <div className={styles.dockRow}>
-          <Link to="/play" className={styles.dockLink}>
-            Change difficulty
-          </Link>
+          {secondary}
           <Link to="/" className={styles.dockLink}>
             Home
           </Link>
         </div>
-        <Button
-          variant="primary"
-          className={styles.commitButton}
-          onClick={onReplay}
-        >
-          Play again
-        </Button>
+        {commit}
       </div>
+
+      {rewardsPending && (tier === 'SS' || tier === 'S') && (
+        <RewardsSheet
+          tier={tier}
+          grid={state.grid}
+          bonusCards={state.bonusCards}
+          blockedBaseId={targets.save?.lastKeptBaseId ?? null}
+          onDone={finishTargets}
+        />
+      )}
 
       <Sheet open={linesOpen} onClose={() => setLinesOpen(false)} title="Lines">
         <LinesPanel report={report} />

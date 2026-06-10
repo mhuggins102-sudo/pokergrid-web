@@ -40,8 +40,26 @@ The full assessment and phased plan live in the original repo at
 - Playwright E2E: deterministic seeded game to completion at 390px and
   1280px (`npx playwright test`)
 
-Next: Phase 3 (daily + leaderboard) → Phase 4 (progression) →
-Phase 5 (polish + launch).
+**Phase 4 — progression** ✓ *(Phase 3, daily + leaderboard, deferred by request)*
+
+- zustand-persisted stores using the original app's storage keys and
+  save formats (stats with legacy migrations, Targets-Up resume save,
+  settings)
+- Stats dashboard (per-difficulty roll-ups, tier histogram, recent
+  runs), Achievements catalog with earned state, Rules, Settings (with
+  full progress reset)
+- Challenges: all seven twisted rule sets playable at
+  `/challenges/:id` on the Hard ruleset with sequential unlocks —
+  including the Three Tricks one-time specials (all twelve targeting
+  flows wired through usePhaseUI) and Mixed Bag's categorized slots
+- Targets Up ladder at `/targets` — difficulty/target per level, S/SS
+  reward picks (supercharge a board card, power up a bonus card),
+  carry-over into the next level's decks, loss ends the run
+- Result screen records mode-aware: free-play runs (with Shapley
+  attribution), challenge completion, Targets-Up high-water mark, and
+  achievement evaluation
+
+Next: Phase 3 (daily + leaderboard) → Phase 5 (polish + launch).
 
 ## Develop
 

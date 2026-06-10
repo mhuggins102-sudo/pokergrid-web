@@ -12,6 +12,7 @@ import { BonusCardStrip } from './components/BonusCardStrip';
 import { DeckPreviewDialog } from './components/DeckPreviewDialog';
 import { BonusResolveDialog } from './components/BonusResolveDialog';
 import { HandValuesDialog } from './components/HandValuesDialog';
+import { ReviveSheet } from './components/ReviveSheet';
 import { ResultView } from './components/ResultView';
 import styles from './GameScreen.module.css';
 
@@ -30,7 +31,7 @@ export interface GameScreenProps {
  * re-seats the same pieces into the three-panel spread.
  */
 export function GameScreen({ onReplay }: GameScreenProps) {
-  const { state } = useGameSession();
+  const { state, dispatch } = useGameSession();
   const ui = usePhaseUI();
   const [peekOpen, setPeekOpen] = useState(false);
   const [handsOpen, setHandsOpen] = useState(false);
@@ -83,12 +84,22 @@ export function GameScreen({ onReplay }: GameScreenProps) {
             />
           </div>
 
-          {!state.noBonusCards && (
+          {(state.bonusCards.length > 0 || !state.noBonusCards) && (
             <div className={styles.bonusRowSlot}>
               <BonusCardStrip
                 layout="row"
                 cards={state.bonusCards}
                 bonusDeckSize={state.bonusDeck.length}
+                onSlotTap={
+                  ui.bonusSlotPick
+                    ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
+                    : undefined
+                }
+                onUse={
+                  ui.canActivateSpecials
+                    ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
+                    : undefined
+                }
               />
             </div>
           )}
@@ -123,11 +134,21 @@ export function GameScreen({ onReplay }: GameScreenProps) {
             )}
           </div>
 
-          {!state.noBonusCards && (
+          {(state.bonusCards.length > 0 || !state.noBonusCards) && (
             <div className={styles.bonusSlot}>
               <BonusCardStrip
                 cards={state.bonusCards}
                 bonusDeckSize={state.bonusDeck.length}
+                onSlotTap={
+                  ui.bonusSlotPick
+                    ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
+                    : undefined
+                }
+                onUse={
+                  ui.canActivateSpecials
+                    ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
+                    : undefined
+                }
               />
             </div>
           )}
@@ -139,6 +160,7 @@ export function GameScreen({ onReplay }: GameScreenProps) {
       </Sheet>
       <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
       <HandValuesDialog open={handsOpen} onClose={() => setHandsOpen(false)} />
+      <ReviveSheet open={ui.reviveOpen} />
       {ui.bonusDialog && <BonusResolveDialog ui={ui.bonusDialog} />}
     </MotionConfig>
   );
