@@ -1,0 +1,35 @@
+.well {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.cardSlot {
+  position: relative;
+  width: 92px;
+  aspect-ratio: 5 / 7;
+  border-radius: var(--radius-sm);
+  background: var(--paper-sunken);
+  border: 1px dashed var(--rule);
+  flex-shrink: 0;
+}
+
+.cardWrap {
+  position: absolute;
+  inset: 0;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.deckCount {
+  font-variant-numeric: tabular-nums;
+}
+
+.peek {
+  align-self: flex-start;
+}

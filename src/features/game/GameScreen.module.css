@@ -1,0 +1,106 @@
+/* Mobile-first single column; DOM order is score, lines, board, well,
+   bonus — flex `order` puts the board right under the score on small
+   screens, and the desktop grid re-seats everything into three panels. */
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.scoreSlot {
+  order: 0;
+}
+
+.boardArea {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: min(100%, 440px);
+  margin: 0 auto;
+}
+
+.wellSlot {
+  order: 2;
+}
+
+.bonusSlot {
+  order: 3;
+}
+
+.linesSlot {
+  order: 4;
+}
+
+.banner {
+  min-height: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.actionBar {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  min-height: 44px;
+}
+
+.wellSlot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 640px) {
+  .layout {
+    max-width: 560px;
+  }
+
+  .boardArea {
+    width: min(100%, 520px);
+  }
+}
+
+/* Desktop: three-panel editorial spread. Left = score + live lines;
+   center = board + actions; right = next card + bonus cards. */
+@media (min-width: 1024px) {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) auto minmax(260px, 1fr);
+    grid-template-rows: auto 1fr;
+    gap: var(--space-xl);
+    max-width: 1200px;
+    align-items: start;
+  }
+
+  .scoreSlot {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .linesSlot {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .boardArea {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: clamp(420px, 44vw, 560px);
+  }
+
+  .wellSlot {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .bonusSlot {
+    grid-column: 3;
+    grid-row: 2;
+  }
+}

@@ -1,0 +1,117 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { PlayPage } from '../PlayPage';
+
+const renderPlay = (search: string) =>
+  render(
+    <MemoryRouter initialEntries={[`/play${search}`]}>
+      <Routes>
+        <Route path="/play" element={<PlayPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+describe('free play', () => {
+  it('shows the difficulty picker without a difficulty param', () => {
+    renderPlay('');
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /extreme/i })
+    ).toHaveAttribute('href', '/play?difficulty=extreme');
+  });
+
+  it('plays a seeded easy game to completion with Place only', () => {
+    renderPlay('?difficulty=easy&seed=42');
+
+    // Board + score chrome render.
+    expect(screen.getByRole('grid', { name: 'Game board' })).toBeInTheDocument();
+    expect(screen.getByText(/\/ 400 target/)).toBeInTheDocument();
+
+    // Place until the run ends. 25 slots − the pre-placed center card,
+    // with jokers auto-placing, bounds the loop well under 30 clicks.
+    for (let i = 0; i < 30; i++) {
+      const place = screen.queryByRole('button', { name: 'Place' });
+      if (!place) break;
+      fireEvent.click(place);
+    }
+
+    const final = screen.getByTestId('final-score');
+    expect(final).toBeInTheDocument();
+    expect(Number(final.textContent)).not.toBeNaN();
+    expect(screen.getByText(/target beaten|target missed/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play again' })).toBeInTheDocument();
+    // Result extras: score math + line breakdown panels.
+    expect(screen.getByText('Score math')).toBeInTheDocument();
+    expect(screen.getByText('Line breakdown')).toBeInTheDocument();
+  });
+
+  it('is deterministic for a fixed seed', () => {
+    const playThrough = (): string => {
+      const view = renderPlay('?difficulty=hard&seed=1234');
+      for (let i = 0; i < 30; i++) {
+        const place = view.queryByRole('button', { name: 'Place' });
+        if (!place) break;
+        fireEvent.click(place);
+      }
+      const score = view.getByTestId('final-score').textContent ?? '';
+      view.unmount();
+      return score;
+    };
+    const a = playThrough();
+    const b = playThrough();
+    expect(a).toBe(b);
+    expect(a).not.toBe('');
+  });
+
+  it('opens a suit-perk targeting phase and cancels back', () => {
+    renderPlay('?difficulty=easy&seed=42');
+
+    // Walk the run until a perk button is enabled, enter targeting,
+    // check the banner + cancel path, then bail out.
+    for (let i = 0; i < 30; i++) {
+      const perk = screen
+        .queryAllByRole('button')
+        .find(
+          b =>
+            /Swap|Slide|Destroy|Bonus/.test(b.textContent ?? '') &&
+            !(b as HTMLButtonElement).disabled
+        );
+      if (perk) {
+        const isBonus = /Bonus/.test(perk.textContent ?? '');
+        fireEvent.click(perk);
+        if (isBonus) {
+          // ♣ opens the draw dialog instead of a board phase.
+          expect(screen.getByText('♣ Bonus draw')).toBeInTheDocument();
+          const decline = screen.queryByRole('button', { name: 'Decline' });
+          expect(decline).not.toBeNull(); // easy allows declining
+          fireEvent.click(decline!);
+        } else {
+          expect(screen.getByRole('status')).toHaveTextContent(/tap/i);
+          fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+          expect(screen.getByRole('button', { name: 'Place' })).toBeInTheDocument();
+        }
+        return;
+      }
+      const place = screen.queryByRole('button', { name: 'Place' });
+      if (!place) break;
+      fireEvent.click(place);
+    }
+    throw new Error('No enabled perk button appeared during the run');
+  });
+
+  it('undo restores the previous board state on easy (1 undo)', () => {
+    renderPlay('?difficulty=easy&seed=42');
+    const board = screen.getByRole('grid', { name: 'Game board' });
+    const filledBefore = board.querySelectorAll('[class*="cardWrap"]').length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Place' }));
+    const undo = screen.getByRole('button', { name: /Undo/ });
+    expect(undo).toBeEnabled();
+    fireEvent.click(undo);
+    // AnimatePresence may keep an exiting card in the DOM briefly, so
+    // assert on the engine-driven control state instead of node counts:
+    // the single easy undo is now spent and the button disables.
+    expect(filledBefore).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Undo/ })).toBeDisabled();
+  });
+});

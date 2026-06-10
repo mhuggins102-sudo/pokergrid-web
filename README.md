@@ -11,7 +11,7 @@ The full assessment and phased plan live in the original repo at
 
 ## Status
 
-**Phase 1 — scaffold + core** (this commit):
+**Phase 1 — scaffold + core** ✓
 
 - Vite 7 + React 19 + TS strict, react-router v7 (library mode), every
   screen deep-linkable from day one
@@ -20,13 +20,28 @@ The full assessment and phased plan live in the original repo at
   Shapley-value bonus attribution) along with 21 of its test files
 - `src/design/` — "Morning Paper" tokens (`tokens.css` + typed `tokens.ts`
   mirror) and primitives: Button, Dialog (native `<dialog>`), Sheet, Tabs,
-  Toast
+  Toast — see `/design` for the token gallery
 - Vitest (node env for game logic, jsdom + Testing Library for UI), CI
 
-Visit `/design` for the token-gallery reference page.
+**Phase 2 — playable game** ✓
 
-Next: Phase 2 (playable game) → Phase 3 (daily + leaderboard) →
-Phase 4 (progression) → Phase 5 (polish + launch).
+- Free play at all four difficulties (`/play?difficulty=easy|medium|hard|extreme`,
+  optional `&seed=` for a deterministic run)
+- `GameSessionProvider` owns the ported reducer; `usePhaseUI` is the single
+  place that switches on `state.phase`
+- Board components (GridBoard / CardFace / NextCardWell / ScoreBar /
+  LinesPanel / BonusCardStrip) + ♥ swap, ♠ slide, ♦ destroy targeting and
+  the ♣ bonus draw/replace dialog
+- Card travel via motion layout (FLIP) animations; `prefers-reduced-motion`
+  respected
+- Result view: verdict, full score math (incomplete-line penalty, grid
+  multipliers) and per-bonus-card Shapley attribution
+- Responsive: single column < 1024px, three-panel editorial spread ≥ 1024px
+- Playwright E2E: deterministic seeded game to completion at 390px and
+  1280px (`npx playwright test`)
+
+Next: Phase 3 (daily + leaderboard) → Phase 4 (progression) →
+Phase 5 (polish + launch).
 
 ## Develop
 

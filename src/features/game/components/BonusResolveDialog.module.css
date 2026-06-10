@@ -1,0 +1,28 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.hint {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}

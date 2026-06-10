@@ -1,0 +1,87 @@
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--card-face);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  container-type: size;
+}
+
+.red {
+  color: var(--card-red);
+}
+
+.black {
+  color: var(--card-black);
+}
+
+.joker {
+  color: var(--joker);
+}
+
+.corner {
+  position: absolute;
+  top: 4%;
+  left: 7%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  font-family: var(--font-display);
+  font-weight: 640;
+  font-size: 26cqh;
+}
+
+.cornerSuit {
+  font-size: 20cqh;
+  font-family: var(--font-body);
+}
+
+.pip {
+  font-size: 42cqh;
+  line-height: 1;
+  font-family: var(--font-body);
+  margin-top: 12cqh;
+}
+
+.jokerStar {
+  font-size: 36cqh;
+  line-height: 1;
+}
+
+.jokerLabel {
+  position: absolute;
+  bottom: 7%;
+  font-size: 13cqh;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-family: var(--font-body);
+}
+
+/* Supercharge badge — wild or double. A solid chip, never a glow. */
+.charge {
+  position: absolute;
+  top: 4%;
+  right: 5%;
+  font-size: 16cqh;
+  font-weight: 700;
+  font-family: var(--font-body);
+  line-height: 1;
+  padding: 3cqh 5cqh;
+  border-radius: var(--radius-xs);
+  color: var(--paper-raised);
+}
+
+.chargeWild {
+  background: var(--joker);
+}
+
+.chargeDouble {
+  background: var(--warn);
+}
