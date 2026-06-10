@@ -1,7 +1,9 @@
 .board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: clamp(4px, 1.2cqw, 8px);
+  /* Fixed gap so external rails (line totals on the result screen) can
+     mirror the row/column rhythm exactly. */
+  gap: 6px;
   width: 100%;
   container-type: inline-size;
 }

@@ -1,0 +1,70 @@
+/* Board + line-total rails as one visual: row totals run down the right
+   edge (aligned with each row), column totals sit under each column.
+   The 6px gaps mirror GridBoard's so chips track their lines exactly. */
+.wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 6px;
+  width: 100%;
+}
+
+.board {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.rowRail {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.colRail {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 24px;
+  padding: 0 4px;
+  border-radius: var(--radius-xs);
+  background: var(--paper-sunken);
+  border: 1px solid var(--hairline);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pos {
+  color: var(--accent);
+}
+
+.zero {
+  color: var(--ink-3);
+}
+
+.neg {
+  color: var(--danger);
+}
+
+/* Corner spacer keeps the col rail from sliding under the row rail. */
+.corner {
+  grid-column: 2;
+  grid-row: 2;
+}
