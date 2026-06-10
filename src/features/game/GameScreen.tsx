@@ -85,6 +85,15 @@ export function GameScreen({ onReplay }: GameScreenProps) {
                 ))}
               </div>
             </div>
+            {!state.noBonusCards && (
+              <div className={styles.bonusRowSlot}>
+                <BonusCardStrip
+                  layout="row"
+                  cards={state.bonusCards}
+                  bonusDeckSize={state.bonusDeck.length}
+                />
+              </div>
+            )}
           </div>
 
           {!state.noBonusCards && (

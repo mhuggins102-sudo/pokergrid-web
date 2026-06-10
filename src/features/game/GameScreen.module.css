@@ -15,8 +15,10 @@
   flex-direction: column;
   gap: var(--space-sm);
   /* Width follows the viewport, but never grows the board taller than
-     what's left after header + score + controls (~330px of chrome). */
-  width: min(100%, 440px, calc((100dvh - 330px) * 5 / 7));
+     what's left after header + score + controls + bonus row (~380px of
+     chrome) — the whole loop, held bonus cards included, fits one
+     phone viewport. */
+  width: min(100%, 440px, calc((100dvh - 380px) * 5 / 7));
   min-width: 260px;
   margin: 0 auto;
 }
@@ -50,6 +52,11 @@
   display: none;
 }
 
+/* The desktop side panel; mobile gets the in-board row instead. */
+.bonusSlot {
+  display: none;
+}
+
 @media (min-width: 640px) {
   .layout {
     max-width: 560px;
@@ -57,7 +64,7 @@
   }
 
   .boardArea {
-    width: min(100%, 520px, calc((100dvh - 360px) * 5 / 7));
+    width: min(100%, 520px, calc((100dvh - 410px) * 5 / 7));
     gap: var(--space-md);
   }
 
@@ -96,7 +103,12 @@
     width: clamp(420px, min(44vw, calc((100dvh - 280px) * 5 / 7)), 560px);
   }
 
+  .bonusRowSlot {
+    display: none;
+  }
+
   .bonusSlot {
+    display: block;
     grid-column: 3;
     grid-row: 1 / span 2;
   }

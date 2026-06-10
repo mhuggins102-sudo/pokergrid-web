@@ -71,6 +71,60 @@
   color: var(--ink-3);
 }
 
+/* ---- row layout (mobile/tablet): three always-present slots in a slim
+   horizontal band, so held cards are visible without scrolling and the
+   hand cap of 3 is legible at a glance. ---- */
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.row .chip {
+  flex: 1;
+  min-width: 0;
+  padding: 6px var(--space-sm);
+  gap: 0;
+}
+
+.row .chipTitle,
+.row .chipMult {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row .chipTitle {
+  font-size: 12px;
+}
+
+.row .chipMult {
+  font-size: 11px;
+}
+
+.emptySlot {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.deckHint {
+  align-self: center;
+  font-size: 11px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .detailBody {
   display: flex;
   flex-direction: column;

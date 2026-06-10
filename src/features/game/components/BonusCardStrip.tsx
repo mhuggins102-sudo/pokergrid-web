@@ -41,6 +41,13 @@ export interface BonusCardStripProps {
   /** Shapley contributions aligned with `cards` (result view). */
   values?: number[];
   title?: string;
+  /**
+   * 'panel' (default): a titled card list for the desktop side column.
+   * 'row': a slim three-slot band for mobile — always renders all three
+   * hand slots (filled or dashed-empty) so held cards stay on screen
+   * and the cap is legible without any scrolling.
+   */
+  layout?: 'panel' | 'row';
 }
 
 /**
@@ -52,9 +59,39 @@ export function BonusCardStrip({
   bonusDeckSize,
   values,
   title = 'Bonus cards',
+  layout = 'panel',
 }: BonusCardStripProps) {
   const [detail, setDetail] = useState<BonusCard | null>(null);
   const detailStyle = detail ? styleFor(detail) : null;
+
+  if (layout === 'row') {
+    const emptySlots = Math.max(0, 3 - cards.length);
+    return (
+      <div className={styles.row} aria-label="Bonus cards">
+        {cards.map((card, i) => (
+          <BonusChip
+            key={`${card.id}-${i}`}
+            card={card}
+            value={values?.[i]}
+            onClick={() => setDetail(card)}
+          />
+        ))}
+        {Array.from({ length: emptySlots }, (_, i) => (
+          <div key={`empty-${i}`} className={styles.emptySlot}>
+            {cards.length === 0 && i === 0 ? '♣ draws fill these' : 'empty'}
+          </div>
+        ))}
+        {bonusDeckSize !== undefined && (
+          <span className={styles.deckHint}>♣{bonusDeckSize}</span>
+        )}
+        <DetailDialog
+          detail={detail}
+          detailStyle={detailStyle}
+          onClose={() => setDetail(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <section className={styles.strip} aria-label="Bonus cards">
@@ -79,23 +116,37 @@ export function BonusCardStrip({
           />
         ))}
       </div>
-      <Dialog
-        open={detail !== null}
+      <DetailDialog
+        detail={detail}
+        detailStyle={detailStyle}
         onClose={() => setDetail(null)}
-        title={detail?.name ?? ''}
-      >
-        {detail && detailStyle && (
-          <div
-            className={styles.detailBody}
-            style={{ '--chip-tone': detailStyle.borderColor } as CSSProperties}
-          >
-            <span className={styles.detailCategory}>
-              {detailStyle.icon} {detailStyle.label}
-            </span>
-            <p className="text-body">{detail.description}</p>
-          </div>
-        )}
-      </Dialog>
+      />
     </section>
+  );
+}
+
+function DetailDialog({
+  detail,
+  detailStyle,
+  onClose,
+}: {
+  detail: BonusCard | null;
+  detailStyle: ReturnType<typeof styleFor> | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={detail !== null} onClose={onClose} title={detail?.name ?? ''}>
+      {detail && detailStyle && (
+        <div
+          className={styles.detailBody}
+          style={{ '--chip-tone': detailStyle.borderColor } as CSSProperties}
+        >
+          <span className={styles.detailCategory}>
+            {detailStyle.icon} {detailStyle.label}
+          </span>
+          <p className="text-body">{detail.description}</p>
+        </div>
+      )}
+    </Dialog>
   );
 }

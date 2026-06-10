@@ -77,11 +77,12 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-md) var(--space-lg) var(--space-xxxl);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
 }
 
 @media (min-width: 640px) {
   .main {
     padding-top: var(--space-xl);
+    padding-bottom: var(--space-xxxl);
   }
 }
