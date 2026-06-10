@@ -1,7 +1,7 @@
 import { CSSProperties, useState } from 'react';
 import { BonusCard } from '../../../game/bonusCards';
 import { styleFor } from '../../../lib/bonusCardCategory';
-import { Dialog } from '../../../design/primitives';
+import { Sheet } from '../../../design/primitives';
 import styles from './BonusCardStrip.module.css';
 
 export function BonusChip({
@@ -135,7 +135,7 @@ function DetailDialog({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={detail !== null} onClose={onClose} title={detail?.name ?? ''}>
+    <Sheet open={detail !== null} onClose={onClose} title={detail?.name ?? ''}>
       {detail && detailStyle && (
         <div
           className={styles.detailBody}
@@ -147,6 +147,6 @@ function DetailDialog({
           <p className="text-body">{detail.description}</p>
         </div>
       )}
-    </Dialog>
+    </Sheet>
   );
 }

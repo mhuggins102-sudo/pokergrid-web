@@ -1,21 +1,23 @@
 import { SPOTLIGHT_ID } from '../../../game/bonusCards';
-import { Button, Dialog } from '../../../design/primitives';
+import { Button, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
 import { BonusChip } from './BonusCardStrip';
 import styles from './BonusResolveDialog.module.css';
 
 /**
- * The ♣ Bonus draw flow. Resolving: pick one of the drawn cards (or
- * decline). At the cap, picking a non-Spotlight card moves to the
- * replacing step: tap one of the held three to swap out. Spotlight skips
- * the swap — it evicts the whole hand by rule.
+ * The ♣ Bonus draw flow — a bottom sheet on phones, centered dialog on
+ * larger screens. Resolving: pick one of the drawn cards (or decline).
+ * At the cap, picking a non-Spotlight card moves to the replacing step:
+ * tap one of the held three to swap out. Spotlight skips the swap — it
+ * evicts the whole hand by rule. When declining isn't allowed the sheet
+ * can't be dismissed: the player must choose.
  */
 export function BonusResolveDialog({ ui }: { ui: BonusDialogUI }) {
   const { state, dispatch } = useGameSession();
 
-  // The dialog is phase-driven; closing it without choosing is only
-  // possible via Decline (when allowed), so onClose maps to that.
+  // Dismissing the sheet (Esc / backdrop / ✕) maps to the flow's "back
+  // out" action where one exists.
   const onClose = () => {
     if (ui.mode === 'replacing') dispatch({ type: 'CANCEL_ACTION' });
     else if (ui.canDecline) dispatch({ type: 'BONUS_DECLINE' });
@@ -24,7 +26,7 @@ export function BonusResolveDialog({ ui }: { ui: BonusDialogUI }) {
   if (ui.mode === 'replacing') {
     const incoming = ui.drawn[ui.pickedNew ?? 0];
     return (
-      <Dialog open onClose={onClose} title="♣ Bonus — replace">
+      <Sheet open onClose={onClose} title="♣ Bonus — replace">
         <div className={styles.body}>
           <p className={styles.hint}>
             Tap the held card to swap out for “{incoming?.name}”.
@@ -44,7 +46,7 @@ export function BonusResolveDialog({ ui }: { ui: BonusDialogUI }) {
             </Button>
           </div>
         </div>
-      </Dialog>
+      </Sheet>
     );
   }
 
@@ -58,9 +60,13 @@ export function BonusResolveDialog({ ui }: { ui: BonusDialogUI }) {
   };
 
   return (
-    <Dialog open onClose={onClose} title="♣ Bonus draw" hideHeader={!ui.canDecline}>
+    <Sheet
+      open
+      onClose={onClose}
+      title="♣ Bonus draw"
+      dismissible={ui.canDecline}
+    >
       <div className={styles.body}>
-        {!ui.canDecline && <h2 className="text-title">♣ Bonus draw</h2>}
         <p className={styles.hint}>
           {ui.atCap
             ? 'Your hand is full — keeping a card means swapping one out.'
@@ -83,6 +89,6 @@ export function BonusResolveDialog({ ui }: { ui: BonusDialogUI }) {
           </div>
         )}
       </div>
-    </Dialog>
+    </Sheet>
   );
 }

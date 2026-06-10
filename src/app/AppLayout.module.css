@@ -78,6 +78,14 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-md) var(--space-lg) var(--space-lg);
+  /* Column flex so a page (the game screen) can stretch to the bottom
+     edge and pin its control dock there. */
+  display: flex;
+  flex-direction: column;
+}
+
+.main > * {
+  width: 100%;
 }
 
 @media (min-width: 640px) {

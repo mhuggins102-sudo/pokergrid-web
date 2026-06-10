@@ -10,6 +10,11 @@ export interface DialogProps {
   className?: string;
   /** Hide the built-in header row (title + close button). */
   hideHeader?: boolean;
+  /**
+   * When false, Escape and backdrop clicks are ignored — for flows where
+   * the player must make a choice (e.g. a forced bonus swap).
+   */
+  dismissible?: boolean;
 }
 
 /**
@@ -24,6 +29,7 @@ export function Dialog({
   children,
   className,
   hideHeader = false,
+  dismissible = true,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -36,7 +42,12 @@ export function Dialog({
 
   const handleClick = (e: React.MouseEvent<HTMLDialogElement>) => {
     // A click on the backdrop targets the <dialog> element itself.
-    if (e.target === ref.current) onClose();
+    if (dismissible && e.target === ref.current) onClose();
+  };
+
+  const handleCancel = (e: React.SyntheticEvent<HTMLDialogElement>) => {
+    // Escape fires 'cancel'; suppress it for must-choose flows.
+    if (!dismissible) e.preventDefault();
   };
 
   return (
@@ -45,19 +56,22 @@ export function Dialog({
       className={[styles.dialog, className].filter(Boolean).join(' ')}
       onClose={onClose}
       onClick={handleClick}
+      onCancel={handleCancel}
       aria-label={typeof title === 'string' ? title : undefined}
     >
       {!hideHeader && (
         <div className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
-          <button
-            type="button"
-            className={styles.close}
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ✕
-          </button>
+          {dismissible && (
+            <button
+              type="button"
+              className={styles.close}
+              onClick={onClose}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          )}
         </div>
       )}
       <div className={styles.body}>{children}</div>

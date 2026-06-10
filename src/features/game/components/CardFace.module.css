@@ -1,3 +1,7 @@
+/* Square tile design (Wordle-tile energy, card-table ink): rank anchored
+   top-left, suit pip bottom-right, supercharge badge top-right. Sizes are
+   container-relative so the same face works on grid cells, the dock chip,
+   and the result board. */
 .card {
   position: relative;
   width: 100%;
@@ -6,9 +10,6 @@
   background: var(--card-face);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   user-select: none;
   container-type: size;
 }
@@ -25,39 +26,41 @@
   color: var(--joker);
 }
 
-.corner {
+.rank {
   position: absolute;
-  top: 4%;
-  left: 7%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1;
+  top: 4cqh;
+  left: 9cqw;
   font-family: var(--font-display);
-  font-weight: 640;
-  font-size: 26cqh;
-}
-
-.cornerSuit {
-  font-size: 20cqh;
-  font-family: var(--font-body);
+  font-weight: 660;
+  font-size: 46cqh;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .pip {
-  font-size: 42cqh;
+  position: absolute;
+  bottom: 5cqh;
+  right: 8cqw;
+  font-size: 38cqh;
   line-height: 1;
   font-family: var(--font-body);
-  margin-top: 12cqh;
 }
 
 .jokerStar {
-  font-size: 36cqh;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  font-size: 42cqh;
   line-height: 1;
 }
 
 .jokerLabel {
   position: absolute;
-  bottom: 7%;
+  bottom: 7cqh;
+  left: 0;
+  right: 0;
+  text-align: center;
   font-size: 13cqh;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -67,13 +70,13 @@
 /* Supercharge badge — wild or double. A solid chip, never a glow. */
 .charge {
   position: absolute;
-  top: 4%;
-  right: 5%;
-  font-size: 16cqh;
+  top: 5cqh;
+  right: 6cqw;
+  font-size: 15cqh;
   font-weight: 700;
   font-family: var(--font-body);
   line-height: 1;
-  padding: 3cqh 5cqh;
+  padding: 3cqh 5cqw;
   border-radius: var(--radius-xs);
   color: var(--paper-raised);
 }

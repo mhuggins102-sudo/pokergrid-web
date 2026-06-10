@@ -1,13 +1,14 @@
 .well {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  flex-shrink: 0;
 }
 
 .cardSlot {
   position: relative;
   width: 56px;
-  aspect-ratio: 5 / 7;
+  aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   background: var(--paper-sunken);
   border: 1px dashed var(--rule);
@@ -22,28 +23,20 @@
 .meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
-.label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
-  white-space: nowrap;
-}
-
 .deckCount {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
+  color: var(--ink-2);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .peek {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--accent);
   text-decoration: underline;
@@ -59,6 +52,10 @@
 
 @media (min-width: 640px) {
   .cardSlot {
-    width: 72px;
+    width: 64px;
+  }
+
+  .deckCount {
+    font-size: 13px;
   }
 }

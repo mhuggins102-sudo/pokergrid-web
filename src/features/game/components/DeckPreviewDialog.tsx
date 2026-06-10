@@ -1,7 +1,7 @@
 import { CSSProperties, useMemo } from 'react';
 import { RANKS, SUITS, Suit, isJoker } from '../../../game/cards';
 import { colors } from '../../../design/tokens';
-import { Dialog } from '../../../design/primitives';
+import { Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import styles from './DeckPreviewDialog.module.css';
 
@@ -43,7 +43,7 @@ export function DeckPreviewDialog({
   }, [state.deck]);
 
   return (
-    <Dialog open={open} onClose={onClose} title="Remaining deck">
+    <Sheet open={open} onClose={onClose} title="Remaining deck">
       <div className={styles.body}>
         {SUITS.map(suit => (
           <div key={suit} className={styles.suitRow}>
@@ -82,6 +82,6 @@ export function DeckPreviewDialog({
           </div>
         )}
       </div>
-    </Dialog>
+    </Sheet>
   );
 }

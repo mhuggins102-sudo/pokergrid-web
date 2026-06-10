@@ -22,6 +22,12 @@ export interface GameScreenProps {
 /**
  * One running game. Composition only — all phase logic lives in
  * usePhaseUI, all rules in the ported reducer.
+ *
+ * Phone layout (portrait-first): status strip, square board, bonus
+ * hand row, and a bottom control dock pinned in the thumb zone. The
+ * dock swaps its contents with the game state — drawn card + actions
+ * while deciding, instruction + cancel while targeting. Desktop
+ * re-seats the same pieces into the three-panel spread.
  */
 export function GameScreen({ onReplay }: GameScreenProps) {
   const { state } = useGameSession();
@@ -45,6 +51,14 @@ export function GameScreen({ onReplay }: GameScreenProps) {
     return <ResultView onReplay={onReplay} />;
   }
 
+  // The dock's bottom row holds the single "commit" action (Place while
+  // deciding, Cancel while targeting) as a full-width thumb target; any
+  // remaining actions sit beside the drawn card in the top row.
+  const commitAction =
+    ui.actions.find(a => a.id === 'place') ??
+    ui.actions.find(a => a.id === 'cancel');
+  const rowActions = ui.actions.filter(a => a !== commitAction);
+
   return (
     <MotionConfig reducedMotion="user">
       <LayoutGroup>
@@ -61,38 +75,51 @@ export function GameScreen({ onReplay }: GameScreenProps) {
           </div>
 
           <div className={styles.boardArea}>
-            <div className={styles.banner} role="status" aria-live="polite">
-              {ui.banner}
-            </div>
             <GridBoard
               grid={state.grid}
               roleOf={ui.roleOf}
               isTappable={ui.isTappable}
               onCellTap={ui.onCellTap}
             />
-            <div className={styles.controls}>
-              <NextCardWell onPeekDeck={() => setPeekOpen(true)} />
-              <div className={styles.actionButtons}>
-                {ui.actions.map(a => (
-                  <Button
-                    key={a.id}
-                    variant={a.variant}
-                    disabled={a.disabled}
-                    onClick={a.onPress}
-                  >
-                    {a.label}
-                  </Button>
-                ))}
-              </div>
+          </div>
+
+          {!state.noBonusCards && (
+            <div className={styles.bonusRowSlot}>
+              <BonusCardStrip
+                layout="row"
+                cards={state.bonusCards}
+                bonusDeckSize={state.bonusDeck.length}
+              />
             </div>
-            {!state.noBonusCards && (
-              <div className={styles.bonusRowSlot}>
-                <BonusCardStrip
-                  layout="row"
-                  cards={state.bonusCards}
-                  bonusDeckSize={state.bonusDeck.length}
-                />
-              </div>
+          )}
+
+          <div className={styles.dock}>
+            <div className={styles.dockRow}>
+              <NextCardWell onPeekDeck={() => setPeekOpen(true)} />
+              <span className={styles.dockText} role="status" aria-live="polite">
+                {ui.banner}
+              </span>
+              {rowActions.map(a => (
+                <Button
+                  key={a.id}
+                  variant={a.variant}
+                  disabled={a.disabled}
+                  onClick={a.onPress}
+                >
+                  {a.label}
+                </Button>
+              ))}
+            </div>
+            {commitAction && (
+              <Button
+                key={commitAction.id}
+                variant={commitAction.id === 'cancel' ? 'secondary' : commitAction.variant}
+                disabled={commitAction.disabled}
+                onClick={commitAction.onPress}
+                className={styles.commitButton}
+              >
+                {commitAction.label}
+              </Button>
             )}
           </div>
 

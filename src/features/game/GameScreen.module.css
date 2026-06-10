@@ -1,58 +1,80 @@
-/* Mobile-first single column. The core loop — score, board, drawn card +
-   actions — is sized to fit one phone viewport; bonus cards scroll below
-   and the line breakdown lives behind the score bar's Lines button until
-   the desktop grid gives it a persistent panel. */
+/* Portrait-phone-first. Square tiles keep the board compact, so the
+   whole loop — status, board, bonus hand, control dock — fits a phone
+   viewport without height hacks. The dock pins to the bottom edge
+   (thumb zone) and the board breathes in the middle. */
 .layout {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
   max-width: 480px;
   margin: 0 auto;
+  /* Fill the viewport so the dock pins to the bottom edge; the board
+     floats in the space between status strip and dock. */
+  flex: 1;
 }
 
 .boardArea {
+  width: min(100%, 440px);
+  margin: auto auto 0;
+}
+
+.bonusRowSlot {
+  margin-bottom: auto;
+}
+
+/* Bottom control dock, pinned to the bottom edge: top row = drawn card
+   + instruction text or secondary actions; bottom row = the one commit
+   action (Place / Cancel) as a full-width thumb target. */
+.dock {
+  margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  /* Width follows the viewport, but never grows the board taller than
-     what's left after header + score + controls + bonus row (~380px of
-     chrome) — the whole loop, held bonus cards included, fits one
-     phone viewport. */
-  width: min(100%, 440px, calc((100dvh - 380px) * 5 / 7));
-  min-width: 260px;
-  margin: 0 auto;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  /* Bleed across .main's side padding so the bar spans edge to edge. */
+  margin-left: calc(-1 * var(--space-lg));
+  margin-right: calc(-1 * var(--space-lg));
+  margin-bottom: calc(-1 * var(--space-lg));
+  padding: var(--space-sm) var(--space-lg)
+    calc(var(--space-md) + env(safe-area-inset-bottom));
 }
 
-.banner {
-  min-height: 20px;
-  text-align: center;
+.dockRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  min-height: 48px;
+}
+
+.dockRow > :first-child {
+  margin-right: auto;
+}
+
+.dockText {
+  flex: 1;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.25;
   color: var(--accent);
+  text-align: right;
 }
 
-/* Drawn card + action buttons in one row, right under the board. */
-.controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-  min-height: 56px;
+.dockText:empty {
+  display: none;
 }
 
-.actionButtons {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
+.commitButton {
+  width: 100%;
+  min-height: 48px;
 }
 
 .linesSlot {
   display: none;
 }
 
-/* The desktop side panel; mobile gets the in-board row instead. */
+/* The desktop side panel; smaller screens get the in-flow bonus row. */
 .bonusSlot {
   display: none;
 }
@@ -64,24 +86,23 @@
   }
 
   .boardArea {
-    width: min(100%, 520px, calc((100dvh - 410px) * 5 / 7));
-    gap: var(--space-md);
+    width: min(100%, 520px);
   }
 
-  .banner {
-    min-height: 24px;
+  .dockText {
     font-size: 14px;
   }
 }
 
 /* Desktop: three-panel editorial spread. Left = score + live lines;
-   center = board + controls; right = bonus cards. */
+   center = board with the dock (unpinned) beneath; right = bonus
+   cards. */
 @media (min-width: 1024px) {
   .layout {
     display: grid;
     grid-template-columns: minmax(260px, 1fr) auto minmax(260px, 1fr);
-    grid-template-rows: auto 1fr;
-    gap: var(--space-xl);
+    grid-template-rows: auto auto 1fr;
+    gap: var(--space-lg) var(--space-xl);
     max-width: 1200px;
     align-items: start;
   }
@@ -94,13 +115,28 @@
   .linesSlot {
     display: block;
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 2 / span 2;
   }
 
   .boardArea {
     grid-column: 2;
     grid-row: 1 / span 2;
-    width: clamp(420px, min(44vw, calc((100dvh - 280px) * 5 / 7)), 560px);
+    width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
+  }
+
+  .dock {
+    grid-column: 2;
+    grid-row: 3;
+    margin: 0;
+    padding: 0;
+    border-top: none;
+    background: transparent;
+  }
+
+  .commitButton {
+    width: auto;
+    min-width: 220px;
+    align-self: center;
   }
 
   .bonusRowSlot {
@@ -110,6 +146,6 @@
   .bonusSlot {
     display: block;
     grid-column: 3;
-    grid-row: 1 / span 2;
+    grid-row: 1 / span 3;
   }
 }

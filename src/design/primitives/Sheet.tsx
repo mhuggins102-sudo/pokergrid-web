@@ -7,6 +7,8 @@ export interface SheetProps {
   onClose: () => void;
   title?: ReactNode;
   children: ReactNode;
+  hideHeader?: boolean;
+  dismissible?: boolean;
 }
 
 /**
@@ -14,9 +16,23 @@ export interface SheetProps {
  * 640px up (see Sheet.module.css). Same native-<dialog> semantics as
  * Dialog.
  */
-export function Sheet({ open, onClose, title, children }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  children,
+  hideHeader,
+  dismissible,
+}: SheetProps) {
   return (
-    <Dialog open={open} onClose={onClose} title={title} className={styles.sheet}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={title}
+      className={styles.sheet}
+      hideHeader={hideHeader}
+      dismissible={dismissible}
+    >
       <div className={styles.grabber} aria-hidden="true" />
       {children}
     </Dialog>

@@ -39,7 +39,6 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
   return (
     <div className={styles.bar}>
       <div className={styles.scoreBlock}>
-        <span className={styles.kicker}>{state.difficulty}</span>
         <div className={styles.scoreRow}>
           <span className={styles.score} aria-label={`Score ${report.total}`}>
             {report.total}
@@ -47,6 +46,7 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
           <span className={`text-label ${styles.target}`}>
             / {state.target} target
           </span>
+          <span className={styles.kicker}>{state.difficulty}</span>
         </div>
         {showPenalty && (
           <span className={styles.penalty} role="status">
@@ -70,8 +70,9 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
             variant="secondary"
             disabled={!canUndo}
             onClick={() => dispatch({ type: 'UNDO' })}
+            aria-label={`Undo (${Math.max(0, maxUndos - state.undoCount)} left)`}
           >
-            Undo{maxUndos > 1 ? '' : ` (${maxUndos - state.undoCount} left)`}
+            Undo
           </Button>
         )}
         <Button

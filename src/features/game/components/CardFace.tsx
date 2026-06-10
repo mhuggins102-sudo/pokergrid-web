@@ -43,9 +43,8 @@ export function CardFace({ card }: { card: Card }) {
   const tone = card.suit === 'H' || card.suit === 'D' ? styles.red : styles.black;
   return (
     <div className={`${styles.card} ${tone}`}>
-      <span className={styles.corner} aria-hidden="true">
+      <span className={styles.rank} aria-hidden="true">
         {card.rank}
-        <span className={styles.cornerSuit}>{SUIT_GLYPH[card.suit]}</span>
       </span>
       <span className={styles.pip} aria-hidden="true">
         {SUIT_GLYPH[card.suit]}

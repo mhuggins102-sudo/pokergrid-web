@@ -1,4 +1,4 @@
-import { Dialog } from '../../../design/primitives';
+import { Sheet } from '../../../design/primitives';
 import { HAND_BASE_VALUE, INCOMPLETE_LINE_PENALTY } from '../../../game/scoring';
 import { HandRank } from '../../../game/hands';
 import { HAND_LABEL } from '../handLabels';
@@ -34,7 +34,7 @@ export function HandValuesDialog({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={open} onClose={onClose} title="Hand values">
+    <Sheet open={open} onClose={onClose} title="Hand values">
       <div>
         {ORDER.map(hand => (
           <div key={hand} style={rowStyle}>
@@ -47,6 +47,6 @@ export function HandValuesDialog({
           <strong>{INCOMPLETE_LINE_PENALTY}</strong>
         </div>
       </div>
-    </Dialog>
+    </Sheet>
   );
 }

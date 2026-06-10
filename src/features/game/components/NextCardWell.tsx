@@ -41,11 +41,10 @@ export function NextCardWell({ onPeekDeck }: NextCardWellProps) {
         </AnimatePresence>
       </div>
       <div className={styles.meta}>
-        <span className={styles.label}>Next</span>
         <span className={styles.deckCount}>{state.deck.length} left</span>
         {canPeek && (
           <button type="button" className={styles.peek} onClick={onPeekDeck}>
-            Peek deck
+            Peek
           </button>
         )}
       </div>

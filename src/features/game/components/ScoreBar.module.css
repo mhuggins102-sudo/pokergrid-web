@@ -17,15 +17,17 @@
   min-width: 0;
 }
 
+/* One baseline-aligned line: score, target, difficulty kicker. */
 .scoreRow {
   display: flex;
   align-items: baseline;
   gap: var(--space-sm);
+  white-space: nowrap;
 }
 
 .score {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 660;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -34,7 +36,6 @@
 .target {
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .kicker {
@@ -64,7 +65,7 @@
   }
 
   .score {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .kicker {
