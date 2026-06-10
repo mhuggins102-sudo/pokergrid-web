@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { canPreviewDeck } from '../../../game/state';
-import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { CardFace, cardAriaLabel, cardLayoutId } from './CardFace';
 import styles from './NextCardWell.module.css';
@@ -10,8 +9,10 @@ export interface NextCardWellProps {
 }
 
 /**
- * The drawn-card well. Shares motion layoutIds with the grid, so placing
- * a card visibly travels from here to its cell.
+ * The drawn-card well — a slim chip that lives in the controls row right
+ * under the board, so the card being decided on is never off-screen.
+ * Shares motion layoutIds with the grid: placing a card visibly travels
+ * from here to its cell.
  */
 export function NextCardWell({ onPeekDeck }: NextCardWellProps) {
   const { state } = useGameSession();
@@ -40,14 +41,12 @@ export function NextCardWell({ onPeekDeck }: NextCardWellProps) {
         </AnimatePresence>
       </div>
       <div className={styles.meta}>
-        <span className="text-label">Next card</span>
-        <span className={`text-value ${styles.deckCount}`}>
-          {state.deck.length} left
-        </span>
+        <span className={styles.label}>Next</span>
+        <span className={styles.deckCount}>{state.deck.length} left</span>
         {canPeek && (
-          <Button size="sm" variant="ghost" className={styles.peek} onClick={onPeekDeck}>
+          <button type="button" className={styles.peek} onClick={onPeekDeck}>
             Peek deck
-          </Button>
+          </button>
         )}
       </div>
     </div>

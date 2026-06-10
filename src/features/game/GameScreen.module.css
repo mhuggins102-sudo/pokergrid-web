@@ -1,73 +1,74 @@
-/* Mobile-first single column; DOM order is score, lines, board, well,
-   bonus — flex `order` puts the board right under the score on small
-   screens, and the desktop grid re-seats everything into three panels. */
+/* Mobile-first single column. The core loop — score, board, drawn card +
+   actions — is sized to fit one phone viewport; bonus cards scroll below
+   and the line breakdown lives behind the score bar's Lines button until
+   the desktop grid gives it a persistent panel. */
 .layout {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   max-width: 480px;
   margin: 0 auto;
 }
 
-.scoreSlot {
-  order: 0;
-}
-
 .boardArea {
-  order: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  width: min(100%, 440px);
+  gap: var(--space-sm);
+  /* Width follows the viewport, but never grows the board taller than
+     what's left after header + score + controls (~330px of chrome). */
+  width: min(100%, 440px, calc((100dvh - 330px) * 5 / 7));
+  min-width: 260px;
   margin: 0 auto;
 }
 
-.wellSlot {
-  order: 2;
-}
-
-.bonusSlot {
-  order: 3;
-}
-
-.linesSlot {
-  order: 4;
-}
-
 .banner {
-  min-height: 24px;
+  min-height: 20px;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--accent);
 }
 
-.actionBar {
+/* Drawn card + action buttons in one row, right under the board. */
+.controls {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   flex-wrap: wrap;
-  min-height: 44px;
+  min-height: 56px;
 }
 
-.wellSlot {
+.actionButtons {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.linesSlot {
+  display: none;
 }
 
 @media (min-width: 640px) {
   .layout {
     max-width: 560px;
+    gap: var(--space-lg);
   }
 
   .boardArea {
-    width: min(100%, 520px);
+    width: min(100%, 520px, calc((100dvh - 360px) * 5 / 7));
+    gap: var(--space-md);
+  }
+
+  .banner {
+    min-height: 24px;
+    font-size: 14px;
   }
 }
 
 /* Desktop: three-panel editorial spread. Left = score + live lines;
-   center = board + actions; right = next card + bonus cards. */
+   center = board + controls; right = bonus cards. */
 @media (min-width: 1024px) {
   .layout {
     display: grid;
@@ -84,6 +85,7 @@
   }
 
   .linesSlot {
+    display: block;
     grid-column: 1;
     grid-row: 2;
   }
@@ -91,16 +93,11 @@
   .boardArea {
     grid-column: 2;
     grid-row: 1 / span 2;
-    width: clamp(420px, 44vw, 560px);
-  }
-
-  .wellSlot {
-    grid-column: 3;
-    grid-row: 1;
+    width: clamp(420px, min(44vw, calc((100dvh - 280px) * 5 / 7)), 560px);
   }
 
   .bonusSlot {
     grid-column: 3;
-    grid-row: 2;
+    grid-row: 1 / span 2;
   }
 }

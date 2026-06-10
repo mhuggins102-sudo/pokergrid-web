@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import { scoreGrid } from '../../game/scoring';
-import { Button } from '../../design/primitives';
+import { Button, Sheet } from '../../design/primitives';
 import { useGameSession } from './GameSessionProvider';
 import { usePhaseUI } from './usePhaseUI';
 import { GridBoard } from './components/GridBoard';
@@ -28,6 +28,7 @@ export function GameScreen({ onReplay }: GameScreenProps) {
   const ui = usePhaseUI();
   const [peekOpen, setPeekOpen] = useState(false);
   const [handsOpen, setHandsOpen] = useState(false);
+  const [linesOpen, setLinesOpen] = useState(false);
 
   const liveReport = useMemo(
     () =>
@@ -49,7 +50,10 @@ export function GameScreen({ onReplay }: GameScreenProps) {
       <LayoutGroup>
         <div className={styles.layout}>
           <div className={styles.scoreSlot}>
-            <ScoreBar onShowHandValues={() => setHandsOpen(true)} />
+            <ScoreBar
+              onShowHandValues={() => setHandsOpen(true)}
+              onShowLines={() => setLinesOpen(true)}
+            />
           </div>
 
           <div className={styles.linesSlot}>
@@ -66,22 +70,21 @@ export function GameScreen({ onReplay }: GameScreenProps) {
               isTappable={ui.isTappable}
               onCellTap={ui.onCellTap}
             />
-            <div className={styles.actionBar}>
-              {ui.actions.map(a => (
-                <Button
-                  key={a.id}
-                  variant={a.variant}
-                  disabled={a.disabled}
-                  onClick={a.onPress}
-                >
-                  {a.label}
-                </Button>
-              ))}
+            <div className={styles.controls}>
+              <NextCardWell onPeekDeck={() => setPeekOpen(true)} />
+              <div className={styles.actionButtons}>
+                {ui.actions.map(a => (
+                  <Button
+                    key={a.id}
+                    variant={a.variant}
+                    disabled={a.disabled}
+                    onClick={a.onPress}
+                  >
+                    {a.label}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
-
-          <div className={styles.wellSlot}>
-            <NextCardWell onPeekDeck={() => setPeekOpen(true)} />
           </div>
 
           {!state.noBonusCards && (
@@ -95,6 +98,9 @@ export function GameScreen({ onReplay }: GameScreenProps) {
         </div>
       </LayoutGroup>
 
+      <Sheet open={linesOpen} onClose={() => setLinesOpen(false)} title="Lines">
+        <LinesPanel report={liveReport} />
+      </Sheet>
       <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
       <HandValuesDialog open={handsOpen} onClose={() => setHandsOpen(false)} />
       {ui.bonusDialog && <BonusResolveDialog ui={ui.bonusDialog} />}

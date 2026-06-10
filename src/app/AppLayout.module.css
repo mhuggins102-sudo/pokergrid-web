@@ -12,26 +12,38 @@
 .headerInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-sm) var(--space-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
-  flex-wrap: wrap;
+  /* Single row always — the nav scrolls sideways instead of wrapping,
+     so the header never steals a second line from the play area. */
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .wordmark {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 680;
   letter-spacing: -0.01em;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .nav {
   display: flex;
   gap: var(--space-xs);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-width: 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
 }
 
 .navLink {
@@ -45,6 +57,8 @@
   color: var(--ink-2);
   text-decoration: none;
   transition: background-color 120ms ease, color 120ms ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .navLink:hover {
@@ -63,5 +77,11 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-xl) var(--space-lg) var(--space-xxxl);
+  padding: var(--space-md) var(--space-lg) var(--space-xxxl);
+}
+
+@media (min-width: 640px) {
+  .main {
+    padding-top: var(--space-xl);
+  }
 }

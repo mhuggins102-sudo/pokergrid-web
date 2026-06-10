@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-lg);
-  padding: var(--space-md) var(--space-lg);
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
   background: var(--paper-raised);
   border: 1px solid var(--rule);
@@ -13,7 +13,7 @@
 .scoreBlock {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   min-width: 0;
 }
 
@@ -25,21 +25,22 @@
 
 .score {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 660;
-  line-height: 1;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
 .target {
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .kicker {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--ink-2);
 }
@@ -53,6 +54,32 @@
 
 .controls {
   display: flex;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .bar {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .score {
+    font-size: 32px;
+  }
+
+  .kicker {
+    font-size: 11px;
+  }
+
+  .controls {
+    gap: var(--space-sm);
+  }
+}
+
+/* The lines sheet trigger only exists where the persistent panel is
+   hidden (below the desktop three-panel breakpoint). */
+@media (min-width: 1024px) {
+  .linesBtn {
+    display: none;
+  }
 }

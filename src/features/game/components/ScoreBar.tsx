@@ -7,6 +7,9 @@ import styles from './ScoreBar.module.css';
 
 export interface ScoreBarProps {
   onShowHandValues: () => void;
+  /** Opens the line-breakdown sheet (mobile/tablet only — the desktop
+   *  layout shows the panel persistently instead). */
+  onShowLines: () => void;
 }
 
 /**
@@ -14,7 +17,7 @@ export interface ScoreBarProps {
  * penalty (it only applies at game end); once the deck runs low a warning
  * spells out what the open lines would cost.
  */
-export function ScoreBar({ onShowHandValues }: ScoreBarProps) {
+export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
   const { state, dispatch, canUndo, maxUndos } = useGameSession();
 
   const report = useMemo(
@@ -53,6 +56,14 @@ export function ScoreBar({ onShowHandValues }: ScoreBarProps) {
         )}
       </div>
       <div className={styles.controls}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={styles.linesBtn}
+          onClick={onShowLines}
+        >
+          Lines
+        </Button>
         {maxUndos > 0 && (
           <Button
             size="sm"
