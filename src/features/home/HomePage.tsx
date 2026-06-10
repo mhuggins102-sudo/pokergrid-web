@@ -28,7 +28,7 @@ export function HomePage() {
   return (
     <section className={styles.wrap}>
       <header className={styles.hero}>
-        <h1 className="text-hero">PokerGrid</h1>
+        <h1 className={`text-hero ${styles.heroTitle}`}>PokerGrid</h1>
         <p className={`text-body ${styles.tagline}`}>
           Place 25 cards. Build ten poker hands at once. Beat the target.
         </p>

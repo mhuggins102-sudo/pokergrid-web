@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-md);
   background: var(--paper-raised);
   border: 1px solid var(--rule);
@@ -27,7 +27,7 @@
 
 .score {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 660;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;

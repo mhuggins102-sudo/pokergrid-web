@@ -7,7 +7,7 @@
 
 .cardSlot {
   position: relative;
-  width: 56px;
+  width: 48px;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   background: var(--paper-sunken);

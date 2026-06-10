@@ -12,7 +12,7 @@
 .headerInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-xs) var(--space-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -77,7 +77,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
   /* Column flex so a page (the game screen) can stretch to the bottom
      edge and pin its control dock there. */
   display: flex;

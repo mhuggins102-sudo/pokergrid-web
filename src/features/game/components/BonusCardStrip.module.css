@@ -84,7 +84,7 @@
 .row .chip {
   flex: 1;
   min-width: 0;
-  padding: 6px var(--space-sm);
+  padding: 4px var(--space-sm);
   gap: 0;
 }
 
@@ -107,7 +107,7 @@
 .emptySlot {
   flex: 1;
   min-width: 0;
-  min-height: 42px;
+  min-height: 36px;
   border: 1px dashed var(--rule);
   border-radius: var(--radius-sm);
   display: flex;

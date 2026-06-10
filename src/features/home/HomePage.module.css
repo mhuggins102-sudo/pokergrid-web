@@ -1,14 +1,18 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xxl);
+  gap: var(--space-xl);
 }
 
 .hero {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  padding-top: var(--space-xl);
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+}
+
+.heroTitle {
+  font-size: clamp(32px, 9vw, 44px);
 }
 
 .tagline {
@@ -16,17 +20,19 @@
   max-width: 46ch;
 }
 
+/* Two-up tiles on phones so all four modes fit one screen with the
+   hero; wider screens flow naturally. */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--space-lg);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
 }
 
 .tile {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-xl);
+  gap: var(--space-xs);
+  padding: var(--space-lg);
   border-radius: var(--radius-lg);
   background: var(--paper-raised);
   border: 1px solid var(--rule);
@@ -49,10 +55,35 @@
 
 .tileTitle {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 620;
 }
 
 .tileBlurb {
   color: var(--ink-2);
+}
+
+@media (min-width: 640px) {
+  .wrap {
+    gap: var(--space-xxl);
+  }
+
+  .hero {
+    gap: var(--space-md);
+    padding-top: var(--space-xl);
+  }
+
+  .tiles {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-lg);
+  }
+
+  .tile {
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+  }
+
+  .tileTitle {
+    font-size: 20px;
+  }
 }
