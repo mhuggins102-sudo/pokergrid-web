@@ -8,7 +8,7 @@
 }
 
 .dialog::backdrop {
-  background: rgba(26, 26, 26, 0.4);
+  background: var(--scrim);
 }
 
 .header {

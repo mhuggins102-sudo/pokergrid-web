@@ -44,6 +44,9 @@ test('hop targeting: tap two cards in a row to swap', async ({ page }) => {
   // Seed chosen so the run draws a heart while the board has 2+ cards
   // (any seed works eventually; we walk until the Swap button enables).
   await page.goto('/play?difficulty=easy&seed=7');
+  // Routes are code-split — wait for the play chunk to hydrate before
+  // the non-waiting count() probes below.
+  await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
   const place = page.getByRole('button', { name: 'Place', exact: true });
   const swap = page.getByRole('button', { name: '♥ Swap' });
 

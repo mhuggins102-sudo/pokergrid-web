@@ -16,6 +16,7 @@ export const colors = {
   ink2: '#5f5a51',
   ink3: '#938c7d',
   hairline: 'rgba(26, 26, 26, 0.14)',
+  scrim: 'rgba(26, 26, 26, 0.4)',
   rule: '#d9d1c0',
 
   // Card faces

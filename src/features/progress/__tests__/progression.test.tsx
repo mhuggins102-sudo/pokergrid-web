@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
+import { ToastProvider } from '../../../design/primitives';
 import { EMPTY_STATS } from '../../../lib/stats';
 import { useStatsStore } from '../statsStore';
 import { useTargetsStore } from '../../targets/targetsStore';
@@ -10,7 +11,7 @@ import { TargetsPlayPage } from '../../targets/TargetsPlayPage';
 
 const renderAt = (path: string) =>
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <ToastProvider><MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/play" element={<PlayPage />} />
         <Route path="/challenges" element={<ChallengesPage />} />
@@ -19,7 +20,7 @@ const renderAt = (path: string) =>
         <Route path="/targets" element={<div>targets home</div>} />
         <Route path="/" element={<div>home</div>} />
       </Routes>
-    </MemoryRouter>
+    </MemoryRouter></ToastProvider>
   );
 
 const placeToEnd = () => {

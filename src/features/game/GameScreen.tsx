@@ -4,6 +4,8 @@ import { scoreGrid } from '../../game/scoring';
 import { Button, Sheet } from '../../design/primitives';
 import { useGameSession } from './GameSessionProvider';
 import { usePhaseUI } from './usePhaseUI';
+import { useGameSfx } from './useGameSfx';
+import { useSettingsStore } from '../settings/settingsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { GridBoard } from './components/GridBoard';
 import { NextCardWell } from './components/NextCardWell';
@@ -49,6 +51,9 @@ export function GameScreen({ onReplay }: GameScreenProps) {
     [state]
   );
 
+  useGameSfx(state, liveReport.total);
+  const reduceMotion = useSettingsStore(s => s.reduceMotion);
+
   if (ui.isGameOver) {
     return <ResultView onReplay={onReplay} />;
   }
@@ -62,7 +67,7 @@ export function GameScreen({ onReplay }: GameScreenProps) {
   const rowActions = ui.actions.filter(a => a !== commitAction);
 
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <LayoutGroup>
         <div className={styles.layout}>
           <div className={styles.scoreSlot}>

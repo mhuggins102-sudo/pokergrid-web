@@ -11,6 +11,7 @@ import { LineDetailSheet } from '../game/components/LineDetailSheet';
 import { BonusCardStrip } from '../game/components/BonusCardStrip';
 import { bonusCardLiveContext } from '../game/bonusCardLiveContext';
 import { RankPanel } from './RankPanel';
+import { ShareButton } from '../game/components/ShareButton';
 import { DailyPlay } from './sync/playsStore';
 // Shares the result screen's layout/styles so a revisited daily looks
 // exactly like the moment it was finished.
@@ -149,6 +150,12 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
           <Link to="/daily" className={styles.dockLink}>
             Today&apos;s daily
           </Link>
+          <ShareButton
+            score={play.score}
+            mode="daily"
+            difficulty={play.recipe.difficulty}
+            grid={state.grid}
+          />
           <Link to="/" className={styles.dockLink}>
             Home
           </Link>

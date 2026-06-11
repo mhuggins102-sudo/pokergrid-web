@@ -13,6 +13,7 @@ import { LineDetailSheet } from './LineDetailSheet';
 import { BonusCardStrip } from './BonusCardStrip';
 import { bonusCardLiveContext } from '../bonusCardLiveContext';
 import { RewardsResult, RewardsSheet } from './RewardsSheet';
+import { ShareButton } from './ShareButton';
 import styles from './ResultView.module.css';
 
 export interface ResultViewProps {
@@ -289,6 +290,18 @@ export function ResultView({ onReplay }: ResultViewProps) {
       <div className={styles.dock}>
         <div className={styles.dockRow}>
           {secondary}
+          <ShareButton
+            score={report.total}
+            mode={
+              mode.kind === 'targets'
+                ? 'targets-up'
+                : mode.kind === 'challenge'
+                  ? 'challenge'
+                  : mode.kind
+            }
+            difficulty={state.difficulty}
+            grid={state.grid}
+          />
           <Link to="/" className={styles.dockLink}>
             Home
           </Link>

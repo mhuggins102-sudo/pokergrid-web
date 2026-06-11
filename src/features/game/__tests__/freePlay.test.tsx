@@ -1,14 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
+import { ToastProvider } from '../../../design/primitives';
 import { PlayPage } from '../PlayPage';
 
 const renderPlay = (search: string) =>
   render(
-    <MemoryRouter initialEntries={[`/play${search}`]}>
+    <ToastProvider><MemoryRouter initialEntries={[`/play${search}`]}>
       <Routes>
         <Route path="/play" element={<PlayPage />} />
       </Routes>
-    </MemoryRouter>
+    </MemoryRouter></ToastProvider>
   );
 
 describe('free play', () => {
@@ -80,13 +81,14 @@ describe('free play', () => {
         const isBonus = /Bonus/.test(perk.textContent ?? '');
         fireEvent.click(perk);
         if (isBonus) {
-          // ♣ opens the draw dialog instead of a board phase.
-          expect(screen.getByText('♣ Bonus draw')).toBeInTheDocument();
-          const decline = screen.queryByRole('button', { name: 'Decline' });
+          // ♣ takes over the dock with full card descriptions.
+          expect(screen.getByText(/♣ Bonus draw/)).toBeInTheDocument();
+          const decline = screen.queryByRole('button', { name: 'Decline both' });
           expect(decline).not.toBeNull(); // easy allows declining
           fireEvent.click(decline!);
         } else {
-          expect(screen.getByRole('status')).toHaveTextContent(/tap/i);
+          // Targeting instruction shows in the dock banner.
+          expect(screen.getByText(/— tap/i)).toBeInTheDocument();
           fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
           expect(screen.getByRole('button', { name: 'Place' })).toBeInTheDocument();
         }

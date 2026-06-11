@@ -50,7 +50,7 @@ The full assessment and phased plan live in the original repo at
   Drain triggers: app start, browser `online`, manual retry — with a
   re-entrance guard and rerun coalescing
 - `/daily` (today), `/daily/:date` (stored result or playable past
-  puzzle), `/daily/archive` (last 14 days). Deals, twists, and
+  puzzle), `/daily/archive` (every daily since launch). Deals, twists, and
   Three Tricks trios are seeded from the date — identical worldwide
   and identical to the original site
 - RankPanel (rank/percentile + retryable submitting state), day
@@ -75,7 +75,19 @@ The full assessment and phased plan live in the original repo at
   attribution), challenge completion, Targets-Up high-water mark, and
   achievement evaluation
 
-Next: Phase 3 (daily + leaderboard) → Phase 5 (polish + launch).
+**Phase 5 — polish** ✓ *(custom domain remains a dashboard step)*
+
+- Installable PWA: manifest + generated icon set, offline shell via
+  vite-plugin-pwa (autoUpdate), Supabase traffic NetworkOnly, /share
+  excluded from the SPA fallback
+- Share: result docks gain a Share action (Web Share API → clipboard
+  fallback); the ported /share Pages Function unfurls links with a
+  Morning-Paper 1200×630 OG card rendered by workers-og
+- Sound: a tiny WebAudio synth (place tick, ♣ chime, win/lose) wired
+  to the sounds setting — no audio assets
+- The reduce-motion setting now forces motion's reduced mode
+- Route-level code splitting; dark-mode token audit (components are
+  fully variable-driven — a [data-theme] palette drop-in away)
 
 ## Develop
 
