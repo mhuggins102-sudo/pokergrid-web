@@ -93,6 +93,17 @@ export function SettingsPage() {
         </div>
       </div>
 
+      <p
+        style={{
+          fontSize: 12,
+          color: 'var(--ink-3)',
+          textAlign: 'center',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        Build {__BUILD_ID__}
+      </p>
+
       <Dialog
         open={confirmReset}
         onClose={() => setConfirmReset(false)}

@@ -42,7 +42,7 @@ export function NextCardWell({ onPeekDeck, instantLayout = false }: NextCardWell
           {drawn && (
             <motion.div
               key={cardLayoutId(drawn)}
-              layoutId={cardLayoutId(drawn)}
+              layoutId={instantLayout ? undefined : cardLayoutId(drawn)}
               className={styles.cardWrap}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}

@@ -95,6 +95,10 @@ export function GameScreen({ onReplay }: GameScreenProps) {
 
           <div className={styles.boardArea}>
             <GridBoard
+              // Remount on the ♣ toggle: a fresh mount renders seated
+              // cards exactly where CSS puts them — no animation state
+              // can carry stale geometry across the resize.
+              key={bonusOpen ? 'board-compact' : 'board-full'}
               grid={state.grid}
               roleOf={ui.roleOf}
               isTappable={ui.isTappable}

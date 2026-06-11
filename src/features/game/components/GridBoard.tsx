@@ -37,7 +37,10 @@ const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
 
 /**
  * The 5×5 board. Cards carry motion layoutIds so placement and moves
- * animate as FLIP travel; destroys exit via AnimatePresence.
+ * animate as FLIP travel; destroys exit via AnimatePresence. With
+ * instantLayout, cards drop out of the projection system entirely
+ * (no layoutId) — pure CSS positioning, immune to stale-measurement
+ * bugs while the container resizes.
  */
 export function GridBoard({
   grid,
@@ -69,11 +72,11 @@ export function GridBoard({
             aria-label={cellLabel(idx, card, role)}
             onClick={tappable ? () => onCellTap?.(idx) : undefined}
           >
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {card && (
                 <motion.div
                   key={cardLayoutId(card) ?? `joker-${idx}`}
-                  layoutId={cardLayoutId(card)}
+                  layoutId={instantLayout ? undefined : cardLayoutId(card)}
                   className={styles.cardWrap}
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}

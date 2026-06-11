@@ -1,10 +1,23 @@
 /// <reference types="vitest/config" />
+import { execSync } from 'node:child_process';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const buildId = (() => {
+  try {
+    const sha = execSync('git rev-parse --short HEAD').toString().trim();
+    return `${sha} · ${new Date().toISOString().slice(0, 10)}`;
+  } catch {
+    return 'dev';
+  }
+})();
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+  },
   plugins: [
     react(),
     VitePWA({
