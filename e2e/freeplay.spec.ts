@@ -7,6 +7,19 @@ test('token gallery renders the design system', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Open dialog' })).toBeVisible();
 });
 
+test('achievements are reachable from the home tile', async ({ page }) => {
+  await page.goto('/');
+  await page
+    .locator('main')
+    .getByRole('link', { name: /Achievements/ })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Achievements' })
+  ).toBeVisible();
+  await expect(page.getByText(/0 of \d+ earned/)).toBeVisible();
+  await expect(page.getByText('Milestones')).toBeVisible();
+});
+
 test('difficulty picker links into a game', async ({ page }) => {
   await page.goto('/play');
   await expect(page.getByRole('heading', { name: 'Free Play' })).toBeVisible();
