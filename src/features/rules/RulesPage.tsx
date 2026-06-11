@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { TARGET_BY_DIFFICULTY } from '../../game/rules';
 import { HAND_BASE_VALUE, INCOMPLETE_LINE_PENALTY } from '../../game/scoring';
 import { HAND_LABEL } from '../game/handLabels';
@@ -37,6 +38,21 @@ export function RulesPage() {
           center), <strong>discard</strong> it, or spend it on its{' '}
           <strong>suit perk</strong>. The game ends when the board fills or
           the deck runs out.
+        </p>
+        <p className={`${styles.body} ${styles.muted}`}>
+          On Easy and Medium you can tap the deck to peek at every card
+          still in it. Extreme disables the Discard button entirely —
+          every draw must be placed or spent.
+        </p>
+      </div>
+
+      <div className={styles.section}>
+        <h2 className="text-section">Undo</h2>
+        <p className={styles.body}>
+          Easy and Medium allow <strong>one undo</strong> per game; Hard and
+          Extreme allow none, and Challenges never do. The Daily grants one
+          free undo regardless of its difficulty — using it does not affect
+          your score or rank.
         </p>
       </div>
 
@@ -80,8 +96,19 @@ export function RulesPage() {
         <p className={styles.body}>
           Bonus cards multiply your score — per hand type, per line, per
           suit, or for whole-board feats at game end. Multipliers on the
-          same line stack multiplicatively. Gold cards pay during the run;
-          purple cards pay at game end.
+          same line stack multiplicatively. Chip color tells you when a
+          card pays: <strong>gold</strong> during the run,{' '}
+          <strong>purple</strong> at game end, <strong>green</strong> for
+          the one-time action cards in the twisted modes.
+        </p>
+        <p className={styles.body}>
+          You hold up to <strong>three</strong>. A ♣ draw shows two cards;
+          at the cap, keeping one means swapping a held card out — only
+          Easy lets you decline at the cap. Tap any held chip to read its
+          card and the live numbers behind its condition.
+        </p>
+        <p className={styles.body}>
+          <Link to="/rules/cards">Browse the full bonus card reference →</Link>
         </p>
       </div>
 
@@ -90,7 +117,8 @@ export function RulesPage() {
         <p className={styles.body}>
           Jokers place themselves the moment they're drawn and count as the
           best possible card for each of their lines — independently in the
-          row and the column. Easy decks carry two, Hard one, Extreme none.
+          row and the column. Easy decks carry two jokers, Medium and Hard
+          one, Extreme none.
         </p>
       </div>
 
@@ -128,6 +156,13 @@ export function RulesPage() {
         <p className={styles.body}>
           <strong>Challenges</strong> — seven twisted rule sets on the Hard
           ruleset, from random perks to a board pre-scattered with 15 cards.
+          Beat one to unlock the next.
+        </p>
+        <p className={styles.body}>
+          <strong>Daily</strong> — one puzzle per UTC day, the same deal for
+          every player worldwide, with a shared leaderboard. Some days roll
+          a twist from the challenge list (the target adjusts to match).
+          One play per day; missed days stay playable from the archive.
         </p>
       </div>
     </section>

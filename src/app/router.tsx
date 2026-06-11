@@ -55,6 +55,11 @@ const TargetsPlayPage = lazy(() =>
 const RulesPage = lazy(() =>
   import('../features/rules/RulesPage').then(m => ({ default: m.RulesPage }))
 );
+const BonusCardReferencePage = lazy(() =>
+  import('../features/rules/BonusCardReferencePage').then(m => ({
+    default: m.BonusCardReferencePage,
+  }))
+);
 const SettingsPage = lazy(() =>
   import('../features/settings/SettingsPage').then(m => ({
     default: m.SettingsPage,
@@ -87,6 +92,7 @@ export const router = createBrowserRouter([
       { path: 'targets', element: page(<TargetsPage />) },
       { path: 'targets/play', element: page(<TargetsPlayPage />) },
       { path: 'rules', element: page(<RulesPage />) },
+      { path: 'rules/cards', element: page(<BonusCardReferencePage />) },
       { path: 'settings', element: page(<SettingsPage />) },
       { path: 'design', element: page(<TokenGalleryPage />) },
       { path: '*', element: <NotFoundPage /> },
