@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import { scoreGrid } from '../../game/scoring';
 import { Button, Sheet } from '../../design/primitives';
@@ -54,6 +54,16 @@ export function GameScreen({ onReplay }: GameScreenProps) {
   useGameSfx(state, liveReport.total);
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
 
+  // Layout corrections snap (no glide) on the renders where the ♣
+  // panel opens or closes — the board and dock resize in those
+  // commits, and cards must move with their containers. (Hook order:
+  // this must run before the game-over early return.)
+  const bonusOpen = !!ui.bonusDialog;
+  const prevBonusOpen = useRef(bonusOpen);
+  const bonusToggled = prevBonusOpen.current !== bonusOpen;
+  prevBonusOpen.current = bonusOpen;
+  const instantLayout = bonusOpen || bonusToggled;
+
   if (ui.isGameOver) {
     return <ResultView onReplay={onReplay} />;
   }
@@ -89,6 +99,7 @@ export function GameScreen({ onReplay }: GameScreenProps) {
               roleOf={ui.roleOf}
               isTappable={ui.isTappable}
               onCellTap={ui.onCellTap}
+              instantLayout={instantLayout}
             />
           </div>
 
@@ -117,7 +128,7 @@ export function GameScreen({ onReplay }: GameScreenProps) {
                 mid-phase strands the grid's shared card layoutIds (cards
                 blink invisible), and the spent club is useful context. */}
             <div className={styles.dockRow}>
-              <NextCardWell onPeekDeck={() => setPeekOpen(true)} />
+              <NextCardWell onPeekDeck={() => setPeekOpen(true)} instantLayout={instantLayout} />
               <span className={styles.dockText} role="status" aria-live="polite">
                 {ui.banner}
               </span>

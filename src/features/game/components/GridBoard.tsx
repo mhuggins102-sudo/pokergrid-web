@@ -10,6 +10,13 @@ export interface GridBoardProps {
   roleOf?: (idx: number) => CellRole;
   isTappable?: (idx: number) => boolean;
   onCellTap?: (idx: number) => void;
+  /**
+   * Snap layout corrections instead of animating them. Used while the
+   * board container is being resized (the ♣-draw shrink): cards must
+   * move WITH their cells, not glide across the screen from their old
+   * positions.
+   */
+  instantLayout?: boolean;
 }
 
 const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
@@ -37,6 +44,7 @@ export function GridBoard({
   roleOf,
   isTappable,
   onCellTap,
+  instantLayout = false,
 }: GridBoardProps) {
   return (
     <div className={styles.board} role="grid" aria-label="Game board">
@@ -70,7 +78,11 @@ export function GridBoard({
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.6 }}
-                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  transition={
+                    instantLayout
+                      ? { duration: 0 }
+                      : { type: 'spring', stiffness: 420, damping: 32 }
+                  }
                 >
                   <CardFace card={card} />
                 </motion.div>

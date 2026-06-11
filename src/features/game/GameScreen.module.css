@@ -20,7 +20,12 @@
      status strip, bonus row, dock, and gaps. */
   width: min(100%, 440px, calc(100svh - 285px));
   margin: auto auto 0;
-  transition: width 220ms ease;
+  /* NO width transition here: motion measures card layouts in the
+     same commit that adds/removes .bonusOpen, and a CSS transition
+     makes it measure mid-flight geometry — cards end up pinned to
+     stale positions until the next re-measure (the "board shifted
+     right until I tabbed away" bug). The width snaps; the cards'
+     own layout animations carry the visual transition. */
 }
 
 /* ♣ draw open: the dock panel needs ~210px more than the normal dock,

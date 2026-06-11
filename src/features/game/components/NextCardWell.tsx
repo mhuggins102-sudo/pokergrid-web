@@ -6,6 +6,9 @@ import styles from './NextCardWell.module.css';
 
 export interface NextCardWellProps {
   onPeekDeck: () => void;
+  /** Snap (don't animate) layout shifts — used while the dock is
+   *  being resized by the ♣ panel. */
+  instantLayout?: boolean;
 }
 
 /**
@@ -14,7 +17,7 @@ export interface NextCardWellProps {
  * Shares motion layoutIds with the grid: placing a card visibly travels
  * from here to its cell.
  */
-export function NextCardWell({ onPeekDeck }: NextCardWellProps) {
+export function NextCardWell({ onPeekDeck, instantLayout = false }: NextCardWellProps) {
   const { state } = useGameSession();
   const drawn = state.drawn;
   const canPeek = canPreviewDeck(state.difficulty);
@@ -43,7 +46,11 @@ export function NextCardWell({ onPeekDeck }: NextCardWellProps) {
               className={styles.cardWrap}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+              transition={
+                instantLayout
+                  ? { duration: 0 }
+                  : { type: 'spring', stiffness: 420, damping: 32 }
+              }
             >
               <CardFace card={drawn} />
             </motion.div>
