@@ -1,0 +1,149 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sm);
+}
+
+.headerRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.rank {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 660;
+  font-variant-numeric: tabular-nums;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* ---- stats sheet ---- */
+.statsBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.statChips {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.statChip {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--paper-sunken);
+  font-variant-numeric: tabular-nums;
+}
+
+.statValue {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.statLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+.topRow {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: var(--space-sm);
+  align-items: baseline;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.topRow:last-child {
+  border-bottom: none;
+}
+
+.own {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.histo {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 72px;
+}
+
+.histoBar {
+  flex: 1;
+  background: var(--accent);
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  min-height: 2px;
+  opacity: 0.75;
+}
+
+.histoLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- handle editor ---- */
+.handleRow {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.handleInput {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  font-size: 14px;
+}
+
+.handleInput:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.handleNote {
+  font-size: 12px;
+  color: var(--ink-3);
+}

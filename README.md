@@ -40,7 +40,23 @@ The full assessment and phased plan live in the original repo at
 - Playwright E2E: deterministic seeded game to completion at 390px and
   1280px (`npx playwright test`)
 
-**Phase 4 — progression** ✓ *(Phase 3, daily + leaderboard, deferred by request)*
+**Phase 3 — daily + leaderboard** ✓
+
+- Same Supabase project/RPCs as the original site — one shared
+  leaderboard across both domains; anonymous device-id identity
+- Queue-first sync (`features/daily/sync/`): a finished daily writes
+  the local play and the durable retry queue BEFORE any network
+  attempt; entries leave the queue only on server confirmation.
+  Drain triggers: app start, browser `online`, manual retry — with a
+  re-entrance guard and rerun coalescing
+- `/daily` (today), `/daily/:date` (stored result or playable past
+  puzzle), `/daily/archive` (last 14 days). Deals, twists, and
+  Three Tricks trios are seeded from the date — identical worldwide
+  and identical to the original site
+- RankPanel (rank/percentile + retryable submitting state), day
+  stats sheet (median, win rate, histogram, top 10), handle editor
+
+**Phase 4 — progression** ✓
 
 - zustand-persisted stores using the original app's storage keys and
   save formats (stats with legacy migrations, Targets-Up resume save,

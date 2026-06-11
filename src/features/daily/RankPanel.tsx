@@ -1,0 +1,244 @@
+import { useState } from 'react';
+import { Button, Sheet, useToast } from '../../design/primitives';
+import {
+  HandleInvalidError,
+  HandleTakenError,
+  isBackendConfigured,
+  setHandleRemote,
+} from '../../lib/supabaseRpc';
+import { getOrCreateDeviceId } from './sync/deviceId';
+import { useQueueStore } from './sync/queue';
+import { drainQueue } from './sync/sync';
+import {
+  useDailyHistogram,
+  useDailyRank,
+  useDailyStats,
+} from './sync/useDailyRank';
+import styles from './RankPanel.module.css';
+
+/**
+ * Leaderboard standing for one date: rank + percentile, with the
+ * day's stats (median, win rate, top 10, score histogram) and the
+ * handle editor behind a sheet. Queue-aware: while this device's play
+ * is still pending it shows a retryable "submitting" state instead of
+ * hanging.
+ */
+export function RankPanel({ dateISO }: { dateISO: string }) {
+  const rank = useDailyRank(dateISO);
+  const pending = useQueueStore(s =>
+    s.pending.some(p => p.dateISO === dateISO)
+  );
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  if (!isBackendConfigured()) return null;
+
+  const retry = async () => {
+    setRetrying(true);
+    try {
+      await drainQueue();
+      await rank.refetch();
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  return (
+    <section className={styles.panel} aria-label="Leaderboard">
+      <div className={styles.headerRow}>
+        <h2 className="text-section">Leaderboard</h2>
+        <Button size="sm" variant="ghost" onClick={() => setStatsOpen(true)}>
+          Day stats
+        </Button>
+      </div>
+
+      {rank.data ? (
+        <>
+          <span className={styles.rank}>
+            #{rank.data.rank}{' '}
+            <span className={styles.sub}>of {rank.data.total}</span>
+          </span>
+          <span className={styles.sub}>
+            top {rank.data.topPercent}% worldwide
+          </span>
+        </>
+      ) : pending ? (
+        <>
+          <span className={styles.status} role="status">
+            Score saved — submitting to the leaderboard…
+          </span>
+          <div className={styles.actions}>
+            <Button size="sm" variant="secondary" disabled={retrying} onClick={retry}>
+              {retrying ? 'Retrying…' : 'Retry now'}
+            </Button>
+          </div>
+        </>
+      ) : rank.isError ? (
+        <>
+          <span className={`${styles.status} ${styles.error}`} role="status">
+            Couldn&apos;t reach the leaderboard.
+          </span>
+          <div className={styles.actions}>
+            <Button size="sm" variant="secondary" disabled={retrying} onClick={retry}>
+              Retry
+            </Button>
+          </div>
+        </>
+      ) : rank.isLoading ? (
+        <span className={styles.status}>Fetching leaderboard…</span>
+      ) : (
+        <span className={styles.status}>Rank pending…</span>
+      )}
+
+      <DayStatsSheet
+        dateISO={dateISO}
+        open={statsOpen}
+        onClose={() => setStatsOpen(false)}
+      />
+    </section>
+  );
+}
+
+function DayStatsSheet({
+  dateISO,
+  open,
+  onClose,
+}: {
+  dateISO: string;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const stats = useDailyStats(dateISO, open);
+  const histo = useDailyHistogram(dateISO, open);
+  const maxCount = Math.max(1, ...(histo.data?.bins.map(b => b.count) ?? []));
+
+  return (
+    <Sheet open={open} onClose={onClose} title={`Daily — ${dateISO}`}>
+      <div className={styles.statsBody}>
+        <div className={styles.statChips}>
+          <div className={styles.statChip}>
+            <span className={styles.statValue}>{stats.data?.total ?? '—'}</span>
+            <span className={styles.statLabel}>Players</span>
+          </div>
+          <div className={styles.statChip}>
+            <span className={styles.statValue}>{stats.data?.median ?? '—'}</span>
+            <span className={styles.statLabel}>Median</span>
+          </div>
+          <div className={styles.statChip}>
+            <span className={styles.statValue}>
+              {stats.data?.winRatePct != null ? `${stats.data.winRatePct}%` : '—'}
+            </span>
+            <span className={styles.statLabel}>Beat target</span>
+          </div>
+        </div>
+
+        {histo.data && histo.data.bins.length > 0 && (
+          <div>
+            <h3 className="text-section">Score distribution</h3>
+            <div className={styles.histo}>
+              {histo.data.bins.map((b, i) => (
+                <div
+                  key={i}
+                  className={styles.histoBar}
+                  style={{ height: `${(b.count / maxCount) * 100}%` }}
+                  title={`${b.lo}–${b.hi}: ${b.count}`}
+                />
+              ))}
+            </div>
+            <div className={styles.histoLabels}>
+              <span>{histo.data.min}</span>
+              <span>median {histo.data.median ?? '—'}</span>
+              <span>{histo.data.max}</span>
+            </div>
+          </div>
+        )}
+
+        {stats.data && stats.data.topScores.length > 0 && (
+          <div>
+            <h3 className="text-section">Top scores</h3>
+            {stats.data.topScores.map(t => (
+              <div
+                key={`${t.rank}-${t.displayName}`}
+                className={`${styles.topRow} ${t.isOwn ? styles.own : ''}`}
+              >
+                <span>#{t.rank}</span>
+                <span>{t.displayName}</span>
+                <span>{t.score}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(stats.isLoading || histo.isLoading) && (
+          <span className={styles.status}>Loading day stats…</span>
+        )}
+        {stats.isError && (
+          <span className={`${styles.status} ${styles.error}`}>
+            Couldn&apos;t load day stats.
+          </span>
+        )}
+
+        <HandleEditor />
+      </div>
+    </Sheet>
+  );
+}
+
+const KEY_HANDLE = 'pokergrid:daily:handle';
+
+function HandleEditor() {
+  const { toast } = useToast();
+  const [handle, setHandle] = useState(
+    () => localStorage.getItem(KEY_HANDLE) ?? ''
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const trimmed = handle.trim();
+      await setHandleRemote(getOrCreateDeviceId(), trimmed || null);
+      if (trimmed) localStorage.setItem(KEY_HANDLE, trimmed);
+      else localStorage.removeItem(KEY_HANDLE);
+      toast('Leaderboard name saved.', 'success');
+    } catch (e) {
+      if (e instanceof HandleTakenError) {
+        setError('That name is taken — try another.');
+      } else if (e instanceof HandleInvalidError) {
+        setError(e.message);
+      } else {
+        setError('Could not save the name. Try again.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <h3 className="text-section">Leaderboard name</h3>
+      <div className={styles.handleRow}>
+        <input
+          className={styles.handleInput}
+          value={handle}
+          maxLength={20}
+          placeholder="Anonymous"
+          aria-label="Leaderboard name"
+          onChange={e => setHandle(e.target.value)}
+        />
+        <Button size="sm" variant="secondary" disabled={saving} onClick={save}>
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+      </div>
+      {error ? (
+        <span className={`${styles.handleNote} ${styles.error}`}>{error}</span>
+      ) : (
+        <span className={styles.handleNote}>
+          Shown on the top-scores list. Leave empty to stay anonymous.
+        </span>
+      )}
+    </div>
+  );
+}

@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../design/primitives';
+import { bootDailySync, queryClient } from '../features/daily/sync/sync';
 import styles from './AppLayout.module.css';
 
 const NAV_ITEMS = [
@@ -13,8 +16,15 @@ const NAV_ITEMS = [
 ];
 
 export function AppLayout() {
+  // Drain any queued daily submissions on start + when the browser
+  // regains connectivity.
+  useEffect(() => {
+    bootDailySync();
+  }, []);
+
   return (
-    <ToastProvider>
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
       <div className={styles.shell}>
         <header className={styles.header}>
           <div className={styles.headerInner}>
@@ -42,6 +52,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
-    </ToastProvider>
+      </ToastProvider>
+    </QueryClientProvider>
   );
 }

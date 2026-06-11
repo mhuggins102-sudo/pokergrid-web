@@ -5,6 +5,8 @@ import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
 import { useTargetsStore } from '../../targets/targetsStore';
+import { recordDailyCompletion } from '../../daily/sync/sync';
+import { RankPanel } from '../../daily/RankPanel';
 import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
 import { LineDetailSheet } from './LineDetailSheet';
@@ -43,6 +45,14 @@ export function ResultView({ onReplay }: ResultViewProps) {
   }, [state]);
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
+
+  // ---- Daily: save locally, then queue-first submit ----
+  const dailyRecordedRef = useRef(false);
+  useEffect(() => {
+    if (mode.kind !== 'daily' || dailyRecordedRef.current) return;
+    dailyRecordedRef.current = true;
+    recordDailyCompletion(mode.dateISO, mode.recipe, state, report.total, won);
+  }, [mode, state, report.total, won]);
 
   // ---- Targets-Up ladder lifecycle ----
   const isTargets = mode.kind === 'targets';
@@ -93,16 +103,24 @@ export function ResultView({ onReplay }: ResultViewProps) {
         ? won
           ? `Level ${mode.level} cleared`
           : `Run over at level ${mode.level}`
-        : won
-          ? 'Target beaten'
-          : 'Target missed';
+        : mode.kind === 'daily'
+          ? won
+            ? 'Daily solved'
+            : 'Daily missed'
+          : won
+            ? 'Target beaten'
+            : 'Target missed';
 
   const contextLine =
     mode.kind === 'challenge'
       ? `goal ${state.target} · hard ruleset`
       : mode.kind === 'targets'
         ? `level ${mode.level} · target ${state.target} · ${state.difficulty}`
-        : `target ${state.target} · ${state.difficulty}`;
+        : mode.kind === 'daily'
+          ? `${mode.dateISO} · target ${state.target} · ${state.difficulty}${
+              setup.challenge ? ` · ${setup.challenge.name}` : ''
+            }`
+          : `target ${state.target} · ${state.difficulty}`;
 
   const commit =
     mode.kind === 'targets' ? (
@@ -122,6 +140,13 @@ export function ResultView({ onReplay }: ResultViewProps) {
           </Button>
         </Link>
       )
+    ) : mode.kind === 'daily' ? (
+      // One play per day — the commit action moves the player on.
+      <Link to="/daily/archive" className={styles.commitLink}>
+        <Button variant="primary" className={styles.commitButton}>
+          Daily archive
+        </Button>
+      </Link>
     ) : (
       <Button variant="primary" className={styles.commitButton} onClick={onReplay}>
         {mode.kind === 'challenge' ? (won ? 'Play it again' : 'Retry challenge') : 'Play again'}
@@ -137,14 +162,20 @@ export function ResultView({ onReplay }: ResultViewProps) {
       <Link to="/targets" className={styles.dockLink}>
         Targets Up home
       </Link>
+    ) : mode.kind === 'daily' ? (
+      <Link to="/daily" className={styles.dockLink}>
+        Today&apos;s daily
+      </Link>
     ) : (
       <Link to="/play" className={styles.dockLink}>
         Change difficulty
       </Link>
     );
 
+  const isDaily = mode.kind === 'daily';
+
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} ${isDaily ? styles.hasRank : ''}`}>
       <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Final result">
         <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
           {verdict}
@@ -161,6 +192,12 @@ export function ResultView({ onReplay }: ResultViewProps) {
           </span>
         )}
       </section>
+
+      {isDaily && mode.kind === 'daily' && (
+        <div className={styles.rankSlot}>
+          <RankPanel dateISO={mode.dateISO} />
+        </div>
+      )}
 
       <div className={styles.boardSlot}>
         <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />

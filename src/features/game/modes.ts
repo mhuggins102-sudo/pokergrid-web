@@ -1,6 +1,6 @@
 import { BonusCard, SPECIAL_DECK_POOL } from '../../game/bonusCards';
 import { Card } from '../../game/cards';
-import { shuffle } from '../../game/deck';
+import { seededRng, shuffle } from '../../game/deck';
 import {
   Challenge,
   ChallengeId,
@@ -8,6 +8,8 @@ import {
   findChallenge,
   targetForLevel,
 } from '../../game/challenges';
+import { DailyRecipe, dailyTargetFor } from '../../game/daily/recipe';
+import { seedForInitialSpecials } from '../../game/daily/seed';
 import { Difficulty, UNDOS_BY_DIFFICULTY } from '../../game/rules';
 import { GameState, newGame } from '../../game/state';
 
@@ -19,7 +21,8 @@ export type GameMode =
       level: number;
       deckExtras: BonusCard[];
       superchargedDeckCards: Card[];
-    };
+    }
+  | { kind: 'daily'; dateISO: string; recipe: DailyRecipe };
 
 export interface ModeSetup {
   difficulty: Difficulty;
@@ -98,6 +101,48 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             [], // keptBonusCards — no hand carry-over in current spec
             mode.deckExtras,
             mode.superchargedDeckCards
+          ),
+      };
+    }
+    case 'daily': {
+      // A twisted daily is structurally identical to the same-named
+      // challenge — same flag plumbing — but seeded so every player
+      // worldwide gets the same deal. One free undo regardless of
+      // difficulty (locked decision); using it doesn't taint the score.
+      const twist = mode.recipe.twist ?? null;
+      const difficulty = mode.recipe.difficulty;
+      const target = dailyTargetFor(difficulty, mode.recipe.twist);
+      return {
+        difficulty,
+        target,
+        maxUndos: 1,
+        challenge: twist ? findChallenge(twist) : null,
+        start: rng =>
+          newGame(
+            difficulty,
+            rng,
+            target,
+            twist === 'short-deck' ? 45 : undefined,
+            false, // noSwap
+            twist === 'no-discards',
+            [],
+            [],
+            [],
+            twist === 'short-circuit',
+            twist === 'poker-purist' || twist === 'three-tricks',
+            // The Three Tricks trio is seeded off the date (its own
+            // salt) so it's globally identical without sharing the
+            // deck's rng stream.
+            twist === 'three-tricks'
+              ? shuffle(
+                  SPECIAL_DECK_POOL,
+                  seededRng(seedForInitialSpecials(mode.dateISO))
+                ).slice(0, 3)
+              : [],
+            twist === 'mixed-bag'
+              ? ['special', 'in-game', 'end-game']
+              : undefined,
+            twist === 'gridlock' ? 15 : 0
           ),
       };
     }

@@ -1,0 +1,157 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
+import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../game/scoring';
+import { dailyTargetFor } from '../../game/daily/recipe';
+import { findChallenge } from '../../game/challenges';
+import { tierForRun } from '../../lib/stats';
+import { Button } from '../../design/primitives';
+import { LineRails } from '../game/components/LineRails';
+import { LinesPanel } from '../game/components/LinesPanel';
+import { LineDetailSheet } from '../game/components/LineDetailSheet';
+import { BonusCardStrip } from '../game/components/BonusCardStrip';
+import { bonusCardLiveContext } from '../game/bonusCardLiveContext';
+import { RankPanel } from './RankPanel';
+import { DailyPlay } from './sync/playsStore';
+// Shares the result screen's layout/styles so a revisited daily looks
+// exactly like the moment it was finished.
+import styles from '../game/components/ResultView.module.css';
+
+/**
+ * Read-only result for an already-played daily, rebuilt from the
+ * stored GameState. Shareable / revisitable: this is what
+ * /daily/:date renders once the date is played.
+ */
+export function DailyResultStatic({ play }: { play: DailyPlay }) {
+  const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
+  const state = play.state;
+  const target = dailyTargetFor(play.recipe.difficulty, play.recipe.twist);
+  const twist = play.recipe.twist ? findChallenge(play.recipe.twist) : null;
+
+  const { report, shapley } = useMemo(() => {
+    const options = {
+      deckRemaining: state.deck.length,
+      discards: state.discards,
+      perkSpent: state.perkSpent,
+    };
+    return {
+      report: scoreGrid(state.grid, state.bonusCards, options),
+      shapley: bonusShapleyValues(state.grid, state.bonusCards, options),
+    };
+  }, [state]);
+
+  const tier = tierForRun({ score: play.score, target, won: play.won });
+
+  return (
+    <div className={`${styles.wrap} ${styles.hasRank}`}>
+      <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Daily result">
+        <span className={`${styles.verdict} ${play.won ? styles.win : styles.loss}`}>
+          {play.won ? 'Daily solved' : 'Daily missed'}
+        </span>
+        <span className={styles.finalScore} data-testid="final-score">
+          {play.score}
+        </span>
+        <span className={`text-body ${styles.targetLine}`}>
+          {play.dateISO} · target {target} · {play.recipe.difficulty}
+          {twist ? ` · ${twist.name}` : ''} · tier {tier}
+        </span>
+      </section>
+
+      <div className={styles.rankSlot}>
+        <RankPanel dateISO={play.dateISO} />
+      </div>
+
+      <div className={styles.boardSlot}>
+        <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />
+      </div>
+
+      <section className={`${styles.math} ${styles.mathSlot}`} aria-label="Score math">
+        <h2 className="text-section">Score math</h2>
+        <details className={styles.linesDetails}>
+          <summary className={styles.linesSummary}>
+            <span className={styles.summaryLabel}>
+              <span className={styles.summaryCaret} aria-hidden="true">
+                ▸
+              </span>
+              Lines subtotal
+            </span>
+            <span>{report.subtotal}</span>
+          </summary>
+          <div className={styles.linesBody}>
+            <LinesPanel report={report} bare />
+          </div>
+        </details>
+        {report.incompletePenalty !== 0 && (
+          <div className={`${styles.mathRow} ${styles.mathPenalty}`}>
+            <span>Unfinished lines</span>
+            <span>{report.incompletePenalty}</span>
+          </div>
+        )}
+        {report.gridMultiplier !== 1 && (
+          <div className={styles.mathRow}>
+            <span>Grid multiplier</span>
+            <span>×{report.gridMultiplier.toFixed(2)}</span>
+          </div>
+        )}
+        {report.gridFlat !== 0 && (
+          <div className={styles.mathRow}>
+            <span>Grid flat bonus</span>
+            <span>+{report.gridFlat}</span>
+          </div>
+        )}
+        <div className={`${styles.mathRow} ${styles.mathTotal}`}>
+          <span>Total</span>
+          <span>{report.total}</span>
+        </div>
+      </section>
+
+      {state.bonusCards.length > 0 && (
+        <>
+          <div className={styles.bonusRowSlot}>
+            <BonusCardStrip
+              layout="row"
+              cards={state.bonusCards}
+              values={shapley}
+              liveContext={card => bonusCardLiveContext(card, state)}
+            />
+          </div>
+          <div className={styles.bonusPanelSlot}>
+            <BonusCardStrip
+              cards={state.bonusCards}
+              values={shapley}
+              title="Bonus contribution"
+              liveContext={card => bonusCardLiveContext(card, state)}
+            />
+          </div>
+        </>
+      )}
+
+      <div className={styles.linesPanelSlot}>
+        <LinesPanel report={report} title="Line breakdown" />
+      </div>
+
+      <div className={styles.dock}>
+        <div className={styles.dockRow}>
+          <Link to="/daily" className={styles.dockLink}>
+            Today&apos;s daily
+          </Link>
+          <Link to="/" className={styles.dockLink}>
+            Home
+          </Link>
+        </div>
+        <Link to="/daily/archive" className={styles.commitLink}>
+          <Button variant="primary" className={styles.commitButton}>
+            Daily archive
+          </Button>
+        </Link>
+      </div>
+
+      <LineDetailSheet
+        line={detailLine}
+        bonusCards={state.bonusCards}
+        allLines={report.lines}
+        gridBonusesApplied={report.gridMultiplier !== 1 || report.gridFlat !== 0}
+        onClose={() => setDetailLine(null)}
+      />
+    </div>
+  );
+}

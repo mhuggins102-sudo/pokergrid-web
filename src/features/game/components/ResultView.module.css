@@ -251,6 +251,21 @@
     grid-row: 1;
   }
 
+  /* Daily: the rank panel takes the right column's top slot and the
+     math/bonus cards shift down one row. */
+  .rankSlot {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .hasRank .mathSlot {
+    grid-row: 2;
+  }
+
+  .hasRank .bonusPanelSlot {
+    grid-row: 3;
+  }
+
   .bonusRowSlot {
     display: none;
   }
