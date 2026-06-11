@@ -43,6 +43,8 @@ export function useRecordResult(
   useEffect(() => {
     if (ranRef.current) return;
     ranRef.current = true;
+    // The tutorial's rigged deal must not touch stats or achievements.
+    if (mode.kind === 'tutorial') return;
 
     const store = useStatsStore.getState();
     const before = store.stats;

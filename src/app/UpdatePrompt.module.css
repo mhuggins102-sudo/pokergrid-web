@@ -1,0 +1,46 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--accent);
+  color: var(--paper-raised);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.text {
+  min-width: 0;
+}
+
+.reload {
+  flex-shrink: 0;
+  padding: 4px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.reload:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: inherit;
+  opacity: 0.8;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.dismiss:hover {
+  opacity: 1;
+}

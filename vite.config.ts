@@ -21,7 +21,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a fresh deploy parks the new service worker in
+      // "waiting" and the UpdatePrompt banner offers a reload — never
+      // forced, so a player mid-game can't lose state to a refresh.
+      registerType: 'prompt',
       includeAssets: ['apple-touch-icon.png'],
       manifest: {
         name: 'PokerGrid',

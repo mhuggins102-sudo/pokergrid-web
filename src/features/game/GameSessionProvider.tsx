@@ -90,3 +90,47 @@ export function useGameSession(): GameSession {
   }
   return ctx;
 }
+
+export interface ActionGate {
+  /** Whether this dispatch may go through right now. */
+  allow: (action: Action, state: GameState) => boolean;
+  /** Called after an allowed action is dispatched. */
+  onAction?: (action: Action) => void;
+  /** Called when a dispatch is blocked (nudge UX). */
+  onBlocked?: (action: Action) => void;
+}
+
+/**
+ * Re-provides the session with a filtered dispatch. Every interaction
+ * in GameScreen and its children funnels through session.dispatch, so
+ * this single wrapper is enough for the tutorial to constrain play to
+ * the scripted move — no per-component awareness needed.
+ */
+export function GameSessionGate({
+  gate,
+  children,
+}: {
+  gate: ActionGate;
+  children: ReactNode;
+}) {
+  const session = useGameSession();
+  const gated = useMemo<GameSession>(
+    () => ({
+      ...session,
+      dispatch: (action: Action) => {
+        if (!gate.allow(action, session.state)) {
+          gate.onBlocked?.(action);
+          return;
+        }
+        session.dispatch(action);
+        gate.onAction?.(action);
+      },
+    }),
+    [session, gate]
+  );
+  return (
+    <GameSessionContext.Provider value={gated}>
+      {children}
+    </GameSessionContext.Provider>
+  );
+}

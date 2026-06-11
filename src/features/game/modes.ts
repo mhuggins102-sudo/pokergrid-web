@@ -12,9 +12,11 @@ import { DailyRecipe, dailyTargetFor } from '../../game/daily/recipe';
 import { seedForInitialSpecials } from '../../game/daily/seed';
 import { Difficulty, UNDOS_BY_DIFFICULTY } from '../../game/rules';
 import { GameState, newGame } from '../../game/state';
+import { TUTORIAL_TARGET, tutorialStart } from '../tutorial/tutorialGame';
 
 export type GameMode =
   | { kind: 'free'; difficulty: Difficulty }
+  | { kind: 'tutorial' }
   | { kind: 'challenge'; id: ChallengeId }
   | {
       kind: 'targets';
@@ -51,6 +53,17 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
         start: rng => newGame(difficulty, rng),
       };
     }
+    case 'tutorial':
+      // Guided first game: a handcrafted Easy deal with a soft target.
+      // No undos — the coach script tracks the reducer state move for
+      // move, and a rewind would desync them.
+      return {
+        difficulty: 'easy',
+        target: TUTORIAL_TARGET,
+        maxUndos: 0,
+        challenge: null,
+        start: () => tutorialStart(),
+      };
     case 'challenge': {
       const challenge = findChallenge(mode.id);
       const difficulty: Difficulty = 'hard';

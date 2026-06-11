@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../design/primitives';
 import { bootDailySync, queryClient } from '../features/daily/sync/sync';
+import { UpdatePrompt } from './UpdatePrompt';
 import styles from './AppLayout.module.css';
 
 const NAV_ITEMS = [
@@ -26,6 +27,7 @@ export function AppLayout() {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
       <div className={styles.shell}>
+        <UpdatePrompt />
         <header className={styles.header}>
           <div className={styles.headerInner}>
             <NavLink to="/" className={styles.wordmark}>

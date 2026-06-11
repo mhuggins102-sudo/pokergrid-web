@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from 'react';
+import { ReactNode, useMemo, useRef, useState } from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import { scoreGrid } from '../../game/scoring';
 import { Button, Sheet } from '../../design/primitives';
 import { useGameSession } from './GameSessionProvider';
+import { useCoachHighlight } from './coach';
 import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
@@ -21,6 +22,9 @@ import styles from './GameScreen.module.css';
 
 export interface GameScreenProps {
   onReplay: () => void;
+  /** Tutorial coach panel; when present the board budget shrinks to
+   *  make room (the same trick the ♣ panel uses). */
+  coach?: ReactNode;
 }
 
 /**
@@ -33,9 +37,10 @@ export interface GameScreenProps {
  * while deciding, instruction + cancel while targeting. Desktop
  * re-seats the same pieces into the three-panel spread.
  */
-export function GameScreen({ onReplay }: GameScreenProps) {
+export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const { state, dispatch } = useGameSession();
   const ui = usePhaseUI();
+  const coachHighlight = useCoachHighlight();
   const [peekOpen, setPeekOpen] = useState(false);
   const [handsOpen, setHandsOpen] = useState(false);
   const [linesOpen, setLinesOpen] = useState(false);
@@ -80,7 +85,13 @@ export function GameScreen({ onReplay }: GameScreenProps) {
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <LayoutGroup>
         <div
-          className={`${styles.layout} ${ui.bonusDialog ? styles.bonusOpen : ''}`}
+          className={[
+            styles.layout,
+            ui.bonusDialog ? styles.bonusOpen : null,
+            coach ? (ui.bonusDialog ? styles.coachSlim : styles.coachOpen) : null,
+          ]
+            .filter(Boolean)
+            .join(' ')}
         >
           <div className={styles.scoreSlot}>
             <ScoreBar
@@ -88,6 +99,8 @@ export function GameScreen({ onReplay }: GameScreenProps) {
               onShowLines={() => setLinesOpen(true)}
             />
           </div>
+
+          {coach && <div className={styles.coachSlot}>{coach}</div>}
 
           <div className={styles.linesSlot}>
             <LinesPanel report={liveReport} />
@@ -143,6 +156,9 @@ export function GameScreen({ onReplay }: GameScreenProps) {
                     variant={a.variant}
                     disabled={a.disabled}
                     onClick={a.onPress}
+                    className={
+                      a.id === coachHighlight ? styles.coachPulse : undefined
+                    }
                   >
                     {a.label}
                   </Button>
@@ -158,7 +174,11 @@ export function GameScreen({ onReplay }: GameScreenProps) {
                   variant={commitAction.id === 'cancel' ? 'secondary' : commitAction.variant}
                   disabled={commitAction.disabled}
                   onClick={commitAction.onPress}
-                  className={styles.commitButton}
+                  className={`${styles.commitButton}${
+                    commitAction.id === coachHighlight
+                      ? ` ${styles.coachPulse}`
+                      : ''
+                  }`}
                 >
                   {commitAction.label}
                 </Button>
