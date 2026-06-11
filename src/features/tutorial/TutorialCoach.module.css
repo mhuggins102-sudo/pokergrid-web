@@ -1,4 +1,8 @@
 .coach {
+  /* Fills the fixed-height coach slot: kicker/title/footer pin in
+     place, only the body scrolls — steps never change the height. */
+  box-sizing: border-box;
+  height: 100%;
   background: var(--paper-raised, #ffffff);
   border: 1px solid var(--rule);
   border-left: 3px solid var(--accent);
@@ -48,6 +52,10 @@
   font-size: 13px;
   line-height: 1.45;
   color: var(--ink-2);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
 }
 
 .footer {
@@ -56,6 +64,9 @@
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-top: 2px;
+  /* As tall as the Next button even on button-less steps, so the
+     bottom row never shifts. */
+  min-height: 32px;
 }
 
 .yourMove {
@@ -63,10 +74,4 @@
   font-weight: 600;
   color: var(--accent);
   margin-right: auto;
-}
-
-/* ♣-draw-open collapse: title line only. */
-.slim .body,
-.slim .footer {
-  display: none;
 }

@@ -91,6 +91,17 @@ export const sfxRevive = (): void => {
   tone(659.25, 0.12, 0.18, 0.05);
 };
 
+/**
+ * Joker auto-placed — a springy bend with a sparkle on top. Starts
+ * ~0.4s late by design: the joker's pop-in animation on the board is
+ * delayed the same amount, so the flourish lands with the card.
+ */
+export const sfxJoker = (): void => {
+  tone(330, 0.4, 0.16, 0.07, 'triangle', 660);
+  tone(880, 0.52, 0.1, 0.05);
+  tone(1108.73, 0.58, 0.14, 0.045);
+};
+
 /** Target beaten — rising arpeggio. */
 export const sfxWin = (): void => {
   [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
@@ -112,7 +123,8 @@ export type SfxName =
   | 'destroy'
   | 'enchant'
   | 'riffle'
-  | 'revive';
+  | 'revive'
+  | 'joker';
 
 export const SFX: Record<SfxName, () => void> = {
   place: sfxPlace,
@@ -123,6 +135,7 @@ export const SFX: Record<SfxName, () => void> = {
   enchant: sfxEnchant,
   riffle: sfxRiffle,
   revive: sfxRevive,
+  joker: sfxJoker,
 };
 
 /**
@@ -132,9 +145,8 @@ export const SFX: Record<SfxName, () => void> = {
  * action card has a voice. Pure; exported for tests.
  */
 export const sfxForHistoryEntry = (entry: string): SfxName | null => {
-  if (entry.startsWith('Place') || entry.startsWith('Joker auto-placed')) {
-    return 'place';
-  }
+  if (entry.startsWith('Joker auto-placed')) return 'joker';
+  if (entry.startsWith('Place')) return 'place';
   if (entry.startsWith('Hop ')) return 'swap'; // ♥
   if (entry.startsWith('Slide ')) return 'slide'; // ♠
   if (entry.startsWith('Destroy slot')) return 'destroy'; // ♦

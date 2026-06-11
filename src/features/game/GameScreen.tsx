@@ -8,7 +8,7 @@ import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
-import { GridBoard } from './components/GridBoard';
+import { GridBoard, useJokerArrivals } from './components/GridBoard';
 import { NextCardWell } from './components/NextCardWell';
 import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
@@ -69,6 +69,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   prevBonusOpen.current = bonusOpen;
   const instantLayout = bonusOpen || bonusToggled;
 
+  // Tracked here because the board below remounts on the ♣ toggle —
+  // the same commit a ♣-triggered joker auto-places in.
+  const jokerArrivals = useJokerArrivals(state.grid);
+
   if (ui.isGameOver) {
     return <ResultView onReplay={onReplay} />;
   }
@@ -88,7 +92,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           className={[
             styles.layout,
             ui.bonusDialog ? styles.bonusOpen : null,
-            coach ? (ui.bonusDialog ? styles.coachSlim : styles.coachOpen) : null,
+            // The coach yields entirely while the ♣ panel has the dock —
+            // both don't fit a phone viewport, and the draw choice is
+            // self-explanatory.
+            coach && !ui.bonusDialog ? styles.coachOpen : null,
           ]
             .filter(Boolean)
             .join(' ')}
@@ -100,7 +107,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             />
           </div>
 
-          {coach && <div className={styles.coachSlot}>{coach}</div>}
+          {coach && !ui.bonusDialog && (
+            <div className={styles.coachSlot}>{coach}</div>
+          )}
 
           <div className={styles.linesSlot}>
             <LinesPanel report={liveReport} />
@@ -117,6 +126,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               isTappable={ui.isTappable}
               onCellTap={ui.onCellTap}
               instantLayout={instantLayout}
+              jokerArrivals={jokerArrivals}
             />
           </div>
 

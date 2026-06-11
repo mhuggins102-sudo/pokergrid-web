@@ -36,26 +36,18 @@
   min-width: 180px;
 }
 
-/* Tutorial coach: the panel takes a fixed slice of the vertical budget
-   and the board shrinks by the same amount (mirrors the ♣ panel's
-   budget trick). .coachSlim is the ♣-draw-open variant — the coach
-   collapses to a one-liner so the dock panel and coach fit together. */
+/* Tutorial coach: a FIXED slice of the vertical budget — every step
+   renders the same panel height (long copy scrolls inside), so the
+   layout never jumps between steps. The board shrinks by the same
+   amount (mirrors the ♣ panel's budget trick); while the ♣ panel has
+   the dock the coach unmounts entirely. */
 .coachSlot {
-  max-height: 190px;
-  overflow-y: auto;
+  height: 216px;
+  flex-shrink: 0;
 }
 
 .coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 475px));
-}
-
-.coachSlim .coachSlot {
-  max-height: 48px;
-}
-
-.coachSlim.bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 556px));
-  min-width: 180px;
+  width: min(100%, 440px, calc(100svh - 501px));
 }
 
 /* Spotlight on the move the coach is asking for. */
@@ -157,12 +149,7 @@
   }
 
   .coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 510px));
-  }
-
-  .coachSlim.bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 591px));
-    min-width: 180px;
+    width: min(100%, 520px, calc(100svh - 536px));
   }
 
   .dockText {
@@ -225,27 +212,21 @@
     grid-row: 1 / span 3;
   }
 
-  /* Desktop: the coach rides the right column, above the bonus cards.
-     The board has its own column, so no width budget changes. */
+  /* Desktop: the coach rides the right column, above the bonus cards,
+     at the same fixed height. The board has its own column, so no
+     width budget changes. */
   .coachSlot {
     grid-column: 3;
     grid-row: 1;
-    max-height: none;
-    overflow: visible;
+    height: 230px;
   }
 
-  .coachOpen .bonusSlot,
-  .coachSlim .bonusSlot {
+  .coachOpen .bonusSlot {
     grid-row: 2 / span 2;
   }
 
-  .coachOpen .boardArea,
-  .coachSlim.bonusOpen .boardArea {
+  .coachOpen .boardArea {
     width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
     min-width: 0;
-  }
-
-  .coachSlim .coachSlot {
-    max-height: none;
   }
 }
