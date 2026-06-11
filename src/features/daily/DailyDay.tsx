@@ -58,14 +58,20 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
         </div>
         <span className={`text-value ${styles.target}`}>target {target}</span>
         {twist && <p className={styles.twistGoal}>{twist.synopsis}</p>}
-        <Button variant="primary" size="lg" onClick={() => setStarted(true)}>
-          Play
-        </Button>
+        <div className={styles.buttons}>
+          <Button variant="primary" size="lg" onClick={() => setStarted(true)}>
+            Play
+          </Button>
+          <Link to="/daily/archive">
+            <Button variant="secondary" size="lg">
+              Archive
+            </Button>
+          </Link>
+        </div>
       </div>
       <p className={styles.note}>
         One play per day — the same deal for every player worldwide. One
-        free undo.{' '}
-        <Link to="/daily/archive">Browse the archive</Link>
+        free undo.
       </p>
     </section>
   );

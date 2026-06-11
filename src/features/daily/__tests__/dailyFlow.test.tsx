@@ -120,8 +120,9 @@ describe('daily flow', () => {
   it('archive lists played scores and playable dates', () => {
     renderAt('/daily/archive');
     expect(screen.getByText('Today')).toBeInTheDocument();
-    // 14 rows, all playable when nothing's been played.
-    expect(screen.getAllByText('Play')).toHaveLength(14);
+    // Every date back to the 2026-05-01 launch, all playable when
+    // nothing's been played.
+    expect(screen.getAllByText('Play').length).toBeGreaterThanOrEqual(40);
   });
 
   it('future dates bounce to today', () => {

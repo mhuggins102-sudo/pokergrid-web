@@ -74,3 +74,9 @@ body {
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
+
+/* Page headers: breathing room between a title and the copy under it. */
+.text-title + p,
+.text-hero + p {
+  margin-top: var(--space-md);
+}

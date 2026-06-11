@@ -4,7 +4,7 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   max-width: 480px;
   margin: 0 auto;
   flex: 1;
@@ -40,7 +40,7 @@
 
 .finalScore {
   font-family: var(--font-display);
-  font-size: 46px;
+  font-size: 40px;
   font-weight: 680;
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
@@ -99,10 +99,56 @@
   margin-top: var(--space-xs);
 }
 
-/* Desktop-only surfaces. */
+/* Desktop-only surfaces — phones get the details bar + sheet instead. */
 .bonusPanelSlot,
-.linesPanelSlot {
+.linesPanelSlot,
+.mathSlot {
   display: none;
+}
+
+/* Thin disclosure bar between the verdict and the board: opens the
+   score-math + bonus sheet, keeping the phone result scroll-free. */
+.detailsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.detailsBar:hover {
+  color: var(--ink);
+}
+
+.detailsBar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.detailsBarCaret {
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+.detailsSheetBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* In the sheet the math section sheds its card chrome. */
+.detailsSheetBody .math {
+  border: none;
+  padding: 0;
+  background: transparent;
 }
 
 /* "Lines subtotal" doubles as the disclosure for the full ten-line
@@ -133,8 +179,9 @@
 
 .summaryCaret {
   display: inline-block;
-  font-size: 11px;
-  color: var(--ink-3);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-2);
   transition: transform 120ms ease;
 }
 
@@ -209,6 +256,10 @@
     gap: var(--space-lg);
   }
 
+  .finalScore {
+    font-size: 56px;
+  }
+
   .hero {
     padding: var(--space-xl);
     gap: var(--space-sm);
@@ -247,8 +298,13 @@
   }
 
   .mathSlot {
+    display: block;
     grid-column: 3;
     grid-row: 1;
+  }
+
+  .detailsBar {
+    display: none;
   }
 
   /* Daily: the rank panel takes the right column's top slot and the

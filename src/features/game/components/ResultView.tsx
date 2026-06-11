@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
-import { Button } from '../../../design/primitives';
+import { Button, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
 import { useTargetsStore } from '../../targets/targetsStore';
@@ -31,6 +31,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const { state, mode, setup } = useGameSession();
   const targets = useTargetsStore();
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const { report, shapley } = useMemo(() => {
     const options = {
@@ -174,6 +175,60 @@ export function ResultView({ onReplay }: ResultViewProps) {
 
   const isDaily = mode.kind === 'daily';
 
+  // Score math + bonus contribution, rendered in the desktop side
+  // panel — and, on phones, inside the details sheet behind the thin
+  // bar (so the whole result fits one viewport with zero scrolling).
+  const scoreMath = (
+    <section className={styles.math} aria-label="Score math">
+      <h2 className="text-section">Score math</h2>
+      <details className={styles.linesDetails}>
+        <summary className={styles.linesSummary}>
+          <span className={styles.summaryLabel}>
+            <span className={styles.summaryCaret} aria-hidden="true">
+              ▸
+            </span>
+            Lines subtotal
+          </span>
+          <span>{report.subtotal}</span>
+        </summary>
+        <div className={styles.linesBody}>
+          <LinesPanel report={report} bare />
+        </div>
+      </details>
+      {report.incompletePenalty !== 0 && (
+        <div className={`${styles.mathRow} ${styles.mathPenalty}`}>
+          <span>Unfinished lines</span>
+          <span>{report.incompletePenalty}</span>
+        </div>
+      )}
+      {report.gridMultiplier !== 1 && (
+        <div className={styles.mathRow}>
+          <span>Grid multiplier</span>
+          <span>×{report.gridMultiplier.toFixed(2)}</span>
+        </div>
+      )}
+      {report.gridFlat !== 0 && (
+        <div className={styles.mathRow}>
+          <span>Grid flat bonus</span>
+          <span>+{report.gridFlat}</span>
+        </div>
+      )}
+      <div className={`${styles.mathRow} ${styles.mathTotal}`}>
+        <span>Total</span>
+        <span>{report.total}</span>
+      </div>
+    </section>
+  );
+
+  const bonusStripRow = state.bonusCards.length > 0 && (
+    <BonusCardStrip
+      layout="row"
+      cards={state.bonusCards}
+      values={shapley}
+      liveContext={card => bonusCardLiveContext(card, state)}
+    />
+  );
+
   return (
     <div className={`${styles.wrap} ${isDaily ? styles.hasRank : ''}`}>
       <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Final result">
@@ -199,69 +254,32 @@ export function ResultView({ onReplay }: ResultViewProps) {
         </div>
       )}
 
+      <button
+        type="button"
+        className={styles.detailsBar}
+        onClick={() => setDetailsOpen(true)}
+      >
+        <span>Score math &amp; bonus cards</span>
+        <span className={styles.detailsBarCaret} aria-hidden="true">
+          ▸
+        </span>
+      </button>
+
       <div className={styles.boardSlot}>
         <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />
       </div>
 
-      <section className={`${styles.math} ${styles.mathSlot}`} aria-label="Score math">
-        <h2 className="text-section">Score math</h2>
-        <details className={styles.linesDetails}>
-          <summary className={styles.linesSummary}>
-            <span className={styles.summaryLabel}>
-              <span className={styles.summaryCaret} aria-hidden="true">
-                ▸
-              </span>
-              Lines subtotal
-            </span>
-            <span>{report.subtotal}</span>
-          </summary>
-          <div className={styles.linesBody}>
-            <LinesPanel report={report} bare />
-          </div>
-        </details>
-        {report.incompletePenalty !== 0 && (
-          <div className={`${styles.mathRow} ${styles.mathPenalty}`}>
-            <span>Unfinished lines</span>
-            <span>{report.incompletePenalty}</span>
-          </div>
-        )}
-        {report.gridMultiplier !== 1 && (
-          <div className={styles.mathRow}>
-            <span>Grid multiplier</span>
-            <span>×{report.gridMultiplier.toFixed(2)}</span>
-          </div>
-        )}
-        {report.gridFlat !== 0 && (
-          <div className={styles.mathRow}>
-            <span>Grid flat bonus</span>
-            <span>+{report.gridFlat}</span>
-          </div>
-        )}
-        <div className={`${styles.mathRow} ${styles.mathTotal}`}>
-          <span>Total</span>
-          <span>{report.total}</span>
-        </div>
-      </section>
+      <div className={styles.mathSlot}>{scoreMath}</div>
 
       {state.bonusCards.length > 0 && (
-        <>
-          <div className={styles.bonusRowSlot}>
-            <BonusCardStrip
-              layout="row"
-              cards={state.bonusCards}
-              values={shapley}
-              liveContext={card => bonusCardLiveContext(card, state)}
-            />
-          </div>
-          <div className={styles.bonusPanelSlot}>
-            <BonusCardStrip
-              cards={state.bonusCards}
-              values={shapley}
-              title="Bonus contribution"
-              liveContext={card => bonusCardLiveContext(card, state)}
-            />
-          </div>
-        </>
+        <div className={styles.bonusPanelSlot}>
+          <BonusCardStrip
+            cards={state.bonusCards}
+            values={shapley}
+            title="Bonus contribution"
+            liveContext={card => bonusCardLiveContext(card, state)}
+          />
+        </div>
       )}
 
       <div className={styles.linesPanelSlot}>
@@ -277,6 +295,19 @@ export function ResultView({ onReplay }: ResultViewProps) {
         </div>
         {commit}
       </div>
+
+      {detailsOpen && (
+        <Sheet
+          open
+          onClose={() => setDetailsOpen(false)}
+          title="Score math & bonus cards"
+        >
+          <div className={styles.detailsSheetBody}>
+            {scoreMath}
+            {bonusStripRow}
+          </div>
+        </Sheet>
+      )}
 
       {rewardsPending && (tier === 'SS' || tier === 'S') && (
         <RewardsSheet

@@ -12,19 +12,19 @@ const cardById = (id: string) => {
 describe('bonusCardLiveContext', () => {
   const state = newGame('easy', seededRng(7));
 
-  it('shows perk usage for Burnout and Frugal', () => {
-    expect(bonusCardLiveContext(cardById('burnout-x1_25'), state)).toEqual([
-      'Suit perks spent so far: 0',
-    ]);
-    expect(bonusCardLiveContext(cardById('frugal-x1_5'), state)).toEqual([
-      'Suit perks spent so far: 0',
-    ]);
+  it('shows perk usage for Burnout and Frugal plus live grid status', () => {
+    const burnout = bonusCardLiveContext(cardById('burnout-x1_25'), state);
+    expect(burnout[0]).toBe('Suit perks spent so far: 0');
+    expect(burnout[1]).toBe('Not active yet'); // 0 perks < 20
+    const frugal = bonusCardLiveContext(cardById('frugal-x1_5'), state);
+    expect(frugal[0]).toBe('Suit perks spent so far: 0');
+    expect(frugal[1]).toMatch(/^If the game ended now: ×1\.5$/); // 0 ≤ 14
   });
 
-  it('shows deck count for Speedrun', () => {
-    expect(bonusCardLiveContext(cardById('deck-bank-x1_05'), state)).toEqual([
-      `Deck cards remaining: ${state.deck.length}`,
-    ]);
+  it('shows deck count for Speedrun with the projected multiplier', () => {
+    const lines = bonusCardLiveContext(cardById('deck-bank-x1_05'), state);
+    expect(lines[0]).toBe(`Deck cards remaining: ${state.deck.length}`);
+    expect(lines[1]).toMatch(/^If the game ended now: ×/);
   });
 
   it('shows joker counts for joker-keyed cards', () => {
@@ -44,7 +44,16 @@ describe('bonusCardLiveContext', () => {
     expect(lines[0]).toMatch(/^♥ Hearts on the board: \d+$/);
   });
 
-  it('stays silent for cards without a live counter', () => {
-    expect(bonusCardLiveContext(cardById('rainbow-line-x2'), state)).toEqual([]);
+  it('reports per-line firing status for line cards', () => {
+    const lines = bonusCardLiveContext(cardById('rainbow-line-x2'), state);
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatch(/^(Not firing on any line yet|Firing on \d+ lines? right now)$/);
+  });
+
+  it('names the hand for hand-type cards', () => {
+    const handCard = BONUS_DECK_POOL.find(c => c.id.startsWith('hand-pair'));
+    expect(handCard).toBeDefined();
+    const lines = bonusCardLiveContext(handCard!, state);
+    expect(lines[0]).toMatch(/^(Lines scoring Pair right now: \d+|No line scores this hand yet)$/);
   });
 });

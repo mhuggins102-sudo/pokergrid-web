@@ -47,13 +47,10 @@
 .dockRow {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  /* Deck chip and action buttons share the row at even spacing. */
+  justify-content: space-between;
   gap: var(--space-sm);
   min-height: 44px;
-}
-
-.dockRow > :first-child {
-  margin-right: auto;
 }
 
 .dockText {

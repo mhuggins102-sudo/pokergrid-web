@@ -11,7 +11,7 @@ import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
 import { BonusCardStrip } from './components/BonusCardStrip';
 import { DeckPreviewDialog } from './components/DeckPreviewDialog';
-import { BonusResolveDialog } from './components/BonusResolveDialog';
+import { BonusResolvePanel } from './components/BonusResolveDialog';
 import { HandValuesDialog } from './components/HandValuesDialog';
 import { ReviveSheet } from './components/ReviveSheet';
 import { ResultView } from './components/ResultView';
@@ -106,32 +106,41 @@ export function GameScreen({ onReplay }: GameScreenProps) {
           )}
 
           <div className={styles.dock}>
+            {/* The well stays mounted through the ♣ flow — unmounting it
+                mid-phase strands the grid's shared card layoutIds (cards
+                blink invisible), and the spent club is useful context. */}
             <div className={styles.dockRow}>
               <NextCardWell onPeekDeck={() => setPeekOpen(true)} />
               <span className={styles.dockText} role="status" aria-live="polite">
                 {ui.banner}
               </span>
-              {rowActions.map(a => (
-                <Button
-                  key={a.id}
-                  variant={a.variant}
-                  disabled={a.disabled}
-                  onClick={a.onPress}
-                >
-                  {a.label}
-                </Button>
-              ))}
+              {!ui.bonusDialog &&
+                rowActions.map(a => (
+                  <Button
+                    key={a.id}
+                    variant={a.variant}
+                    disabled={a.disabled}
+                    onClick={a.onPress}
+                  >
+                    {a.label}
+                  </Button>
+                ))}
             </div>
-            {commitAction && (
-              <Button
-                key={commitAction.id}
-                variant={commitAction.id === 'cancel' ? 'secondary' : commitAction.variant}
-                disabled={commitAction.disabled}
-                onClick={commitAction.onPress}
-                className={styles.commitButton}
-              >
-                {commitAction.label}
-              </Button>
+            {ui.bonusDialog ? (
+              // ♣ draw takes over the dock — board stays fully visible.
+              <BonusResolvePanel ui={ui.bonusDialog} />
+            ) : (
+              commitAction && (
+                <Button
+                  key={commitAction.id}
+                  variant={commitAction.id === 'cancel' ? 'secondary' : commitAction.variant}
+                  disabled={commitAction.disabled}
+                  onClick={commitAction.onPress}
+                  className={styles.commitButton}
+                >
+                  {commitAction.label}
+                </Button>
+              )
             )}
           </div>
 
@@ -162,7 +171,6 @@ export function GameScreen({ onReplay }: GameScreenProps) {
       <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
       <HandValuesDialog open={handsOpen} onClose={() => setHandsOpen(false)} />
       <ReviveSheet open={ui.reviveOpen} />
-      {ui.bonusDialog && <BonusResolveDialog ui={ui.bonusDialog} />}
     </MotionConfig>
   );
 }

@@ -3,19 +3,21 @@
    The 6px gaps mirror GridBoard's so chips track their lines exactly. */
 .wrap {
   display: grid;
-  grid-template-columns: 1fr auto;
+  /* Row totals on the LEFT edge (thumb-near on phones), column totals
+     underneath. */
+  grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
   gap: 6px;
   width: 100%;
 }
 
 .board {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 1;
 }
 
 .rowRail {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
   display: grid;
   grid-template-rows: repeat(5, 1fr);
@@ -23,7 +25,7 @@
 }
 
 .colRail {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 2;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -65,6 +67,6 @@
 
 /* Corner spacer keeps the col rail from sliding under the row rail. */
 .corner {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 2;
 }
