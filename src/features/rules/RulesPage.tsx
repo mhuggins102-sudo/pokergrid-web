@@ -28,6 +28,11 @@ export function RulesPage() {
           5×5 poker solitaire. Place every card, score the ten lines, beat
           your target.
         </p>
+        <p className={styles.body}>
+          Prefer to learn by playing?{' '}
+          <Link to="/tutorial">Take the interactive tutorial</Link> — a
+          guided practice deal that walks you through every move.
+        </p>
       </header>
 
       <div className={styles.section}>

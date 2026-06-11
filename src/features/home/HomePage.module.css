@@ -20,6 +20,77 @@
   max-width: 46ch;
 }
 
+/* First-visit tutorial callout. */
+.intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.introText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1 1 240px;
+}
+
+.introTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 620;
+}
+
+.introBlurb {
+  color: var(--ink-2);
+}
+
+.introActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.introStart {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--paper-raised);
+  font-weight: 620;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.introStart:hover {
+  filter: brightness(1.08);
+}
+
+.introDismiss {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.introDismiss:hover {
+  color: var(--ink-2);
+}
+
+.tutorialLink {
+  color: var(--ink-3);
+  text-align: center;
+}
+
 /* Two-up tiles on phones so all four modes fit one screen with the
    hero; wider screens flow naturally. */
 .tiles {

@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/react" />
 
 // Injected by vite.config.ts `define` — short git sha + build date,
 // shown in Settings so a device's running build is verifiable (the

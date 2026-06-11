@@ -36,6 +36,51 @@
   min-width: 180px;
 }
 
+/* Tutorial coach: the panel takes a fixed slice of the vertical budget
+   and the board shrinks by the same amount (mirrors the ♣ panel's
+   budget trick). .coachSlim is the ♣-draw-open variant — the coach
+   collapses to a one-liner so the dock panel and coach fit together. */
+.coachSlot {
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.coachOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 475px));
+}
+
+.coachSlim .coachSlot {
+  max-height: 48px;
+}
+
+.coachSlim.bonusOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 556px));
+  min-width: 180px;
+}
+
+/* Spotlight on the move the coach is asking for. */
+.coachPulse {
+  animation: coach-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes coach-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(31, 93, 67, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(31, 93, 67, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coachPulse {
+    animation: none;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
 .bonusRowSlot {
   margin-bottom: auto;
 }
@@ -111,6 +156,15 @@
     width: min(100%, 520px, calc(100svh - 535px));
   }
 
+  .coachOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 510px));
+  }
+
+  .coachSlim.bonusOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 591px));
+    min-width: 180px;
+  }
+
   .dockText {
     font-size: 14px;
   }
@@ -169,5 +223,29 @@
     display: block;
     grid-column: 3;
     grid-row: 1 / span 3;
+  }
+
+  /* Desktop: the coach rides the right column, above the bonus cards.
+     The board has its own column, so no width budget changes. */
+  .coachSlot {
+    grid-column: 3;
+    grid-row: 1;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .coachOpen .bonusSlot,
+  .coachSlim .bonusSlot {
+    grid-row: 2 / span 2;
+  }
+
+  .coachOpen .boardArea,
+  .coachSlim.bonusOpen .boardArea {
+    width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
+    min-width: 0;
+  }
+
+  .coachSlim .coachSlot {
+    max-height: none;
   }
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button, Dialog, useToast } from '../../design/primitives';
 import { Settings, useSettingsStore } from './settingsStore';
 import { useStatsStore } from '../progress/statsStore';
@@ -38,6 +39,7 @@ export function SettingsPage() {
   const settings = useSettingsStore();
   const resetStats = useStatsStore(s => s.reset);
   const clearTargets = useTargetsStore(s => s.clearProgress);
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -74,6 +76,20 @@ export function SettingsPage() {
           value={settings.twoColorDeck}
           onChange={v => patch({ twoColorDeck: v })}
         />
+      </div>
+
+      <div className={styles.panel}>
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowTitle}>Replay tutorial</span>
+            <span className={styles.rowHint}>
+              Re-run the guided practice deal that walks through every move.
+            </span>
+          </div>
+          <Button size="sm" onClick={() => navigate('/tutorial')}>
+            Replay
+          </Button>
+        </div>
       </div>
 
       <div className={styles.panel}>

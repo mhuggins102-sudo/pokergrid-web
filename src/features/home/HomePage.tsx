@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
+import { markTutorialSeen, tutorialSeen } from '../tutorial/tutorialSeen';
 import styles from './HomePage.module.css';
 
 const TILES = [
@@ -25,6 +27,10 @@ const TILES = [
 ];
 
 export function HomePage() {
+  // First-visit callout; "No thanks" suppresses it for good (the
+  // tutorial stays reachable from Rules and Settings).
+  const [showIntro, setShowIntro] = useState(() => !tutorialSeen());
+
   return (
     <section className={styles.wrap}>
       <header className={styles.hero}>
@@ -33,6 +39,32 @@ export function HomePage() {
           Place 25 cards. Build ten poker hands at once. Beat the target.
         </p>
       </header>
+      {showIntro && (
+        <div className={styles.intro}>
+          <div className={styles.introText}>
+            <span className={styles.introTitle}>First time here?</span>
+            <span className={`text-label ${styles.introBlurb}`}>
+              Learn by playing — a guided practice deal walks you through
+              every move in about three minutes.
+            </span>
+          </div>
+          <div className={styles.introActions}>
+            <Link to="/tutorial" className={styles.introStart}>
+              Start the tutorial
+            </Link>
+            <button
+              type="button"
+              className={styles.introDismiss}
+              onClick={() => {
+                markTutorialSeen();
+                setShowIntro(false);
+              }}
+            >
+              No thanks
+            </button>
+          </div>
+        </div>
+      )}
       <div className={styles.tiles}>
         {TILES.map(t => (
           <Link key={t.to} to={t.to} className={styles.tile}>
@@ -41,6 +73,11 @@ export function HomePage() {
           </Link>
         ))}
       </div>
+      {!showIntro && (
+        <p className={`text-label ${styles.tutorialLink}`}>
+          New here? <Link to="/tutorial">Take the interactive tutorial</Link>.
+        </p>
+      )}
     </section>
   );
 }

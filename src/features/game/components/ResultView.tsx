@@ -279,18 +279,23 @@ export function ResultView({ onReplay }: ResultViewProps) {
       <div className={styles.dock}>
         <div className={styles.dockRow}>
           {secondary}
-          <ShareButton
-            score={report.total}
-            mode={
-              mode.kind === 'targets'
-                ? 'targets-up'
-                : mode.kind === 'challenge'
-                  ? 'challenge'
-                  : mode.kind
-            }
-            difficulty={state.difficulty}
-            grid={state.grid}
-          />
+          {/* No share for the tutorial — the deal is rigged. */}
+          {mode.kind !== 'tutorial' && (
+            <ShareButton
+              score={report.total}
+              mode={
+                mode.kind === 'targets'
+                  ? 'targets-up'
+                  : mode.kind === 'challenge'
+                    ? 'challenge'
+                    : mode.kind === 'daily'
+                      ? 'daily'
+                      : 'free'
+              }
+              difficulty={state.difficulty}
+              grid={state.grid}
+            />
+          )}
           <Link to="/" className={styles.dockLink}>
             Home
           </Link>
