@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: '/targets', label: 'Targets Up' },
   { to: '/challenges', label: 'Challenges' },
   { to: '/stats', label: 'Stats' },
+  { to: '/achievements', label: 'Achievements' },
   { to: '/rules', label: 'Rules' },
   { to: '/settings', label: 'Settings' },
 ];

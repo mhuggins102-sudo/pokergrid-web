@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { useStatsStore } from '../progress/statsStore';
 import { markTutorialSeen, tutorialSeen } from '../tutorial/tutorialSeen';
 import styles from './HomePage.module.css';
 
@@ -30,6 +31,10 @@ export function HomePage() {
   // First-visit callout; "No thanks" suppresses it for good (the
   // tutorial stays reachable from Rules and Settings).
   const [showIntro, setShowIntro] = useState(() => !tutorialSeen());
+  // The achievements tile mirrors the original home card: a running
+  // earned count once there is one. (statsStore is light — type-only
+  // game imports — so home stays out of the engine chunk.)
+  const earned = useStatsStore(s => s.stats.achievementsDone.length);
 
   return (
     <section className={styles.wrap}>
@@ -72,6 +77,14 @@ export function HomePage() {
             <span className={`text-label ${styles.tileBlurb}`}>{t.blurb}</span>
           </Link>
         ))}
+        <Link to="/achievements" className={styles.tile}>
+          <span className={styles.tileTitle}>Achievements</span>
+          <span className={`text-label ${styles.tileBlurb}`}>
+            {earned > 0
+              ? `${earned} earned — quiet goals that unlock as you play.`
+              : 'Quiet goals that unlock as you play.'}
+          </span>
+        </Link>
       </div>
       {!showIntro && (
         <p className={`text-label ${styles.tutorialLink}`}>
