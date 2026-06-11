@@ -20,6 +20,15 @@
      status strip, bonus row, dock, and gaps. */
   width: min(100%, 440px, calc(100svh - 285px));
   margin: auto auto 0;
+  transition: width 220ms ease;
+}
+
+/* ♣ draw open: the dock panel needs ~210px more than the normal dock,
+   so the board temporarily shrinks by that budget — overall page
+   height never changes. */
+.bonusOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 500px));
+  min-width: 180px;
 }
 
 .bonusRowSlot {
@@ -47,10 +56,13 @@
 .dockRow {
   display: flex;
   align-items: center;
-  /* Deck chip and action buttons share the row at even spacing. */
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-sm);
   min-height: 44px;
+}
+
+.dockRow > :first-child {
+  margin-right: auto;
 }
 
 .dockText {
@@ -88,6 +100,10 @@
 
   .boardArea {
     width: min(100%, 520px, calc(100svh - 320px));
+  }
+
+  .bonusOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 535px));
   }
 
   .dockText {

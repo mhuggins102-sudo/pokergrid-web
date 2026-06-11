@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
-import { Button, Sheet } from '../../../design/primitives';
+import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
 import { useTargetsStore } from '../../targets/targetsStore';
@@ -13,6 +13,7 @@ import { LineDetailSheet } from './LineDetailSheet';
 import { BonusCardStrip } from './BonusCardStrip';
 import { bonusCardLiveContext } from '../bonusCardLiveContext';
 import { RewardsResult, RewardsSheet } from './RewardsSheet';
+import { ScoreDetailsSheet } from './ScoreDetailsSheet';
 import { ShareButton } from './ShareButton';
 import styles from './ResultView.module.css';
 
@@ -221,18 +222,17 @@ export function ResultView({ onReplay }: ResultViewProps) {
     </section>
   );
 
-  const bonusStripRow = state.bonusCards.length > 0 && (
-    <BonusCardStrip
-      layout="row"
-      cards={state.bonusCards}
-      values={shapley}
-      liveContext={card => bonusCardLiveContext(card, state)}
-    />
-  );
-
   return (
     <div className={`${styles.wrap} ${isDaily ? styles.hasRank : ''}`}>
       <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Final result">
+        <button
+          type="button"
+          className={styles.heroInfo}
+          aria-label="Score details"
+          onClick={() => setDetailsOpen(true)}
+        >
+          ⓘ
+        </button>
         <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
           {verdict}
         </span>
@@ -254,17 +254,6 @@ export function ResultView({ onReplay }: ResultViewProps) {
           <RankPanel dateISO={mode.dateISO} />
         </div>
       )}
-
-      <button
-        type="button"
-        className={styles.detailsBar}
-        onClick={() => setDetailsOpen(true)}
-      >
-        <span>Score math &amp; bonus cards</span>
-        <span className={styles.detailsBarCaret} aria-hidden="true">
-          ▸
-        </span>
-      </button>
 
       <div className={styles.boardSlot}>
         <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />
@@ -309,18 +298,14 @@ export function ResultView({ onReplay }: ResultViewProps) {
         {commit}
       </div>
 
-      {detailsOpen && (
-        <Sheet
-          open
-          onClose={() => setDetailsOpen(false)}
-          title="Score math & bonus cards"
-        >
-          <div className={styles.detailsSheetBody}>
-            {scoreMath}
-            {bonusStripRow}
-          </div>
-        </Sheet>
-      )}
+      <ScoreDetailsSheet
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        report={report}
+        bonusCards={state.bonusCards}
+        shapley={shapley}
+        liveContext={card => bonusCardLiveContext(card, state)}
+      />
 
       {rewardsPending && (tier === 'SS' || tier === 'S') && (
         <RewardsSheet

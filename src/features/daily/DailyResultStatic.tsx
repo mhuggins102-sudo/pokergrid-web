@@ -4,7 +4,7 @@ import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../game/scoring';
 import { dailyTargetFor } from '../../game/daily/recipe';
 import { findChallenge } from '../../game/challenges';
 import { tierForRun } from '../../lib/stats';
-import { Button, Sheet } from '../../design/primitives';
+import { Button } from '../../design/primitives';
 import { LineRails } from '../game/components/LineRails';
 import { LinesPanel } from '../game/components/LinesPanel';
 import { LineDetailSheet } from '../game/components/LineDetailSheet';
@@ -12,6 +12,7 @@ import { BonusCardStrip } from '../game/components/BonusCardStrip';
 import { bonusCardLiveContext } from '../game/bonusCardLiveContext';
 import { RankPanel } from './RankPanel';
 import { ShareButton } from '../game/components/ShareButton';
+import { ScoreDetailsSheet } from '../game/components/ScoreDetailsSheet';
 import { DailyPlay } from './sync/playsStore';
 // Shares the result screen's layout/styles so a revisited daily looks
 // exactly like the moment it was finished.
@@ -85,18 +86,17 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
     </section>
   );
 
-  const bonusStripRow = state.bonusCards.length > 0 && (
-    <BonusCardStrip
-      layout="row"
-      cards={state.bonusCards}
-      values={shapley}
-      liveContext={card => bonusCardLiveContext(card, state)}
-    />
-  );
-
   return (
     <div className={`${styles.wrap} ${styles.hasRank}`}>
       <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Daily result">
+        <button
+          type="button"
+          className={styles.heroInfo}
+          aria-label="Score details"
+          onClick={() => setDetailsOpen(true)}
+        >
+          ⓘ
+        </button>
         <span className={`${styles.verdict} ${play.won ? styles.win : styles.loss}`}>
           {play.won ? 'Daily solved' : 'Daily missed'}
         </span>
@@ -112,17 +112,6 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
       <div className={styles.rankSlot}>
         <RankPanel dateISO={play.dateISO} />
       </div>
-
-      <button
-        type="button"
-        className={styles.detailsBar}
-        onClick={() => setDetailsOpen(true)}
-      >
-        <span>Score math &amp; bonus cards</span>
-        <span className={styles.detailsBarCaret} aria-hidden="true">
-          ▸
-        </span>
-      </button>
 
       <div className={styles.boardSlot}>
         <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />
@@ -167,18 +156,14 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
         </Link>
       </div>
 
-      {detailsOpen && (
-        <Sheet
-          open
-          onClose={() => setDetailsOpen(false)}
-          title="Score math & bonus cards"
-        >
-          <div className={styles.detailsSheetBody}>
-            {scoreMath}
-            {bonusStripRow}
-          </div>
-        </Sheet>
-      )}
+      <ScoreDetailsSheet
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        report={report}
+        bonusCards={state.bonusCards}
+        shapley={shapley}
+        liveContext={card => bonusCardLiveContext(card, state)}
+      />
 
       <LineDetailSheet
         line={detailLine}

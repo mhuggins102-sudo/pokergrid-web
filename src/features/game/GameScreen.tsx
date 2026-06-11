@@ -69,7 +69,9 @@ export function GameScreen({ onReplay }: GameScreenProps) {
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <LayoutGroup>
-        <div className={styles.layout}>
+        <div
+          className={`${styles.layout} ${ui.bonusDialog ? styles.bonusOpen : ''}`}
+        >
           <div className={styles.scoreSlot}>
             <ScoreBar
               onShowHandValues={() => setHandsOpen(true)}

@@ -1,7 +1,8 @@
-import { BonusCard, LineContext, isPlaceholder, isSpecialCard } from '../../../game/bonusCards';
+import { BonusCard } from '../../../game/bonusCards';
 import { INCOMPLETE_LINE_PENALTY, ScoredLine } from '../../../game/scoring';
 import { Sheet } from '../../../design/primitives';
 import { HAND_LABEL, lineLabel } from '../handLabels';
+import { appliedLineBonuses, fmtMult } from '../lineBonuses';
 import { CardFace } from './CardFace';
 import styles from './LineDetailSheet.module.css';
 
@@ -20,11 +21,6 @@ export interface LineDetailSheetProps {
   onClose: () => void;
 }
 
-const fmtMult = (m: number): string => {
-  const s = m.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-  return `×${s}`;
-};
-
 /**
  * The calculation behind one line: its five cards, the hand, and
  * exactly which bonus cards fired on it (re-deriving each card's
@@ -37,16 +33,7 @@ export function LineDetailSheet({
   gridBonusesApplied = false,
   onClose,
 }: LineDetailSheetProps) {
-  const applied =
-    line && line.hand
-      ? bonusCards
-          .filter(c => !isPlaceholder(c) && !isSpecialCard(c) && c.lineEffect)
-          .map(card => {
-            const eff = card.lineEffect!(line as LineContext, card, allLines);
-            return { card, mult: eff.multiplier ?? 1, flat: eff.flatAdd ?? 0 };
-          })
-          .filter(e => e.mult !== 1 || e.flat !== 0)
-      : [];
+  const applied = line ? appliedLineBonuses(line, bonusCards, allLines) : [];
 
   return (
     <Sheet

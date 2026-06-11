@@ -45,7 +45,15 @@ export function Dialog({
     if (dismissible && e.target === ref.current) onClose();
   };
 
+  // React propagates close/cancel synthetically through the component
+  // tree even though the native events don't bubble — without the
+  // target guard, closing a nested dialog would also close this one.
+  const handleClose = (e: React.SyntheticEvent<HTMLDialogElement>) => {
+    if (e.target === ref.current) onClose();
+  };
+
   const handleCancel = (e: React.SyntheticEvent<HTMLDialogElement>) => {
+    if (e.target !== ref.current) return;
     // Escape fires 'cancel'; suppress it for must-choose flows.
     if (!dismissible) e.preventDefault();
   };
@@ -54,7 +62,7 @@ export function Dialog({
     <dialog
       ref={ref}
       className={[styles.dialog, className].filter(Boolean).join(' ')}
-      onClose={onClose}
+      onClose={handleClose}
       onClick={handleClick}
       onCancel={handleCancel}
       aria-label={typeof title === 'string' ? title : undefined}
