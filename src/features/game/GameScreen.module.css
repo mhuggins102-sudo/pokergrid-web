@@ -42,12 +42,14 @@
    amount (mirrors the ♣ panel's budget trick); while the ♣ panel has
    the dock the coach unmounts entirely. */
 .coachSlot {
-  height: 216px;
+  /* Sized for the longest step body (~3 lines) — tutorialSteps.ts
+     keeps copy short so the board stays the main event. */
+  height: 158px;
   flex-shrink: 0;
 }
 
 .coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 501px));
+  width: min(100%, 440px, calc(100svh - 443px));
 }
 
 /* Spotlight on the move the coach is asking for. */
@@ -149,7 +151,7 @@
   }
 
   .coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 536px));
+    width: min(100%, 520px, calc(100svh - 478px));
   }
 
   .dockText {
@@ -218,7 +220,7 @@
   .coachSlot {
     grid-column: 3;
     grid-row: 1;
-    height: 230px;
+    height: 190px;
   }
 
   .coachOpen .bonusSlot {
