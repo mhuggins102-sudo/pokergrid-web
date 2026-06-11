@@ -77,3 +77,42 @@
   position: absolute;
   inset: 0;
 }
+
+/* Auto-placed joker arrival: invisible through a short beat (backwards
+   fill), then an overshoot pop with a gold glow bloom. The 0.4s delay
+   is kept in sync with sfxJoker's lead-in. */
+.jokerArrive {
+  border-radius: var(--radius-sm);
+  animation:
+    joker-arrive-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s backwards,
+    joker-arrive-glow 1s ease-out 0.4s;
+}
+
+@keyframes joker-arrive-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes joker-arrive-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(176, 125, 46, 0);
+  }
+  35% {
+    box-shadow: 0 0 18px 4px rgba(176, 125, 46, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(176, 125, 46, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jokerArrive {
+    animation: none;
+  }
+}

@@ -3,7 +3,7 @@ import { sfxForHistoryEntry } from '../sfx';
 describe('sfxForHistoryEntry', () => {
   it('covers placements and all four suit perks', () => {
     expect(sfxForHistoryEntry('Place')).toBe('place');
-    expect(sfxForHistoryEntry('Joker auto-placed')).toBe('place');
+    expect(sfxForHistoryEntry('Joker auto-placed')).toBe('joker');
     expect(sfxForHistoryEntry('Hop 3↔7')).toBe('swap'); // ♥
     expect(sfxForHistoryEntry('Slide left × 2')).toBe('slide'); // ♠
     expect(sfxForHistoryEntry('Destroy slot 12')).toBe('destroy'); // ♦

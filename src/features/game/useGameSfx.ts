@@ -22,10 +22,19 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
     if (!sounds || last === null) return;
 
     // One voice per commit: play the sound of the most recent new
-    // history entry (an UNDO shrinks the log — skip those).
+    // history entry (an UNDO shrinks the log — skip those). A joker
+    // auto-place rides along with whatever move triggered the draw, so
+    // its flourish LAYERS on the move's own sound instead of replacing
+    // it (the flourish is internally delayed to land with the joker's
+    // pop-in animation).
     if (cur.historyLen > last.historyLen && cur.phase !== 'game-over') {
-      for (let i = cur.historyLen - 1; i >= last.historyLen; i--) {
-        const name = sfxForHistoryEntry(state.history[i]);
+      const fresh = state.history.slice(last.historyLen);
+      if (fresh.some(e => e.startsWith('Joker auto-placed'))) {
+        SFX.joker();
+      }
+      for (let i = fresh.length - 1; i >= 0; i--) {
+        if (fresh[i].startsWith('Joker auto-placed')) continue;
+        const name = sfxForHistoryEntry(fresh[i]);
         if (name) {
           SFX[name]();
           break;

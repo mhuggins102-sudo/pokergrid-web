@@ -71,8 +71,11 @@ test('tutorial guides the scripted opening and releases into free play', async (
   await expect(coach).toContainText('let it go');
   await page.getByRole('button', { name: 'Discard', exact: true }).click();
 
-  // Step 13 — scoring recap, then the free tail dismisses the coach.
+  // Steps 13-14 — scoring + good-to-know recaps, then the free tail
+  // dismisses the coach.
   await expect(coach).toContainText('How scoring works');
+  await coach.getByRole('button', { name: 'Next' }).click();
+  await expect(coach).toContainText('Good to know');
   await coach.getByRole('button', { name: 'Next' }).click();
   await expect(coach).toContainText('on your own');
   await coach.getByRole('button', { name: 'Got it' }).click();

@@ -113,7 +113,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     title: '♦ Destroy',
     body:
       'Spend the 9♦ to remove any card from the grid. Tap ♦ Destroy, then the 2♣ you just placed. ' +
-      'Both cards leave play and the slot reopens. Powerful — but unfilled slots cost points at the end, so don’t overdo it.',
+      'Both cards leave play and the slot reopens — and watch the pulsing marker jump back to it: ' +
+      'placing always fills the earliest empty spiral slot first.',
     highlight: 'perk',
     allows: oneOf('BEGIN_SUIT_ACTION', 'RESOLVE_DESTROY'),
     completes: oneOf('RESOLVE_DESTROY'),
@@ -151,9 +152,9 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'info',
     title: 'The joker is wild',
     body:
-      'Did you spot it? A joker just placed itself into the empty slot — jokers always auto-place, no perk, ' +
-      'no discard. On the grid a joker counts as whatever rank and suit make the best hand, judged separately ' +
-      'for its row and its column. Only a ♦ Destroy can remove one.',
+      'Did you spot it? A drawn joker places itself — it landed in the slot your slide left open, since ' +
+      'placing always backfills the earliest empty spiral slot. On the grid it counts as whatever rank and ' +
+      'suit score best for its row and column. Only ♦ Destroy removes one.',
   },
   {
     id: 'discard',
@@ -171,9 +172,19 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'info',
     title: 'How scoring works',
     body:
-      'When the grid fills, each of the 10 lines scores as its best poker hand — a pair is 5 points, a royal flush 120. ' +
-      'Bonus cards multiply, and they stack multiplicatively. A line missing cards scores −25 instead. ' +
-      'The score bar tracks your live total; Lines shows the per-line breakdown.',
+      'The game ends when the grid fills — or the deck runs out. Each of the 10 lines then scores as its best ' +
+      'poker hand: a pair is 5 points, a royal flush 120. Bonus cards multiply, and they stack multiplicatively. ' +
+      'A line missing cards scores −25 instead. Tap Lines for the live per-line breakdown, and the ⓘ button by ' +
+      'the score for what every hand pays.',
+  },
+  {
+    id: 'good-to-know',
+    kind: 'info',
+    title: 'Good to know',
+    body:
+      'You can hold at most three bonus cards — at the cap, a ♣ draw forces a swap (Easy lets you decline). ' +
+      'The deck counter sits beside the drawn card; Peek lists every card left (Easy and Medium). When the ' +
+      'deck runs dry, unfilled slots become those −25 lines.',
   },
   {
     id: 'free',
