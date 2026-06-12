@@ -48,6 +48,15 @@
   line-height: 1;
 }
 
+/* Row chips run their text vertically so the left rail is exactly as
+   slim as the column chips are short — the board gets the width back. */
+.rowChip {
+  writing-mode: vertical-rl;
+  min-width: 24px;
+  min-height: 38px;
+  padding: 4px 0;
+}
+
 .chip:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;

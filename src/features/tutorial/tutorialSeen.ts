@@ -17,3 +17,12 @@ export const markTutorialSeen = (): void => {
     // ignore
   }
 };
+
+/** Settings → Reset all progress re-arms the first-visit callout. */
+export const clearTutorialSeen = (): void => {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // ignore
+  }
+};
