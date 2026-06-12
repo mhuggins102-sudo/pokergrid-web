@@ -40,7 +40,9 @@
 
 .podium {
   fill: currentColor;
-  margin-right: 6px;
+  /* The Button primitive already spaces children by 8px; pull the
+     glyph in a touch tighter. */
+  margin-right: -3px;
   vertical-align: -2px;
 }
 

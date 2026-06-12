@@ -69,3 +69,18 @@
   line-height: 1.45;
   color: var(--ink-3);
 }
+
+/* The inline ⓘ mirrors the result hero's info button. */
+.infoGlyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--rule);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ink-2);
+  vertical-align: -3px;
+}

@@ -1,7 +1,9 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  /* Tight: with grid multiplier/flat rows present the sheet otherwise
+     runs past the fold. */
+  gap: var(--space-md);
 }
 
 .lines {
@@ -22,7 +24,7 @@
   grid-template-columns: 16px 32px 1fr auto;
   align-items: baseline;
   gap: var(--space-sm);
-  padding: 7px 0;
+  padding: 5px 0;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
