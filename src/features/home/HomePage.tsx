@@ -16,14 +16,14 @@ const TILES = [
     blurb: 'Unlimited games across four difficulties.',
   },
   {
-    to: '/targets',
-    title: 'Targets Up',
-    blurb: 'Climb the ladder — the target rises every level.',
-  },
-  {
     to: '/challenges',
     title: 'Challenges',
     blurb: 'Twisted rule sets: Gridlock, Mixed Bag, Three Tricks…',
+  },
+  {
+    to: '/targets',
+    title: 'Targets Up',
+    blurb: 'Climb the ladder — the target rises every level.',
   },
 ];
 

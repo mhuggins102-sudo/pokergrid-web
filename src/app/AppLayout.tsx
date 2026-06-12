@@ -9,8 +9,8 @@ import styles from './AppLayout.module.css';
 const NAV_ITEMS = [
   { to: '/daily', label: 'Daily' },
   { to: '/play', label: 'Free Play' },
-  { to: '/targets', label: 'Targets Up' },
   { to: '/challenges', label: 'Challenges' },
+  { to: '/targets', label: 'Targets Up' },
   { to: '/stats', label: 'Stats' },
   { to: '/achievements', label: 'Achievements' },
   { to: '/rules', label: 'Rules' },
