@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { safeJSONStorage } from '../../lib/safeStorage';
 
 export interface Settings {
   // Sound effects (wired up in the polish phase; persisted now so the
@@ -30,6 +31,6 @@ export const useSettingsStore = create<SettingsStore>()(
       ...DEFAULT_SETTINGS,
       set: patch => set(patch),
     }),
-    { name: 'pokergrid:settings:v1' }
+    { name: 'pokergrid:settings:v1', storage: safeJSONStorage() }
   )
 );

@@ -10,6 +10,8 @@ export interface NextCardWellProps {
   /** Snap (don't animate) layout shifts — used while the dock is
    *  being resized by the ♣ panel. */
   instantLayout?: boolean;
+  /** Hand-stack dock: hero-size card with the meta line beneath. */
+  stacked?: boolean;
   /**
    * Auto-place staging (useAutoPlaceFlights): while set, this card
    * poses here INSTEAD of the drawn card; on release the grid cell
@@ -27,6 +29,7 @@ export interface NextCardWellProps {
 export function NextCardWell({
   onPeekDeck,
   instantLayout = false,
+  stacked = false,
   flight = null,
 }: NextCardWellProps) {
   const { state } = useGameSession();
@@ -52,7 +55,7 @@ export function NextCardWell({
   const SlotTag = canPeek ? 'button' : 'div';
 
   return (
-    <div className={styles.well}>
+    <div className={`${styles.well}${stacked ? ` ${styles.stacked}` : ''}`}>
       <SlotTag
         {...(canPeek ? { type: 'button' as const, onClick: onPeekDeck } : {})}
         className={styles.cardSlot}

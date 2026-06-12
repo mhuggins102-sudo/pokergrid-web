@@ -203,52 +203,94 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             {/* The well stays mounted through the ♣ flow — unmounting it
                 mid-phase strands the grid's shared card layoutIds (cards
                 blink invisible), and the spent club is useful context. */}
-            <div className={styles.dockRow}>
-              <NextCardWell
-                onPeekDeck={() => setPeekOpen(true)}
-                instantLayout={instantLayout}
-                flight={flight}
-              />
-              <span className={styles.dockText} role="status" aria-live="polite">
-                {ui.banner}
-              </span>
-              {!ui.bonusDialog &&
-                rowActions.map(a => (
-                  <Button
-                    key={a.id}
-                    variant={a.variant}
-                    // While an auto-placed card poses in the well, the
-                    // dock pauses — committing then would act on the
-                    // drawn card while the well shows the flight card.
-                    disabled={a.disabled || flight !== null}
-                    onClick={a.onPress}
-                    className={
-                      a.id === coachHighlight ? styles.coachPulse : undefined
-                    }
-                  >
-                    {a.label}
-                  </Button>
-                ))}
-            </div>
             {ui.bonusDialog ? (
               // ♣ draw takes over the dock — board stays fully visible.
-              <BonusResolvePanel ui={ui.bonusDialog} />
+              <>
+                <div className={styles.dockRow}>
+                  <NextCardWell
+                    onPeekDeck={() => setPeekOpen(true)}
+                    instantLayout={instantLayout}
+                    flight={flight}
+                  />
+                  <span className={styles.dockText} role="status" aria-live="polite">
+                    {ui.banner}
+                  </span>
+                </div>
+                <BonusResolvePanel ui={ui.bonusDialog} />
+              </>
             ) : (
-              commitAction && (
-                <Button
-                  key={commitAction.id}
-                  variant={commitAction.id === 'cancel' ? 'secondary' : commitAction.variant}
-                  disabled={commitAction.disabled || flight !== null}
-                  onClick={commitAction.onPress}
-                  className={`${styles.commitButton}${
-                    commitAction.id === coachHighlight
-                      ? ` ${styles.coachPulse}`
-                      : ''
-                  }`}
-                >
-                  {commitAction.label}
-                </Button>
-              )
+              // Hand stack: the drawn card is the hero, with the actions
+              // stacked by importance beside it. While targeting, the
+              // banner takes the stack's top and Cancel sinks to the
+              // bottom; while deciding, Place leads.
+              <div className={styles.handStack}>
+                <NextCardWell
+                  onPeekDeck={() => setPeekOpen(true)}
+                  instantLayout={instantLayout}
+                  stacked
+                  flight={flight}
+                />
+                <div className={styles.actionStack}>
+                  {ui.banner && (
+                    <span
+                      className={styles.dockText}
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {ui.banner}
+                    </span>
+                  )}
+                  {commitAction && commitAction.id === 'place' && (
+                    <Button
+                      key={commitAction.id}
+                      variant={commitAction.variant}
+                      disabled={commitAction.disabled || flight !== null}
+                      onClick={commitAction.onPress}
+                      className={`${styles.commitButton}${
+                        commitAction.id === coachHighlight
+                          ? ` ${styles.coachPulse}`
+                          : ''
+                      }`}
+                    >
+                      {commitAction.label}
+                    </Button>
+                  )}
+                  {rowActions.length > 0 && (
+                    <div className={styles.actionRow}>
+                      {rowActions.map(a => (
+                        <Button
+                          key={a.id}
+                          variant={a.variant}
+                          // While an auto-placed card poses in the well,
+                          // the dock pauses — committing then would act
+                          // on the drawn card while the well shows the
+                          // flight card.
+                          disabled={a.disabled || flight !== null}
+                          onClick={a.onPress}
+                          className={
+                            a.id === coachHighlight
+                              ? styles.coachPulse
+                              : undefined
+                          }
+                        >
+                          {a.label}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                  {commitAction && commitAction.id !== 'place' && (
+                    <Button
+                      key={commitAction.id}
+                      variant="secondary"
+                      disabled={commitAction.disabled || flight !== null}
+                      onClick={commitAction.onPress}
+                      className={styles.commitButton}
+                    >
+                      {commitAction.label}
+                    </Button>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
