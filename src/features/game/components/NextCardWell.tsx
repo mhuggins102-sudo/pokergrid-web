@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
+import { Card } from '../../../game/cards';
 import { canPreviewDeck } from '../../../game/state';
 import { useGameSession } from '../GameSessionProvider';
 import { CardFace, cardAriaLabel, cardLayoutId } from './CardFace';
@@ -9,6 +10,12 @@ export interface NextCardWellProps {
   /** Snap (don't animate) layout shifts — used while the dock is
    *  being resized by the ♣ panel. */
   instantLayout?: boolean;
+  /**
+   * Auto-place staging (useAutoPlaceFlights): while set, this card
+   * poses here INSTEAD of the drawn card; on release the grid cell
+   * takes over its layoutId and the card visibly flies to its slot.
+   */
+  flight?: { card: Card; layoutId: string } | null;
 }
 
 /**
@@ -17,14 +24,27 @@ export interface NextCardWellProps {
  * Shares motion layoutIds with the grid: placing a card visibly travels
  * from here to its cell.
  */
-export function NextCardWell({ onPeekDeck, instantLayout = false }: NextCardWellProps) {
+export function NextCardWell({
+  onPeekDeck,
+  instantLayout = false,
+  flight = null,
+}: NextCardWellProps) {
   const { state } = useGameSession();
   const drawn = state.drawn;
   const canPeek = canPreviewDeck(state.difficulty);
 
-  const cardLabel = drawn
-    ? `Drawn card: ${cardAriaLabel(drawn)}`
-    : 'No card drawn';
+  const shown = flight ? flight.card : drawn;
+  const shownLayoutId = flight
+    ? flight.layoutId
+    : drawn
+      ? cardLayoutId(drawn)
+      : undefined;
+
+  const cardLabel = flight
+    ? `Auto-placing: ${cardAriaLabel(flight.card)}`
+    : drawn
+      ? `Drawn card: ${cardAriaLabel(drawn)}`
+      : 'No card drawn';
 
   // On Easy/Medium the deck is peekable — tapping the card/deck area is
   // the natural gesture for it, with the Peek link as the discoverable
@@ -39,10 +59,10 @@ export function NextCardWell({ onPeekDeck, instantLayout = false }: NextCardWell
         aria-label={canPeek ? `${cardLabel}. Peek at the remaining deck` : cardLabel}
       >
         <AnimatePresence>
-          {drawn && (
+          {shown && (
             <motion.div
-              key={cardLayoutId(drawn)}
-              layoutId={instantLayout ? undefined : cardLayoutId(drawn)}
+              key={shownLayoutId}
+              layoutId={instantLayout ? undefined : shownLayoutId}
               className={styles.cardWrap}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -52,7 +72,7 @@ export function NextCardWell({ onPeekDeck, instantLayout = false }: NextCardWell
                   : { type: 'spring', stiffness: 420, damping: 32 }
               }
             >
-              <CardFace card={drawn} />
+              <CardFace card={shown} />
             </motion.div>
           )}
         </AnimatePresence>

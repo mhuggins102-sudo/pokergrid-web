@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { ToastProvider } from '../../../design/primitives';
 import { PlayPage } from '../PlayPage';
@@ -101,9 +101,16 @@ describe('free play', () => {
     throw new Error('No enabled perk button appeared during the run');
   });
 
-  it('undo restores the previous board state on easy (1 undo)', () => {
+  it('undo restores the previous board state on easy (1 undo)', async () => {
     renderPlay('?difficulty=easy&seed=42');
     const board = screen.getByRole('grid', { name: 'Game board' });
+    // The opening card stages in the well first, then flies to its
+    // cell (useAutoPlaceFlights) — wait for the landing.
+    await waitFor(() =>
+      expect(
+        board.querySelectorAll('[class*="cardWrap"]').length
+      ).toBeGreaterThan(0)
+    );
     const filledBefore = board.querySelectorAll('[class*="cardWrap"]').length;
 
     fireEvent.click(screen.getByRole('button', { name: 'Place' }));

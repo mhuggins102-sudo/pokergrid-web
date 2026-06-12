@@ -25,11 +25,16 @@ export interface GridBoardProps {
    */
   jokerArrivals?: ReadonlySet<number>;
   /**
-   * Slots seated by the engine before the first paint (from
-   * useOpeningDeal, hosted in GameScreen for the same remount reason).
-   * Those cards deal in with a staggered pop.
+   * Slots seated by the engine on pre-scattered boards (from
+   * useAutoPlaceFlights' cssDeal). Those cards deal in with a
+   * staggered CSS cascade instead of the per-card well flight.
    */
   openingDeal?: ReadonlySet<number>;
+  /**
+   * Slots whose card is currently staged in the well by
+   * useAutoPlaceFlights — rendered empty until the flight releases.
+   */
+  hiddenSlots?: ReadonlySet<number>;
   /**
    * Line spotlight: highlight this slot's row + column, dim the rest,
    * and float the line tags (e.g. "R3 · 25" / "C2 · open") at the
@@ -68,11 +73,11 @@ const NO_ARRIVALS: ReadonlySet<number> = new Set();
 
 /**
  * Slots whose joker ARRIVED (auto-placed on draw — the joker count
- * went up): those get a delayed, springy pop-in with a glow, so the
- * "free card appeared out of nowhere" moment reads. A joker merely
- * MOVED by a perk keeps the normal entrance. Arrival slots stick in
- * the ref so re-renders mid-animation don't strip the styling; they
- * clear when the slot stops holding a joker.
+ * went up): those bloom a gold glow as the flight staged by
+ * useAutoPlaceFlights lands, so the "free card" moment reads. A joker
+ * merely MOVED by a perk keeps the normal entrance. Arrival slots
+ * stick in the ref so re-renders mid-animation don't strip the
+ * styling; they clear when the slot stops holding a joker.
  *
  * Lives in GameScreen, NOT GridBoard — the board remounts on the
  * ♣-panel toggle (the exact commit a ♣-triggered joker lands in),
@@ -96,36 +101,14 @@ export function useJokerArrivals(grid: Grid): ReadonlySet<number> {
     });
   }
   // Expire arrival marks once the moment has played out — otherwise a
-  // later board remount (the ♣-panel toggle) would replay the pop for
+  // later board remount (the ♣-panel toggle) would replay the glow for
   // a joker that has been sitting there for minutes.
   useEffect(() => {
     if (arrivedSlots.size === 0) return;
-    const t = window.setTimeout(() => arrivedSlots.clear(), 2500);
+    const t = window.setTimeout(() => arrivedSlots.clear(), 4000);
     return () => window.clearTimeout(t);
   });
   return arrivedSlots;
-}
-
-/**
- * Slots already filled when the session's board first renders — the
- * engine seats the opening card (and Gridlock's pre-scatter, and any
- * pre-render auto-placed jokers) before React ever paints, so without
- * this they'd just pop into existence. GameScreen mounts exactly once
- * per run, so "filled at mount" IS the opening deal. Marks expire so
- * later board remounts don't replay the deal.
- */
-export function useOpeningDeal(grid: Grid): ReadonlySet<number> {
-  const slotsRef = useRef<Set<number> | null>(null);
-  if (slotsRef.current === null) {
-    slotsRef.current = new Set(grid.flatMap((c, i) => (c ? [i] : [])));
-  }
-  const slots = slotsRef.current;
-  useEffect(() => {
-    if (slots.size === 0) return;
-    const t = window.setTimeout(() => slots.clear(), 2500);
-    return () => window.clearTimeout(t);
-  });
-  return slots;
 }
 
 export function GridBoard({
@@ -136,6 +119,7 @@ export function GridBoard({
   instantLayout = false,
   jokerArrivals = NO_ARRIVALS,
   openingDeal = NO_ARRIVALS,
+  hiddenSlots = NO_ARRIVALS,
   spotlight = null,
 }: GridBoardProps) {
   const dealOrder = [...openingDeal];
@@ -143,7 +127,10 @@ export function GridBoard({
   const spotCol = spotlight ? spotlight.idx % GRID_SIZE : -1;
   return (
     <div className={styles.board} role="grid" aria-label="Game board">
-      {grid.map((card, idx) => {
+      {grid.map((realCard, idx) => {
+        // A staged card renders as empty here — it's posing in the
+        // well, and lands (with FLIP travel) when its flight releases.
+        const card = hiddenSlots.has(idx) ? null : realCard;
         const role = roleOf?.(idx) ?? null;
         const tappable = isTappable?.(idx) ?? false;
         const dimmed =
@@ -171,22 +158,10 @@ export function GridBoard({
           >
             <AnimatePresence initial={false}>
               {card &&
-                (jokerArrivals.has(idx) ? (
-                  // Auto-placed joker: pop in late with a wobble + glow.
-                  // The entrance is pure CSS — the board remounts in
-                  // this same commit (♣ toggle) and AnimatePresence's
-                  // initial={false} would swallow a motion entrance.
-                  <motion.div
-                    key={`joker-${idx}`}
-                    className={`${styles.cardWrap} ${styles.jokerArrive}`}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                  >
-                    <CardFace card={card} />
-                  </motion.div>
-                ) : openingDeal.has(idx) ? (
-                  // Opening deal: seated pre-paint by the engine, so the
-                  // entrance is CSS (AnimatePresence's initial={false}
-                  // suppresses mount animations). Staggered by slot.
+                (openingDeal.has(idx) ? (
+                  // Pre-scattered board: seated pre-paint by the engine,
+                  // so the entrance is CSS (AnimatePresence's
+                  // initial={false} suppresses mount animations).
                   <motion.div
                     key={cardLayoutId(card) ?? `joker-${idx}`}
                     className={`${styles.cardWrap} ${styles.dealIn}`}
@@ -198,10 +173,20 @@ export function GridBoard({
                     <CardFace card={card} />
                   </motion.div>
                 ) : (
+                  // Jokers carry a slot-keyed layoutId so an auto-place
+                  // flight (staged in the well under the same id) FLIPs
+                  // here exactly like a manual Place; arrived jokers
+                  // bloom a glow on touchdown.
                   <motion.div
                     key={cardLayoutId(card) ?? `joker-${idx}`}
-                    layoutId={instantLayout ? undefined : cardLayoutId(card)}
-                    className={styles.cardWrap}
+                    layoutId={
+                      instantLayout
+                        ? undefined
+                        : (cardLayoutId(card) ?? `joker-slot-${idx}`)
+                    }
+                    className={`${styles.cardWrap}${
+                      jokerArrivals.has(idx) ? ` ${styles.jokerArrive}` : ''
+                    }`}
                     initial={{ opacity: 0, scale: 0.85 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.6 }}

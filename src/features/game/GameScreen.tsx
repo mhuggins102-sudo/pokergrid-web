@@ -9,11 +9,8 @@ import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { lineLabel } from './handLabels';
-import {
-  GridBoard,
-  useJokerArrivals,
-  useOpeningDeal,
-} from './components/GridBoard';
+import { GridBoard, useJokerArrivals } from './components/GridBoard';
+import { useAutoPlaceFlights } from './useAutoPlaceFlights';
 import { NextCardWell } from './components/NextCardWell';
 import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
@@ -77,7 +74,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Tracked here because the board below remounts on the ♣ toggle —
   // the same commit a ♣-triggered joker auto-places in.
   const jokerArrivals = useJokerArrivals(state.grid);
-  const openingDeal = useOpeningDeal(state.grid);
+  // Engine-placed cards (opening deal, auto-placed jokers) pose in the
+  // well, then fly to their cell via the same FLIP a manual Place gets.
+  const { flight, hiddenSlots, cssDeal } = useAutoPlaceFlights(state);
 
   // Line spotlight: tapping a seated card (outside perk targeting)
   // lights up its row + column with their R/C names and live values —
@@ -174,7 +173,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               }}
               instantLayout={instantLayout}
               jokerArrivals={jokerArrivals}
-              openingDeal={openingDeal}
+              openingDeal={cssDeal}
+              hiddenSlots={hiddenSlots}
               spotlight={spotlightProp}
             />
           </div>
@@ -204,7 +204,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 mid-phase strands the grid's shared card layoutIds (cards
                 blink invisible), and the spent club is useful context. */}
             <div className={styles.dockRow}>
-              <NextCardWell onPeekDeck={() => setPeekOpen(true)} instantLayout={instantLayout} />
+              <NextCardWell
+                onPeekDeck={() => setPeekOpen(true)}
+                instantLayout={instantLayout}
+                flight={flight}
+              />
               <span className={styles.dockText} role="status" aria-live="polite">
                 {ui.banner}
               </span>
