@@ -41,17 +41,24 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'info',
     title: 'Welcome to PokerGrid',
     body:
-      'This is a guided practice deal. You place 25 cards on a 5×5 grid; at the end, ' +
-      'every row and every column scores as a poker hand — ten hands at once. ' +
-      `Beat the practice target of ${TUTORIAL_TARGET}. The deck is rigged so you can try every move.`,
+      'This is a guided practice deal. You’ll fill the 5×5 grid; at the end, every row ' +
+      'and every column scores as a poker hand — ten hands at once.',
+  },
+  {
+    id: 'target',
+    kind: 'info',
+    title: 'The practice target',
+    body:
+      `Beat ${TUTORIAL_TARGET} to win this deal. The deck is rigged so you can safely try ` +
+      'every move — nothing here counts toward your stats.',
   },
   {
     id: 'place-first',
     kind: 'action',
     title: 'Place your first card',
     body:
-      'Cards fill the grid along a spiral: center first, then clockwise outward. ' +
-      'The pulsing slot is where the next card lands. Tap Place to put the K♠ beside the 7♥.',
+      'Cards fill the grid in a spiral: center first, then clockwise outward. The pulsing ' +
+      'slot is next. Tap Place to put the K♠ beside the 7♥.',
     highlight: 'place',
     allows: oneOf('PLACE'),
     completes: oneOf('PLACE'),
@@ -70,8 +77,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'action',
     title: 'A second king',
     body:
-      'Place the K♦. It lands next to the 4♣ — not in line with the other king, ' +
-      "but we'll fix that in a moment.",
+      'Place the K♦. It lands beside the 4♣ — not in line with the other king yet, but ' +
+      'we’ll fix that in a moment.',
     highlight: 'place',
     allows: oneOf('PLACE'),
     completes: oneOf('PLACE'),
@@ -81,17 +88,16 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'info',
     title: 'Every suit is a power',
     body:
-      'Instead of placing a drawn card, you can spend it on its suit’s perk: ' +
-      '♥ swaps two cards, ♠ slides a chain, ♦ destroys a card, ♣ draws a bonus card. ' +
-      'The drawn card is used up either way. Let’s try all four.',
+      'Instead of placing a drawn card, you can spend it on its suit’s perk: ♥ swaps, ' +
+      '♠ slides, ♦ destroys, ♣ draws a bonus card. Let’s try all four.',
   },
   {
     id: 'hop',
     kind: 'action',
     title: '♥ Swap',
     body:
-      'Spend the 9♥ to swap any two cards that share a row or column. ' +
-      'Tap ♥ Swap, then swap the K♦ with the 4♣ — both kings line up, and a pair of kings scores on that column.',
+      'Spend the 9♥ to swap two cards that share a row or column. Tap ♥ Swap, then swap ' +
+      'the K♦ with the 4♣ — the kings line up and start scoring.',
     highlight: 'perk',
     allows: oneOf('BEGIN_SUIT_ACTION', 'RESOLVE_HOP'),
     completes: oneOf('RESOLVE_HOP'),
@@ -101,7 +107,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'action',
     title: 'A dud card',
     body:
-      'Back to normal play — place the 2♣. Low offsuit cards like this drag a line down. ' +
+      'Back to normal play — place the 2♣. Low offsuit cards drag their lines down. ' +
       'Good thing diamonds exist…',
     highlight: 'place',
     allows: oneOf('PLACE'),
@@ -112,20 +118,27 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'action',
     title: '♦ Destroy',
     body:
-      'Spend the 9♦ to remove any card from the grid. Tap ♦ Destroy, then the 2♣ you just placed. ' +
-      'Both cards leave play and the slot reopens — and watch the pulsing marker jump back to it: ' +
-      'placing always fills the earliest empty spiral slot first.',
+      'Spend the 9♦ to remove any card from the grid. Tap ♦ Destroy, then the 2♣ you ' +
+      'just placed — both cards leave play and the slot reopens.',
     highlight: 'perk',
     allows: oneOf('BEGIN_SUIT_ACTION', 'RESOLVE_DESTROY'),
     completes: oneOf('RESOLVE_DESTROY'),
+  },
+  {
+    id: 'spiral-backfill',
+    kind: 'info',
+    title: 'The spiral backfills',
+    body:
+      'See the pulsing marker jump back to the hole? Placing always fills the earliest ' +
+      'empty spiral slot — holes get patched before the spiral grows.',
   },
   {
     id: 'slide',
     kind: 'action',
     title: '♠ Slide',
     body:
-      'Spend the 9♠ to slide a card — plus any chain of cards in front of it — along its row or column. ' +
-      'Tap ♠ Slide, pick a card, then pick where its leading edge should land. Try sliding the 4♣ into the empty slot.',
+      'Spend the 9♠ to slide a card along its row or column — any chain in front moves ' +
+      'with it. Tap ♠ Slide and move the 4♣ into the empty slot.',
     highlight: 'perk',
     allows: oneOf('BEGIN_SUIT_ACTION', 'SLIDE_SELECT_SOURCE', 'RESOLVE_SLIDE'),
     completes: oneOf('RESOLVE_SLIDE'),
@@ -135,8 +148,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'action',
     title: '♣ Bonus',
     body:
-      'Spend the 9♣ to draw two bonus cards and keep one. Bonus cards multiply line scores or pay off at game end — ' +
-      'you already hold one from the deal (the strip by the board) and can hold up to three.',
+      'Spend the 9♣ to draw two bonus cards and keep one. Bonus cards multiply line ' +
+      'scores or pay off at game end.',
     highlight: 'perk',
     allows: oneOf(
       'BEGIN_SUIT_ACTION',
@@ -152,17 +165,24 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'info',
     title: 'The joker is wild',
     body:
-      'Did you spot it? A drawn joker places itself — it landed in the slot your slide left open, since ' +
-      'placing always backfills the earliest empty spiral slot. On the grid it counts as whatever rank and ' +
-      'suit score best for its row and column. Only ♦ Destroy removes one.',
+      'Did you spot it? A drawn joker places itself — into the earliest empty spiral ' +
+      'slot, as always. No perk, no discard for jokers.',
+  },
+  {
+    id: 'joker-hands',
+    kind: 'info',
+    title: 'A shape-shifter',
+    body:
+      'On the grid the joker counts as whatever rank and suit score best — judged ' +
+      'separately for its row and its column. Only ♦ Destroy removes one.',
   },
   {
     id: 'discard',
     kind: 'action',
     title: 'Or just let it go',
     body:
-      'Sometimes the best move is none: Discard throws the drawn card away without filling a slot. ' +
-      '(Extreme difficulty takes this away.) Discard the 2♦.',
+      'Sometimes the best move is none. Discard the 2♦ — it leaves play without ' +
+      'filling a slot. (Extreme difficulty bans discards.)',
     highlight: 'discard',
     allows: oneOf('DISCARD_NONE'),
     completes: oneOf('DISCARD_NONE'),
@@ -170,21 +190,42 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     id: 'scoring',
     kind: 'info',
-    title: 'How scoring works',
+    title: 'How the game ends',
     body:
-      'The game ends when the grid fills — or the deck runs out. Each of the 10 lines then scores as its best ' +
-      'poker hand: a pair is 5 points, a royal flush 120. Bonus cards multiply, and they stack multiplicatively. ' +
-      'A line missing cards scores −25 instead. Tap Lines for the live per-line breakdown, and the ⓘ button by ' +
-      'the score for what every hand pays.',
+      'The game ends when the grid fills — or the deck runs out. Every row and column ' +
+      'then scores as its best five-card poker hand.',
   },
   {
-    id: 'good-to-know',
+    id: 'scoring-values',
     kind: 'info',
-    title: 'Good to know',
+    title: 'What hands pay',
     body:
-      'You can hold at most three bonus cards — at the cap, a ♣ draw forces a swap (Easy lets you decline). ' +
-      'The deck counter sits beside the drawn card; Peek lists every card left (Easy and Medium). When the ' +
-      'deck runs dry, unfilled slots become those −25 lines.',
+      'A pair pays 5 points, a royal flush 120. Bonus cards multiply line scores — and ' +
+      'they stack. A line missing cards scores −25 instead.',
+  },
+  {
+    id: 'scoring-tools',
+    kind: 'info',
+    title: 'Your dashboards',
+    body:
+      'Tap Lines for the live per-line breakdown, and the ⓘ button by the score for ' +
+      'what every hand pays.',
+  },
+  {
+    id: 'bonus-hand',
+    kind: 'info',
+    title: 'Your bonus hand',
+    body:
+      'You can hold three bonus cards at most — at the cap, a ♣ draw forces a swap ' +
+      '(Easy lets you decline). Tap a held card any time for its full details.',
+  },
+  {
+    id: 'deck-watch',
+    kind: 'info',
+    title: 'Watch the deck',
+    body:
+      'The counter beside the drawn card tracks what’s left; Peek lists every card ' +
+      '(Easy and Medium). When the deck runs dry, unfilled slots become −25 lines.',
   },
   {
     id: 'free',
