@@ -18,7 +18,7 @@ export interface ScoreBarProps {
  * Lines view shows which lines are still open.
  */
 export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
-  const { state, dispatch, canUndo, maxUndos } = useGameSession();
+  const { state, dispatch, mode, canUndo, maxUndos } = useGameSession();
   const [tiersOpen, setTiersOpen] = useState(false);
 
   const report = useMemo(
@@ -78,7 +78,12 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
           ⓘ
         </Button>
       </div>
-      <TierBreakdownSheet open={tiersOpen} onClose={() => setTiersOpen(false)} />
+      <TierBreakdownSheet
+        open={tiersOpen}
+        onClose={() => setTiersOpen(false)}
+        target={state.target}
+        showRewards={mode.kind === 'targets'}
+      />
     </div>
   );
 }

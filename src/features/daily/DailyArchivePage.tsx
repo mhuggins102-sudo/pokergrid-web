@@ -3,24 +3,9 @@ import { currentDateISO } from '../../game/daily/seed';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { findChallenge } from '../../game/challenges';
 import { tierForRun } from '../../lib/stats';
+import { DAILY_LAUNCH_ISO, datesBack } from './dailyDates';
 import { usePlaysStore } from './sync/playsStore';
 import styles from './DailyArchivePage.module.css';
-
-// The first daily ever published (carried over from the original site)
-// — the archive runs all the way back to it.
-const DAILY_LAUNCH_ISO = '2026-05-01';
-
-const datesBack = (todayISO: string, earliestISO: string): string[] => {
-  const [y, m, d] = todayISO.split('-').map(Number);
-  const base = Date.UTC(y, m - 1, d);
-  const out: string[] = [];
-  for (let i = 0; ; i++) {
-    const iso = new Date(base - i * 86_400_000).toISOString().slice(0, 10);
-    if (iso < earliestISO) break;
-    out.push(iso);
-  }
-  return out;
-};
 
 /** /daily/archive — every published daily, play or revisit. */
 export function DailyArchivePage() {

@@ -1,11 +1,13 @@
 .panel {
-  /* A slim bar: standing left, Leaderboard sheet trigger right. */
+  /* A compact centered pill: standing + Leaderboard trigger, sized to
+     its content — a full-width bar left an unsettling void between. */
+  width: fit-content;
+  margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
+  gap: var(--space-lg);
   min-height: 42px;
-  padding: 4px var(--space-sm) 4px var(--space-md);
+  padding: 4px var(--space-sm) 4px var(--space-lg);
   border-radius: var(--radius-md);
   background: var(--paper-raised);
   border: 1px solid var(--rule);

@@ -47,6 +47,19 @@
   color: var(--ink-2);
 }
 
+/* The "your score" marker row, slotted between the tiers it landed
+   between. */
+.you {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-weight: 700;
+}
+
+.you .tier,
+.you .label {
+  color: var(--accent);
+}
+
 .label {
   color: var(--ink-2);
 }
