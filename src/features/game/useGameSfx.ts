@@ -19,7 +19,16 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
     const cur = { historyLen: state.history.length, phase: state.phase.kind };
     const last = prev.current;
     prev.current = cur;
-    if (!sounds || last === null) return;
+    if (!sounds) return;
+    if (last === null) {
+      // Session mount: the engine seated the opening card(s) before the
+      // first paint. Give that deal its placement tick, timed to the
+      // board's deal-in animation.
+      if (state.past.length === 0 && state.grid.some(c => c !== null)) {
+        window.setTimeout(() => SFX.place(), 150);
+      }
+      return;
+    }
 
     // One voice per commit: play the sound of the most recent new
     // history entry (an UNDO shrinks the log — skip those). A joker
