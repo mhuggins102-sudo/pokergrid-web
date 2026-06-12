@@ -28,3 +28,12 @@ export const markTwistSeen = (id: ChallengeId): void => {
     // storage unavailable — explainer just shows again next time
   }
 };
+
+/** Settings → Reset all progress re-arms every twist explainer. */
+export const clearTwistsSeen = (): void => {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // ignore
+  }
+};

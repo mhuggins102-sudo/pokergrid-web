@@ -30,6 +30,12 @@ export interface GridBoardProps {
    * Those cards deal in with a staggered pop.
    */
   openingDeal?: ReadonlySet<number>;
+  /**
+   * Line spotlight: highlight this slot's row + column, dim the rest,
+   * and float the line tags (e.g. "R3 · 25" / "C2 · open") at the
+   * row/column edges — the in-place answer to "which line is R3?".
+   */
+  spotlight?: { idx: number; rowText: string; colText: string } | null;
 }
 
 const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
@@ -130,19 +136,27 @@ export function GridBoard({
   instantLayout = false,
   jokerArrivals = NO_ARRIVALS,
   openingDeal = NO_ARRIVALS,
+  spotlight = null,
 }: GridBoardProps) {
   const dealOrder = [...openingDeal];
+  const spotRow = spotlight ? Math.floor(spotlight.idx / GRID_SIZE) : -1;
+  const spotCol = spotlight ? spotlight.idx % GRID_SIZE : -1;
   return (
     <div className={styles.board} role="grid" aria-label="Game board">
       {grid.map((card, idx) => {
         const role = roleOf?.(idx) ?? null;
         const tappable = isTappable?.(idx) ?? false;
+        const dimmed =
+          spotlight !== null &&
+          Math.floor(idx / GRID_SIZE) !== spotRow &&
+          idx % GRID_SIZE !== spotCol;
         const cls = [
           styles.cell,
           card ? styles.filled : null,
           role === 'target' ? styles.target : null,
           role === 'selected' ? styles.selected : null,
           role === 'next' ? styles.next : null,
+          dimmed ? styles.dimmed : null,
         ]
           .filter(Boolean)
           .join(' ');
@@ -204,6 +218,30 @@ export function GridBoard({
           </button>
         );
       })}
+      {spotlight && (
+        <>
+          <span
+            className={styles.lineTag}
+            style={{
+              top: `calc(${spotRow} * 20% + 10%)`,
+              left: '4px',
+              transform: 'translateY(-50%)',
+            }}
+          >
+            {spotlight.rowText}
+          </span>
+          <span
+            className={styles.lineTag}
+            style={{
+              left: `calc(${spotCol} * 20% + 10%)`,
+              top: '4px',
+              transform: 'translateX(-50%)',
+            }}
+          >
+            {spotlight.colText}
+          </span>
+        </>
+      )}
     </div>
   );
 }

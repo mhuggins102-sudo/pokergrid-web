@@ -4,6 +4,8 @@ import { Button, Dialog, useToast } from '../../design/primitives';
 import { Settings, useSettingsStore } from './settingsStore';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from '../targets/targetsStore';
+import { clearTwistsSeen } from '../daily/twistSeen';
+import { clearTutorialSeen } from '../tutorial/tutorialSeen';
 import styles from './SettingsPage.module.css';
 
 function ToggleRow({
@@ -128,7 +130,9 @@ export function SettingsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <p className="text-body">
             This permanently clears your stats, achievements, completed
-            challenges, and the current Targets-Up run on this device.
+            challenges, and the current Targets-Up run on this device. It
+            also re-arms the one-time explainers (tutorial callout, daily
+            twist intros).
           </p>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <Button variant="ghost" onClick={() => setConfirmReset(false)}>
@@ -139,6 +143,8 @@ export function SettingsPage() {
               onClick={() => {
                 resetStats();
                 clearTargets();
+                clearTwistsSeen();
+                clearTutorialSeen();
                 setConfirmReset(false);
                 toast('Progress reset.', 'success');
               }}

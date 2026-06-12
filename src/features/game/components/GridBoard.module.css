@@ -1,4 +1,5 @@
 .board {
+  position: relative; /* anchors the spotlight line tags */
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   /* Fixed gap so external rails (line totals on the result screen) can
@@ -78,6 +79,27 @@
   inset: 0;
 }
 
+/* Line spotlight: cells off the tapped card's row/column fade back. */
+.dimmed {
+  opacity: 0.3;
+  transition: opacity 150ms ease;
+}
+
+.lineTag {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--paper-raised);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-md);
+}
+
 /* Auto-placed joker arrival: invisible through a short beat (backwards
    fill), then an overshoot pop with a gold glow bloom. The 0.4s delay
    is kept in sync with sfxJoker's lead-in. */
@@ -117,19 +139,21 @@
   }
 }
 
-/* Opening deal: the engine seats cards before first paint; this deals
-   them in with a small overshoot pop. The per-slot stagger comes from
-   an inline animation-delay; backwards fill hides cards until their
-   turn. */
+/* Opening deal: the engine seats cards before first paint; this flies
+   them in from the deck well's direction (bottom-left dock) like a
+   normal placement's travel. The per-slot stagger comes from an inline
+   animation-delay; backwards fill hides cards until their turn. */
 .dealIn {
   border-radius: var(--radius-sm);
-  animation: card-deal-in 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+  animation: card-deal-in 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) backwards;
+  z-index: 2;
 }
 
 @keyframes card-deal-in {
   from {
-    opacity: 0;
-    transform: scale(0.5);
+    opacity: 0.85;
+    transform: translate(calc(-1 * min(28vw, 230px)), min(48vh, 400px))
+      scale(0.9);
   }
   to {
     opacity: 1;

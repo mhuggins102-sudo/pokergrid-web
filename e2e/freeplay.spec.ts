@@ -53,6 +53,20 @@ test('seeded easy game plays to completion with Place', async ({ page }) => {
   await expect(place).toBeVisible();
 });
 
+test('tapping a seated card spotlights its row and column', async ({
+  page,
+}) => {
+  await page.goto('/play?difficulty=easy&seed=42');
+  await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
+  // The opening card sits at the center (row 3, column 3).
+  await page.getByLabel(/^row 3 column 3: (?!empty)/).click();
+  await expect(page.getByText(/^R3 · /)).toBeVisible();
+  await expect(page.getByText(/^C3 · /)).toBeVisible();
+  // Tapping the same card again clears the spotlight.
+  await page.getByLabel(/^row 3 column 3: (?!empty)/).click();
+  await expect(page.getByText(/^R3 · /)).toHaveCount(0);
+});
+
 test('hop targeting: tap two cards in a row to swap', async ({ page }) => {
   // Seed chosen so the run draws a heart while the board has 2+ cards
   // (any seed works eventually; we walk until the Swap button enables).

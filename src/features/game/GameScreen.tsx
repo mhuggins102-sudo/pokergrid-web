@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import { scoreGrid } from '../../game/scoring';
 import { Button, Sheet } from '../../design/primitives';
@@ -8,6 +8,7 @@ import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
+import { lineLabel } from './handLabels';
 import {
   GridBoard,
   useJokerArrivals,
@@ -78,6 +79,38 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const jokerArrivals = useJokerArrivals(state.grid);
   const openingDeal = useOpeningDeal(state.grid);
 
+  // Line spotlight: tapping a seated card (outside perk targeting)
+  // lights up its row + column with their R/C names and live values —
+  // the in-place reference for bonus cards that talk about "R1"/"C3".
+  // Clears on its own, on a second tap, or on any game commit.
+  const [spotlight, setSpotlight] = useState<number | null>(null);
+  useEffect(() => {
+    setSpotlight(null);
+  }, [state]);
+  useEffect(() => {
+    if (spotlight === null) return;
+    const t = window.setTimeout(() => setSpotlight(null), 3000);
+    return () => window.clearTimeout(t);
+  }, [spotlight]);
+
+  const spotlightEnabled = ui.phaseKind === 'awaiting-action';
+  const lineText = (kind: 'row' | 'col', index: number): string => {
+    const line = liveReport.lines.find(
+      l => l.kind === kind && l.index === index
+    );
+    const label = lineLabel(kind, index);
+    if (!line || line.incomplete) return `${label} · open`;
+    return `${label} · ${line.total}`;
+  };
+  const spotlightProp =
+    spotlight !== null
+      ? {
+          idx: spotlight,
+          rowText: lineText('row', Math.floor(spotlight / 5)),
+          colText: lineText('col', spotlight % 5),
+        }
+      : null;
+
   if (ui.isGameOver) {
     return <ResultView onReplay={onReplay} />;
   }
@@ -128,11 +161,21 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               key={bonusOpen ? 'board-compact' : 'board-full'}
               grid={state.grid}
               roleOf={ui.roleOf}
-              isTappable={ui.isTappable}
-              onCellTap={ui.onCellTap}
+              isTappable={idx =>
+                ui.isTappable(idx) ||
+                (spotlightEnabled && state.grid[idx] !== null)
+              }
+              onCellTap={idx => {
+                if (spotlightEnabled && state.grid[idx] !== null) {
+                  setSpotlight(s => (s === idx ? null : idx));
+                  return;
+                }
+                ui.onCellTap(idx);
+              }}
               instantLayout={instantLayout}
               jokerArrivals={jokerArrivals}
               openingDeal={openingDeal}
+              spotlight={spotlightProp}
             />
           </div>
 

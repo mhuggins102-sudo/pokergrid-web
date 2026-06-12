@@ -32,7 +32,9 @@ export function LineRails({ grid, report, onLineTap }: LineRailsProps) {
     <button
       key={`${line.kind}-${line.index}`}
       type="button"
-      className={`${styles.chip} ${toneOf(line)}`}
+      className={`${styles.chip} ${
+        line.kind === 'row' ? styles.rowChip : ''
+      } ${toneOf(line)}`}
       onClick={() => onLineTap?.(line)}
       aria-label={chipLabel(line)}
     >
