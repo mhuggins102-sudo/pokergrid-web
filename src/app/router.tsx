@@ -75,6 +75,11 @@ const TokenGalleryPage = lazy(() =>
     default: m.TokenGalleryPage,
   }))
 );
+const DockGalleryPage = lazy(() =>
+  import('../design/gallery/DockGalleryPage').then(m => ({
+    default: m.DockGalleryPage,
+  }))
+);
 
 const page = (el: React.ReactNode) => (
   <Suspense fallback={null}>{el}</Suspense>
@@ -101,6 +106,7 @@ export const router = createBrowserRouter([
       { path: 'rules/cards', element: page(<BonusCardReferencePage />) },
       { path: 'settings', element: page(<SettingsPage />) },
       { path: 'design', element: page(<TokenGalleryPage />) },
+      { path: 'design/dock', element: page(<DockGalleryPage />) },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
