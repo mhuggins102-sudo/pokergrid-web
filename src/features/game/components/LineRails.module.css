@@ -51,7 +51,9 @@
 /* Row chips run their text vertically so the left rail is exactly as
    slim as the column chips are short — the board gets the width back. */
 .rowChip {
+  /* vertical-rl glyphs face left; the 180° turn makes them face right. */
   writing-mode: vertical-rl;
+  transform: rotate(180deg);
   min-width: 24px;
   min-height: 38px;
   padding: 4px 0;
