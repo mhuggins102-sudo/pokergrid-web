@@ -106,8 +106,12 @@ export function LineDetailSheet({
             </div>
             {gridBonusesApplied && (
               <p className={styles.gridNote}>
-                Grid-level bonuses also multiplied the final total at game
-                end — see Score math.
+                Press{' '}
+                <span className={styles.infoGlyph} aria-label="the info button">
+                  ⓘ
+                </span>{' '}
+                to view grid multiplier bonuses that factored into the final
+                score.
               </p>
             )}
           </div>
