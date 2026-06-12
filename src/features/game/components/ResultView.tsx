@@ -120,7 +120,8 @@ export function ResultView({ onReplay }: ResultViewProps) {
       : mode.kind === 'targets'
         ? `level ${mode.level} · target ${state.target} · ${state.difficulty}`
         : mode.kind === 'daily'
-          ? `${mode.dateISO} · target ${state.target} · ${state.difficulty}${
+          ? // The date lives on the rank bar below — no need twice.
+            `target ${state.target} · ${state.difficulty}${
               setup.challenge ? ` · ${setup.challenge.name}` : ''
             }`
           : `target ${state.target} · ${state.difficulty}`;
