@@ -87,9 +87,19 @@ export function RankPanel({ dateISO }: { dateISO: string }) {
   return (
     <section className={styles.panel} aria-label="Leaderboard">
       {standing}
-      <span className={styles.date}>{dateISO}</span>
       <Button size="sm" variant="ghost" onClick={() => setStatsOpen(true)}>
-        Day stats
+        <svg
+          className={styles.podium}
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+        >
+          <rect x="1" y="9" width="4" height="6" />
+          <rect x="6" y="4" width="4" height="11" />
+          <rect x="11" y="11" width="4" height="4" />
+        </svg>
+        Leaderboard
       </Button>
 
       <DayStatsSheet
@@ -115,7 +125,7 @@ function DayStatsSheet({
   const maxCount = Math.max(1, ...(histo.data?.bins.map(b => b.count) ?? []));
 
   return (
-    <Sheet open={open} onClose={onClose} title={`Daily — ${dateISO}`}>
+    <Sheet open={open} onClose={onClose} title={`Leaderboard — ${dateISO}`}>
       <div className={styles.statsBody}>
         <div className={styles.statChips}>
           <div className={styles.statChip}>

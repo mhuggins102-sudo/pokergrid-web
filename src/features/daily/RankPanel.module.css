@@ -1,7 +1,8 @@
 .panel {
-  /* A slim bar: standing left, date centered, Day stats right. */
+  /* A slim bar: standing left, Leaderboard sheet trigger right. */
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-sm);
   min-height: 42px;
   padding: 4px var(--space-sm) 4px var(--space-md);
@@ -26,12 +27,19 @@
 }
 
 .date {
+  /* Backendless builds: a date-only bar (the hero dropped the date). */
   flex: 1;
   text-align: center;
   font-size: 13px;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.podium {
+  fill: currentColor;
+  margin-right: 6px;
+  vertical-align: -2px;
 }
 
 /* Keep the bar's pieces on one line at 390px. */
