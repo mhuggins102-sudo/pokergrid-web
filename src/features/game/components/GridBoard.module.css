@@ -100,31 +100,12 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Auto-placed joker arrival: invisible through a short beat (backwards
-   fill), then it flies in from the deck well like any placed card —
-   with a wobble and a gold glow bloom. The 0.4s delay is kept in sync
-   with sfxJoker's lead-in. */
+/* Auto-placed joker touchdown: the travel itself is the real FLIP
+   flight from the well (useAutoPlaceFlights); this glow blooms as the
+   card lands. */
 .jokerArrive {
   border-radius: var(--radius-sm);
-  z-index: 2;
-  animation:
-    joker-arrive-pop 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) 0.4s backwards,
-    joker-arrive-glow 1.1s ease-out 0.4s;
-}
-
-@keyframes joker-arrive-pop {
-  0% {
-    opacity: 0;
-    transform: translate(calc(-1 * min(28vw, 230px)), min(48vh, 400px))
-      scale(0.9) rotate(-12deg);
-  }
-  30% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
+  animation: joker-arrive-glow 1.1s ease-out 0.25s backwards;
 }
 
 @keyframes joker-arrive-glow {

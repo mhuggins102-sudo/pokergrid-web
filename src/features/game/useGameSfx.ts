@@ -23,9 +23,10 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
     if (last === null) {
       // Session mount: the engine seated the opening card(s) before the
       // first paint. Give that deal its placement tick, timed to the
-      // board's deal-in animation.
+      // staged flight's takeoff from the well (STAGE_MS in
+      // useAutoPlaceFlights).
       if (state.past.length === 0 && state.grid.some(c => c !== null)) {
-        window.setTimeout(() => SFX.place(), 150);
+        window.setTimeout(() => SFX.place(), 350);
       }
       return;
     }
