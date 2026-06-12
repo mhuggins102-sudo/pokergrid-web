@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { safeJSONStorage } from '../../lib/safeStorage';
 import type { AchievementId } from '../../game/achievements';
 import type { ChallengeId } from '../../game/challenges';
 import {
@@ -60,6 +61,7 @@ export const useStatsStore = create<StatsStore>()(
     }),
     {
       name: 'pokergrid:stats:v1',
+      storage: safeJSONStorage(),
       merge: (persisted, current) => ({
         ...current,
         stats: hydrateStats(

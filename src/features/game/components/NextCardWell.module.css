@@ -60,9 +60,30 @@ button.cardSlot:focus-visible {
   outline-offset: 2px;
 }
 
+/* Hand-stack dock: hero card, meta line beneath. */
+.stacked {
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.stacked .cardSlot {
+  width: 92px;
+}
+
+.stacked .meta {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+}
+
 @media (min-width: 640px) {
   .cardSlot {
     width: 68px;
+  }
+
+  .stacked .cardSlot {
+    width: 96px;
   }
 
   .deckCount {

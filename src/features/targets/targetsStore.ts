@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { safeJSONStorage } from '../../lib/safeStorage';
 import { BonusCard } from '../../game/bonusCards';
 import { Card } from '../../game/cards';
 import {
@@ -49,6 +50,7 @@ export const useTargetsStore = create<TargetsStore>()(
     }),
     {
       name: 'pokergrid:tu-save:v1',
+      storage: safeJSONStorage(),
       merge: (persisted, current) => ({
         ...current,
         save: hydrateTUSave(

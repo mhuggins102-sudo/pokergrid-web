@@ -7,6 +7,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { safeJSONStorage } from '../../../lib/safeStorage';
 import type { DailyRecipe } from '../../../game/daily/recipe';
 import {
   AlreadySubmittedError,
@@ -49,7 +50,7 @@ export const useQueueStore = create<QueueStore>()(
           ),
         })),
     }),
-    { name: 'pokergrid:daily:pendingSubmits:v1' }
+    { name: 'pokergrid:daily:pendingSubmits:v1', storage: safeJSONStorage() }
   )
 );
 
