@@ -104,7 +104,8 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
           {play.score}
         </span>
         <span className={`text-body ${styles.targetLine}`}>
-          {play.dateISO} · target {target} · {play.recipe.difficulty}
+          {/* The date lives on the rank bar below — no need twice. */}
+          target {target} · {play.recipe.difficulty}
           {twist ? ` · ${twist.name}` : ''} · tier {tier}
         </span>
       </section>

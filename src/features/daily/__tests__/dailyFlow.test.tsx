@@ -77,7 +77,7 @@ describe('daily flow', () => {
     expect(useQueueStore.getState().pending).toHaveLength(1);
     expect(useQueueStore.getState().pending[0].dateISO).toBe(DATE);
     // The rank panel surfaces the retryable submitting state.
-    expect(await screen.findByText(/submitting to the leaderboard/i)).toBeInTheDocument();
+    expect(await screen.findByText(/submitting…/i)).toBeInTheDocument();
   });
 
   it('is deterministic: the same date deals the same board', () => {

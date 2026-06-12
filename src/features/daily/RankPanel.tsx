@@ -17,10 +17,11 @@ import {
 import styles from './RankPanel.module.css';
 
 /**
- * Leaderboard standing for one date: rank + percentile, with the
- * day's stats (median, win rate, top 10, score histogram) and the
- * handle editor behind a sheet. Queue-aware: while this device's play
- * is still pending it shows a retryable "submitting" state instead of
+ * Leaderboard standing for one date as a slim bar — rank on the left,
+ * the date in the middle, Day stats on the right; the day's stats
+ * (median, win rate, top 10, score histogram) and the handle editor
+ * live behind the sheet. Queue-aware: while this device's play is
+ * still pending it shows a retryable "submitting" state instead of
  * hanging.
  */
 export function RankPanel({ dateISO }: { dateISO: string }) {
@@ -31,7 +32,15 @@ export function RankPanel({ dateISO }: { dateISO: string }) {
   const [statsOpen, setStatsOpen] = useState(false);
   const [retrying, setRetrying] = useState(false);
 
-  if (!isBackendConfigured()) return null;
+  // No leaderboard backend (local builds): the bar still owns showing
+  // the date, since the verdict hero no longer carries it.
+  if (!isBackendConfigured()) {
+    return (
+      <section className={styles.panel} aria-label="Daily date">
+        <span className={styles.date}>{dateISO}</span>
+      </section>
+    );
+  }
 
   const retry = async () => {
     setRetrying(true);
@@ -43,52 +52,45 @@ export function RankPanel({ dateISO }: { dateISO: string }) {
     }
   };
 
+  const standing = rank.data ? (
+    <span className={styles.rank}>
+      #{rank.data.rank} <span className={styles.sub}>of {rank.data.total}</span>
+    </span>
+  ) : pending ? (
+    <span className={styles.statusRow}>
+      <span
+        className={styles.status}
+        role="status"
+        aria-label="Score saved — submitting to the leaderboard"
+      >
+        Submitting…
+      </span>
+      <Button size="sm" variant="secondary" disabled={retrying} onClick={retry}>
+        {retrying ? 'Retrying…' : 'Retry'}
+      </Button>
+    </span>
+  ) : rank.isError ? (
+    <span className={styles.statusRow}>
+      <span className={`${styles.status} ${styles.error}`} role="status">
+        No connection.
+      </span>
+      <Button size="sm" variant="secondary" disabled={retrying} onClick={retry}>
+        Retry
+      </Button>
+    </span>
+  ) : rank.isLoading ? (
+    <span className={styles.status}>Fetching rank…</span>
+  ) : (
+    <span className={styles.status}>Rank pending…</span>
+  );
+
   return (
     <section className={styles.panel} aria-label="Leaderboard">
-      <div className={styles.headerRow}>
-        <h2 className="text-section">Leaderboard</h2>
-        <Button size="sm" variant="ghost" onClick={() => setStatsOpen(true)}>
-          Day stats
-        </Button>
-      </div>
-
-      {rank.data ? (
-        <>
-          <span className={styles.rank}>
-            #{rank.data.rank}{' '}
-            <span className={styles.sub}>of {rank.data.total}</span>
-          </span>
-          <span className={styles.sub}>
-            top {rank.data.topPercent}% worldwide
-          </span>
-        </>
-      ) : pending ? (
-        <>
-          <span className={styles.status} role="status">
-            Score saved — submitting to the leaderboard…
-          </span>
-          <div className={styles.actions}>
-            <Button size="sm" variant="secondary" disabled={retrying} onClick={retry}>
-              {retrying ? 'Retrying…' : 'Retry now'}
-            </Button>
-          </div>
-        </>
-      ) : rank.isError ? (
-        <>
-          <span className={`${styles.status} ${styles.error}`} role="status">
-            Couldn&apos;t reach the leaderboard.
-          </span>
-          <div className={styles.actions}>
-            <Button size="sm" variant="secondary" disabled={retrying} onClick={retry}>
-              Retry
-            </Button>
-          </div>
-        </>
-      ) : rank.isLoading ? (
-        <span className={styles.status}>Fetching leaderboard…</span>
-      ) : (
-        <span className={styles.status}>Rank pending…</span>
-      )}
+      {standing}
+      <span className={styles.date}>{dateISO}</span>
+      <Button size="sm" variant="ghost" onClick={() => setStatsOpen(true)}>
+        Day stats
+      </Button>
 
       <DayStatsSheet
         dateISO={dateISO}

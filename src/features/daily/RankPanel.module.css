@@ -1,26 +1,22 @@
 .panel {
+  /* A slim bar: standing left, date centered, Day stats right. */
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
+  min-height: 42px;
+  padding: 4px var(--space-sm) 4px var(--space-md);
   border-radius: var(--radius-md);
   background: var(--paper-raised);
   border: 1px solid var(--rule);
   box-shadow: var(--shadow-sm);
 }
 
-.headerRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-md);
-}
-
 .rank {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 17px;
   font-weight: 660;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .sub {
@@ -29,19 +25,36 @@
   font-variant-numeric: tabular-nums;
 }
 
-.status {
+.date {
+  flex: 1;
+  text-align: center;
   font-size: 13px;
   color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Keep the bar's pieces on one line at 390px. */
+.panel > button {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.status {
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
 }
 
 .error {
   color: var(--danger);
-}
-
-.actions {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
 }
 
 /* ---- stats sheet ---- */
