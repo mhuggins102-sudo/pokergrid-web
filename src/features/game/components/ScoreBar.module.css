@@ -17,12 +17,26 @@
   min-width: 0;
 }
 
-/* One baseline-aligned line: score, target, difficulty kicker. */
+/* One baseline-aligned line: score, target, difficulty kicker.
+   A button — tapping the score opens the tier breakdown. */
 .scoreRow {
   display: flex;
   align-items: baseline;
   gap: var(--space-sm);
   white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.scoreRow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
 .score {

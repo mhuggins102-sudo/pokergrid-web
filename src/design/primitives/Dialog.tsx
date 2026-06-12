@@ -15,6 +15,12 @@ export interface DialogProps {
    * the player must make a choice (e.g. a forced bonus swap).
    */
   dismissible?: boolean;
+  /**
+   * Touch drag-down dismisses the dialog (Sheet sets this in its
+   * bottom-sheet form). Inner scrollable content keeps priority: drags
+   * only start when the touched scroller is already at its top.
+   */
+  dragToClose?: boolean;
 }
 
 /**
@@ -30,6 +36,7 @@ export function Dialog({
   className,
   hideHeader = false,
   dismissible = true,
+  dragToClose = false,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -39,6 +46,97 @@ export function Dialog({
     if (open && !el.open) el.showModal();
     else if (!open && el.open) el.close();
   }, [open]);
+
+  // showModal() makes the page behind inert but does NOT stop touch
+  // scrolling it — a flick on the dialog otherwise pans the main
+  // screen. Lock body scroll for the dialog's lifetime.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // Swipe-down to dismiss. Native listeners because React's synthetic
+  // touchmove is passive (preventDefault would be ignored). A drag only
+  // arms when the touched scroll container is at its top, so lists
+  // inside the sheet still scroll naturally.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !open || !dragToClose) return;
+    let startY = 0;
+    let startT = 0;
+    let dy = 0;
+    let mode: 'idle' | 'drag' | 'scroll' = 'scroll';
+
+    const scrollerOf = (t: EventTarget | null): HTMLElement | null => {
+      let n = t instanceof HTMLElement ? t : null;
+      while (n && n !== el) {
+        if (n.scrollHeight > n.clientHeight + 1) {
+          const o = getComputedStyle(n).overflowY;
+          if (o === 'auto' || o === 'scroll') return n;
+        }
+        n = n.parentElement;
+      }
+      return null;
+    };
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const sc = scrollerOf(e.target);
+      mode = sc && sc.scrollTop > 0 ? 'scroll' : 'idle';
+      dy = 0;
+      startY = e.touches[0].clientY;
+      startT = Date.now();
+    };
+    const onMove = (e: TouchEvent) => {
+      if (mode === 'scroll') return;
+      const d = e.touches[0].clientY - startY;
+      if (mode === 'idle') {
+        if (d > 8) mode = 'drag';
+        else if (d < -8) {
+          mode = 'scroll';
+          return;
+        } else return;
+      }
+      dy = Math.max(0, d);
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${dy}px)`;
+      e.preventDefault();
+    };
+    const onEnd = () => {
+      if (mode !== 'drag') {
+        mode = 'scroll';
+        return;
+      }
+      const fast = dy / Math.max(1, Date.now() - startT) > 0.45;
+      if (dy > 90 || (fast && dy > 30)) {
+        onCloseRef.current();
+      } else {
+        el.style.transition = 'transform 180ms ease';
+        el.style.transform = '';
+      }
+      mode = 'scroll';
+      dy = 0;
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+      el.style.transform = '';
+      el.style.transition = '';
+    };
+  }, [open, dragToClose]);
 
   const handleClick = (e: React.MouseEvent<HTMLDialogElement>) => {
     // A click on the backdrop targets the <dialog> element itself.

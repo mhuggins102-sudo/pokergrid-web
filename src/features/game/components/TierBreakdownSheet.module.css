@@ -1,0 +1,69 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.targetLine {
+  margin: 0 0 var(--space-xs);
+  font-size: 14px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: var(--space-sm);
+  align-items: baseline;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Targets-Up adds the reward column. */
+.row:has(.reward) {
+  grid-template-columns: 36px auto auto 1fr;
+}
+
+.tier {
+  font-weight: 800;
+}
+
+.win {
+  background: color-mix(in srgb, var(--success) 9%, transparent);
+}
+
+.win .tier {
+  color: var(--success);
+}
+
+.loss {
+  background: color-mix(in srgb, var(--ink-3) 8%, transparent);
+}
+
+.loss .tier {
+  color: var(--ink-2);
+}
+
+.label {
+  color: var(--ink-2);
+}
+
+.req {
+  font-weight: 700;
+}
+
+.reward {
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: right;
+}
+
+.note {
+  margin: var(--space-sm) 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.4;
+}

@@ -1,3 +1,9 @@
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+
 .wrap {
   display: flex;
   flex-direction: column;
@@ -56,8 +62,46 @@
   align-items: baseline;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
-  padding: 4px 0;
+  padding: 4px 6px;
   border-bottom: 1px solid var(--hairline);
+  /* Rows are filter toggles. */
+  width: 100%;
+  text-align: left;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.diffRow:hover {
+  background: color-mix(in srgb, var(--difficulty-tone) 7%, transparent);
+}
+
+.diffRow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.diffRowActive {
+  background: color-mix(in srgb, var(--difficulty-tone) 12%, transparent);
+  box-shadow: inset 3px 0 0 var(--difficulty-tone);
+}
+
+.filterHint {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.filterNote {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: var(--difficulty-tone);
 }
 
 .diffRow:last-child {
@@ -150,7 +194,13 @@
 
 /* Desktop: 2-column dashboard — overview + tiers left, recents right. */
 @media (min-width: 1024px) {
-  .wrap {
+  .header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+
+.wrap {
     max-width: 1000px;
     display: grid;
     grid-template-columns: 1fr 1fr;

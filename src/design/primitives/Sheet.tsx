@@ -32,6 +32,7 @@ export function Sheet({
       className={styles.sheet}
       hideHeader={hideHeader}
       dismissible={dismissible}
+      dragToClose={dismissible !== false}
     >
       <div className={styles.grabber} aria-hidden="true" />
       {children}
