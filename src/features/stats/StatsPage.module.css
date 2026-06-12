@@ -77,8 +77,12 @@
   border-radius: var(--radius-sm);
 }
 
-.diffRow:hover {
-  background: color-mix(in srgb, var(--difficulty-tone) 7%, transparent);
+/* hover-capable pointers only — on touch, :hover sticks to the last
+   tapped row, which made an unselected filter keep its tint. */
+@media (hover: hover) {
+  .diffRow:hover {
+    background: color-mix(in srgb, var(--difficulty-tone) 7%, transparent);
+  }
 }
 
 .diffRow:focus-visible {

@@ -5,7 +5,7 @@ import { dailyTargetFor } from '../../game/daily/recipe';
 import { seedForDate } from '../../game/daily/seed';
 import { findChallenge } from '../../game/challenges';
 import { difficultyColors } from '../../design/tokens';
-import { Button, Dialog } from '../../design/primitives';
+import { Button, Sheet } from '../../design/primitives';
 import { markTwistSeen, twistSeen } from './twistSeen';
 import { GameSessionProvider } from '../game/GameSessionProvider';
 import { GameScreen } from '../game/GameScreen';
@@ -45,7 +45,7 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
       >
         <GameScreen onReplay={() => {}} />
         {twist && (
-          <Dialog
+          <Sheet
             open={twistInfoOpen}
             onClose={() => {
               markTwistSeen(twist.id);
@@ -72,7 +72,7 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
                 Got it
               </Button>
             </div>
-          </Dialog>
+          </Sheet>
         )}
       </GameSessionProvider>
     );
