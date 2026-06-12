@@ -1,6 +1,6 @@
+import { Fragment } from 'react';
 import { Sheet } from '../../../design/primitives';
 import { Tier } from '../../../lib/stats';
-import { useGameSession } from '../GameSessionProvider';
 import styles from './TierBreakdownSheet.module.css';
 
 // Tier rules — mirrors tierForRun() in lib/stats.ts: win bands use
@@ -27,46 +27,83 @@ const TU_REWARDS: Partial<Record<Tier, string>> = {
   A: 'Advance · no reward',
 };
 
+const thresholdFor = (
+  rule: (typeof TIER_RULES)[number],
+  target: number
+): number => (rule.ratio === 0 ? 0 : Math.ceil(target * rule.ratio));
+
 const requirementFor = (
   rule: (typeof TIER_RULES)[number],
   target: number
 ): string => {
   if (rule.ratio === 0) return `below ${Math.ceil(target * 0.5)}`;
-  return `${Math.ceil(target * rule.ratio)}+`;
+  return `${thresholdFor(rule, target)}+`;
 };
 
 export interface TierBreakdownSheetProps {
   open: boolean;
   onClose: () => void;
+  target: number;
+  /** Targets-Up adds its per-tier reward column. */
+  showRewards?: boolean;
+  /** Result screens: slot a "your score" row between the tiers it
+   *  landed between, so the distance to the next band is visible. */
+  score?: number;
 }
 
 /**
  * What each result tier requires for this run's target — opens from a
- * tap on the live score. Targets-Up adds its per-tier reward column.
+ * tap on the score (live in-game, or final on the result screens).
  */
-export function TierBreakdownSheet({ open, onClose }: TierBreakdownSheetProps) {
-  const { state, mode } = useGameSession();
-  const showRewards = mode.kind === 'targets';
+export function TierBreakdownSheet({
+  open,
+  onClose,
+  target,
+  showRewards = false,
+  score,
+}: TierBreakdownSheetProps) {
+  // Your-score row goes above the first tier whose threshold you met.
+  const scoreRowBefore =
+    score === undefined
+      ? -1
+      : TIER_RULES.findIndex(rule => thresholdFor(rule, target) <= score);
+
+  const yourRow =
+    score !== undefined ? (
+      <div className={`${styles.row} ${styles.you}`}>
+        <span className={styles.tier} aria-hidden="true">
+          →
+        </span>
+        <span className={styles.label}>Your score</span>
+        <span className={styles.req}>{score}</span>
+        {showRewards && <span className={styles.reward} />}
+      </div>
+    ) : null;
 
   return (
     <Sheet open={open} onClose={onClose} title="Score tiers">
       <div className={styles.list}>
         <p className={styles.targetLine}>
-          Target: <strong>{state.target}</strong>
+          Target: <strong>{target}</strong>
         </p>
-        {TIER_RULES.map(rule => (
-          <div
-            key={rule.tier}
-            className={`${styles.row} ${rule.won ? styles.win : styles.loss}`}
-          >
-            <span className={styles.tier}>{rule.tier}</span>
-            <span className={styles.label}>{rule.label}</span>
-            <span className={styles.req}>{requirementFor(rule, state.target)}</span>
-            {showRewards && (
-              <span className={styles.reward}>{TU_REWARDS[rule.tier] ?? '—'}</span>
-            )}
-          </div>
+        {TIER_RULES.map((rule, i) => (
+          <Fragment key={rule.tier}>
+            {i === scoreRowBefore && yourRow}
+            <div
+              className={`${styles.row} ${rule.won ? styles.win : styles.loss}`}
+            >
+              <span className={styles.tier}>{rule.tier}</span>
+              <span className={styles.label}>{rule.label}</span>
+              <span className={styles.req}>{requirementFor(rule, target)}</span>
+              {showRewards && (
+                <span className={styles.reward}>
+                  {TU_REWARDS[rule.tier] ?? '—'}
+                </span>
+              )}
+            </div>
+          </Fragment>
         ))}
+        {score !== undefined && scoreRowBefore === -1 && yourRow}
         <p className={styles.note}>
           Win tiers compare your score to the target; B–D grade how close a
           missed run came.

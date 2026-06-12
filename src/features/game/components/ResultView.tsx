@@ -6,6 +6,8 @@ import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
 import { useTargetsStore } from '../../targets/targetsStore';
 import { recordDailyCompletion } from '../../daily/sync/sync';
+import { nextIncompleteDaily } from '../../daily/dailyDates';
+import { usePlaysStore } from '../../daily/sync/playsStore';
 import { RankPanel } from '../../daily/RankPanel';
 import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
@@ -14,6 +16,7 @@ import { BonusCardStrip } from './BonusCardStrip';
 import { bonusCardLiveContext } from '../bonusCardLiveContext';
 import { RewardsResult, RewardsSheet } from './RewardsSheet';
 import { ScoreDetailsSheet } from './ScoreDetailsSheet';
+import { TierBreakdownSheet } from './TierBreakdownSheet';
 import { ShareButton } from './ShareButton';
 import styles from './ResultView.module.css';
 
@@ -34,6 +37,10 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const targets = useTargetsStore();
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [tiersOpen, setTiersOpen] = useState(false);
+  const plays = usePlaysStore(s => s.plays);
+  const nextDaily =
+    mode.kind === 'daily' ? nextIncompleteDaily(mode.dateISO, plays) : null;
 
   const { report, shapley } = useMemo(() => {
     const options = {
@@ -167,9 +174,11 @@ export function ResultView({ onReplay }: ResultViewProps) {
         Targets Up home
       </Link>
     ) : mode.kind === 'daily' ? (
-      <Link to="/daily" className={styles.dockLink}>
-        Today&apos;s daily
-      </Link>
+      nextDaily && (
+        <Link to={`/daily/${nextDaily}`} className={styles.dockLink}>
+          Next daily
+        </Link>
+      )
     ) : (
       <Link to="/play" className={styles.dockLink}>
         Change difficulty
@@ -237,9 +246,15 @@ export function ResultView({ onReplay }: ResultViewProps) {
         <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
           {verdict}
         </span>
-        <span className={styles.finalScore} data-testid="final-score">
+        <button
+          type="button"
+          className={`${styles.finalScore} ${styles.finalScoreBtn}`}
+          data-testid="final-score"
+          aria-label={`Score ${report.total} — show tier thresholds`}
+          onClick={() => setTiersOpen(true)}
+        >
           {report.total}
-        </span>
+        </button>
         <span className={`text-body ${styles.targetLine}`}>
           {contextLine} · tier {tier}
         </span>
@@ -303,6 +318,14 @@ export function ResultView({ onReplay }: ResultViewProps) {
         </div>
         {commit}
       </div>
+
+      <TierBreakdownSheet
+        open={tiersOpen}
+        onClose={() => setTiersOpen(false)}
+        target={state.target}
+        showRewards={mode.kind === 'targets'}
+        score={report.total}
+      />
 
       <ScoreDetailsSheet
         open={detailsOpen}

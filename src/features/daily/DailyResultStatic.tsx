@@ -11,9 +11,11 @@ import { LineDetailSheet } from '../game/components/LineDetailSheet';
 import { BonusCardStrip } from '../game/components/BonusCardStrip';
 import { bonusCardLiveContext } from '../game/bonusCardLiveContext';
 import { RankPanel } from './RankPanel';
+import { nextIncompleteDaily } from './dailyDates';
 import { ShareButton } from '../game/components/ShareButton';
 import { ScoreDetailsSheet } from '../game/components/ScoreDetailsSheet';
-import { DailyPlay } from './sync/playsStore';
+import { TierBreakdownSheet } from '../game/components/TierBreakdownSheet';
+import { DailyPlay, usePlaysStore } from './sync/playsStore';
 // Shares the result screen's layout/styles so a revisited daily looks
 // exactly like the moment it was finished.
 import styles from '../game/components/ResultView.module.css';
@@ -26,6 +28,9 @@ import styles from '../game/components/ResultView.module.css';
 export function DailyResultStatic({ play }: { play: DailyPlay }) {
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [tiersOpen, setTiersOpen] = useState(false);
+  const plays = usePlaysStore(s => s.plays);
+  const nextDaily = nextIncompleteDaily(play.dateISO, plays);
   const state = play.state;
   const target = dailyTargetFor(play.recipe.difficulty, play.recipe.twist);
   const twist = play.recipe.twist ? findChallenge(play.recipe.twist) : null;
@@ -100,9 +105,15 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
         <span className={`${styles.verdict} ${play.won ? styles.win : styles.loss}`}>
           {play.won ? 'Daily solved' : 'Daily missed'}
         </span>
-        <span className={styles.finalScore} data-testid="final-score">
+        <button
+          type="button"
+          className={`${styles.finalScore} ${styles.finalScoreBtn}`}
+          data-testid="final-score"
+          aria-label={`Score ${play.score} — show tier thresholds`}
+          onClick={() => setTiersOpen(true)}
+        >
           {play.score}
-        </span>
+        </button>
         <span className={`text-body ${styles.targetLine}`}>
           {/* The date lives on the rank bar below — no need twice. */}
           target {target} · {play.recipe.difficulty}
@@ -137,9 +148,11 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
 
       <div className={styles.dock}>
         <div className={styles.dockRow}>
-          <Link to="/daily" className={styles.dockLink}>
-            Today&apos;s daily
-          </Link>
+          {nextDaily && (
+            <Link to={`/daily/${nextDaily}`} className={styles.dockLink}>
+              Next daily
+            </Link>
+          )}
           <ShareButton
             score={play.score}
             mode="daily"
@@ -156,6 +169,13 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
           </Button>
         </Link>
       </div>
+
+      <TierBreakdownSheet
+        open={tiersOpen}
+        onClose={() => setTiersOpen(false)}
+        target={target}
+        score={play.score}
+      />
 
       <ScoreDetailsSheet
         open={detailsOpen}
