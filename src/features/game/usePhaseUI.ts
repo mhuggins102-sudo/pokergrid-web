@@ -203,7 +203,9 @@ export function usePhaseUI(): PhaseUI {
               actions.push({
                 id: 'discard',
                 label: 'Discard',
-                variant: 'ghost',
+                // Outlined like the perk: chrome marks moves that spend
+                // the drawn card, plain text marks view-only actions.
+                variant: 'secondary',
                 onPress: () => dispatch({ type: 'DISCARD_NONE' }),
               });
             }
