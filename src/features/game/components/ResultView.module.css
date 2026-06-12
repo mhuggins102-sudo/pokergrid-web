@@ -71,6 +71,14 @@
   margin: 0 auto;
 }
 
+/* Daily: the rank bar joins the above-board stack, so cap the board by
+   the viewport too — on wide phones with heavy browser chrome the
+   column-total chips otherwise dip behind the sticky dock. Budget:
+   ~220px of hero+bar above the board, ~100px of dock below. */
+.hasRank .boardSlot {
+  width: min(100%, 440px, calc(100svh - 320px));
+}
+
 .math {
   display: flex;
   flex-direction: column;
@@ -269,7 +277,8 @@
     grid-row: 1;
   }
 
-  .boardSlot {
+  .boardSlot,
+  .hasRank .boardSlot {
     grid-column: 2;
     grid-row: 2;
     width: clamp(420px, 40vw, 520px);
