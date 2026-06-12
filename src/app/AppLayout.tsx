@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, ScrollRestoration } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../design/primitives';
 import { bootDailySync, queryClient } from '../features/daily/sync/sync';
@@ -55,6 +55,10 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+      {/* Reset scroll to the top on navigation (and restore it on
+          back/forward) — without this, deep pages like the bonus card
+          reference open mid-scroll. */}
+      <ScrollRestoration />
       </ToastProvider>
     </QueryClientProvider>
   );

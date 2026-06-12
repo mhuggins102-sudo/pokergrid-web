@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { scoreGrid } from '../../../game/scoring';
 import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
+import { TierBreakdownSheet } from './TierBreakdownSheet';
 import styles from './ScoreBar.module.css';
 
 export interface ScoreBarProps {
@@ -18,6 +19,7 @@ export interface ScoreBarProps {
  */
 export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
   const { state, dispatch, canUndo, maxUndos } = useGameSession();
+  const [tiersOpen, setTiersOpen] = useState(false);
 
   const report = useMemo(
     () =>
@@ -33,15 +35,19 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
   return (
     <div className={styles.bar}>
       <div className={styles.scoreBlock}>
-        <div className={styles.scoreRow}>
-          <span className={styles.score} aria-label={`Score ${report.total}`}>
-            {report.total}
-          </span>
+        {/* The score doubles as the door to the tier breakdown. */}
+        <button
+          type="button"
+          className={styles.scoreRow}
+          onClick={() => setTiersOpen(true)}
+          aria-label={`Score ${report.total} — show tier thresholds`}
+        >
+          <span className={styles.score}>{report.total}</span>
           <span className={`text-label ${styles.target}`}>
             / {state.target} target
           </span>
           <span className={styles.kicker}>{state.difficulty}</span>
-        </div>
+        </button>
       </div>
       <div className={styles.controls}>
         <Button
@@ -72,6 +78,7 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
           ⓘ
         </Button>
       </div>
+      <TierBreakdownSheet open={tiersOpen} onClose={() => setTiersOpen(false)} />
     </div>
   );
 }

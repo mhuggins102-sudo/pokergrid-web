@@ -5,7 +5,8 @@ import { dailyTargetFor } from '../../game/daily/recipe';
 import { seedForDate } from '../../game/daily/seed';
 import { findChallenge } from '../../game/challenges';
 import { difficultyColors } from '../../design/tokens';
-import { Button } from '../../design/primitives';
+import { Button, Dialog } from '../../design/primitives';
+import { markTwistSeen, twistSeen } from './twistSeen';
 import { GameSessionProvider } from '../game/GameSessionProvider';
 import { GameScreen } from '../game/GameScreen';
 import { usePlaysStore } from './sync/playsStore';
@@ -20,12 +21,21 @@ import styles from './DailyDay.module.css';
 export function DailyDay({ dateISO }: { dateISO: string }) {
   const play = usePlaysStore(s => s.plays[dateISO]);
   const [started, setStarted] = useState(false);
+  // First-encounter twist explainer: opens over the board right after
+  // Play, once per twist per device.
+  const [twistInfoOpen, setTwistInfoOpen] = useState(false);
 
   if (play) return <DailyResultStatic play={play} />;
 
   const recipe = recipeFor(dateISO);
   const twist = recipe.twist ? findChallenge(recipe.twist) : null;
   const target = dailyTargetFor(recipe.difficulty, recipe.twist);
+
+  // Challenge goal copy embeds the challenge's own score target; swap
+  // in today's (difficulty-adjusted) daily target so the numbers agree.
+  const twistGoal = twist
+    ? twist.goal.replace(/^Score \d+\+ points/, `Score ${target}+ points`)
+    : null;
 
   if (started) {
     return (
@@ -34,6 +44,36 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
         seed={seedForDate(dateISO)}
       >
         <GameScreen onReplay={() => {}} />
+        {twist && (
+          <Dialog
+            open={twistInfoOpen}
+            onClose={() => {
+              markTwistSeen(twist.id);
+              setTwistInfoOpen(false);
+            }}
+            title={`Today's twist: ${twist.name}`}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p className="text-body">{twistGoal}</p>
+              <p
+                className="text-label"
+                style={{ color: 'var(--ink-3)' }}
+              >
+                Daily twists come from the Challenges list — you can re-read
+                any of them there. This explainer shows once per twist.
+              </p>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  markTwistSeen(twist.id);
+                  setTwistInfoOpen(false);
+                }}
+              >
+                Got it
+              </Button>
+            </div>
+          </Dialog>
+        )}
       </GameSessionProvider>
     );
   }
@@ -59,7 +99,14 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
         <span className={`text-value ${styles.target}`}>target {target}</span>
         {twist && <p className={styles.twistGoal}>{twist.synopsis}</p>}
         <div className={styles.buttons}>
-          <Button variant="primary" size="lg" onClick={() => setStarted(true)}>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => {
+              if (twist && !twistSeen(twist.id)) setTwistInfoOpen(true);
+              setStarted(true);
+            }}
+          >
             Play
           </Button>
           <Link to="/daily/archive">

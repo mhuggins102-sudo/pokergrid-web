@@ -50,4 +50,6 @@
 
 .body {
   padding: var(--space-lg) var(--space-xl) var(--space-xl);
+  /* Inner lists may scroll; never chain that scroll to the page. */
+  overscroll-behavior: contain;
 }

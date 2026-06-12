@@ -5,7 +5,7 @@ import styles from './AchievementsPage.module.css';
 const GROUPS: Array<{ tier: AchievementTier; title: string; blurb: string }> = [
   {
     tier: 'easy',
-    title: 'Easy table stakes',
+    title: 'Easy',
     blurb: 'Earned in free play on Easy.',
   },
   {
