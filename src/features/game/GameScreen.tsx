@@ -217,7 +217,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   <Button
                     key={a.id}
                     variant={a.variant}
-                    disabled={a.disabled}
+                    // While an auto-placed card poses in the well, the
+                    // dock pauses — committing then would act on the
+                    // drawn card while the well shows the flight card.
+                    disabled={a.disabled || flight !== null}
                     onClick={a.onPress}
                     className={
                       a.id === coachHighlight ? styles.coachPulse : undefined
@@ -235,7 +238,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 <Button
                   key={commitAction.id}
                   variant={commitAction.id === 'cancel' ? 'secondary' : commitAction.variant}
-                  disabled={commitAction.disabled}
+                  disabled={commitAction.disabled || flight !== null}
                   onClick={commitAction.onPress}
                   className={`${styles.commitButton}${
                     commitAction.id === coachHighlight
