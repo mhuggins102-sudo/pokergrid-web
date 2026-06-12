@@ -1,13 +1,16 @@
 .well {
+  /* Card on top, "# left" + Peek stacked beneath — the meta column
+     beside the card was capping how big the card could be. */
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 2px;
   flex-shrink: 0;
 }
 
 .cardSlot {
   position: relative;
-  width: 56px;
+  width: 64px;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   background: var(--paper-sunken);
@@ -33,12 +36,13 @@ button.cardSlot:focus-visible {
 .meta {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 0;
   min-width: 0;
 }
 
 .deckCount {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
@@ -62,7 +66,7 @@ button.cardSlot:focus-visible {
 
 @media (min-width: 640px) {
   .cardSlot {
-    width: 68px;
+    width: 72px;
   }
 
   .deckCount {

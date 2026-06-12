@@ -2,11 +2,14 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 
 // jsdom has no matchMedia; motion (and any prefers-reduced-motion guard)
-// queries it. A static "no match" stub is enough for tests.
+// queries it. Tests declare reduced motion so presentation staging
+// (e.g. useAutoPlaceFlights' well pose, which briefly disables the
+// dock) collapses to instant — fireEvent doesn't wait for buttons to
+// re-enable the way Playwright does.
 if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = (query: string): MediaQueryList =>
     ({
-      matches: false,
+      matches: query.includes('prefers-reduced-motion'),
       media: query,
       onchange: null,
       addListener: () => {},

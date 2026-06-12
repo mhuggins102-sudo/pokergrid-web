@@ -8,6 +8,8 @@
   align-items: center;
   gap: var(--space-sm);
   z-index: 100;
+  /* Toasts are pure notifications: never swallow taps meant for what's
+     underneath (they overlap the game dock's commit button). */
   pointer-events: none;
 }
 
@@ -23,7 +25,9 @@
   font-size: 14px;
   font-weight: 500;
   box-shadow: var(--shadow-lg);
-  pointer-events: auto;
+  /* No dismiss affordance — keep the whole toast click-transparent
+     (auto here would defeat the viewport's pointer-events: none). */
+  pointer-events: none;
   animation: toast-in 180ms ease;
 }
 

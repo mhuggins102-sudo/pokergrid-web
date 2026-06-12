@@ -46,7 +46,16 @@ const EMPTY: ReadonlySet<number> = new Set();
  */
 export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
   const queueRef = useRef<number[]>([]);
-  const [current, setCurrent] = useState<number | null>(null);
+
+  // Flights are pure presentation; under reduced motion (also how the
+  // jsdom tests run) cards seat instantly instead.
+  const skipRef = useRef<boolean | null>(null);
+  if (skipRef.current === null) {
+    skipRef.current =
+      typeof window !== 'undefined' &&
+      !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  }
+  const skip = skipRef.current;
 
   // Session mount: stage the engine's opening seats in spiral order.
   // A pre-scattered board (Gridlock: 16 cards) would make a tedious
@@ -54,7 +63,9 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
   const cssDealRef = useRef<Set<number> | null>(null);
   if (cssDealRef.current === null) {
     const seats = state.grid.flatMap((c, i) => (c ? [i] : []));
-    if (seats.length <= 3) {
+    if (skip) {
+      cssDealRef.current = new Set();
+    } else if (seats.length <= 3) {
       queueRef.current = seats.sort(
         (a, b) => SPIRAL_POSITION[a] - SPIRAL_POSITION[b]
       );
@@ -64,6 +75,11 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
     }
   }
   const cssDeal = cssDealRef.current;
+  // Staging state lives AFTER the queue is seeded so the very first
+  // render can already hold a flight.
+  const [current, setCurrent] = useState<number | null>(
+    () => queueRef.current[0] ?? null
+  );
   useEffect(() => {
     if (cssDeal.size === 0) return;
     const t = window.setTimeout(() => cssDeal.clear(), 2500);
@@ -78,7 +94,7 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
   useEffect(() => {
     prevGridRef.current = state.grid;
   });
-  if (prevGrid !== null && jokerCount(state.grid) > jokerCount(prevGrid)) {
+  if (!skip && prevGrid !== null && jokerCount(state.grid) > jokerCount(prevGrid)) {
     state.grid.forEach((c, i) => {
       const was = prevGrid[i];
       if (
@@ -97,13 +113,14 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
   const cur =
     current !== null && queueRef.current.includes(current) ? current : null;
 
-  // Advance: stage the next queued card in the well. Re-runs on mount,
-  // after each release (cur → null), and on every commit (state) —
-  // which covers every moment the queue can gain a head.
-  useEffect(() => {
-    if (cur !== null || queueRef.current.length === 0) return;
+  // Advance as a render-phase update, NOT an effect: the flight (and
+  // the dock-disable that rides on it) must appear in the same commit
+  // as the card it stages. An effect leaves a window where the dock is
+  // enabled, then flips disabled a beat later — under CPU load that
+  // raced real clicks into a just-disabled button.
+  if (cur === null && queueRef.current.length > 0) {
     setCurrent(queueRef.current[0]);
-  }, [cur, state]);
+  }
 
   // …and release it after a beat — clearing it from the queue lands
   // the card on the grid, which is what triggers the FLIP travel.
