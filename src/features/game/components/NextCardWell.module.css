@@ -7,7 +7,7 @@
 
 .cardSlot {
   position: relative;
-  width: 64px;
+  width: 56px;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   background: var(--paper-sunken);
@@ -62,7 +62,7 @@ button.cardSlot:focus-visible {
 
 @media (min-width: 640px) {
   .cardSlot {
-    width: 72px;
+    width: 68px;
   }
 
   .deckCount {

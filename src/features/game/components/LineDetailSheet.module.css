@@ -70,17 +70,10 @@
   color: var(--ink-3);
 }
 
-/* The inline ⓘ mirrors the result hero's info button. */
+/* The inline ⓘ mirrors the result hero's info button — the glyph
+   draws its own circle, so no border here. */
 .infoGlyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--rule);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   color: var(--ink-2);
-  vertical-align: -3px;
 }

@@ -18,7 +18,7 @@
      with the mobile browser's URL bar expanded: on short viewports the
      board shrinks instead of the page scrolling. ~285px covers header,
      status strip, bonus row, dock, and gaps. */
-  width: min(100%, 440px, calc(100svh - 301px));
+  width: min(100%, 440px, calc(100svh - 293px));
   margin: auto auto 0;
   /* NO width transition here: motion measures card layouts in the
      same commit that adds/removes .bonusOpen, and a CSS transition
@@ -32,7 +32,7 @@
    so the board temporarily shrinks by that budget — overall page
    height never changes. */
 .bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 516px));
+  width: min(100%, 440px, calc(100svh - 508px));
   min-width: 180px;
 }
 
@@ -49,7 +49,7 @@
 }
 
 .coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 459px));
+  width: min(100%, 440px, calc(100svh - 451px));
 }
 
 /* Spotlight on the move the coach is asking for. */
@@ -123,11 +123,7 @@
 }
 
 .commitButton {
-  /* Sized like the perk + discard pair above it, tucked to the same
-     edge — the freed left side goes to the larger drawn card. */
-  width: auto;
-  min-width: 212px;
-  align-self: flex-end;
+  width: 100%;
   min-height: 44px;
 }
 
@@ -147,15 +143,15 @@
   }
 
   .boardArea {
-    width: min(100%, 520px, calc(100svh - 336px));
+    width: min(100%, 520px, calc(100svh - 324px));
   }
 
   .bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 551px));
+    width: min(100%, 520px, calc(100svh - 539px));
   }
 
   .coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 494px));
+    width: min(100%, 520px, calc(100svh - 482px));
   }
 
   .dockText {
