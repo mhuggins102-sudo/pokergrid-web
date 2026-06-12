@@ -24,6 +24,12 @@ export interface GridBoardProps {
    * remounts). Those jokers enter with a delayed pop + glow.
    */
   jokerArrivals?: ReadonlySet<number>;
+  /**
+   * Slots seated by the engine before the first paint (from
+   * useOpeningDeal, hosted in GameScreen for the same remount reason).
+   * Those cards deal in with a staggered pop.
+   */
+  openingDeal?: ReadonlySet<number>;
 }
 
 const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
@@ -83,7 +89,37 @@ export function useJokerArrivals(grid: Grid): ReadonlySet<number> {
       if (c && isJoker(c) && !(was && isJoker(was))) arrivedSlots.add(i);
     });
   }
+  // Expire arrival marks once the moment has played out — otherwise a
+  // later board remount (the ♣-panel toggle) would replay the pop for
+  // a joker that has been sitting there for minutes.
+  useEffect(() => {
+    if (arrivedSlots.size === 0) return;
+    const t = window.setTimeout(() => arrivedSlots.clear(), 2500);
+    return () => window.clearTimeout(t);
+  });
   return arrivedSlots;
+}
+
+/**
+ * Slots already filled when the session's board first renders — the
+ * engine seats the opening card (and Gridlock's pre-scatter, and any
+ * pre-render auto-placed jokers) before React ever paints, so without
+ * this they'd just pop into existence. GameScreen mounts exactly once
+ * per run, so "filled at mount" IS the opening deal. Marks expire so
+ * later board remounts don't replay the deal.
+ */
+export function useOpeningDeal(grid: Grid): ReadonlySet<number> {
+  const slotsRef = useRef<Set<number> | null>(null);
+  if (slotsRef.current === null) {
+    slotsRef.current = new Set(grid.flatMap((c, i) => (c ? [i] : [])));
+  }
+  const slots = slotsRef.current;
+  useEffect(() => {
+    if (slots.size === 0) return;
+    const t = window.setTimeout(() => slots.clear(), 2500);
+    return () => window.clearTimeout(t);
+  });
+  return slots;
 }
 
 export function GridBoard({
@@ -93,7 +129,9 @@ export function GridBoard({
   onCellTap,
   instantLayout = false,
   jokerArrivals = NO_ARRIVALS,
+  openingDeal = NO_ARRIVALS,
 }: GridBoardProps) {
+  const dealOrder = [...openingDeal];
   return (
     <div className={styles.board} role="grid" aria-label="Game board">
       {grid.map((card, idx) => {
@@ -127,6 +165,20 @@ export function GridBoard({
                   <motion.div
                     key={`joker-${idx}`}
                     className={`${styles.cardWrap} ${styles.jokerArrive}`}
+                    exit={{ opacity: 0, scale: 0.6 }}
+                  >
+                    <CardFace card={card} />
+                  </motion.div>
+                ) : openingDeal.has(idx) ? (
+                  // Opening deal: seated pre-paint by the engine, so the
+                  // entrance is CSS (AnimatePresence's initial={false}
+                  // suppresses mount animations). Staggered by slot.
+                  <motion.div
+                    key={cardLayoutId(card) ?? `joker-${idx}`}
+                    className={`${styles.cardWrap} ${styles.dealIn}`}
+                    style={{
+                      animationDelay: `${0.1 + dealOrder.indexOf(idx) * 0.06}s`,
+                    }}
                     exit={{ opacity: 0, scale: 0.6 }}
                   >
                     <CardFace card={card} />

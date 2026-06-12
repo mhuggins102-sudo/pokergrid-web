@@ -8,7 +8,11 @@ import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
-import { GridBoard, useJokerArrivals } from './components/GridBoard';
+import {
+  GridBoard,
+  useJokerArrivals,
+  useOpeningDeal,
+} from './components/GridBoard';
 import { NextCardWell } from './components/NextCardWell';
 import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
@@ -72,6 +76,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Tracked here because the board below remounts on the ♣ toggle —
   // the same commit a ♣-triggered joker auto-places in.
   const jokerArrivals = useJokerArrivals(state.grid);
+  const openingDeal = useOpeningDeal(state.grid);
 
   if (ui.isGameOver) {
     return <ResultView onReplay={onReplay} />;
@@ -127,6 +132,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               onCellTap={ui.onCellTap}
               instantLayout={instantLayout}
               jokerArrivals={jokerArrivals}
+              openingDeal={openingDeal}
             />
           </div>
 
