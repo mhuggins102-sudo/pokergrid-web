@@ -18,7 +18,7 @@
      with the mobile browser's URL bar expanded: on short viewports the
      board shrinks instead of the page scrolling. ~285px covers header,
      status strip, bonus row, dock, and gaps. */
-  width: min(100%, 440px, calc(100svh - 323px));
+  width: min(100%, 440px, calc(100svh - 302px));
   margin: auto auto 0;
   /* NO width transition here: motion measures card layouts in the
      same commit that adds/removes .bonusOpen, and a CSS transition
@@ -49,7 +49,7 @@
 }
 
 .coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 481px));
+  width: min(100%, 440px, calc(100svh - 460px));
 }
 
 /* Classic dock is ~30px shorter; center stage ~35px taller. */
@@ -62,11 +62,11 @@
 }
 
 .dockStage .boardArea {
-  width: min(100%, 440px, calc(100svh - 358px));
+  width: min(100%, 440px, calc(100svh - 334px));
 }
 
 .dockStage.coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 516px));
+  width: min(100%, 440px, calc(100svh - 492px));
 }
 
 .dockClassic.bonusOpen .boardArea,
@@ -236,7 +236,7 @@
   }
 
   .boardArea {
-    width: min(100%, 520px, calc(100svh - 354px));
+    width: min(100%, 520px, calc(100svh - 333px));
   }
 
   .bonusOpen .boardArea {
@@ -244,7 +244,7 @@
   }
 
   .coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 512px));
+    width: min(100%, 520px, calc(100svh - 491px));
   }
 
   .dockClassic .boardArea {
@@ -256,11 +256,11 @@
   }
 
   .dockStage .boardArea {
-    width: min(100%, 520px, calc(100svh - 389px));
+    width: min(100%, 520px, calc(100svh - 365px));
   }
 
   .dockStage.coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 547px));
+    width: min(100%, 520px, calc(100svh - 523px));
   }
 
   .dockClassic.bonusOpen .boardArea,

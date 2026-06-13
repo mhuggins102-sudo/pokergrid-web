@@ -99,7 +99,7 @@ export function SettingsPage() {
           role="radiogroup"
           aria-label="Game controls layout"
         >
-          {(['hand-stack', 'center-stage', 'classic'] as DockLayout[]).map(
+          {(['classic', 'hand-stack', 'center-stage'] as DockLayout[]).map(
             l => (
               <button
                 key={l}
