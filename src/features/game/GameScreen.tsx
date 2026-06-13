@@ -1,4 +1,11 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import { scoreGrid } from '../../game/scoring';
 import { Button, Sheet } from '../../design/primitives';
@@ -78,6 +85,42 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Engine-placed cards (opening deal, auto-placed jokers) pose in the
   // well, then fly to their cell via the same FLIP a manual Place gets.
   const { flight, hiddenSlots, cssDeal } = useAutoPlaceFlights(state);
+
+  // Board sizing (phone/tablet only): the board is the largest square
+  // that fits whatever vertical space the dock leaves. We measure the
+  // flex-sized board area and write the square's size back, rather than
+  // sizing it with container-query units — on mobile Safari those don't
+  // recompute when the flex area resizes until a repaint is forced, so
+  // the board would stay stuck oversized (overlapping the score + panel)
+  // until the next touch. A ResizeObserver tracks the dock's real height
+  // change and resizes the board before the next paint. Desktop seats
+  // the board in its own grid column, so CSS sizes it there.
+  const boardAreaRef = useRef<HTMLDivElement>(null);
+  const boardSquareRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const area = boardAreaRef.current;
+    const square = boardSquareRef.current;
+    if (!area || !square) return;
+    const apply = () => {
+      if (window.innerWidth >= 1024) {
+        square.style.removeProperty('width');
+        square.style.removeProperty('height');
+        return;
+      }
+      const cap = window.matchMedia('(min-width: 640px)').matches ? 520 : 440;
+      const size = Math.min(area.clientWidth, area.clientHeight, cap);
+      square.style.width = `${size}px`;
+      square.style.height = `${size}px`;
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(area);
+    window.addEventListener('resize', apply);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', apply);
+    };
+  }, []);
 
   // Line spotlight: tapping a seated card (outside perk targeting)
   // lights up its row + column with their R/C names and live values —
@@ -188,8 +231,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             <LinesPanel report={liveReport} />
           </div>
 
-          <div className={styles.boardArea}>
-            <div className={styles.boardSquare}>
+          <div className={styles.boardArea} ref={boardAreaRef}>
+            <div className={styles.boardSquare} ref={boardSquareRef}>
               <GridBoard
                 // Remount on the ♣ toggle: a fresh mount renders seated
                 // cards exactly where CSS puts them — no animation state

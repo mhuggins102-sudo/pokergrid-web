@@ -23,32 +23,28 @@
 
 .boardArea {
   /* The board claims whatever vertical space the dock leaves, rather
-     than reserving a fixed per-state budget. It's a `size` container so
-     the square inside can measure both axes (100cqw / 100cqh); its own
-     height comes purely from the flex leftover and never from its child
-     (size containment). So a tall dock — e.g. the ♣ replace panel
-     listing three text-rich cards — shrinks the board, and a short dock
-     grows it, with no magic numbers and no page overflow. */
+     than reserving a fixed per-state budget — so a tall dock (e.g. the
+     ♣ replace panel listing three text-rich cards) shrinks the board
+     and a short dock grows it, with no magic numbers and no page
+     overflow. The square inside is sized from JS by measuring this
+     box (GameScreen's ResizeObserver), not with container-query units,
+     which lag on mobile Safari. */
   flex: 1 1 0;
   min-height: 0;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  container-type: size;
 }
 
 .boardSquare {
-  /* Largest square that fits the leftover box: bounded by its width,
-     its height, and the comfort cap. aspect-ratio keeps it square and
-     the GridBoard inside fills it.
-     NO size transition here: motion measures card layouts in the same
-     commit the dock resizes the board, and a CSS transition makes it
-     measure mid-flight geometry — cards pin to stale positions until
-     the next re-measure (the "board shifted right until I tabbed away"
-     bug). The size snaps; the cards' own layout animations carry the
-     visual transition. */
-  width: min(100cqw, 100cqh, 440px);
+  /* JS (GameScreen) writes the exact width/height from the measured
+     board area. This rule is only the pre-measure fallback.
+     NO size transition here: the board must snap to the dock's new size
+     in the same commit; a transition makes motion measure mid-flight
+     geometry — cards pin to stale positions until the next re-measure
+     (the "board shifted right until I tabbed away" bug). */
+  width: min(100%, 440px);
   aspect-ratio: 1 / 1;
 }
 
@@ -207,12 +203,13 @@
 
 .stageWell [class*='cardSlot'] {
   width: 76px;
-  transition: width 160ms ease;
 }
 
 /* Targeting: the instruction banner adds a line to the stage, so the
-   well card gives that line back — net dock height is unchanged, so the
-   flex board above it doesn't resize when a suit perk is picked. */
+   well card gives that exact line back (snapping, NOT transitioning —
+   a transition animates the dock height over time and makes the board
+   flex in and out). Net dock height is unchanged, so the board above
+   it doesn't move at all when a suit perk is picked. */
 .stageTargeting .stageWell [class*='cardSlot'] {
   width: 56px;
 }
@@ -235,7 +232,8 @@
   }
 
   .boardSquare {
-    width: min(100cqw, 100cqh, 520px);
+    /* Pre-measure fallback; JS writes the real size (cap 520 here). */
+    width: min(100%, 520px);
   }
 
   .dockText {
@@ -275,9 +273,8 @@
     grid-column: 2;
     grid-row: 1 / span 2;
     width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
-    /* Desktop gives the board its own column, so drop the mobile
-       flex/size-container behavior and let the square fill the clamp. */
-    container-type: normal;
+    /* Desktop gives the board its own column (JS skips sizing ≥1024px),
+       so drop the mobile flex centering and let the square fill. */
     display: block;
   }
 
