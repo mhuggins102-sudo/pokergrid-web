@@ -20,7 +20,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   sounds: true,
-  dockLayout: 'hand-stack',
+  dockLayout: 'classic',
   reduceMotion: false,
   colorBlindAssist: false,
   twoColorDeck: true,
