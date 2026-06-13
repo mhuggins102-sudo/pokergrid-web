@@ -236,23 +236,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           )}
 
           <div className={styles.dock}>
-            {/* The well stays mounted through the ♣ flow — unmounting it
-                mid-phase strands the grid's shared card layoutIds (cards
-                blink invisible), and the spent club is useful context. */}
             {ui.bonusDialog ? (
-              // ♣ draw takes over the dock — board stays fully visible.
-              // All three layouts share this flow.
-              <>
-                <div className={styles.dockRow}>
-                  <NextCardWell
-                    onPeekDeck={() => setPeekOpen(true)}
-                    instantLayout={instantLayout}
-                    flight={flight}
-                  />
-                  {banner}
-                </div>
-                <BonusResolvePanel ui={ui.bonusDialog} />
-              </>
+              // ♣ draw takes over the whole dock — the well hides so the
+              // board keeps as much room as possible. Safe to unmount:
+              // instantLayout strips every shared layoutId while the
+              // panel is open, so no FLIP pair gets stranded.
+              <BonusResolvePanel ui={ui.bonusDialog} />
             ) : dockLayout === 'classic' ? (
               // Classic: slim card + meta row with the secondary actions,
               // full-width commit beneath.
