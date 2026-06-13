@@ -34,7 +34,7 @@
    so the board temporarily shrinks by that budget — overall page
    height never changes. */
 .bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 420px));
+  width: min(100%, 440px, calc(100svh - 350px));
   min-width: 180px;
 }
 
@@ -73,7 +73,7 @@
 
 .dockClassic.bonusOpen .boardArea,
 .dockStage.bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 420px));
+  width: min(100%, 440px, calc(100svh - 350px));
   min-width: 180px;
 }
 
@@ -242,7 +242,7 @@
   }
 
   .bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 451px));
+    width: min(100%, 520px, calc(100svh - 381px));
   }
 
   .coachOpen .boardArea {
@@ -267,7 +267,7 @@
 
   .dockClassic.bonusOpen .boardArea,
   .dockStage.bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 451px));
+    width: min(100%, 520px, calc(100svh - 381px));
   }
 
   .dockText {
