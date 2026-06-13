@@ -79,9 +79,9 @@
 .footer {
   display: flex;
   justify-content: center;
-  /* Nudge the Decline / Back button up toward the cards — the 44px tap
-     target stays, only the visual gap tightens. */
-  margin-top: -8px;
+  /* Trim a little dead space beneath the Decline / Back button — scoped
+     to this panel so the shared dock's safe-area padding is untouched. */
+  margin-bottom: -6px;
 }
 
 @media (min-width: 640px) {
