@@ -189,30 +189,32 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           </div>
 
           <div className={styles.boardArea}>
-            <GridBoard
-              // Remount on the ♣ toggle: a fresh mount renders seated
-              // cards exactly where CSS puts them — no animation state
-              // can carry stale geometry across the resize.
-              key={bonusOpen ? 'board-compact' : 'board-full'}
-              grid={state.grid}
-              roleOf={ui.roleOf}
-              isTappable={idx =>
-                ui.isTappable(idx) ||
-                (spotlightEnabled && state.grid[idx] !== null)
-              }
-              onCellTap={idx => {
-                if (spotlightEnabled && state.grid[idx] !== null) {
-                  setSpotlight(s => (s === idx ? null : idx));
-                  return;
+            <div className={styles.boardSquare}>
+              <GridBoard
+                // Remount on the ♣ toggle: a fresh mount renders seated
+                // cards exactly where CSS puts them — no animation state
+                // can carry stale geometry across the resize.
+                key={bonusOpen ? 'board-compact' : 'board-full'}
+                grid={state.grid}
+                roleOf={ui.roleOf}
+                isTappable={idx =>
+                  ui.isTappable(idx) ||
+                  (spotlightEnabled && state.grid[idx] !== null)
                 }
-                ui.onCellTap(idx);
-              }}
-              instantLayout={instantLayout}
-              jokerArrivals={jokerArrivals}
-              openingDeal={cssDeal}
-              hiddenSlots={hiddenSlots}
-              spotlight={spotlightProp}
-            />
+                onCellTap={idx => {
+                  if (spotlightEnabled && state.grid[idx] !== null) {
+                    setSpotlight(s => (s === idx ? null : idx));
+                    return;
+                  }
+                  ui.onCellTap(idx);
+                }}
+                instantLayout={instantLayout}
+                jokerArrivals={jokerArrivals}
+                openingDeal={cssDeal}
+                hiddenSlots={hiddenSlots}
+                spotlight={spotlightProp}
+              />
+            </div>
           </div>
 
           {/* Hidden during the ♣ draw — the panel lists held cards
