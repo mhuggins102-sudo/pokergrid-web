@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
-import { Button } from '../../../design/primitives';
+import { Button, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
+import type { Achievement } from '../../../game/achievements';
 import { useTargetsStore } from '../../targets/targetsStore';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { nextIncompleteDaily } from '../../daily/dailyDates';
@@ -38,6 +39,8 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [tiersOpen, setTiersOpen] = useState(false);
+  // Tapped just-earned achievement → explainer sheet.
+  const [achInfo, setAchInfo] = useState<Achievement | null>(null);
   const plays = usePlaysStore(s => s.plays);
   const nextDaily =
     mode.kind === 'daily' ? nextIncompleteDaily(mode.dateISO, plays) : null;
@@ -260,7 +263,17 @@ export function ResultView({ onReplay }: ResultViewProps) {
         </span>
         {newAchievements.length > 0 && (
           <span className={styles.achievements} role="status">
-            🏆 {newAchievements.map(a => a.name).join(' · ')}
+            🏆{' '}
+            {newAchievements.map(a => (
+              <button
+                key={a.id}
+                type="button"
+                className={styles.achievementBtn}
+                onClick={() => setAchInfo(a)}
+              >
+                {a.name}
+              </button>
+            ))}
           </span>
         )}
       </section>
@@ -318,6 +331,14 @@ export function ResultView({ onReplay }: ResultViewProps) {
         </div>
         {commit}
       </div>
+
+      <Sheet
+        open={achInfo !== null}
+        onClose={() => setAchInfo(null)}
+        title={achInfo ? `🏆 ${achInfo.name}` : ''}
+      >
+        {achInfo && <p className="text-body">{achInfo.description}</p>}
+      </Sheet>
 
       <TierBreakdownSheet
         open={tiersOpen}
