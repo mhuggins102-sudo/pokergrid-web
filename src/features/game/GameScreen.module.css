@@ -8,56 +8,73 @@
   gap: var(--space-sm);
   max-width: 480px;
   margin: 0 auto;
-  /* A FIXED, svh-based height — not flex-grow into the shell's
-     min-height:100dvh. With min-height, a tall dock (the 3-card ♣
-     replace panel) makes the page grow and scroll, so the flex board
-     never gets shrink pressure and stays full-size — worst on mobile
-     Safari, whose dynamic viewport hides the toolbar as the page
-     scrolls. A definite svh height (the conservative toolbar-shown
-     height) forces the board to shrink to fit instead. 69px = header +
-     main's vertical padding. */
-  flex: none;
-  height: calc(100svh - 69px);
-  min-height: 0;
+  /* Fill the viewport so the dock pins to the bottom edge; the board
+     floats in the space between status strip and dock. */
+  flex: 1;
 }
 
 .boardArea {
-  /* The board claims whatever vertical space the dock leaves, rather
-     than reserving a fixed per-state budget — so a tall dock (e.g. the
-     ♣ replace panel listing three text-rich cards) shrinks the board
-     and a short dock grows it, with no magic numbers and no page
-     overflow. The square inside is sized from JS by measuring this
-     box (GameScreen's ResizeObserver), not with container-query units,
-     which lag on mobile Safari. */
-  flex: 1 1 0;
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* svh (smallest viewport height) keeps the whole loop on screen even
+     with the mobile browser's URL bar expanded: on short viewports the
+     board shrinks instead of the page scrolling. ~285px covers header,
+     status strip, bonus row, dock, and gaps. */
+  width: min(100%, 440px, calc(100svh - 302px));
+  /* Equal breathing room: vertical auto margins split layout slack
+     evenly above and below the board. */
+  margin: auto;
+  /* NO width transition here: motion measures card layouts in the
+     same commit that adds/removes .bonusOpen, and a CSS transition
+     makes it measure mid-flight geometry — cards end up pinned to
+     stale positions until the next re-measure (the "board shifted
+     right until I tabbed away" bug). The width snaps; the cards'
+     own layout animations carry the visual transition. */
 }
 
-.boardSquare {
-  /* JS (GameScreen) writes the exact width/height from the measured
-     board area. This rule is only the pre-measure fallback.
-     NO size transition here: the board must snap to the dock's new size
-     in the same commit; a transition makes motion measure mid-flight
-     geometry — cards pin to stale positions until the next re-measure
-     (the "board shifted right until I tabbed away" bug). */
-  width: min(100%, 440px);
-  aspect-ratio: 1 / 1;
+/* ♣ draw open: the dock panel needs ~210px more than the normal dock,
+   so the board temporarily shrinks by that budget — overall page
+   height never changes. */
+.bonusOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 350px));
+  min-width: 180px;
 }
 
 /* Tutorial coach: a FIXED slice of the vertical budget — every step
    renders the same panel height (long copy scrolls inside), so the
-   layout never jumps between steps. The board flexes around it, taking
-   whatever space the slot leaves; while the ♣ panel has the dock the
-   coach unmounts entirely. */
+   layout never jumps between steps. The board shrinks by the same
+   amount (mirrors the ♣ panel's budget trick); while the ♣ panel has
+   the dock the coach unmounts entirely. */
 .coachSlot {
   /* Sized for the longest step body (~3 lines) — tutorialSteps.ts
      keeps copy short so the board stays the main event. */
   height: 158px;
   flex-shrink: 0;
+}
+
+.coachOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 460px));
+}
+
+/* Classic dock is ~30px shorter; center stage ~35px taller. */
+.dockClassic .boardArea {
+  width: min(100%, 440px, calc(100svh - 293px));
+}
+
+.dockClassic.coachOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 451px));
+}
+
+.dockStage .boardArea {
+  width: min(100%, 440px, calc(100svh - 334px));
+}
+
+.dockStage.coachOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 492px));
+}
+
+.dockClassic.bonusOpen .boardArea,
+.dockStage.bonusOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 350px));
+  min-width: 180px;
 }
 
 /* Spotlight on the move the coach is asking for. */
@@ -205,15 +222,6 @@
   width: 76px;
 }
 
-/* Targeting: the instruction banner adds a line to the stage, so the
-   well card gives that exact line back (snapping, NOT transitioning —
-   a transition animates the dock height over time and makes the board
-   flex in and out). Net dock height is unchanged, so the board above
-   it doesn't move at all when a suit perk is picked. */
-.stageTargeting .stageWell [class*='cardSlot'] {
-  width: 56px;
-}
-
 .linesSlot {
   display: none;
 }
@@ -227,13 +235,39 @@
   .layout {
     max-width: 560px;
     gap: var(--space-lg);
-    /* 117px = header + the larger ≥640px main padding. */
-    height: calc(100svh - 117px);
   }
 
-  .boardSquare {
-    /* Pre-measure fallback; JS writes the real size (cap 520 here). */
-    width: min(100%, 520px);
+  .boardArea {
+    width: min(100%, 520px, calc(100svh - 333px));
+  }
+
+  .bonusOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 381px));
+  }
+
+  .coachOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 491px));
+  }
+
+  .dockClassic .boardArea {
+    width: min(100%, 520px, calc(100svh - 324px));
+  }
+
+  .dockClassic.coachOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 482px));
+  }
+
+  .dockStage .boardArea {
+    width: min(100%, 520px, calc(100svh - 365px));
+  }
+
+  .dockStage.coachOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 523px));
+  }
+
+  .dockClassic.bonusOpen .boardArea,
+  .dockStage.bonusOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 381px));
   }
 
   .dockText {
@@ -252,10 +286,6 @@
     gap: var(--space-lg) var(--space-xl);
     max-width: 1200px;
     align-items: start;
-    /* Desktop gives the board its own column and unpins the dock, so
-       drop the mobile fixed-height behavior. */
-    flex: 1;
-    height: auto;
   }
 
   .scoreSlot {
@@ -273,13 +303,6 @@
     grid-column: 2;
     grid-row: 1 / span 2;
     width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
-    /* Desktop gives the board its own column (JS skips sizing ≥1024px),
-       so drop the mobile flex centering and let the square fill. */
-    display: block;
-  }
-
-  .boardSquare {
-    width: 100%;
   }
 
   .dock {

@@ -20,15 +20,6 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
     }) as MediaQueryList;
 }
 
-// jsdom has no ResizeObserver; GameScreen uses one to size the board.
-if (typeof window !== 'undefined' && !window.ResizeObserver) {
-  window.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver;
-}
-
 // jsdom doesn't implement the native <dialog> show/close methods yet;
 // shim enough for Dialog/Sheet component tests.
 if (typeof HTMLDialogElement !== 'undefined') {
