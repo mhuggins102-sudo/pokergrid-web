@@ -79,9 +79,6 @@
 .footer {
   display: flex;
   justify-content: center;
-  /* Trim a little dead space beneath the Decline / Back button — scoped
-     to this panel so the shared dock's safe-area padding is untouched. */
-  margin-bottom: -6px;
 }
 
 @media (min-width: 640px) {
