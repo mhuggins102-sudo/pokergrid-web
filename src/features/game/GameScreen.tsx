@@ -215,7 +215,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             />
           </div>
 
-          {(state.bonusCards.length > 0 || !state.noBonusCards) && (
+          {/* Hidden during the ♣ draw — the panel lists held cards
+              itself when the choice involves them (replace flow), and
+              the row's height goes to the board instead. */}
+          {!ui.bonusDialog &&
+            (state.bonusCards.length > 0 || !state.noBonusCards) && (
             <div className={styles.bonusRowSlot}>
               <BonusCardStrip
                 layout="row"
