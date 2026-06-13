@@ -2,10 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { safeJSONStorage } from '../../lib/safeStorage';
 
+export type DockLayout = 'hand-stack' | 'center-stage' | 'classic';
+
 export interface Settings {
   // Sound effects (wired up in the polish phase; persisted now so the
   // preference survives).
   sounds: boolean;
+  // In-game bottom bar arrangement (see DockLayoutPreview).
+  dockLayout: DockLayout;
   // Force-reduce animations regardless of the OS-level setting.
   reduceMotion: boolean;
   // Augment color-coded UI with glyphs for colorblind players.
@@ -16,6 +20,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   sounds: true,
+  dockLayout: 'hand-stack',
   reduceMotion: false,
   colorBlindAssist: false,
   twoColorDeck: true,

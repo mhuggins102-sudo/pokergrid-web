@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, Dialog, useToast } from '../../design/primitives';
-import { Settings, useSettingsStore } from './settingsStore';
+import { Button, Dialog, Sheet, useToast } from '../../design/primitives';
+import { DOCK_LAYOUT_LABEL, DockLayoutPreview } from './DockLayoutPreview';
+import { DockLayout, Settings, useSettingsStore } from './settingsStore';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from '../targets/targetsStore';
 import { clearTwistsSeen } from '../daily/twistSeen';
@@ -44,8 +45,15 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
+  // Preview sheet for the just-picked dock layout.
+  const [previewLayout, setPreviewLayout] = useState<DockLayout | null>(null);
 
   const patch = (p: Partial<Settings>) => settings.set(p);
+
+  const pickDock = (layout: DockLayout) => {
+    patch({ dockLayout: layout });
+    setPreviewLayout(layout);
+  };
 
   return (
     <section className={styles.wrap}>
@@ -78,6 +86,36 @@ export function SettingsPage() {
           value={settings.twoColorDeck}
           onChange={v => patch({ twoColorDeck: v })}
         />
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowTitle}>Game controls</span>
+            <span className={styles.rowHint}>
+              How the drawn card and action buttons arrange under the board.
+            </span>
+          </div>
+        </div>
+        <div
+          className={styles.segmented}
+          role="radiogroup"
+          aria-label="Game controls layout"
+        >
+          {(['hand-stack', 'center-stage', 'classic'] as DockLayout[]).map(
+            l => (
+              <button
+                key={l}
+                type="button"
+                role="radio"
+                aria-checked={settings.dockLayout === l}
+                className={`${styles.segment} ${
+                  settings.dockLayout === l ? styles.segmentOn : ''
+                }`}
+                onClick={() => pickDock(l)}
+              >
+                {DOCK_LAYOUT_LABEL[l]}
+              </button>
+            )
+          )}
+        </div>
       </div>
 
       <div className={styles.panel}>
@@ -121,6 +159,21 @@ export function SettingsPage() {
       >
         Build {__BUILD_ID__}
       </p>
+
+      <Sheet
+        open={previewLayout !== null}
+        onClose={() => setPreviewLayout(null)}
+        title={previewLayout ? DOCK_LAYOUT_LABEL[previewLayout] : ''}
+      >
+        {previewLayout && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <DockLayoutPreview layout={previewLayout} />
+            <p className="text-label" style={{ color: 'var(--ink-3)' }}>
+              Applied — your next game uses this arrangement.
+            </p>
+          </div>
+        )}
+      </Sheet>
 
       <Dialog
         open={confirmReset}

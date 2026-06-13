@@ -92,3 +92,33 @@
     max-width: 720px;
   }
 }
+
+/* Dock-layout picker. */
+.segmented {
+  display: flex;
+  gap: var(--space-xs);
+  padding: 4px 0 var(--space-sm);
+}
+
+.segment {
+  flex: 1;
+  padding: 8px 4px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.segment:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.segmentOn {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}

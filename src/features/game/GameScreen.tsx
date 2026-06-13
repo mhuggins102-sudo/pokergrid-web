@@ -60,6 +60,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
   useGameSfx(state, liveReport.total);
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
+  const dockLayout = useSettingsStore(s => s.dockLayout);
 
   // Layout corrections snap (no glide) on the renders where the ♣
   // panel opens or closes — the board and dock resize in those
@@ -114,13 +115,46 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     return <ResultView onReplay={onReplay} />;
   }
 
-  // The dock's bottom row holds the single "commit" action (Place while
-  // deciding, Cancel while targeting) as a full-width thumb target; any
-  // remaining actions sit beside the drawn card in the top row.
+  // The dock's commit action (Place while deciding, Cancel while
+  // targeting); remaining actions arrange per the dock-layout setting.
   const commitAction =
     ui.actions.find(a => a.id === 'place') ??
     ui.actions.find(a => a.id === 'cancel');
   const rowActions = ui.actions.filter(a => a !== commitAction);
+
+  const actionBtn = (a: (typeof ui.actions)[number], cls?: string) => (
+    <Button
+      key={a.id}
+      variant={a.variant}
+      // While an auto-placed card poses in the well, the dock pauses —
+      // committing then would act on the drawn card while the well
+      // shows the flight card.
+      disabled={a.disabled || flight !== null}
+      onClick={a.onPress}
+      className={
+        [a.id === coachHighlight ? styles.coachPulse : null, cls]
+          .filter(Boolean)
+          .join(' ') || undefined
+      }
+    >
+      {a.label}
+    </Button>
+  );
+
+  const commitBtn = (variantOverride?: 'secondary') =>
+    commitAction &&
+    actionBtn(
+      variantOverride
+        ? { ...commitAction, variant: variantOverride }
+        : commitAction,
+      styles.commitButton
+    );
+
+  const banner = ui.banner && (
+    <span className={styles.dockText} role="status" aria-live="polite">
+      {ui.banner}
+    </span>
+  );
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
@@ -128,6 +162,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         <div
           className={[
             styles.layout,
+            dockLayout === 'classic' ? styles.dockClassic : null,
+            dockLayout === 'center-stage' ? styles.dockStage : null,
             ui.bonusDialog ? styles.bonusOpen : null,
             // The coach yields entirely while the ♣ panel has the dock —
             // both don't fit a phone viewport, and the draw choice is
@@ -205,6 +241,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 blink invisible), and the spent club is useful context. */}
             {ui.bonusDialog ? (
               // ♣ draw takes over the dock — board stays fully visible.
+              // All three layouts share this flow.
               <>
                 <div className={styles.dockRow}>
                   <NextCardWell
@@ -212,17 +249,57 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     instantLayout={instantLayout}
                     flight={flight}
                   />
-                  <span className={styles.dockText} role="status" aria-live="polite">
-                    {ui.banner}
-                  </span>
+                  {banner}
                 </div>
                 <BonusResolvePanel ui={ui.bonusDialog} />
               </>
+            ) : dockLayout === 'classic' ? (
+              // Classic: slim card + meta row with the secondary actions,
+              // full-width commit beneath.
+              <>
+                <div className={styles.dockRow}>
+                  <NextCardWell
+                    onPeekDeck={() => setPeekOpen(true)}
+                    instantLayout={instantLayout}
+                    flight={flight}
+                  />
+                  {banner}
+                  {rowActions.map(a => actionBtn(a))}
+                </div>
+                {commitBtn(
+                  commitAction?.id === 'cancel' ? 'secondary' : undefined
+                )}
+              </>
+            ) : dockLayout === 'center-stage' ? (
+              // Center stage: the card front and center, its two "spend"
+              // fates flanking it, commit full-width beneath.
+              <div className={styles.stage}>
+                {banner}
+                <div className={styles.stageRow}>
+                  <div className={styles.stageSide}>
+                    {rowActions[0] && actionBtn(rowActions[0], styles.stageBtn)}
+                  </div>
+                  <div className={styles.stageWell}>
+                    <NextCardWell
+                      onPeekDeck={() => setPeekOpen(true)}
+                      instantLayout={instantLayout}
+                      stacked
+                      flight={flight}
+                    />
+                  </div>
+                  <div className={styles.stageSide}>
+                    {rowActions[1] && actionBtn(rowActions[1], styles.stageBtn)}
+                  </div>
+                </div>
+                {commitBtn(
+                  commitAction?.id === 'cancel' ? 'secondary' : undefined
+                )}
+              </div>
             ) : (
-              // Hand stack: the drawn card is the hero, with the actions
-              // stacked by importance beside it. While targeting, the
-              // banner takes the stack's top and Cancel sinks to the
-              // bottom; while deciding, Place leads.
+              // Hand stack (default): the drawn card is the hero, with
+              // the actions stacked by importance beside it. While
+              // targeting, the banner takes the stack's top and Cancel
+              // sinks to the bottom; while deciding, Place leads.
               <div className={styles.handStack}>
                 <NextCardWell
                   onPeekDeck={() => setPeekOpen(true)}
@@ -231,64 +308,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   flight={flight}
                 />
                 <div className={styles.actionStack}>
-                  {ui.banner && (
-                    <span
-                      className={styles.dockText}
-                      role="status"
-                      aria-live="polite"
-                    >
-                      {ui.banner}
-                    </span>
-                  )}
-                  {commitAction && commitAction.id === 'place' && (
-                    <Button
-                      key={commitAction.id}
-                      variant={commitAction.variant}
-                      disabled={commitAction.disabled || flight !== null}
-                      onClick={commitAction.onPress}
-                      className={`${styles.commitButton}${
-                        commitAction.id === coachHighlight
-                          ? ` ${styles.coachPulse}`
-                          : ''
-                      }`}
-                    >
-                      {commitAction.label}
-                    </Button>
-                  )}
+                  {banner}
+                  {commitAction?.id === 'place' && commitBtn()}
                   {rowActions.length > 0 && (
                     <div className={styles.actionRow}>
-                      {rowActions.map(a => (
-                        <Button
-                          key={a.id}
-                          variant={a.variant}
-                          // While an auto-placed card poses in the well,
-                          // the dock pauses — committing then would act
-                          // on the drawn card while the well shows the
-                          // flight card.
-                          disabled={a.disabled || flight !== null}
-                          onClick={a.onPress}
-                          className={
-                            a.id === coachHighlight
-                              ? styles.coachPulse
-                              : undefined
-                          }
-                        >
-                          {a.label}
-                        </Button>
-                      ))}
+                      {rowActions.map(a => actionBtn(a))}
                     </div>
                   )}
-                  {commitAction && commitAction.id !== 'place' && (
-                    <Button
-                      key={commitAction.id}
-                      variant="secondary"
-                      disabled={commitAction.disabled || flight !== null}
-                      onClick={commitAction.onPress}
-                      className={styles.commitButton}
-                    >
-                      {commitAction.label}
-                    </Button>
-                  )}
+                  {commitAction && commitAction.id !== 'place' && commitBtn('secondary')}
                 </div>
               </div>
             )}

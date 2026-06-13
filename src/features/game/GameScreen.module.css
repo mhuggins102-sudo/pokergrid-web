@@ -52,6 +52,29 @@
   width: min(100%, 440px, calc(100svh - 481px));
 }
 
+/* Classic dock is ~30px shorter; center stage ~35px taller. */
+.dockClassic .boardArea {
+  width: min(100%, 440px, calc(100svh - 293px));
+}
+
+.dockClassic.coachOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 451px));
+}
+
+.dockStage .boardArea {
+  width: min(100%, 440px, calc(100svh - 358px));
+}
+
+.dockStage.coachOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 516px));
+}
+
+.dockClassic.bonusOpen .boardArea,
+.dockStage.bonusOpen .boardArea {
+  width: min(100%, 440px, calc(100svh - 508px));
+  min-width: 180px;
+}
+
 /* Spotlight on the move the coach is asking for. */
 .coachPulse {
   animation: coach-pulse 1.4s ease-in-out infinite;
@@ -76,14 +99,14 @@
 }
 
 .bonusRowSlot {
-  margin-bottom: auto;
+  /* No auto margins below the board: the board + bonus row + dock
+     cluster hugs the bottom and slack collects under the score bar. */
 }
 
 /* Bottom control dock, pinned to the bottom edge: top row = drawn card
    + instruction text or secondary actions; bottom row = the one commit
    action (Place / Cancel) as a full-width thumb target. */
 .dock {
-  margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -162,6 +185,41 @@
   min-height: 44px;
 }
 
+/* Center-stage dock: card front and center, spends flanking it. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.stage .dockText {
+  flex: none;
+  text-align: center;
+}
+
+.stageRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.stageSide {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.stageBtn {
+  width: 100%;
+  max-width: 130px;
+  min-height: 44px;
+}
+
+.stageWell [class*='cardSlot'] {
+  width: 76px;
+}
+
 .linesSlot {
   display: none;
 }
@@ -187,6 +245,27 @@
 
   .coachOpen .boardArea {
     width: min(100%, 520px, calc(100svh - 512px));
+  }
+
+  .dockClassic .boardArea {
+    width: min(100%, 520px, calc(100svh - 324px));
+  }
+
+  .dockClassic.coachOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 482px));
+  }
+
+  .dockStage .boardArea {
+    width: min(100%, 520px, calc(100svh - 389px));
+  }
+
+  .dockStage.coachOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 547px));
+  }
+
+  .dockClassic.bonusOpen .boardArea,
+  .dockStage.bonusOpen .boardArea {
+    width: min(100%, 520px, calc(100svh - 539px));
   }
 
   .dockText {
@@ -267,7 +346,11 @@
     grid-row: 2 / span 2;
   }
 
-  .coachOpen .boardArea {
+  .coachOpen .boardArea,
+  .dockClassic .boardArea,
+  .dockStage .boardArea,
+  .dockClassic.coachOpen .boardArea,
+  .dockStage.coachOpen .boardArea {
     width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
     min-width: 0;
   }
