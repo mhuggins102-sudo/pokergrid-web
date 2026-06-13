@@ -267,8 +267,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               </>
             ) : dockLayout === 'center-stage' ? (
               // Center stage: the card front and center, its two "spend"
-              // fates flanking it, commit full-width beneath.
-              <div className={styles.stage}>
+              // fates flanking it, commit full-width beneath. While
+              // targeting (a banner is showing), the well card shrinks by
+              // the banner's height so the dock — and therefore the board
+              // above it — keeps the exact same size as while deciding.
+              <div
+                className={[styles.stage, banner ? styles.stageTargeting : null]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
                 {banner}
                 <div className={styles.stageRow}>
                   <div className={styles.stageSide}>
