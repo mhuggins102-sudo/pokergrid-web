@@ -79,6 +79,9 @@
 .footer {
   display: flex;
   justify-content: center;
+  /* Nudge the Decline / Back button up toward the cards — the 44px tap
+     target stays, only the visual gap tightens. */
+  margin-top: -8px;
 }
 
 @media (min-width: 640px) {
