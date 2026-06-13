@@ -19,7 +19,9 @@
      board shrinks instead of the page scrolling. ~285px covers header,
      status strip, bonus row, dock, and gaps. */
   width: min(100%, 440px, calc(100svh - 302px));
-  margin: auto auto 0;
+  /* Equal breathing room: vertical auto margins split layout slack
+     evenly above and below the board. */
+  margin: auto;
   /* NO width transition here: motion measures card layouts in the
      same commit that adds/removes .bonusOpen, and a CSS transition
      makes it measure mid-flight geometry — cards end up pinned to
@@ -32,7 +34,7 @@
    so the board temporarily shrinks by that budget — overall page
    height never changes. */
 .bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 508px));
+  width: min(100%, 440px, calc(100svh - 466px));
   min-width: 180px;
 }
 
@@ -71,7 +73,7 @@
 
 .dockClassic.bonusOpen .boardArea,
 .dockStage.bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 508px));
+  width: min(100%, 440px, calc(100svh - 466px));
   min-width: 180px;
 }
 
@@ -240,7 +242,7 @@
   }
 
   .bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 539px));
+    width: min(100%, 520px, calc(100svh - 497px));
   }
 
   .coachOpen .boardArea {
@@ -265,7 +267,7 @@
 
   .dockClassic.bonusOpen .boardArea,
   .dockStage.bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 539px));
+    width: min(100%, 520px, calc(100svh - 497px));
   }
 
   .dockText {
