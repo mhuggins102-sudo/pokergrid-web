@@ -199,6 +199,14 @@
 
 .stageWell [class*='cardSlot'] {
   width: 76px;
+  transition: width 160ms ease;
+}
+
+/* Targeting: the instruction banner adds a line to the stage, so the
+   well card gives that line back — net dock height is unchanged, so the
+   flex board above it doesn't resize when a suit perk is picked. */
+.stageTargeting .stageWell [class*='cardSlot'] {
+  width: 56px;
 }
 
 .linesSlot {
