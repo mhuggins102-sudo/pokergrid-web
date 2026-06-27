@@ -93,24 +93,18 @@
   gap: 0;
 }
 
-/* Live Shapley contribution in the top-right corner — plain green points
-   (no badge), so what each card is adding is visible in-game without
-   opening the popup. */
+/* Live Shapley contribution in the bottom-right corner — plain green
+   points (no badge), so what each card is adding is visible in-game
+   without opening the popup. Matches the end-game contribution styling:
+   --accent green, weight 600, 12px. */
 .row .chipValue {
   position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: 10px;
-  /* Match the end-game contribution styling: --accent green, weight 600. */
+  bottom: 3px;
+  right: 6px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
   color: var(--accent);
-}
-
-/* Keep the title clear of the corner value (the mult sits on the line
-   below, away from it). */
-.row .chipTitle {
-  padding-right: 26px;
 }
 
 .row .chipTitle,
@@ -119,6 +113,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The contribution sits at the bottom-right; keep the mult (bottom-left)
+   from running under it. */
+.row .chipMult {
+  padding-right: 32px;
 }
 
 .row .chipTitle {
