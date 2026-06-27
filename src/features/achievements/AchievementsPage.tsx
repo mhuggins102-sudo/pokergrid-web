@@ -14,9 +14,14 @@ const GROUPS: Array<{ tier: AchievementTier; title: string; blurb: string }> = [
     blurb: 'Earned in free play on Hard or Extreme.',
   },
   {
+    tier: 'daily',
+    title: 'Daily Puzzles',
+    blurb: 'Earned by winning daily puzzles.',
+  },
+  {
     tier: 'milestone',
     title: 'Milestones',
-    blurb: 'Earned across your whole history.',
+    blurb: 'Earned across your whole history — daily wins count too.',
   },
 ];
 

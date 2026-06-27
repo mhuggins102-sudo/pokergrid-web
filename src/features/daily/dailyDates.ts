@@ -5,14 +5,15 @@ import { DailyPlay } from './sync/playsStore';
 // — the archive runs all the way back to it.
 export const DAILY_LAUNCH_ISO = '2026-05-01';
 
-const dayMs = 86_400_000;
+export const dayMs = 86_400_000;
 
-const toUTC = (iso: string): number => {
+export const toUTC = (iso: string): number => {
   const [y, m, d] = iso.split('-').map(Number);
   return Date.UTC(y, m - 1, d);
 };
 
-const toISO = (utc: number): string => new Date(utc).toISOString().slice(0, 10);
+export const toISO = (utc: number): string =>
+  new Date(utc).toISOString().slice(0, 10);
 
 /** Every published date from `todayISO` back to `earliestISO`, newest first. */
 export const datesBack = (todayISO: string, earliestISO: string): string[] => {
