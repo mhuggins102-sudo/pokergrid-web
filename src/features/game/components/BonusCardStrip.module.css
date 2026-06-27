@@ -101,7 +101,8 @@
   top: 2px;
   right: 4px;
   font-size: 10px;
-  font-weight: 700;
+  /* Match the end-game contribution styling: --accent green, weight 600. */
+  font-weight: 600;
   line-height: 1.2;
   color: var(--accent);
 }
