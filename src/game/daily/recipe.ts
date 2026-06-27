@@ -39,6 +39,24 @@ const ALL_TWISTS: ChallengeId[] = [
   'three-tricks',
 ];
 
+// Scatter joins the daily twist rotation from this UTC date onward.
+// Gating it by date keeps every earlier daily's recipe byte-for-byte
+// identical — adding a twist shifts the `% eligible.length` mapping, so
+// without this the whole archive (and its shared leaderboards) would
+// silently re-roll to different twists.
+const SCATTER_LAUNCH_ISO = '2026-07-01';
+
+const eligibleTwistsFor = (
+  difficulty: Difficulty,
+  dateISO: string,
+  config: RecipeConfig
+): ChallengeId[] => {
+  const base = config.twistEligibility[difficulty];
+  // Extreme has no twists; don't append to an empty pool.
+  if (base.length === 0 || dateISO < SCATTER_LAUNCH_ISO) return base;
+  return [...base, 'scatter'];
+};
+
 export const RECIPE_CONFIG: RecipeConfig = {
   difficultyWeights: { easy: 20, medium: 35, hard: 35, extreme: 10 },
   // Phase 3: twists live at 30%. Suppressed on Extreme days so the
@@ -103,7 +121,7 @@ export const recipeFor = (
 ): DailyRecipe => {
   const { difficultyRoll, twistRoll, twistIndexRoll } = channelsFor(dateISO);
   const difficulty = pickDifficulty(difficultyRoll, config.difficultyWeights);
-  const eligibleTwists = config.twistEligibility[difficulty];
+  const eligibleTwists = eligibleTwistsFor(difficulty, dateISO, config);
   if (
     eligibleTwists.length === 0 ||
     twistRoll >= config.twistProbability

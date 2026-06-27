@@ -28,6 +28,8 @@ const baseState = (overrides: Partial<GameState>): GameState => ({
   bonusDeclineAllowed: false,
   randomPerks: false,
   noBonusCards: false,
+  scatter: false,
+  scatterSlot: null,
   ...overrides,
 });
 
