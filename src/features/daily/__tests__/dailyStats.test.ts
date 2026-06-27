@@ -72,23 +72,27 @@ describe('dailyByDifficulty', () => {
         play('2026-05-03', true, 200, 'easy')
       )
     );
+    // 120/80 = 1.5 → S tier (not SS); 200/80 = 2.5 → SS.
     expect(agg.hard).toEqual({
       best: 120,
       totalScore: 210,
       totalRuns: 2,
       wins: 1,
+      ssWins: 0,
     });
     expect(agg.easy).toEqual({
       best: 200,
       totalScore: 200,
       totalRuns: 1,
       wins: 1,
+      ssWins: 1,
     });
     expect(agg.extreme).toEqual({
       best: null,
       totalScore: 0,
       totalRuns: 0,
       wins: 0,
+      ssWins: 0,
     });
   });
 });

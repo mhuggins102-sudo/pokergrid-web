@@ -279,7 +279,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'win-every-difficulty',
     tier: 'milestone',
     name: 'Globetrotter',
-    description: 'Win a game at each difficulty.',
+    description: 'Win a game at each difficulty (free play or daily).',
     conditionMet: ({ milestone }) => {
       const w = milestone.winsByDifficulty;
       return w.easy > 0 && w.medium > 0 && w.hard > 0 && w.extreme > 0;
@@ -289,7 +289,8 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'perfect-every-difficulty',
     tier: 'milestone',
     name: 'Perfectionist',
-    description: 'Win a game with Perfect (SS rating) at each difficulty.',
+    description:
+      'Win with Perfect (SS rating) at each difficulty (free play or daily).',
     conditionMet: ({ milestone }) => {
       const s = milestone.ssByDifficulty;
       return s.easy > 0 && s.medium > 0 && s.hard > 0 && s.extreme > 0;
@@ -389,7 +390,14 @@ export interface CumulativeInputs {
   // Free-play wins + daily wins — the combined total the win milestones
   // now count.
   totalWins: number;
+  // Combined free-play + daily wins / SS-tier wins per difficulty — feed
+  // the Globetrotter and Perfectionist milestones (so dailies count too).
+  winsByDifficulty: Record<Difficulty, number>;
+  ssByDifficulty: Record<Difficulty, number>;
 }
+
+const allFourPositive = (m: Record<Difficulty, number>): boolean =>
+  m.easy > 0 && m.medium > 0 && m.hard > 0 && m.extreme > 0;
 
 export const earnedCumulativeAchievements = (
   c: CumulativeInputs
@@ -401,5 +409,7 @@ export const earnedCumulativeAchievements = (
   if (c.dailyBestStreak >= 10) out.push('daily-streak-10');
   if (c.totalWins >= 25) out.push('wins-25');
   if (c.totalWins >= 100) out.push('wins-100');
+  if (allFourPositive(c.winsByDifficulty)) out.push('win-every-difficulty');
+  if (allFourPositive(c.ssByDifficulty)) out.push('perfect-every-difficulty');
   return out;
 };

@@ -1,6 +1,13 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
-import { scoreGrid } from '../../game/scoring';
+import { bonusShapleyValues, scoreGrid } from '../../game/scoring';
 import { Button, Sheet } from '../../design/primitives';
 import { useGameSession } from './GameSessionProvider';
 import { useCoachHighlight } from './coach';
@@ -58,6 +65,21 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     [state]
   );
 
+  // Live per-card Shapley contribution, shown as a corner badge on each
+  // held bonus card so the points it's adding are visible without opening
+  // the popup. Mirrors the result-screen attribution but live (incomplete
+  // lines ignored); only positive values are surfaced.
+  const liveShapley = useMemo(
+    () =>
+      bonusShapleyValues(state.grid, state.bonusCards, {
+        ignoreIncompletePenalty: true,
+        deckRemaining: state.deck.length,
+        discards: state.discards,
+        perkSpent: state.perkSpent,
+      }).map(v => (v > 0 ? v : undefined)),
+    [state]
+  );
+
   useGameSfx(state, liveReport.total);
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
   const dockLayout = useSettingsStore(s => s.dockLayout);
@@ -71,6 +93,58 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const bonusToggled = prevBonusOpen.current !== bonusOpen;
   prevBonusOpen.current = bonusOpen;
   const instantLayout = bonusOpen || bonusToggled;
+
+  // During the ♣ draw the dock is replaced by a content-sized panel of
+  // varying height. The board can't shrink via flex here (the page is
+  // allowed to grow past the viewport), so measure the room left between
+  // the board's top and the dock and size the board to fit — the dock
+  // stays at its natural height (never scrolls) and the board flexes to
+  // whatever is left. Only runs while the panel is open.
+  const scoreSlotRef = useRef<HTMLDivElement>(null);
+  const boardAreaRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const dockMode = ui.bonusDialog?.mode ?? null;
+  const [bonusBoardSize, setBonusBoardSize] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    if (!bonusOpen) {
+      setBonusBoardSize(null);
+      return;
+    }
+    const measure = () => {
+      const score = scoreSlotRef.current;
+      const boardArea = boardAreaRef.current;
+      const dock = dockRef.current;
+      if (!score || !boardArea || !dock) return;
+      // Desktop lays the board and dock in separate grid columns — no
+      // vertical contention — so leave it to CSS there.
+      if (window.matchMedia?.('(min-width: 1024px)').matches) {
+        setBonusBoardSize(null);
+        return;
+      }
+      // Measure from the (fixed) score bar, NOT the board: the board is
+      // vertically centered by margin:auto, so its own top moves with its
+      // size and would make the measurement oscillate.
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      const scoreBottom = score.getBoundingClientRect().bottom;
+      const dockH = dock.getBoundingClientRect().height;
+      const GAPS = 16; // column gaps above and below the board
+      const avail = vh - scoreBottom - dockH - GAPS;
+      // Parent width (stable) — NOT the board's own width, which we set.
+      const containerW = boardArea.parentElement?.clientWidth ?? avail;
+      setBonusBoardSize(Math.max(140, Math.min(avail, 440, containerW)));
+    };
+    measure();
+    let ro: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined' && dockRef.current) {
+      ro = new ResizeObserver(measure);
+      ro.observe(dockRef.current);
+    }
+    window.addEventListener('resize', measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [bonusOpen, dockMode]);
 
   // Tracked here because the board below remounts on the ♣ toggle —
   // the same commit a ♣-triggered joker auto-places in.
@@ -173,7 +247,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             .filter(Boolean)
             .join(' ')}
         >
-          <div className={styles.scoreSlot}>
+          <div className={styles.scoreSlot} ref={scoreSlotRef}>
             <ScoreBar
               onShowHandValues={() => setHandsOpen(true)}
               onShowLines={() => setLinesOpen(true)}
@@ -188,7 +262,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             <LinesPanel report={liveReport} />
           </div>
 
-          <div className={styles.boardArea}>
+          <div
+            className={styles.boardArea}
+            ref={boardAreaRef}
+            style={
+              bonusOpen && bonusBoardSize !== null
+                ? { width: bonusBoardSize, minWidth: 0, maxWidth: '100%' }
+                : undefined
+            }
+          >
             <GridBoard
               // Remount on the ♣ toggle: a fresh mount renders seated
               // cards exactly where CSS puts them — no animation state
@@ -224,6 +306,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <BonusCardStrip
                 layout="row"
                 cards={state.bonusCards}
+                values={liveShapley}
                 onSlotTap={
                   ui.bonusSlotPick
                     ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
@@ -239,7 +322,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           )}
 
-          <div className={styles.dock}>
+          <div className={styles.dock} ref={dockRef}>
             {ui.bonusDialog ? (
               // ♣ draw takes over the whole dock — the well hides so the
               // board keeps as much room as possible. Safe to unmount:
@@ -321,6 +404,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             <div className={styles.bonusSlot}>
               <BonusCardStrip
                 cards={state.bonusCards}
+                values={liveShapley}
                 onSlotTap={
                   ui.bonusSlotPick
                     ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })

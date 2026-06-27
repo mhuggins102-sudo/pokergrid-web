@@ -1,4 +1,5 @@
 import type { Difficulty } from '../../game/rules';
+import { tierForRun } from '../../lib/stats';
 import { dayMs, toISO, toUTC } from './dailyDates';
 import type { DailyPlaysMap } from './sync/playsStore';
 
@@ -9,6 +10,8 @@ export interface DailyDifficultyAgg {
   totalScore: number;
   totalRuns: number;
   wins: number;
+  // SS-tier ("perfect") wins — feeds the Perfectionist milestone.
+  ssWins: number;
 }
 
 const emptyAgg = (): DailyDifficultyAgg => ({
@@ -16,6 +19,7 @@ const emptyAgg = (): DailyDifficultyAgg => ({
   totalScore: 0,
   totalRuns: 0,
   wins: 0,
+  ssWins: 0,
 });
 
 export const dailyByDifficulty = (
@@ -34,6 +38,11 @@ export const dailyByDifficulty = (
     a.totalRuns += 1;
     if (p.won) a.wins += 1;
     if (a.best === null || p.score > a.best) a.best = p.score;
+    if (
+      tierForRun({ score: p.score, target: p.state.target, won: p.won }) === 'SS'
+    ) {
+      a.ssWins += 1;
+    }
   }
   return out;
 };

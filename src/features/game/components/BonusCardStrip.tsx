@@ -8,11 +8,14 @@ export function BonusChip({
   card,
   onClick,
   value,
+  compact,
 }: {
   card: BonusCard;
   onClick?: () => void;
-  /** Optional resolved contribution (Shapley points, result view). */
+  /** Optional resolved contribution (Shapley points). */
   value?: number;
+  /** Slim corner badge (no " pts" suffix) for the in-game row strip. */
+  compact?: boolean;
 }) {
   const cat = styleFor(card);
   const dimmed = card.used || isPlaceholder(card);
@@ -24,7 +27,9 @@ export function BonusChip({
         .join(' ')}
       style={{ '--chip-tone': cat.borderColor } as CSSProperties}
       onClick={onClick}
-      aria-label={`Bonus card: ${card.name}${card.used ? ' (used)' : ''}`}
+      aria-label={`Bonus card: ${card.name}${card.used ? ' (used)' : ''}${
+        value !== undefined ? `, contributing ${value} points` : ''
+      }`}
     >
       <span className={styles.chipTitle}>
         {card.title}
@@ -34,7 +39,8 @@ export function BonusChip({
       {value !== undefined && (
         <span className={styles.chipValue}>
           {value >= 0 ? '+' : ''}
-          {value} pts
+          {value}
+          {compact ? '' : ' pts'}
         </span>
       )}
     </button>
@@ -44,8 +50,9 @@ export function BonusChip({
 export interface BonusCardStripProps {
   cards: BonusCard[];
   bonusDeckSize?: number;
-  /** Shapley contributions aligned with `cards` (result view). */
-  values?: number[];
+  /** Shapley contributions aligned with `cards`; entries left undefined
+   *  render no value. */
+  values?: (number | undefined)[];
   title?: string;
   /**
    * 'panel' (default): a titled card list for the desktop side column.
@@ -114,6 +121,7 @@ export function BonusCardStrip({
             key={`${card.id}-${i}`}
             card={card}
             value={values?.[i]}
+            compact
             onClick={() => tapChip(card, i)}
           />
         ))}

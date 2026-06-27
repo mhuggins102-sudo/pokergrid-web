@@ -86,10 +86,32 @@
 }
 
 .row .chip {
+  position: relative;
   flex: 1;
   min-width: 0;
   padding: 4px var(--space-sm);
   gap: 0;
+}
+
+/* Live Shapley contribution as a top-right corner badge, so the points
+   each card is adding are visible in-game without opening the popup. */
+.row .chipValue {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+/* Keep the title clear of the corner badge (the mult sits on the line
+   below, away from it). */
+.row .chipTitle {
+  padding-right: 28px;
 }
 
 .row .chipTitle,
