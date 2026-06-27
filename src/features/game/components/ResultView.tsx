@@ -71,6 +71,14 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const isTargets = mode.kind === 'targets';
   const wantsRewards = isTargets && won && (tier === 'SS' || tier === 'S');
   const [rewardsPending, setRewardsPending] = useState(wantsRewards);
+  // Let the final result land first, then bring up the perks picker — it
+  // used to pop on the same frame as the verdict, hiding the result.
+  const [rewardsRevealed, setRewardsRevealed] = useState(false);
+  useEffect(() => {
+    if (!wantsRewards) return;
+    const t = window.setTimeout(() => setRewardsRevealed(true), 1500);
+    return () => window.clearTimeout(t);
+  }, [wantsRewards]);
   const tuDoneRef = useRef(false);
 
   const finishTargets = (result: RewardsResult) => {
@@ -357,7 +365,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
         liveContext={card => bonusCardLiveContext(card, state, { final: true })}
       />
 
-      {rewardsPending && (tier === 'SS' || tier === 'S') && (
+      {rewardsPending && rewardsRevealed && (tier === 'SS' || tier === 'S') && (
         <RewardsSheet
           tier={tier}
           grid={state.grid}
