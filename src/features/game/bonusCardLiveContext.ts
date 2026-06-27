@@ -8,8 +8,18 @@ import {
 import { Suit, isJoker } from '../../game/cards';
 import { lines as gridLines } from '../../game/grid';
 import { evaluateLine } from '../../game/hands';
+import { bonusShapleyValues } from '../../game/scoring';
 import { GameState } from '../../game/state';
 import { HAND_LABEL } from './handLabels';
+
+export interface LiveContextOptions {
+  // True when the popup is shown after the game is over (result /
+  // archive views). In that state the "not yet" / "not active" lines
+  // are meaningless, so they're suppressed, and the live Shapley line
+  // is omitted because the end-game chip already shows the final
+  // per-card contribution.
+  final?: boolean;
+}
 
 const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
 const SUIT_NAME: Record<Suit, string> = {
@@ -36,10 +46,12 @@ const trimMult = (m: number): string =>
  */
 export const bonusCardLiveContext = (
   card: BonusCard,
-  state: GameState
+  state: GameState,
+  opts: LiveContextOptions = {}
 ): string[] => {
   if (isPlaceholder(card) || isSpecialCard(card)) return [];
 
+  const final = opts.final ?? false;
   const baseId = card.id.replace(/-pwr\d+$/, '');
   const out: string[] = [];
 
@@ -49,6 +61,25 @@ export const bonusCardLiveContext = (
     cards: l.cards,
     hand: evaluateLine(l.cards),
   }));
+
+  // ---- live Shapley contribution (gameplay only) ----
+  // What this card is worth on the current board, fairly split when
+  // several bonuses stack on the same line. Mirrors live preview
+  // scoring (incomplete-line penalty ignored). Only shown when above 0.
+  if (!final) {
+    const idx = state.bonusCards.indexOf(card);
+    if (idx >= 0) {
+      const sh = bonusShapleyValues(state.grid, state.bonusCards, {
+        deckRemaining: state.deck.length,
+        discards: state.discards,
+        perkSpent: state.perkSpent,
+        ignoreIncompletePenalty: true,
+      })[idx];
+      if (sh !== undefined && sh > 0) {
+        out.push(`Contributing +${sh} pts right now`);
+      }
+    }
+  }
 
   // ---- targeted counters ----
 
@@ -128,11 +159,11 @@ export const bonusCardLiveContext = (
       const e = card.lineEffect!(c, card, ctxs);
       return (e.multiplier ?? 1) !== 1 || (e.flatAdd ?? 0) !== 0;
     })?.hand;
-    out.push(
-      firing > 0 && hand
-        ? `Lines scoring ${HAND_LABEL[hand]} right now: ${firing}`
-        : 'No line scores this hand yet'
-    );
+    if (firing > 0 && hand) {
+      out.push(`Lines scoring ${HAND_LABEL[hand]} right now: ${firing}`);
+    } else if (!final) {
+      out.push('No line scores this hand yet');
+    }
     return out; // generic line would repeat the same number
   }
 
@@ -140,11 +171,11 @@ export const bonusCardLiveContext = (
 
   if (card.lineEffect) {
     const firing = countFiring(card, ctxs);
-    out.push(
-      firing > 0
-        ? `Firing on ${firing} line${firing === 1 ? '' : 's'} right now`
-        : 'Not firing on any line yet'
-    );
+    if (firing > 0) {
+      out.push(`Firing on ${firing} line${firing === 1 ? '' : 's'} right now`);
+    } else if (!final) {
+      out.push('Not firing on any line yet');
+    }
   }
 
   if (card.gridEffect) {
@@ -158,11 +189,13 @@ export const bonusCardLiveContext = (
     const eff = card.gridEffect(snap, card);
     const m = eff.totalMultiplier ?? 1;
     const f = eff.totalFlatAdd ?? 0;
-    out.push(
-      m !== 1 || f !== 0
-        ? `If the game ended now: ×${trimMult(m)}${f !== 0 ? ` +${f}` : ''}`
-        : 'Not active yet'
-    );
+    if (m !== 1 || f !== 0) {
+      out.push(
+        `If the game ended now: ×${trimMult(m)}${f !== 0 ? ` +${f}` : ''}`
+      );
+    } else if (!final) {
+      out.push('Not active yet');
+    }
   }
 
   return out;

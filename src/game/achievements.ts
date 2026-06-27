@@ -30,7 +30,7 @@ import type { Difficulty } from './rules';
 //   - conditionMet: checks the run / cumulative state.
 // ============================================================================
 
-export type AchievementTier = 'easy' | 'hard-extreme' | 'milestone';
+export type AchievementTier = 'easy' | 'hard-extreme' | 'daily' | 'milestone';
 
 // Pair, Two Pair, and Three of a Kind — and anything that scored nothing
 // (no hand). Used by the Low Hands achievement.
@@ -50,9 +50,16 @@ export type AchievementId =
   | 'line-only'
   | 'low-hands'
   | 'high-hands'
+  | 'gaps-and-glory'
+  | 'full-spectrum'
   | 'easy-overshot'
   | 'easy-grand'
   | 'easy-soloist'
+  // Daily puzzles
+  | 'daily-first'
+  | 'daily-20'
+  | 'daily-streak-3'
+  | 'daily-streak-10'
   // Milestones
   | 'win-every-difficulty'
   | 'perfect-every-difficulty'
@@ -211,6 +218,61 @@ export const ACHIEVEMENTS: Achievement[] = [
     conditionMet: ({ report }) =>
       report.lines.every(l => !l.hand || LOW_OR_NONE.has(l.hand)),
   },
+  {
+    id: 'gaps-and-glory',
+    tier: 'hard-extreme',
+    name: 'Gaps & Glory',
+    description: 'Score 500+ with 3 or more incomplete lines on the board.',
+    scoreTarget: 500,
+    conditionMet: ({ report }) =>
+      report.lines.filter(l => l.incomplete).length >= 3,
+  },
+  {
+    id: 'full-spectrum',
+    tier: 'hard-extreme',
+    name: 'Full Spectrum',
+    description: 'Score 500+ with 8 or more distinct scoring hand types.',
+    scoreTarget: 500,
+    conditionMet: ({ report }) =>
+      new Set(
+        report.lines
+          .map(l => l.hand)
+          .filter((h): h is HandRank => h !== null && h !== 'HIGH_CARD')
+      ).size >= 8,
+  },
+
+  // ---------- Daily puzzles ----------
+  // These are cumulative across all daily plays, so they're recorded by
+  // earnedCumulativeAchievements (driven from the daily plays map), not
+  // by the per-run engine below. conditionMet is never invoked for them.
+  {
+    id: 'daily-first',
+    tier: 'daily',
+    name: 'Daily Debut',
+    description: 'Win your first daily puzzle.',
+    conditionMet: () => false,
+  },
+  {
+    id: 'daily-20',
+    tier: 'daily',
+    name: 'Daily Devotee',
+    description: 'Win 20 daily puzzles.',
+    conditionMet: () => false,
+  },
+  {
+    id: 'daily-streak-3',
+    tier: 'daily',
+    name: 'On a Roll',
+    description: 'Win 3+ daily puzzles in a row (consecutive dates).',
+    conditionMet: () => false,
+  },
+  {
+    id: 'daily-streak-10',
+    tier: 'daily',
+    name: 'Perfect Fortnight',
+    description: 'Win 10+ daily puzzles in a row (consecutive dates).',
+    conditionMet: () => false,
+  },
 
   // ---------- Milestones ----------
   {
@@ -237,14 +299,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'wins-25',
     tier: 'milestone',
     name: 'Quarter Century',
-    description: 'Win 25+ games across all difficulties.',
+    description: 'Win 25+ games, free play and daily puzzles combined.',
     conditionMet: ({ milestone }) => milestone.totalWins >= 25,
   },
   {
     id: 'wins-100',
     tier: 'milestone',
     name: 'Centurion',
-    description: 'Win 100+ games across all difficulties.',
+    description: 'Win 100+ games, free play and daily puzzles combined.',
     conditionMet: ({ milestone }) => milestone.totalWins >= 100,
   },
   {
@@ -280,6 +342,9 @@ const modeAllowedFor = (
   ach: Achievement,
   mode: AchievementCheckCtx['mode']
 ): boolean => {
+  // Daily-tier achievements are cumulative over the plays map, recorded
+  // by earnedCumulativeAchievements — never by the per-run engine.
+  if (ach.tier === 'daily') return false;
   if (ach.id === 'all-challenges') {
     return mode === 'free' || mode === 'challenge';
   }
@@ -311,4 +376,30 @@ export const achievementEarned = (
     return false;
   }
   return ach.conditionMet(ctx);
+};
+
+// Cumulative tallies that aren't tied to a single run: the Daily-Puzzle
+// achievements and the combined-win milestones. Kept here (pure, with
+// the thresholds) so they live alongside the achievement catalog and
+// stay testable; the UI feeds in the daily plays + free-play wins.
+export interface CumulativeInputs {
+  // Daily puzzles won (all-time) and the longest consecutive-date streak.
+  dailyWins: number;
+  dailyBestStreak: number;
+  // Free-play wins + daily wins — the combined total the win milestones
+  // now count.
+  totalWins: number;
+}
+
+export const earnedCumulativeAchievements = (
+  c: CumulativeInputs
+): AchievementId[] => {
+  const out: AchievementId[] = [];
+  if (c.dailyWins >= 1) out.push('daily-first');
+  if (c.dailyWins >= 20) out.push('daily-20');
+  if (c.dailyBestStreak >= 3) out.push('daily-streak-3');
+  if (c.dailyBestStreak >= 10) out.push('daily-streak-10');
+  if (c.totalWins >= 25) out.push('wins-25');
+  if (c.totalWins >= 100) out.push('wins-100');
+  return out;
 };

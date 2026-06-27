@@ -48,3 +48,24 @@
   color: var(--suit-tone);
   box-shadow: inset 0 0 0 1px var(--suit-tone);
 }
+
+/* Targets-Up upgraded card (wild / double): override the suit ring with
+   the charge tone so a peeked deck flags which cards were changed. */
+.charged {
+  position: relative;
+  background: color-mix(in srgb, var(--charge-tone) 16%, var(--paper-raised));
+  color: var(--charge-tone);
+  box-shadow: inset 0 0 0 1.5px var(--charge-tone);
+}
+
+.chargeMark {
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 0;
+}
+
+.legend {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin: 0;
+}
