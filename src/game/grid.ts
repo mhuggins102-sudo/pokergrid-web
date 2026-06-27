@@ -47,6 +47,16 @@ export const placeAtSpiralNext = (g: Grid, card: Card): Grid => {
   return placeAt(g, idx, card);
 };
 
+// A uniformly-random empty slot, or null when full. Used by the Scatter
+// twist, where the next placement target is re-rolled for every drawn
+// card instead of following the spiral.
+export const randomEmptySlot = (g: Grid, rng: () => number): number | null => {
+  const empties: number[] = [];
+  for (let i = 0; i < GRID_SLOTS; i++) if (g[i] === null) empties.push(i);
+  if (empties.length === 0) return null;
+  return empties[Math.floor(rng() * empties.length)];
+};
+
 export const isFull = (g: Grid): boolean => g.every(c => c !== null);
 
 export const rowOf = (idx: number): number => Math.floor(idx / GRID_SIZE);

@@ -91,7 +91,8 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             mode.id === 'mixed-bag'
               ? ['special', 'in-game', 'end-game']
               : undefined,
-            mode.id === 'gridlock' ? 15 : 0
+            mode.id === 'gridlock' ? 15 : 0,
+            mode.id === 'scatter'
           ),
       };
     }
@@ -155,7 +156,8 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             twist === 'mixed-bag'
               ? ['special', 'in-game', 'end-game']
               : undefined,
-            twist === 'gridlock' ? 15 : 0
+            twist === 'gridlock' ? 15 : 0,
+            twist === 'scatter'
           ),
       };
     }

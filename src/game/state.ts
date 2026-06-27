@@ -1,6 +1,14 @@
 import { Card, isJoker, shiftRank, StandardCard, Suit } from './cards';
 import { freshShuffledDeck, shuffle } from './deck';
-import { emptyGrid, Grid, isFull, nextSpiralSlot, placeAtSpiralNext } from './grid';
+import {
+  emptyGrid,
+  Grid,
+  isFull,
+  nextSpiralSlot,
+  placeAt,
+  placeAtSpiralNext,
+  randomEmptySlot,
+} from './grid';
 import { HandRank } from './hands';
 import {
   BonusCard,
@@ -287,6 +295,15 @@ export interface GameState {
   // empty slots hold a placeholder card matching the slot's kind, and
   // ♣ draws are filtered to the slot's category. Undefined otherwise.
   slotCategories?: SlotKind[];
+  // Scatter challenge: instead of the spiral, every card drawn from the
+  // deck targets a uniformly-random empty slot, re-rolled for each new
+  // drawn card (even after a suit perk spends the previous one). Jokers
+  // auto-place at random slots too.
+  scatter: boolean;
+  // The random slot the current drawn card will land on under Scatter
+  // (null otherwise / when nothing is drawn). Also drives the "next"
+  // highlight in the UI.
+  scatterSlot: number | null;
 }
 
 export type Action =
@@ -333,22 +350,38 @@ const log = (s: GameState, msg: string): GameState => ({
   history: [...s.history, msg],
 });
 
-const drawNext = (state: GameState): GameState => {
+const drawNext = (
+  state: GameState,
+  rng: () => number = Math.random
+): GameState => {
   let s = state;
   while (true) {
     if (isFull(s.grid)) {
-      return { ...s, drawn: null, phase: { kind: 'game-over' } };
+      return { ...s, drawn: null, scatterSlot: null, phase: { kind: 'game-over' } };
     }
     if (s.deck.length === 0) {
-      return { ...s, drawn: null, phase: { kind: 'game-over' } };
+      return { ...s, drawn: null, scatterSlot: null, phase: { kind: 'game-over' } };
     }
     const [next, ...rest] = s.deck;
     if (isJoker(next)) {
-      const grid = placeAtSpiralNext(s.grid, next);
+      // Scatter sends auto-placed jokers to random slots too; otherwise
+      // they follow the spiral. randomEmptySlot is non-null here (grid
+      // isn't full).
+      const grid = s.scatter
+        ? placeAt(s.grid, randomEmptySlot(s.grid, rng)!, next)
+        : placeAtSpiralNext(s.grid, next);
       s = log({ ...s, deck: rest, grid }, 'Joker auto-placed');
       continue;
     }
-    return { ...s, deck: rest, drawn: next, phase: { kind: 'awaiting-action' } };
+    // Re-roll the random target for THIS drawn card (Scatter).
+    const scatterSlot = s.scatter ? randomEmptySlot(s.grid, rng) : null;
+    return {
+      ...s,
+      deck: rest,
+      drawn: next,
+      scatterSlot,
+      phase: { kind: 'awaiting-action' },
+    };
   }
 };
 
@@ -407,7 +440,10 @@ export const newGame = (
   // top of the shuffled deck (so RNG drives both which cards and
   // where they land). 0 / undefined = standard spiral-from-center
   // start.
-  randomGridFill: number = 0
+  randomGridFill: number = 0,
+  // Scatter challenge: every drawn card targets a random empty slot
+  // (re-rolled per draw) instead of the spiral.
+  scatter = false
 ): GameState => {
   // Joker count is determined by difficulty (Easy ships 2 jokers, Hard
   // ships 1, Extreme ships 0). Targets-Up infers difficulty from level
@@ -522,7 +558,11 @@ export const newGame = (
   } else {
     const [first, ...remaining] = deck;
     rest = remaining;
-    grid = placeAtSpiralNext(emptyGrid(), first);
+    // Scatter seats even the very first card at a random slot instead of
+    // the center; otherwise the spiral starts from the middle.
+    grid = scatter
+      ? placeAt(emptyGrid(), randomEmptySlot(emptyGrid(), rng)!, first)
+      : placeAtSpiralNext(emptyGrid(), first);
   }
   const initial: GameState = {
     deck: rest,
@@ -548,8 +588,10 @@ export const newGame = (
     randomPerks,
     noBonusCards,
     slotCategories,
+    scatter,
+    scatterSlot: null,
   };
-  return drawNext(initial);
+  return drawNext(initial, rng);
 };
 
 // ---------- helpers ----------
@@ -570,16 +612,23 @@ const pushPerkSpent = (s: GameState, card: Card): GameState => ({
 
 // ---------- action handlers ----------
 
-const handlePlace = (s: GameState): GameState => {
+const handlePlace = (s: GameState, rng: () => number): GameState => {
   if (s.phase.kind !== 'awaiting-action' || !s.drawn) return s;
-  const grid = placeAtSpiralNext(s.grid, s.drawn);
-  return drawNext(log({ ...s, grid }, 'Place'));
+  // Scatter lands the card on its pre-rolled random slot; otherwise the
+  // spiral picks the next slot.
+  const slot =
+    s.scatter && s.scatterSlot !== null
+      ? s.scatterSlot
+      : nextSpiralSlot(s.grid);
+  if (slot === null) return s;
+  const grid = placeAt(s.grid, slot, s.drawn);
+  return drawNext(log({ ...s, grid }, 'Place'), rng);
 };
 
-const handleDiscardNone = (s: GameState): GameState => {
+const handleDiscardNone = (s: GameState, rng: () => number): GameState => {
   if (s.phase.kind !== 'awaiting-action' || !s.drawn || isJoker(s.drawn)) return s;
   if (s.noDiscards) return s; // No Discards challenge — reject the action.
-  return drawNext(log(pushDiscard(s, s.drawn), 'Discard'));
+  return drawNext(log(pushDiscard(s, s.drawn), 'Discard'), rng);
 };
 
 // Short Circuit: pick a uniformly-random suit whose perk would
@@ -688,11 +737,16 @@ const handleBeginSuitAction = (
   }
 };
 
-const handleResolveHop = (s: GameState, i: number, j: number): GameState => {
+const handleResolveHop = (
+  s: GameState,
+  i: number,
+  j: number,
+  rng: () => number
+): GameState => {
   if (s.phase.kind !== 'awaiting-target-hop') return s;
   if (!s.drawn || isJoker(s.drawn)) return s;
   const grid = executeHop(s.grid, i, j);
-  return drawNext(log(pushPerkSpent({ ...s, grid }, s.drawn), `Hop ${i}↔${j}`));
+  return drawNext(log(pushPerkSpent({ ...s, grid }, s.drawn), `Hop ${i}↔${j}`), rng);
 };
 
 const handleSlideSelectSource = (s: GameState, slot: number): GameState => {
@@ -715,7 +769,8 @@ const handleResolveSlide = (
   s: GameState,
   from: number,
   direction: Direction,
-  distance: number
+  distance: number,
+  rng: () => number
 ): GameState => {
   if (s.phase.kind !== 'awaiting-target-slide-dest') return s;
   if (!s.drawn || isJoker(s.drawn)) return s;
@@ -725,18 +780,26 @@ const handleResolveSlide = (
   if (!valid) return s;
   const grid = executeSlide(s.grid, from, direction, distance);
   return drawNext(
-    log(pushPerkSpent({ ...s, grid }, s.drawn), `Slide ${direction} × ${distance}`)
+    log(pushPerkSpent({ ...s, grid }, s.drawn), `Slide ${direction} × ${distance}`),
+    rng
   );
 };
 
-const handleResolveDestroy = (s: GameState, slot: number): GameState => {
+const handleResolveDestroy = (
+  s: GameState,
+  slot: number,
+  rng: () => number
+): GameState => {
   if (s.phase.kind !== 'awaiting-target-destroy') return s;
   if (!s.drawn || isJoker(s.drawn)) return s;
   const { grid, removed } = executeDestroy(s.grid, slot);
   // Target goes to discards (not a perk usage — collateral); the diamond
   // itself goes to perkSpent.
   const afterTarget = pushDiscard({ ...s, grid }, removed);
-  return drawNext(log(pushPerkSpent(afterTarget, s.drawn), `Destroy slot ${slot}`));
+  return drawNext(
+    log(pushPerkSpent(afterTarget, s.drawn), `Destroy slot ${slot}`),
+    rng
+  );
 };
 
 // ---------- special card handlers (Three Tricks challenge) ----------
@@ -1230,7 +1293,8 @@ const handleResolvePlusMinus = (s: GameState, delta: 1 | -1): GameState => {
 const finishBonusFlow = (
   s: GameState,
   returningDrawn: BonusCard[],
-  newBonusCards: BonusCard[]
+  newBonusCards: BonusCard[],
+  rng: () => number
 ): GameState => {
   if (!s.drawn || isJoker(s.drawn)) return s;
   return drawNext(
@@ -1244,7 +1308,8 @@ const finishBonusFlow = (
         s.drawn
       ),
       'Bonus draw resolved'
-    )
+    ),
+    rng
   );
 };
 
@@ -1303,7 +1368,11 @@ const enforceSpotlightMixedBag = (
   );
 };
 
-const handleBonusKeep = (s: GameState, idx: number): GameState => {
+const handleBonusKeep = (
+  s: GameState,
+  idx: number,
+  rng: () => number
+): GameState => {
   if (s.phase.kind !== 'bonus-card-resolving') return s;
   if (idx < 0 || idx >= s.phase.drawn.length) return s;
   const phase = s.phase;
@@ -1331,7 +1400,8 @@ const handleBonusKeep = (s: GameState, idx: number): GameState => {
     return finishBonusFlow(
       swappedReal ? { ...s, swappedBonus: true } : s,
       returning,
-      finalHand
+      finalHand,
+      rng
     );
   }
   // Spotlight bypasses the cap check: it evicts every other held card
@@ -1348,7 +1418,7 @@ const handleBonusKeep = (s: GameState, idx: number): GameState => {
   }
   const returning = phase.drawn.filter((_, i) => i !== idx);
   const newHand = enforceSpotlight([...s.bonusCards, kept], kept);
-  return finishBonusFlow(s, returning, newHand);
+  return finishBonusFlow(s, returning, newHand, rng);
 };
 
 const handleBonusPickSlot = (s: GameState, slot: number): GameState => {
@@ -1392,7 +1462,11 @@ const handleBonusSelectNew = (s: GameState, idx: number): GameState => {
   };
 };
 
-const handleBonusReplace = (s: GameState, oldIdx: number): GameState => {
+const handleBonusReplace = (
+  s: GameState,
+  oldIdx: number,
+  rng: () => number
+): GameState => {
   if (s.phase.kind !== 'bonus-card-replacing') return s;
   const phase = s.phase;
   if (oldIdx < 0 || oldIdx >= s.bonusCards.length) return s;
@@ -1405,10 +1479,15 @@ const handleBonusReplace = (s: GameState, oldIdx: number): GameState => {
   // bonus card is gone (we don't model a bonus-card trash explicitly).
   const returningDrawn = phase.drawn.filter((_, i) => i !== phase.pickedNew);
   // Mark that a forced-swap happened — the No Swap challenge looks at this.
-  return finishBonusFlow({ ...s, swappedBonus: true }, returningDrawn, newHand);
+  return finishBonusFlow(
+    { ...s, swappedBonus: true },
+    returningDrawn,
+    newHand,
+    rng
+  );
 };
 
-const handleBonusDecline = (s: GameState): GameState => {
+const handleBonusDecline = (s: GameState, rng: () => number): GameState => {
   if (
     s.phase.kind !== 'bonus-card-resolving' &&
     s.phase.kind !== 'bonus-card-replacing'
@@ -1424,7 +1503,7 @@ const handleBonusDecline = (s: GameState): GameState => {
   ) {
     return s;
   }
-  return finishBonusFlow(s, s.phase.drawn, s.bonusCards);
+  return finishBonusFlow(s, s.phase.drawn, s.bonusCards, rng);
 };
 
 const handleCancelAction = (s: GameState): GameState => {
@@ -1569,37 +1648,43 @@ export const step = (
   let next: GameState;
   switch (action.type) {
     case 'PLACE':
-      next = handlePlace(state);
+      next = handlePlace(state, rng);
       break;
     case 'DISCARD_NONE':
-      next = handleDiscardNone(state);
+      next = handleDiscardNone(state, rng);
       break;
     case 'BEGIN_SUIT_ACTION':
       next = handleBeginSuitAction(state, rng, action.forSuit);
       break;
     case 'RESOLVE_HOP':
-      next = handleResolveHop(state, action.i, action.j);
+      next = handleResolveHop(state, action.i, action.j, rng);
       break;
     case 'SLIDE_SELECT_SOURCE':
       next = handleSlideSelectSource(state, action.slot);
       break;
     case 'RESOLVE_SLIDE':
-      next = handleResolveSlide(state, action.from, action.direction, action.distance);
+      next = handleResolveSlide(
+        state,
+        action.from,
+        action.direction,
+        action.distance,
+        rng
+      );
       break;
     case 'RESOLVE_DESTROY':
-      next = handleResolveDestroy(state, action.slot);
+      next = handleResolveDestroy(state, action.slot, rng);
       break;
     case 'BONUS_KEEP':
-      next = handleBonusKeep(state, action.idx);
+      next = handleBonusKeep(state, action.idx, rng);
       break;
     case 'BONUS_SELECT_NEW':
       next = handleBonusSelectNew(state, action.idx);
       break;
     case 'BONUS_REPLACE':
-      next = handleBonusReplace(state, action.oldIdx);
+      next = handleBonusReplace(state, action.oldIdx, rng);
       break;
     case 'BONUS_DECLINE':
-      next = handleBonusDecline(state);
+      next = handleBonusDecline(state, rng);
       break;
     case 'BONUS_PICK_SLOT':
       next = handleBonusPickSlot(state, action.slot);

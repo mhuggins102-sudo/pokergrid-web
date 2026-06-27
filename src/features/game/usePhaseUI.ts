@@ -175,7 +175,11 @@ export function usePhaseUI(): PhaseUI {
     switch (phase.kind) {
       case 'awaiting-action': {
         const drawn = state.drawn;
-        const next = nextSpiralSlot(state.grid);
+        // Scatter highlights the pre-rolled random slot; otherwise the
+        // spiral's next slot.
+        const next = state.scatter
+          ? state.scatterSlot
+          : nextSpiralSlot(state.grid);
         const actions: PhaseAction[] = [];
         if (drawn) {
           actions.push({

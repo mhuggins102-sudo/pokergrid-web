@@ -103,7 +103,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const scoreSlotRef = useRef<HTMLDivElement>(null);
   const boardAreaRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
-  const dockMode = ui.bonusDialog?.mode ?? null;
   const [bonusBoardSize, setBonusBoardSize] = useState<number | null>(null);
   useLayoutEffect(() => {
     if (!bonusOpen) {
@@ -134,17 +133,26 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       setBonusBoardSize(Math.max(140, Math.min(avail, 440, containerW)));
     };
     measure();
+    // Re-measure after paint too, in case fonts/layout settle late.
+    const raf = requestAnimationFrame(measure);
+    // A SINGLE observer kept across the resolving → replacing step (the
+    // dock grows from two drawn cards to three held cards): tearing the
+    // observer down and rebuilding it on every mode change could miss
+    // exactly that resize, which is why the board didn't re-fit when the
+    // hand-full swap list appeared.
     let ro: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== 'undefined' && dockRef.current) {
+    if (typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(measure);
-      ro.observe(dockRef.current);
+      if (dockRef.current) ro.observe(dockRef.current);
+      if (scoreSlotRef.current) ro.observe(scoreSlotRef.current);
     }
     window.addEventListener('resize', measure);
     return () => {
+      cancelAnimationFrame(raf);
       ro?.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [bonusOpen, dockMode]);
+  }, [bonusOpen]);
 
   // Tracked here because the board below remounts on the ♣ toggle —
   // the same commit a ♣-triggered joker auto-places in.

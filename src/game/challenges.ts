@@ -23,7 +23,8 @@ export type ChallengeId =
   | 'poker-purist'
   | 'three-tricks'
   | 'mixed-bag'
-  | 'gridlock';
+  | 'gridlock'
+  | 'scatter';
 
 export interface Challenge {
   id: ChallengeId;
@@ -79,6 +80,17 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame: randomGridFill seeds 15 cards into random
     // positions before drawNext runs. The remaining deck is intact
     // and the spiral picks up from whichever slots stayed empty.
+    conditionMet: () => true,
+  },
+  {
+    id: 'scatter',
+    name: 'Scatter',
+    synopsis: 'Twist: Each card lands at a random spot',
+    goal: 'Score 500+ points with no spiral. Every card drawn from the deck targets a random empty slot, re-rolled for each new card — even after you spend one on a suit perk. Jokers scatter too.',
+    scoreTarget: 500,
+    // Enforced at newGame: the scatter flag makes drawNext pick (and
+    // re-roll) a random empty slot for every drawn card and auto-placed
+    // joker, instead of following the spiral order.
     conditionMet: () => true,
   },
   {

@@ -87,8 +87,8 @@ describe('challenges', () => {
     // First unbeaten two are open: no-discards + gridlock.
     expect(screen.getByText('✓ Beaten')).toBeInTheDocument();
     const locked = screen.getAllByText('Locked');
-    // 7 total − 1 beaten − 2 open = 4 locked.
-    expect(locked).toHaveLength(4);
+    // 8 total − 1 beaten − 2 open = 5 locked.
+    expect(locked).toHaveLength(5);
   });
 
   it('three-tricks seeds three one-time specials', () => {
