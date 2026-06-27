@@ -50,6 +50,8 @@ export type AchievementId =
   | 'line-only'
   | 'low-hands'
   | 'high-hands'
+  | 'gaps-and-glory'
+  | 'full-spectrum'
   | 'easy-overshot'
   | 'easy-grand'
   | 'easy-soloist'
@@ -210,6 +212,28 @@ export const ACHIEVEMENTS: Achievement[] = [
     scoreTarget: 500,
     conditionMet: ({ report }) =>
       report.lines.every(l => !l.hand || LOW_OR_NONE.has(l.hand)),
+  },
+  {
+    id: 'gaps-and-glory',
+    tier: 'hard-extreme',
+    name: 'Gaps & Glory',
+    description: 'Score 500+ with 3 or more incomplete lines on the board.',
+    scoreTarget: 500,
+    conditionMet: ({ report }) =>
+      report.lines.filter(l => l.incomplete).length >= 3,
+  },
+  {
+    id: 'full-spectrum',
+    tier: 'hard-extreme',
+    name: 'Full Spectrum',
+    description: 'Score 500+ with 8 or more distinct scoring hand types.',
+    scoreTarget: 500,
+    conditionMet: ({ report }) =>
+      new Set(
+        report.lines
+          .map(l => l.hand)
+          .filter((h): h is HandRank => h !== null && h !== 'HIGH_CARD')
+      ).size >= 8,
   },
 
   // ---------- Milestones ----------

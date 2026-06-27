@@ -31,6 +31,11 @@ const jokerCount = (g: Grid): number =>
 /** How long a card poses in the well before flying to its cell. */
 const STAGE_MS = 350;
 
+/** Faster pose for the opening deal of a pre-scattered board (Gridlock):
+ *  every seat is dealt one at a time, but rapid-fire so 15 cards don't
+ *  drag. */
+const OPENING_RAPID_MS = 140;
+
 const EMPTY: ReadonlySet<number> = new Set();
 
 /**
@@ -57,21 +62,22 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
   }
   const skip = skipRef.current;
 
-  // Session mount: stage the engine's opening seats in spiral order.
-  // A pre-scattered board (Gridlock: 16 cards) would make a tedious
-  // relay — those keep the CSS cascade.
+  // Session mount: stage the engine's opening seats in spiral order
+  // through the well→cell flight relay — one card at a time. A pre-
+  // scattered board (Gridlock) seats many cards at once; rather than
+  // dumping them all via a CSS cascade, deal them one at a time too,
+  // just rapid-fire (OPENING_RAPID_MS) so the burst stays snappy.
   const cssDealRef = useRef<Set<number> | null>(null);
+  const openingSeatsRef = useRef<Set<number>>(new Set());
   if (cssDealRef.current === null) {
     const seats = state.grid.flatMap((c, i) => (c ? [i] : []));
-    if (skip) {
-      cssDealRef.current = new Set();
-    } else if (seats.length <= 3) {
+    cssDealRef.current = new Set();
+    if (!skip) {
       queueRef.current = seats.sort(
         (a, b) => SPIRAL_POSITION[a] - SPIRAL_POSITION[b]
       );
-      cssDealRef.current = new Set();
-    } else {
-      cssDealRef.current = new Set(seats);
+      // A multi-card opening deal (Gridlock) flies rapid-fire.
+      if (seats.length > 3) openingSeatsRef.current = new Set(seats);
     }
   }
   const cssDeal = cssDealRef.current;
@@ -126,10 +132,13 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
   // the card on the grid, which is what triggers the FLIP travel.
   useEffect(() => {
     if (cur === null) return;
+    const stageMs = openingSeatsRef.current.has(cur)
+      ? OPENING_RAPID_MS
+      : STAGE_MS;
     const t = window.setTimeout(() => {
       queueRef.current = queueRef.current.filter(s => s !== cur);
       setCurrent(null);
-    }, STAGE_MS);
+    }, stageMs);
     return () => window.clearTimeout(t);
   }, [cur]);
 

@@ -296,7 +296,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
             cards={state.bonusCards}
             values={shapley}
             title="Bonus contribution"
-            liveContext={card => bonusCardLiveContext(card, state)}
+            liveContext={card => bonusCardLiveContext(card, state, { final: true })}
           />
         </div>
       )}
@@ -354,7 +354,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
         report={report}
         bonusCards={state.bonusCards}
         shapley={shapley}
-        liveContext={card => bonusCardLiveContext(card, state)}
+        liveContext={card => bonusCardLiveContext(card, state, { final: true })}
       />
 
       {rewardsPending && (tier === 'SS' || tier === 'S') && (
