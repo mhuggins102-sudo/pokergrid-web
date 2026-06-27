@@ -11,6 +11,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Always reserve the scrollbar gutter so the centered layout doesn't
+     jump sideways when a tall view (e.g. the ♣ swap list) makes the page
+     scrollable and the scrollbar appears or disappears. */
+  scrollbar-gutter: stable;
 }
 
 body {
