@@ -284,10 +284,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             }
           >
             <GridBoard
-              // Remount on the ♣ toggle: a fresh mount renders seated
-              // cards exactly where CSS puts them — no animation state
-              // can carry stale geometry across the resize.
-              key={bonusOpen ? 'board-compact' : 'board-full'}
+              // Remount on the ♣ toggle AND whenever the measured board
+              // size changes during the draw (resolving → replacing): a
+              // fresh mount renders seated cards exactly where CSS puts
+              // them, so motion's LayoutGroup never pins them to stale
+              // geometry from the previous size (the "board slid right
+              // until I left and came back" bug).
+              key={bonusOpen ? `board-bonus-${bonusBoardSize ?? 'init'}` : 'board-full'}
               grid={state.grid}
               roleOf={ui.roleOf}
               isTappable={idx =>
