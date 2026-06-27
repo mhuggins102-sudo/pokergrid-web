@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useStatsStore } from '../progress/statsStore';
+import { countDailyWins } from '../daily/dailyWinsLite';
 import { markTutorialSeen, tutorialSeen } from '../tutorial/tutorialSeen';
 import styles from './HomePage.module.css';
 
@@ -34,7 +35,12 @@ export function HomePage() {
   // The stats/achievements tiles mirror the original home cards: a
   // running count once there is one. (statsStore is light — type-only
   // game imports — so home stays out of the engine chunk.)
-  const wins = useStatsStore(s => s.stats.wins);
+  // Free-play wins (reactive) + daily wins (read once from storage, so
+  // Home stays off the engine chunk). Snapshot refreshes whenever Home
+  // remounts, e.g. after returning from a daily.
+  const freeWins = useStatsStore(s => s.stats.wins);
+  const [dailyWins] = useState(() => countDailyWins());
+  const wins = freeWins + dailyWins;
   const earned = useStatsStore(s => s.stats.achievementsDone.length);
 
   return (

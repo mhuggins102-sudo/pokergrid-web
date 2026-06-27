@@ -103,6 +103,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const scoreSlotRef = useRef<HTMLDivElement>(null);
   const boardAreaRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
+  // The panel's height changes only at these transitions (entering the
+  // draw, and resolving → replacing when the hand is full). Re-measuring
+  // on `dockMode` is the reliable trigger — the ResizeObserver alone
+  // didn't fire for the swap-list step on iOS.
+  const dockMode = ui.bonusDialog?.mode ?? null;
   const [bonusBoardSize, setBonusBoardSize] = useState<number | null>(null);
   useLayoutEffect(() => {
     if (!bonusOpen) {
@@ -133,26 +138,25 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       setBonusBoardSize(Math.max(140, Math.min(avail, 440, containerW)));
     };
     measure();
-    // Re-measure after paint too, in case fonts/layout settle late.
+    // Re-measure after paint and on the next tick too, in case the new
+    // panel's layout (and iOS's viewport) settle a frame late.
     const raf = requestAnimationFrame(measure);
-    // A SINGLE observer kept across the resolving → replacing step (the
-    // dock grows from two drawn cards to three held cards): tearing the
-    // observer down and rebuilding it on every mode change could miss
-    // exactly that resize, which is why the board didn't re-fit when the
-    // hand-full swap list appeared.
+    const t = window.setTimeout(measure, 0);
+    // Keep an observer as well for orientation / font / chrome changes
+    // mid-draw; the dockMode dep handles the resolving → replacing step.
     let ro: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(measure);
       if (dockRef.current) ro.observe(dockRef.current);
-      if (scoreSlotRef.current) ro.observe(scoreSlotRef.current);
     }
     window.addEventListener('resize', measure);
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(t);
       ro?.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [bonusOpen]);
+  }, [bonusOpen, dockMode]);
 
   // Tracked here because the board below remounts on the ♣ toggle —
   // the same commit a ♣-triggered joker auto-places in.
