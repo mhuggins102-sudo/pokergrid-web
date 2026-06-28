@@ -31,10 +31,10 @@ const jokerCount = (g: Grid): number =>
 /** How long a card poses in the well before flying to its cell. */
 const STAGE_MS = 350;
 
-/** Faster pose for the opening deal of a pre-scattered board (Gridlock):
- *  every seat is dealt one at a time, but rapid-fire so 15 cards don't
- *  drag. */
-const OPENING_RAPID_MS = 140;
+/** Pose time for the opening deal of a pre-scattered board (Gridlock):
+ *  every seat is dealt one at a time. Exported so the sound layer can
+ *  tick a placement per card on the same cadence. */
+export const OPENING_RAPID_MS = 280;
 
 const EMPTY: ReadonlySet<number> = new Set();
 

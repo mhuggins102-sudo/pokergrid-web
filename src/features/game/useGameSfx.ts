@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { GameState } from '../../game/state';
 import { SFX, sfxChime, sfxForHistoryEntry, sfxLose, sfxWin } from '../../lib/sfx';
 import { useSettingsStore } from '../settings/settingsStore';
+import { OPENING_RAPID_MS } from './useAutoPlaceFlights';
 
 /**
  * State-transition sounds, derived from the reducer's history log —
@@ -14,6 +15,9 @@ import { useSettingsStore } from '../settings/settingsStore';
 export const useGameSfx = (state: GameState, finalScore: number): void => {
   const sounds = useSettingsStore(s => s.sounds);
   const prev = useRef<{ historyLen: number; phase: string } | null>(null);
+  // Timers for the opening deal's placement ticks, cleared on unmount so
+  // a long Gridlock deal doesn't keep firing after you leave.
+  const openingTimers = useRef<number[]>([]);
 
   useEffect(() => {
     const cur = { historyLen: state.history.length, phase: state.phase.kind };
@@ -22,11 +26,25 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
     if (!sounds) return;
     if (last === null) {
       // Session mount: the engine seated the opening card(s) before the
-      // first paint. Give that deal its placement tick, timed to the
-      // staged flight's takeoff from the well (STAGE_MS in
-      // useAutoPlaceFlights).
+      // first paint. Give that deal its placement tick(s), timed to the
+      // staged flight cadence in useAutoPlaceFlights.
       if (state.past.length === 0 && state.grid.some(c => c !== null)) {
-        window.setTimeout(() => SFX.place(), 350);
+        const seats = state.grid.filter(c => c !== null).length;
+        const reduced =
+          typeof window !== 'undefined' &&
+          !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (seats > 3 && !reduced) {
+          // Gridlock: cards fly in one at a time (OPENING_RAPID_MS apart),
+          // so tick a placement for each as it lands.
+          for (let j = 1; j <= seats; j++) {
+            openingTimers.current.push(
+              window.setTimeout(() => SFX.place(), j * OPENING_RAPID_MS)
+            );
+          }
+        } else {
+          // Normal opening: a single card seats from the well.
+          openingTimers.current.push(window.setTimeout(() => SFX.place(), 350));
+        }
       }
       return;
     }
@@ -63,4 +81,11 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
       else sfxLose();
     }
   }, [state, sounds, finalScore]);
+
+  // Cancel any pending opening-deal ticks on unmount (e.g. leaving mid
+  // Gridlock deal) so they don't fire after the screen is gone.
+  useEffect(() => {
+    const timers = openingTimers.current;
+    return () => timers.forEach(id => window.clearTimeout(id));
+  }, []);
 };
