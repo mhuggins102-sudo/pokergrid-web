@@ -28,6 +28,7 @@ interface QueueStore {
   pending: PendingSubmit[];
   enqueue: (p: PendingSubmit) => void;
   remove: (deviceId: string, dateISO: string) => void;
+  clear: () => void;
 }
 
 export const useQueueStore = create<QueueStore>()(
@@ -49,6 +50,7 @@ export const useQueueStore = create<QueueStore>()(
             e => !(e.deviceId === deviceId && e.dateISO === dateISO)
           ),
         })),
+      clear: () => set({ pending: [] }),
     }),
     { name: 'pokergrid:daily:pendingSubmits:v1', storage: safeJSONStorage() }
   )

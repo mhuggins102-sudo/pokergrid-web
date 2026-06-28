@@ -222,6 +222,13 @@
   width: 76px;
 }
 
+/* When a suit-action banner is showing, shrink the deck card so the
+   extra text line is absorbed rather than expanding the dock (and
+   nudging the board). Roughly: one banner line + the stage gap. */
+.stageHasBanner .stageWell [class*='cardSlot'] {
+  width: 56px;
+}
+
 .linesSlot {
   display: none;
 }

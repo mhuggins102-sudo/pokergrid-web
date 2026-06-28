@@ -365,8 +365,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // Center stage: the card front and center, its two "spend"
               // fates flanking it, commit full-width beneath. The banner
               // only takes space when a suit action is prompting — no
-              // reserved slot, so there's no empty gap during normal play.
-              <div className={styles.stage}>
+              // reserved slot, so there's no empty gap during normal play;
+              // when it IS shown, the deck card shrinks to absorb the line
+              // so the dock height (and the board) stays put.
+              <div
+                className={`${styles.stage} ${banner ? styles.stageHasBanner : ''}`}
+              >
                 {banner}
                 <div className={styles.stageRow}>
                   <div className={styles.stageSide}>

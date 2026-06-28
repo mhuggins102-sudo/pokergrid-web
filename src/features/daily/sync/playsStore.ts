@@ -45,6 +45,7 @@ const hydratePlay = (play: DailyPlay): DailyPlay => ({
 interface PlaysStore {
   plays: DailyPlaysMap;
   savePlay: (play: DailyPlay) => void;
+  reset: () => void;
 }
 
 export const usePlaysStore = create<PlaysStore>()(
@@ -58,6 +59,7 @@ export const usePlaysStore = create<PlaysStore>()(
             [play.dateISO]: { ...play, state: slimState(play.state) },
           },
         })),
+      reset: () => set({ plays: {} }),
     }),
     {
       name: 'pokergrid:daily:plays:v1',
