@@ -305,6 +305,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
             values={shapley}
             title="Bonus contribution"
             liveContext={card => bonusCardLiveContext(card, state, { final: true })}
+            hideEach
           />
         </div>
       )}

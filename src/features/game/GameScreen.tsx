@@ -364,11 +364,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             ) : dockLayout === 'center-stage' ? (
               // Center stage: the card front and center, its two "spend"
               // fates flanking it, commit full-width beneath. The banner
-              // sits in a fixed-height slot so the dock — and the board
-              // above it — keep a constant size whether or not a suit
-              // action is prompting (matches the other dock layouts).
+              // only takes space when a suit action is prompting — no
+              // reserved slot, so there's no empty gap during normal play.
               <div className={styles.stage}>
-                <div className={styles.stageBanner}>{banner}</div>
+                {banner}
                 <div className={styles.stageRow}>
                   <div className={styles.stageSide}>
                     {rowActions[0] && actionBtn(rowActions[0], styles.stageBtn)}
