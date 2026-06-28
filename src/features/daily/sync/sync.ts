@@ -5,7 +5,7 @@ import { QueryClient } from '@tanstack/react-query';
 import type { GameState } from '../../../game/state';
 import type { DailyRecipe } from '../../../game/daily/recipe';
 import { isBackendConfigured, submitDailyPlay } from '../../../lib/supabaseRpc';
-import { getOrCreateDeviceId } from './deviceId';
+import { clearDailyIdentity, getOrCreateDeviceId } from './deviceId';
 import { DailyPlay, usePlaysStore } from './playsStore';
 import { DrainDeps, drainGuarded, useQueueStore } from './queue';
 
@@ -75,6 +75,23 @@ export const recordDailyCompletion = (
     enqueuedAt: Date.now(),
   });
   void drainQueue();
+};
+
+/**
+ * Wipe this device's local daily history: stored results, the pending
+ * submit queue, and the leaderboard identity (device id + handle). Used
+ * by "Reset all progress" so a player can truly start over — including
+ * under a different username. Already-submitted scores remain in Supabase
+ * under the old (now-forgotten) device id. Cached rank/stats queries are
+ * invalidated so the UI reflects the fresh identity.
+ */
+export const resetDailyProgress = (): void => {
+  usePlaysStore.getState().reset();
+  useQueueStore.getState().clear();
+  clearDailyIdentity();
+  void queryClient.invalidateQueries({ queryKey: ['daily-rank'] });
+  void queryClient.invalidateQueries({ queryKey: ['daily-stats'] });
+  void queryClient.invalidateQueries({ queryKey: ['daily-histogram'] });
 };
 
 let bootDone = false;

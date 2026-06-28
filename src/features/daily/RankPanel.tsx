@@ -6,7 +6,7 @@ import {
   isBackendConfigured,
   setHandleRemote,
 } from '../../lib/supabaseRpc';
-import { getOrCreateDeviceId } from './sync/deviceId';
+import { getOrCreateDeviceId, KEY_HANDLE } from './sync/deviceId';
 import { useQueueStore } from './sync/queue';
 import { drainQueue } from './sync/sync';
 import {
@@ -195,8 +195,6 @@ function DayStatsSheet({
     </Sheet>
   );
 }
-
-const KEY_HANDLE = 'pokergrid:daily:handle';
 
 function HandleEditor() {
   const { toast } = useToast();

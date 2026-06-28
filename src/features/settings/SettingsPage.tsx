@@ -5,6 +5,7 @@ import { DOCK_LAYOUT_LABEL, DockLayoutPreview } from './DockLayoutPreview';
 import { DockLayout, Settings, useSettingsStore } from './settingsStore';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from '../targets/targetsStore';
+import { resetDailyProgress } from '../daily/sync/sync';
 import { clearTwistsSeen } from '../daily/twistSeen';
 import { clearTutorialSeen } from '../tutorial/tutorialSeen';
 import styles from './SettingsPage.module.css';
@@ -183,9 +184,11 @@ export function SettingsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <p className="text-body">
             This permanently clears your stats, achievements, completed
-            challenges, and the current Targets-Up run on this device. It
-            also re-arms the one-time explainers (tutorial callout, daily
-            twist intros).
+            challenges, the current Targets-Up run, and your daily puzzle
+            results and leaderboard identity on this device — so you can
+            start over under a different name. It also re-arms the one-time
+            explainers (tutorial callout, daily twist intros). Scores
+            already submitted stay on the online leaderboard.
           </p>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <Button variant="ghost" onClick={() => setConfirmReset(false)}>
@@ -196,6 +199,7 @@ export function SettingsPage() {
               onClick={() => {
                 resetStats();
                 clearTargets();
+                resetDailyProgress();
                 clearTwistsSeen();
                 clearTutorialSeen();
                 setConfirmReset(false);
