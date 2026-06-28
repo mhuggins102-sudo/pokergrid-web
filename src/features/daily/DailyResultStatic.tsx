@@ -138,6 +138,7 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
             values={shapley}
             title="Bonus contribution"
             liveContext={card => bonusCardLiveContext(card, state, { final: true })}
+            hideEach
           />
         </div>
       )}

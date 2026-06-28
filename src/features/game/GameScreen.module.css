@@ -199,16 +199,6 @@
   text-align: center;
 }
 
-/* Reserve room for up to two banner lines whether or not a suit action
-   is prompting, so the dock (and the board above) never resize when the
-   banner appears or clears. */
-.stageBanner {
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .stageRow {
   display: flex;
   align-items: center;

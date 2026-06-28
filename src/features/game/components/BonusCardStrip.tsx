@@ -9,6 +9,7 @@ export function BonusChip({
   onClick,
   value,
   compact,
+  hideEach,
 }: {
   card: BonusCard;
   onClick?: () => void;
@@ -16,9 +17,15 @@ export function BonusChip({
   value?: number;
   /** Slim corner badge (no " pts" suffix) for the in-game row strip. */
   compact?: boolean;
+  /** Drop the "(each)" suffix from the mult — the narrow end-game cells
+   *  can't fit it next to the contribution. */
+  hideEach?: boolean;
 }) {
   const cat = styleFor(card);
   const dimmed = card.used || isPlaceholder(card);
+  const multText = hideEach
+    ? card.mult.replace(/\s*\(each\)\s*$/i, '')
+    : card.mult;
   return (
     <button
       type="button"
@@ -35,7 +42,7 @@ export function BonusChip({
         {card.title}
         {card.used ? ' ✓' : ''}
       </span>
-      <span className={styles.chipMult}>{card.mult}</span>
+      <span className={styles.chipMult}>{multText}</span>
       {value !== undefined && (
         <span className={styles.chipValue}>
           {value >= 0 ? '+' : ''}
@@ -77,6 +84,8 @@ export interface BonusCardStripProps {
    * 7") — rendered in the detail sheet under the description.
    */
   liveContext?: (card: BonusCard) => string[];
+  /** Drop the "(each)" suffix from each chip's mult (end-game cells). */
+  hideEach?: boolean;
 }
 
 /**
@@ -93,6 +102,7 @@ export function BonusCardStrip({
   onSlotTap,
   onUse,
   liveContext,
+  hideEach,
 }: BonusCardStripProps) {
   const [detail, setDetail] = useState<{ card: BonusCard; index: number } | null>(
     null
@@ -122,6 +132,7 @@ export function BonusCardStrip({
             card={card}
             value={values?.[i]}
             compact
+            hideEach={hideEach}
             onClick={() => tapChip(card, i)}
           />
         ))}
@@ -157,6 +168,7 @@ export function BonusCardStrip({
             key={`${card.id}-${i}`}
             card={card}
             value={values?.[i]}
+            hideEach={hideEach}
             onClick={() => tapChip(card, i)}
           />
         ))}

@@ -148,6 +148,7 @@ export function ScoreDetailsSheet({
             cards={bonusCards}
             values={shapley}
             liveContext={liveContext}
+            hideEach
           />
         )}
       </div>
