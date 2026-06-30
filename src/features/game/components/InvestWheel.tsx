@@ -1,21 +1,24 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Button, Sheet } from '../../../design/primitives';
 import { HandRank } from '../../../game/hands';
 import { INVEST_HANDS } from '../../../game/invest';
+import { sfxWheelSpin } from '../../../lib/sfx';
 import { HAND_LABEL } from '../handLabels';
 import { useGameSession } from '../GameSessionProvider';
+import { useSettingsStore } from '../../settings/settingsStore';
 import styles from './InvestWheel.module.css';
 
-const ITEM_H = 44; // px per reel row
+const ITEM_H = 48; // px per reel row
 const VISIBLE = 5; // rows visible in the window
-const SPIN_S = 2.4; // spin duration
+const CENTER = (VISIBLE - 1) / 2;
+const SPIN_S = 2.6; // spin duration
 
 /**
- * Bull Market ♣ invest reveal: a slot-machine reel spins through the
- * hand types and lands on the one the reducer already picked, then shows
- * the boost and a Continue button (which applies it + draws the next
- * card). Dismissible only via Continue.
+ * Bull Market ♣ invest reveal: a slot-machine reel spins the hand types
+ * past a pointer and decelerates onto the one the reducer picked, with a
+ * matching click track. When it stops it names the landed hand and the
+ * boost; Continue applies it and draws the next card.
  */
 export function InvestWheel({
   hand,
@@ -25,6 +28,9 @@ export function InvestWheel({
   amount: number;
 }) {
   const { dispatch } = useGameSession();
+  const sounds = useSettingsStore(s => s.sounds);
+  const [landed, setLanded] = useState(false);
+  const startedRef = useRef(false);
 
   // A long reel that cycles the ten hands several times, ending on the
   // chosen hand so the spin decelerates onto it.
@@ -37,13 +43,25 @@ export function InvestWheel({
 
   const targetIndex = reel.length - 1;
   // Land the target row under the centered highlight band.
-  const finalY = -(targetIndex - (VISIBLE - 1) / 2) * ITEM_H;
+  const finalY = -(targetIndex - CENTER) * ITEM_H;
+  const rowsScrolled = targetIndex - CENTER;
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    if (sounds) sfxWheelSpin(SPIN_S, rowsScrolled);
+    const t = window.setTimeout(() => setLanded(true), SPIN_S * 1000);
+    return () => window.clearTimeout(t);
+  }, [sounds, rowsScrolled]);
 
   return (
     <Sheet open onClose={() => {}} dismissible={false} title="♣ Invest">
       <div className={styles.body}>
-        <p className="text-body">The wheel picks a hand to boost…</p>
+        <p className="text-body">Spinning for a hand to boost…</p>
         <div className={styles.window} style={{ height: VISIBLE * ITEM_H }}>
+          <span className={styles.pointer} aria-hidden="true">
+            ▶
+          </span>
           <div className={styles.highlight} style={{ height: ITEM_H }} />
           <motion.div
             className={styles.reel}
@@ -52,20 +70,35 @@ export function InvestWheel({
             transition={{ duration: SPIN_S, ease: [0.1, 0.7, 0.1, 1] }}
           >
             {reel.map((h, i) => (
-              <div key={i} className={styles.reelItem} style={{ height: ITEM_H }}>
+              <div
+                key={i}
+                className={`${styles.reelItem} ${
+                  landed && i === targetIndex ? styles.reelItemWon : ''
+                }`}
+                style={{ height: ITEM_H }}
+              >
                 {HAND_LABEL[h]}
               </div>
             ))}
           </motion.div>
         </div>
-        <motion.p
-          className={styles.result}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: SPIN_S }}
-        >
-          <strong>{HAND_LABEL[hand]}</strong> base value +{amount}!
-        </motion.p>
+
+        <div className={styles.result}>
+          {landed ? (
+            <motion.div
+              className={styles.resultInner}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+            >
+              <span className={styles.resultHand}>{HAND_LABEL[hand]}</span>
+              <span className={styles.resultAmount}>base value +{amount}</span>
+            </motion.div>
+          ) : (
+            <span className={styles.spinning}>Spinning…</span>
+          )}
+        </div>
+
         <Button
           variant="primary"
           onClick={() => dispatch({ type: 'RESOLVE_CLUB_INVEST' })}

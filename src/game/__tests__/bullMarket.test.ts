@@ -47,14 +47,14 @@ describe('Bull Market', () => {
     expect(s.handBoost).toEqual({});
   });
 
-  it('clubInvestValue uses blackjack pip values', () => {
+  it('clubInvestValue is 2× the blackjack pip value', () => {
     const v = (rank: string, suit = 'C') =>
       clubInvestValue({ kind: 'standard', rank, suit } as never);
-    expect(v('2')).toBe(2);
-    expect(v('9')).toBe(9);
-    expect(v('10')).toBe(10);
-    expect(v('K')).toBe(10);
-    expect(v('A')).toBe(11);
+    expect(v('2')).toBe(4);
+    expect(v('9')).toBe(18);
+    expect(v('10')).toBe(20);
+    expect(v('K')).toBe(20);
+    expect(v('A')).toBe(22);
   });
 
   it('the ♣ perk invests the club value into a random hand', () => {

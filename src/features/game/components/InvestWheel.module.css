@@ -9,26 +9,38 @@
 .window {
   position: relative;
   width: 100%;
-  max-width: 280px;
+  max-width: 300px;
   overflow: hidden;
   border-radius: var(--radius-md);
   background: var(--paper-sunken);
   border: 1px solid var(--rule);
-  /* Fade the top and bottom so rows appear to spin out of view. */
+  /* Gentle fade at the very top/bottom for the wheel feel, but rows stay
+     legible as they cycle past. */
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent,
-    #000 22%,
-    #000 78%,
+    #000 14%,
+    #000 86%,
     transparent
   );
   mask-image: linear-gradient(
     to bottom,
     transparent,
-    #000 22%,
-    #000 78%,
+    #000 14%,
+    #000 86%,
     transparent
   );
+}
+
+.pointer {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  color: var(--accent);
+  font-size: 14px;
+  pointer-events: none;
 }
 
 .highlight {
@@ -37,7 +49,7 @@
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   border-top: 2px solid var(--accent);
   border-bottom: 2px solid var(--accent);
   pointer-events: none;
@@ -54,14 +66,45 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.reelItemWon {
+  color: var(--accent);
+}
+
+/* Fixed height so the layout doesn't jump from "Spinning…" to the result. */
+.result {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.resultInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.resultHand {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 680;
+  color: var(--accent);
+}
+
+.resultAmount {
+  font-size: 14px;
+  font-weight: 600;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
-.result {
-  font-size: 16px;
-  color: var(--accent);
-  margin: 0;
-  text-align: center;
+.spinning {
+  color: var(--ink-3);
+  font-size: 14px;
 }
