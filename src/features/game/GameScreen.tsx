@@ -24,6 +24,7 @@ import { LinesPanel } from './components/LinesPanel';
 import { BonusCardStrip } from './components/BonusCardStrip';
 import { DeckPreviewDialog } from './components/DeckPreviewDialog';
 import { BonusResolvePanel } from './components/BonusResolveDialog';
+import { InvestWheel } from './components/InvestWheel';
 import { HandValuesDialog } from './components/HandValuesDialog';
 import { ReviveSheet } from './components/ReviveSheet';
 import { ResultView } from './components/ResultView';
@@ -61,6 +62,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         deckRemaining: state.deck.length,
         discards: state.discards,
         perkSpent: state.perkSpent,
+        handBoost: state.handBoost,
       }),
     [state]
   );
@@ -76,6 +78,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         deckRemaining: state.deck.length,
         discards: state.discards,
         perkSpent: state.perkSpent,
+        handBoost: state.handBoost,
       }).map(v => (v > 0 ? v : undefined)),
     [state]
   );
@@ -444,8 +447,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         <LinesPanel report={liveReport} />
       </Sheet>
       <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
-      <HandValuesDialog open={handsOpen} onClose={() => setHandsOpen(false)} />
+      <HandValuesDialog
+        open={handsOpen}
+        onClose={() => setHandsOpen(false)}
+        handBoost={state.investHands ? state.handBoost : undefined}
+      />
       <ReviveSheet open={ui.reviveOpen} />
+      {ui.clubInvest && (
+        <InvestWheel
+          hand={ui.clubInvest.hand}
+          amount={ui.clubInvest.amount}
+        />
+      )}
     </MotionConfig>
   );
 }

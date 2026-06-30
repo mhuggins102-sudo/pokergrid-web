@@ -84,7 +84,9 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             [], // deckExtras
             [], // superchargedDeckCards
             mode.id === 'short-circuit',
-            mode.id === 'poker-purist' || mode.id === 'three-tricks',
+            mode.id === 'poker-purist' ||
+              mode.id === 'three-tricks' ||
+              mode.id === 'bull-market',
             mode.id === 'three-tricks'
               ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
               : [],
@@ -92,7 +94,8 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               ? ['special', 'in-game', 'end-game']
               : undefined,
             mode.id === 'gridlock' ? 15 : 0,
-            mode.id === 'scatter'
+            mode.id === 'scatter',
+            mode.id === 'bull-market'
           ),
       };
     }
@@ -143,7 +146,9 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             [],
             [],
             twist === 'short-circuit',
-            twist === 'poker-purist' || twist === 'three-tricks',
+            twist === 'poker-purist' ||
+              twist === 'three-tricks' ||
+              twist === 'bull-market',
             // The Three Tricks trio is seeded off the date (its own
             // salt) so it's globally identical without sharing the
             // deck's rng stream.
@@ -157,7 +162,8 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               ? ['special', 'in-game', 'end-game']
               : undefined,
             twist === 'gridlock' ? 15 : 0,
-            twist === 'scatter'
+            twist === 'scatter',
+            twist === 'bull-market'
           ),
       };
     }

@@ -40,6 +40,7 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
       deckRemaining: state.deck.length,
       discards: state.discards,
       perkSpent: state.perkSpent,
+      handBoost: state.handBoost,
     };
     return {
       report: scoreGrid(state.grid, state.bonusCards, options),

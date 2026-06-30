@@ -545,7 +545,9 @@ export const suitActionAvailable = (
   // the run is operating under No Swap rules (in which case ♣ is disabled
   // entirely at the cap, since taking it would force a swap).
   bonusHandSize: number = 0,
-  noSwap: boolean = false
+  noSwap: boolean = false,
+  // Bull Market: ♣ always invests (no bonus deck needed).
+  investHands: boolean = false
 ): boolean => {
   if (!drawn || isJoker(drawn)) return false;
   switch (drawn.suit) {
@@ -556,6 +558,7 @@ export const suitActionAvailable = (
     case 'D':
       return canDestroy(grid);
     case 'C':
+      if (investHands) return true;
       if (noSwap && bonusHandSize >= BONUS_HAND_LIMIT) return false;
       return canDrawBonus(bonusDeckSize);
   }
