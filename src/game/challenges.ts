@@ -98,7 +98,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'bull-market',
     name: 'Bull Market',
     synopsis: 'Twist: ♣ invests in hand values',
-    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its ♣ perk "invests" its blackjack value (2–9 face, 10–K = 10, A = 11) into a random hand type, permanently raising that hand\'s base value. Boosts stack — press ⓘ to see the revised hand values.',
+    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its ♣ perk "invests" twice its blackjack value (2–9 face, 10–K = 10, A = 11; so a 7 adds 14, an Ace adds 22) into a random hand type, permanently raising that hand\'s base value. Boosts stack — press ⓘ to see the revised hand values.',
     scoreTarget: 500,
     // Enforced at newGame: noBonusCards strips the bonus deck and
     // investHands repurposes the ♣ perk to boost a random hand's base.

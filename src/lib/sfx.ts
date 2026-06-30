@@ -115,6 +115,83 @@ export const sfxLose = (): void => {
   tone(311.13, 0.12, 0.28, 0.05);
 };
 
+// A single short peg "click" for the invest wheel.
+const clickTick = (startIn: number, freq: number, peak: number): void => {
+  const c = audio();
+  if (!c) return;
+  const t0 = c.currentTime + startIn;
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(freq, t0);
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(peak, t0 + 0.001);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.03);
+  osc.connect(gain).connect(c.destination);
+  osc.start(t0);
+  osc.stop(t0 + 0.04);
+};
+
+// Evaluate a CSS-style cubic-bezier easing: time fraction → progress.
+const cubicBezierEase = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+): ((x: number) => number) => {
+  const ax = 1 - 3 * x2 + 3 * x1;
+  const bx = 3 * x2 - 6 * x1;
+  const cx = 3 * x1;
+  const ay = 1 - 3 * y2 + 3 * y1;
+  const by = 3 * y2 - 6 * y1;
+  const cy = 3 * y1;
+  const sampleX = (s: number) => ((ax * s + bx) * s + cx) * s;
+  const sampleY = (s: number) => ((ay * s + by) * s + cy) * s;
+  const dX = (s: number) => (3 * ax * s + 2 * bx) * s + cx;
+  const solveS = (x: number) => {
+    let s = x;
+    for (let i = 0; i < 8; i++) {
+      const d = dX(s);
+      if (Math.abs(d) < 1e-6) break;
+      s -= (sampleX(s) - x) / d;
+    }
+    return Math.min(1, Math.max(0, s));
+  };
+  return (x: number) => sampleY(solveS(x));
+};
+
+/**
+ * Big-wheel spin: clicks once per hand passing the pointer, on the SAME
+ * easing the reel uses, so the clicking blurs fast at the start and
+ * audibly slows to a stop — the casino-wheel ratchet. `ticks` is how
+ * many rows scroll past; `durationS` the spin length.
+ */
+export const sfxWheelSpin = (durationS: number, ticks: number): void => {
+  const c = audio();
+  if (!c || ticks <= 0) return;
+  const ease = cubicBezierEase(0.1, 0.7, 0.1, 1);
+  // Invert the easing: displacement fraction → time fraction.
+  const timeForFraction = (f: number): number => {
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 22; i++) {
+      const mid = (lo + hi) / 2;
+      if (ease(mid) < f) lo = mid;
+      else hi = mid;
+    }
+    return (lo + hi) / 2;
+  };
+  let lastT = -1;
+  for (let k = 1; k <= ticks; k++) {
+    const t = timeForFraction(k / ticks) * durationS;
+    // Thin out the opening blur — anything under ~26ms apart merges.
+    if (t - lastT < 0.026) continue;
+    lastT = t;
+    const p = k / ticks; // pitch eases down a touch as it slows
+    clickTick(t, 1150 - p * 380, 0.05);
+  }
+};
+
 export type SfxName =
   | 'place'
   | 'chime'

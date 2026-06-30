@@ -17,6 +17,10 @@ export const INVEST_HANDS: HandRank[] = [
   'ROYAL_FLUSH',
 ];
 
+// Each invest adds TWICE the club's blackjack pip value to the hand's
+// base (e.g. an Ace boosts by 22, a 7 by 14).
+const INVEST_MULTIPLIER = 2;
+
 // Blackjack pip values: 2–9 face, 10/J/Q/K = 10, A = 11.
 const RANK_INVEST_VALUE: Record<Rank, number> = {
   '2': 2,
@@ -34,9 +38,10 @@ const RANK_INVEST_VALUE: Record<Rank, number> = {
   A: 11,
 };
 
-/** How much a club spent on the invest perk adds to a hand's base. */
+/** How much a club spent on the invest perk adds to a hand's base
+ *  (2× its blackjack pip value). */
 export const clubInvestValue = (card: Card): number =>
-  isJoker(card) ? 0 : RANK_INVEST_VALUE[card.rank];
+  isJoker(card) ? 0 : RANK_INVEST_VALUE[card.rank] * INVEST_MULTIPLIER;
 
 /** Uniformly pick a scoring hand to boost (stacking allowed). */
 export const pickInvestHand = (rng: () => number): HandRank =>
