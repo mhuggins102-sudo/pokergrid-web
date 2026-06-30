@@ -10,6 +10,7 @@ import {
   suitActionAvailable,
 } from '../../game/actions';
 import { Suit, isJoker } from '../../game/cards';
+import { HandRank } from '../../game/hands';
 import { nextSpiralSlot } from '../../game/grid';
 import { BonusCard } from '../../game/bonusCards';
 import { useGameSession } from './GameSessionProvider';
@@ -45,6 +46,8 @@ export interface PhaseUI {
   /** Buttons for the dock. */
   actions: PhaseAction[];
   bonusDialog: BonusDialogUI | null;
+  /** Bull Market: the ♣ invest spin wheel — the hand + amount to reveal. */
+  clubInvest: { hand: HandRank; amount: number } | null;
   /** Revive (special card): pick a card from the discard pile. */
   reviveOpen: boolean;
   /** Mixed Bag: ♣ asks which bonus slot to draw for — chips tappable. */
@@ -94,6 +97,7 @@ export function usePhaseUI(): PhaseUI {
       phaseKind: phase.kind,
       banner: null as string | null,
       bonusDialog: null as BonusDialogUI | null,
+      clubInvest: null as { hand: HandRank; amount: number } | null,
       reviveOpen: false,
       bonusSlotPick: false,
       canActivateSpecials: false,
@@ -194,11 +198,17 @@ export function usePhaseUI(): PhaseUI {
               state.grid,
               state.bonusDeck.length,
               state.bonusCards.length,
-              state.noSwap
+              state.noSwap,
+              state.investHands
             );
+            const perkLabel = state.randomPerks
+              ? '? Perk'
+              : state.investHands && drawn.suit === 'C'
+                ? '♣ Invest'
+                : SUIT_PERK_LABEL[drawn.suit];
             actions.push({
               id: 'perk',
-              label: state.randomPerks ? '? Perk' : SUIT_PERK_LABEL[drawn.suit],
+              label: perkLabel,
               variant: 'secondary',
               disabled: !suitOK,
               onPress: () => dispatch({ type: 'BEGIN_SUIT_ACTION' }),
@@ -334,6 +344,14 @@ export function usePhaseUI(): PhaseUI {
             atCap: true,
             canDecline: false,
           },
+        };
+
+      case 'club-invest':
+        return {
+          ...base,
+          ...fromSets(EMPTY_SET),
+          isTappable: () => false,
+          clubInvest: { hand: phase.hand, amount: phase.amount },
         };
 
       case 'awaiting-bonus-slot-choice':

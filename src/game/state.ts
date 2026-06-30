@@ -10,6 +10,7 @@ import {
   randomEmptySlot,
 } from './grid';
 import { HandRank } from './hands';
+import { clubInvestValue, pickInvestHand } from './invest';
 import {
   BonusCard,
   BONUS_DECK_POOL,
@@ -110,6 +111,16 @@ export type Phase =
       kind: 'bonus-card-replacing';
       drawn: BonusCard[];
       pickedNew: number; // index into drawn
+      returnTo: TargetReturnTo;
+    }
+  // Bull Market challenge: the ♣ perk "invests" the drawn club's value
+  // into a randomly-chosen hand type. This phase holds the result while
+  // the spin wheel reveals it; RESOLVE_CLUB_INVEST applies the boost and
+  // draws the next card.
+  | {
+      kind: 'club-invest';
+      hand: HandRank;
+      amount: number;
       returnTo: TargetReturnTo;
     }
   // Three Tricks challenge — special-card activation phases. `cardIdx`
@@ -304,6 +315,11 @@ export interface GameState {
   // (null otherwise / when nothing is drawn). Also drives the "next"
   // highlight in the UI.
   scatterSlot: number | null;
+  // Bull Market challenge: the ♣ perk invests the drawn club's value
+  // into a random hand type instead of drawing a bonus card.
+  investHands: boolean;
+  // Accumulated per-hand base-value boosts from invest perks.
+  handBoost: Partial<Record<HandRank, number>>;
 }
 
 export type Action =
@@ -320,6 +336,8 @@ export type Action =
   | { type: 'BONUS_DECLINE' }
   // Mixed Bag: pick a slot to draw for after ♣ fires.
   | { type: 'BONUS_PICK_SLOT'; slot: number }
+  // Bull Market: dismiss the invest wheel; applies the boost + draws next.
+  | { type: 'RESOLVE_CLUB_INVEST' }
   | { type: 'CANCEL_ACTION' }
   // Three Tricks: activate a held special card. The current draw is NOT
   // spent — these are independent of the suit-perk flow.
@@ -443,7 +461,10 @@ export const newGame = (
   randomGridFill: number = 0,
   // Scatter challenge: every drawn card targets a random empty slot
   // (re-rolled per draw) instead of the spiral.
-  scatter = false
+  scatter = false,
+  // Bull Market challenge: ♣ invests the drawn club's value into a
+  // random hand type (paired with noBonusCards = true).
+  investHands = false
 ): GameState => {
   // Joker count is determined by difficulty (Easy ships 2 jokers, Hard
   // ships 1, Extreme ships 0). Targets-Up infers difficulty from level
@@ -590,6 +611,8 @@ export const newGame = (
     slotCategories,
     scatter,
     scatterSlot: null,
+    investHands,
+    handBoost: {},
   };
   return drawNext(initial, rng);
 };
@@ -707,6 +730,19 @@ const handleBeginSuitAction = (
       };
     }
     case 'C': {
+      // Bull Market: ♣ invests the drawn club's value into a random hand
+      // type. Spin the wheel (in the new phase); RESOLVE applies it.
+      if (s.investHands) {
+        return {
+          ...s,
+          phase: {
+            kind: 'club-invest',
+            hand: pickInvestHand(rng),
+            amount: clubInvestValue(drawn),
+            returnTo: 'awaiting-action',
+          },
+        };
+      }
       if (!canDrawBonus(s.bonusDeck.length)) return s;
       // No Swap challenge: ♣ is unavailable at the cap (would force a swap).
       if (s.noSwap && s.bonusCards.length >= BONUS_HAND_LIMIT) return s;
@@ -726,12 +762,16 @@ const handleBeginSuitAction = (
       }
       // Draw up to 2 from the top of the bonus deck.
       const drawCount = Math.min(2, s.bonusDeck.length);
-      const drawn = s.bonusDeck.slice(0, drawCount);
+      const bonusDrawn = s.bonusDeck.slice(0, drawCount);
       const remainingDeck = s.bonusDeck.slice(drawCount);
       return {
         ...s,
         bonusDeck: remainingDeck,
-        phase: { kind: 'bonus-card-resolving', drawn, returnTo: 'awaiting-action' },
+        phase: {
+          kind: 'bonus-card-resolving',
+          drawn: bonusDrawn,
+          returnTo: 'awaiting-action',
+        },
       };
     }
   }
@@ -798,6 +838,25 @@ const handleResolveDestroy = (
   const afterTarget = pushDiscard({ ...s, grid }, removed);
   return drawNext(
     log(pushPerkSpent(afterTarget, s.drawn), `Destroy slot ${slot}`),
+    rng
+  );
+};
+
+const handleResolveClubInvest = (
+  s: GameState,
+  rng: () => number
+): GameState => {
+  if (s.phase.kind !== 'club-invest' || !s.drawn || isJoker(s.drawn)) return s;
+  const { hand, amount } = s.phase;
+  const handBoost = {
+    ...s.handBoost,
+    [hand]: (s.handBoost[hand] ?? 0) + amount,
+  };
+  return drawNext(
+    log(
+      pushPerkSpent({ ...s, handBoost }, s.drawn),
+      `Invest +${amount} into ${hand}`
+    ),
     rng
   );
 };
@@ -1510,6 +1569,8 @@ const handleCancelAction = (s: GameState): GameState => {
   switch (s.phase.kind) {
     case 'awaiting-action':
     case 'game-over':
+    case 'club-invest':
+      // (club-invest = Bull Market's committed invest reveal — no cancel.)
       return s;
     case 'awaiting-target-slide-dest':
       // Back to source selection within the same slide flow.
@@ -1614,6 +1675,7 @@ const SNAP_ACTIONS = new Set<Action['type']>([
   'BONUS_KEEP',
   'BONUS_REPLACE',
   'BONUS_DECLINE',
+  'RESOLVE_CLUB_INVEST',
   // Special-card commits — each consumes a one-time card and mutates the
   // grid, so undo should restore both.
   'RESOLVE_POWER_SWAP',
@@ -1688,6 +1750,9 @@ export const step = (
       break;
     case 'BONUS_PICK_SLOT':
       next = handleBonusPickSlot(state, action.slot);
+      break;
+    case 'RESOLVE_CLUB_INVEST':
+      next = handleResolveClubInvest(state, rng);
       break;
     case 'CANCEL_ACTION':
       next = handleCancelAction(state);

@@ -28,6 +28,7 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
         deckRemaining: state.deck.length,
         discards: state.discards,
         perkSpent: state.perkSpent,
+        handBoost: state.handBoost,
       }),
     [state]
   );

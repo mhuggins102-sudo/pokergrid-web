@@ -39,12 +39,14 @@ const ALL_TWISTS: ChallengeId[] = [
   'three-tricks',
 ];
 
-// Scatter joins the daily twist rotation from this UTC date onward.
-// Gating it by date keeps every earlier daily's recipe byte-for-byte
-// identical — adding a twist shifts the `% eligible.length` mapping, so
-// without this the whole archive (and its shared leaderboards) would
-// silently re-roll to different twists.
+// New twists join the daily rotation from these UTC dates onward. Gating
+// by date keeps every earlier daily's recipe byte-for-byte identical —
+// appending a twist shifts the `% eligible.length` mapping, so without
+// this the whole archive (and its shared leaderboards) would silently
+// re-roll to different twists. Each launch is its own date so an earlier
+// twist's window is never disturbed by a later addition.
 const SCATTER_LAUNCH_ISO = '2026-07-01';
+const BULL_MARKET_LAUNCH_ISO = '2026-07-15';
 
 const eligibleTwistsFor = (
   difficulty: Difficulty,
@@ -53,8 +55,11 @@ const eligibleTwistsFor = (
 ): ChallengeId[] => {
   const base = config.twistEligibility[difficulty];
   // Extreme has no twists; don't append to an empty pool.
-  if (base.length === 0 || dateISO < SCATTER_LAUNCH_ISO) return base;
-  return [...base, 'scatter'];
+  if (base.length === 0) return base;
+  const pool = [...base];
+  if (dateISO >= SCATTER_LAUNCH_ISO) pool.push('scatter');
+  if (dateISO >= BULL_MARKET_LAUNCH_ISO) pool.push('bull-market');
+  return pool;
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {
@@ -140,6 +145,8 @@ export const recipeFor = (
 const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
   'poker-purist': 350,
   'three-tricks': 400,
+  // No bonus cards (multiplier-free), like Poker Purist — flat target.
+  'bull-market': 500,
 };
 
 // Per-twist delta applied to the difficulty's base target for every

@@ -24,7 +24,8 @@ export type ChallengeId =
   | 'three-tricks'
   | 'mixed-bag'
   | 'gridlock'
-  | 'scatter';
+  | 'scatter'
+  | 'bull-market';
 
 export interface Challenge {
   id: ChallengeId;
@@ -91,6 +92,16 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame: the scatter flag makes drawNext pick (and
     // re-roll) a random empty slot for every drawn card and auto-placed
     // joker, instead of following the spiral order.
+    conditionMet: () => true,
+  },
+  {
+    id: 'bull-market',
+    name: 'Bull Market',
+    synopsis: 'Twist: ♣ invests in hand values',
+    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its ♣ perk "invests" its blackjack value (2–9 face, 10–K = 10, A = 11) into a random hand type, permanently raising that hand\'s base value. Boosts stack — press ⓘ to see the revised hand values.',
+    scoreTarget: 500,
+    // Enforced at newGame: noBonusCards strips the bonus deck and
+    // investHands repurposes the ♣ perk to boost a random hand's base.
     conditionMet: () => true,
   },
   {

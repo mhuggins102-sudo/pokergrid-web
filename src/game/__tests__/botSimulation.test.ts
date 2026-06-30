@@ -350,6 +350,10 @@ const pickAction = (s: GameState): Action => {
       // the bot's Free Play simulation. If they ever do, just bail
       // out cleanly.
       return { type: 'CANCEL_ACTION' };
+    case 'club-invest':
+      // Bull Market's invest reveal — dismiss it (doesn't occur in the
+      // Free Play simulation).
+      return { type: 'RESOLVE_CLUB_INVEST' };
     case 'game-over':
       throw new Error('pickAction called on game-over state');
   }

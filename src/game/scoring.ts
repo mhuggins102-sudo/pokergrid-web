@@ -53,7 +53,16 @@ export interface ScoreOptions {
   discards?: readonly Card[];
   // Drawn cards spent on suit perks. Burnout / Frugal look here.
   perkSpent?: readonly Card[];
+  // Per-hand base-value boosts (the Bull Market challenge's ♣ invest
+  // perk). Added to HAND_BASE_VALUE before any line multipliers apply.
+  handBoost?: Partial<Record<HandRank, number>>;
 }
+
+/** Base value of a hand including any Bull Market invest boosts. */
+export const effectiveHandBase = (
+  hand: HandRank,
+  handBoost?: Partial<Record<HandRank, number>>
+): number => HAND_BASE_VALUE[hand] + (handBoost?.[hand] ?? 0);
 
 /**
  * Shapley-value attribution of the bonus-card contribution.
@@ -147,7 +156,7 @@ export const scoreGrid = (
       const total = incomplete && !ignorePenalty ? INCOMPLETE_LINE_PENALTY : 0;
       return { ...ctx, base: 0, multiplier: 1, flat: 0, total, incomplete };
     }
-    const base = HAND_BASE_VALUE[ctx.hand];
+    const base = effectiveHandBase(ctx.hand, options.handBoost);
     const { multiplier, flat } = applyLineEffects(ctx, bonusCards, allCtxs);
     const total = Math.ceil(base * multiplier) + flat;
     return { ...ctx, base, multiplier, flat, total, incomplete: false };
