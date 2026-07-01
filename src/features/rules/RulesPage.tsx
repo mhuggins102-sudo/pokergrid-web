@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { CHALLENGES } from '../../game/challenges';
 import { TARGET_BY_DIFFICULTY } from '../../game/rules';
 import { HAND_BASE_VALUE, INCOMPLETE_LINE_PENALTY } from '../../game/scoring';
 import { HAND_LABEL } from '../game/handLabels';
@@ -159,9 +160,9 @@ export function RulesPage() {
           level. One loss ends the run.
         </p>
         <p className={styles.body}>
-          <strong>Challenges</strong> — seven twisted rule sets on the Hard
-          ruleset, from random perks to a board pre-scattered with 15 cards.
-          Beat one to unlock the next.
+          <strong>Challenges</strong> — {CHALLENGES.length} twisted rule sets
+          on the Hard ruleset, from random perks to a board pre-scattered
+          with 15 cards. Beat one to unlock the next.
         </p>
         <p className={styles.body}>
           <strong>Daily</strong> — one puzzle per UTC day, the same deal for
