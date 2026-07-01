@@ -64,7 +64,7 @@ The full assessment and phased plan live in the original repo at
 - Stats dashboard (per-difficulty roll-ups, tier histogram, recent
   runs), Achievements catalog with earned state, Rules, Settings (with
   full progress reset)
-- Challenges: all seven twisted rule sets playable at
+- Challenges: the full catalog of twisted rule sets playable at
   `/challenges/:id` on the Hard ruleset with sequential unlocks —
   including the Three Tricks one-time specials (all twelve targeting
   flows wired through usePhaseUI) and Mixed Bag's categorized slots

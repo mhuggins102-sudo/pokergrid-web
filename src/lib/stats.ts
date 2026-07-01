@@ -1,4 +1,5 @@
 import type { AchievementId } from '../game/achievements';
+import { CHALLENGES } from '../game/challenges';
 import type { ChallengeId } from '../game/challenges';
 import type { Difficulty } from '../game/rules';
 
@@ -20,15 +21,11 @@ const MIGRATED_ACHIEVEMENT_IDS: ReadonlySet<string> = new Set([
   'high-hands',
 ]);
 
-const KNOWN_CHALLENGE_IDS: ReadonlySet<string> = new Set([
-  'short-deck',
-  'no-discards',
-  'short-circuit',
-  'poker-purist',
-  'gridlock',
-  'mixed-bag',
-  'three-tricks',
-]);
+// Derived from the live catalog so a newly added challenge can never be
+// filtered out of stats.challengesDone at load time.
+const KNOWN_CHALLENGE_IDS: ReadonlySet<string> = new Set(
+  CHALLENGES.map(c => c.id)
+);
 
 export interface BonusCardAttribution {
   cardId: string;

@@ -1,9 +1,8 @@
 // Daily Grid recipe — pure function from dateISO → {difficulty, twist?}.
 //
 // Every player worldwide gets the same recipe on the same UTC day
-// because the function is deterministic from the date string. Twist
-// support is wired in but disabled in Phase 1 (TWIST_PROBABILITY = 0)
-// per the implementation plan — Phase 3 turns it on.
+// because the function is deterministic from the date string. Twists
+// land on half of non-Extreme days (see RECIPE_CONFIG.twistProbability).
 
 import type { Difficulty } from '../rules';
 import { TARGET_BY_DIFFICULTY } from '../rules';
@@ -15,8 +14,8 @@ export interface DailyRecipe {
   twist?: ChallengeId;
 }
 
-// Weighted difficulty distribution (locked per spec):
-//   Easy 20% / Medium 35% / Hard 35% / Extreme 10%.
+// Weighted difficulty distribution:
+//   Easy 25% / Medium 30% / Hard 35% / Extreme 10%.
 // Anything that adds up cleanly works; the weighted-bag picker
 // normalizes against the sum.
 export interface RecipeConfig {
@@ -152,10 +151,10 @@ export const recipeFor = (
 };
 
 // Twists that ignore the per-difficulty target and use a fixed value.
-// Both Poker Purist and Three Tricks strip the bonus deck entirely, so
-// scoring is multiplier-free and a flat ceiling makes more sense than
-// scaling. The difficulty's toolkit (jokers / undos / discards) still
-// modifies how hard it FEELS within the mode.
+// Poker Purist strips the bonus deck entirely, so scoring is
+// multiplier-free and a flat ceiling makes more sense than scaling.
+// The difficulty's toolkit (jokers / undos / discards) still modifies
+// how hard it FEELS within the mode.
 const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
   'poker-purist': 350,
 };

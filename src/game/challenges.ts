@@ -6,14 +6,10 @@ import { Difficulty, TARGET_BY_DIFFICULTY } from './rules';
 // Challenges — playable game variants. The other entries that used to live
 // here are now Achievements (src/game/achievements.ts) — those check a
 // final-state condition on a normal Hard / Extreme run so they're earned
-// passively. Only the variants that actually MODIFY gameplay stay here:
-//
-//   - Short Deck: deck size capped at 45 (8 cards held out)
-//   - No Discards: the Discard button is unavailable
-//   - Short Circuit: the suit perk you get is randomized — you don't know
-//     which of the four perks will fire until you commit
-//   - Poker Purist: no bonus cards at all — no starter, no ♣ perk draws,
-//     no in-game or end-game multipliers
+// passively. Only the variants that actually MODIFY gameplay live here —
+// see the CHALLENGES catalog below for the full roster (each entry's
+// synopsis/goal describes its twist). These double as the daily-puzzle
+// twist pool (src/game/daily/recipe.ts).
 // ============================================================================
 
 export type ChallengeId =
