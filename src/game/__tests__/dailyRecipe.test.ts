@@ -72,6 +72,52 @@ describe('daily recipe', () => {
     expect(counts.extreme / TOTAL).toBeLessThan(0.13);
   });
 
+  it('twist odds follow the 3:2:1 common/normal/rare tiers', () => {
+    const start = new Date(Date.UTC(2026, 0, 1));
+    const TOTAL = 3650;
+    const counts: Record<string, number> = {};
+    let twisted = 0;
+    for (let i = 0; i < TOTAL; i++) {
+      const d = new Date(start.getTime() + i * 86400_000);
+      const { twist } = recipeFor(currentDateISO(d));
+      if (twist) {
+        counts[twist] = (counts[twist] ?? 0) + 1;
+        twisted += 1;
+      }
+    }
+
+    // All nine twists appear — including the previously date-gated
+    // Scatter / Bull Market, now eligible on every date.
+    const ALL = [
+      'short-circuit',
+      'no-discards',
+      'gridlock',
+      'short-deck',
+      'poker-purist',
+      'mixed-bag',
+      'three-tricks',
+      'scatter',
+      'bull-market',
+    ];
+    for (const t of ALL) expect(counts[t] ?? 0).toBeGreaterThan(0);
+
+    // Weights: common (short-deck / poker-purist / mixed-bag /
+    // three-tricks) 3, normal (no-discards / short-circuit / scatter /
+    // gridlock) 2, rare (bull-market) 1. Total weight 21.
+    const share = (t: string) => (counts[t] ?? 0) / twisted;
+    const common = share('short-deck');
+    const normal = share('scatter');
+    const rare = share('bull-market');
+    // Expected shares 3/21, 2/21, 1/21 — loose ±0.03 tolerance.
+    expect(common).toBeGreaterThan(3 / 21 - 0.03);
+    expect(common).toBeLessThan(3 / 21 + 0.03);
+    expect(normal).toBeGreaterThan(2 / 21 - 0.03);
+    expect(normal).toBeLessThan(2 / 21 + 0.03);
+    expect(rare).toBeLessThan(2 / 21); // rare strictly below a normal tier
+    // Ordering holds: a common twist is meaningfully more frequent.
+    expect(common).toBeGreaterThan(rare);
+  });
+
   it('snapshots — locked recipes for known dates', () => {
     // Pin a few specific dates so a future refactor to the hash function
     // or distribution would surface the regression loudly.

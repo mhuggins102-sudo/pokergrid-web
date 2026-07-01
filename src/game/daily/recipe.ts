@@ -29,6 +29,8 @@ export interface RecipeConfig {
   twistEligibility: Record<Difficulty, ChallengeId[]>;
 }
 
+// The full twist rotation. Order is stable so the weighted pick below is
+// deterministic. Extreme never gets a twist (empty eligibility).
 const ALL_TWISTS: ChallengeId[] = [
   'short-circuit',
   'no-discards',
@@ -37,36 +39,33 @@ const ALL_TWISTS: ChallengeId[] = [
   'poker-purist',
   'mixed-bag',
   'three-tricks',
+  'scatter',
+  'bull-market',
 ];
 
-// New twists join the daily rotation from these UTC dates onward. Gating
-// by date keeps every earlier daily's recipe byte-for-byte identical —
-// appending a twist shifts the `% eligible.length` mapping, so without
-// this the whole archive (and its shared leaderboards) would silently
-// re-roll to different twists. Each launch is its own date so an earlier
-// twist's window is never disturbed by a later addition.
-const SCATTER_LAUNCH_ISO = '2026-07-01';
-const BULL_MARKET_LAUNCH_ISO = '2026-07-15';
-
-const eligibleTwistsFor = (
-  difficulty: Difficulty,
-  dateISO: string,
-  config: RecipeConfig
-): ChallengeId[] => {
-  const base = config.twistEligibility[difficulty];
-  // Extreme has no twists; don't append to an empty pool.
-  if (base.length === 0) return base;
-  const pool = [...base];
-  if (dateISO >= SCATTER_LAUNCH_ISO) pool.push('scatter');
-  if (dateISO >= BULL_MARKET_LAUNCH_ISO) pool.push('bull-market');
-  return pool;
+// Relative odds of each twist when a day is twisted (common / normal /
+// rare tiers, 3 : 2 : 1). Uniform selection is replaced by a weighted
+// bag keyed on the twist-index channel.
+const TWIST_WEIGHT: Record<ChallengeId, number> = {
+  // Common (3)
+  'short-deck': 3,
+  'poker-purist': 3,
+  'mixed-bag': 3,
+  'three-tricks': 3,
+  // Normal (2)
+  'no-discards': 2,
+  'short-circuit': 2,
+  scatter: 2,
+  gridlock: 2,
+  // Rare (1)
+  'bull-market': 1,
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {
   difficultyWeights: { easy: 20, medium: 35, hard: 35, extreme: 10 },
-  // Phase 3: twists live at 30%. Suppressed on Extreme days so the
-  // hardest baseline doesn't compound with a structural handicap.
-  twistProbability: 0.3,
+  // Twists land on half of non-Extreme days. Suppressed on Extreme so
+  // the hardest baseline doesn't compound with a structural handicap.
+  twistProbability: 0.5,
   twistEligibility: {
     easy: ALL_TWISTS,
     medium: ALL_TWISTS,
@@ -101,8 +100,23 @@ const channelsFor = (dateISO: string): { difficultyRoll: number; twistRoll: numb
   return {
     difficultyRoll: hDiff / 0x100000000,    // [0, 1) using all 32 bits
     twistRoll: hTwist / 0x100000000,        // [0, 1)
-    twistIndexRoll: hTwistIdx & 0xff,       // 0..255
+    twistIndexRoll: hTwistIdx / 0x100000000, // [0, 1) — drives the weighted bag
   };
+};
+
+// Weighted pick from `eligible` (fixed order) using a [0, 1) roll.
+const pickTwist = (
+  eligible: ChallengeId[],
+  roll: number
+): ChallengeId => {
+  const total = eligible.reduce((sum, t) => sum + TWIST_WEIGHT[t], 0);
+  const target = roll * total;
+  let acc = 0;
+  for (const t of eligible) {
+    acc += TWIST_WEIGHT[t];
+    if (target < acc) return t;
+  }
+  return eligible[eligible.length - 1];
 };
 
 const pickDifficulty = (
@@ -126,14 +140,14 @@ export const recipeFor = (
 ): DailyRecipe => {
   const { difficultyRoll, twistRoll, twistIndexRoll } = channelsFor(dateISO);
   const difficulty = pickDifficulty(difficultyRoll, config.difficultyWeights);
-  const eligibleTwists = eligibleTwistsFor(difficulty, dateISO, config);
+  const eligibleTwists = config.twistEligibility[difficulty];
   if (
     eligibleTwists.length === 0 ||
     twistRoll >= config.twistProbability
   ) {
     return { difficulty };
   }
-  const twist = eligibleTwists[twistIndexRoll % eligibleTwists.length];
+  const twist = pickTwist(eligibleTwists, twistIndexRoll);
   return { difficulty, twist };
 };
 
@@ -145,15 +159,17 @@ export const recipeFor = (
 const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
   'poker-purist': 350,
   'three-tricks': 400,
-  // No bonus cards (multiplier-free), like Poker Purist — flat target.
-  'bull-market': 500,
 };
 
-// Per-twist delta applied to the difficulty's base target for every
-// other twist. The user-locked value: every "scoring-still-active"
-// twist drops the bar by 50 from the base difficulty target so the
-// twisted day feels comparable in challenge to the plain day.
-const TWIST_TARGET_DELTA = -50;
+// Delta applied to the difficulty's base target for scoring-active
+// twists. The default drops the bar by 50 so a twisted day feels
+// comparable to the plain day; per-twist overrides tune specific ones —
+// Bull Market keeps the full base target (its invests can push scores
+// well past a −50 bar).
+const DEFAULT_TWIST_DELTA = -50;
+const TWIST_DELTA_OVERRIDE: Partial<Record<ChallengeId, number>> = {
+  'bull-market': 0,
+};
 
 // Daily target = base difficulty target, optionally adjusted by the
 // active twist. Twists with a fixed entry override the delta path.
@@ -167,5 +183,6 @@ export const dailyTargetFor = (
   if (!twist) return TARGET_BY_DIFFICULTY[difficulty];
   const fixed = FIXED_TWIST_TARGET[twist];
   if (fixed !== undefined) return fixed;
-  return TARGET_BY_DIFFICULTY[difficulty] + TWIST_TARGET_DELTA;
+  const delta = TWIST_DELTA_OVERRIDE[twist] ?? DEFAULT_TWIST_DELTA;
+  return TARGET_BY_DIFFICULTY[difficulty] + delta;
 };

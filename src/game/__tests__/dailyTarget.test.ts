@@ -19,6 +19,7 @@ describe('dailyTargetFor', () => {
       'gridlock',
       'short-deck',
       'mixed-bag',
+      'scatter',
     ] as const;
     it.each([
       ['easy', 350],
@@ -42,6 +43,16 @@ describe('dailyTargetFor', () => {
       expect(dailyTargetFor('easy', 'three-tricks')).toBe(400);
       expect(dailyTargetFor('medium', 'three-tricks')).toBe(400);
       expect(dailyTargetFor('hard', 'three-tricks')).toBe(400);
+    });
+  });
+
+  describe('bull-market — full base target (delta 0)', () => {
+    it.each([
+      ['easy', 400],
+      ['medium', 450],
+      ['hard', 500],
+    ])('%s → %s', (difficulty, expected) => {
+      expect(dailyTargetFor(difficulty as 'easy', 'bull-market')).toBe(expected);
     });
   });
 
