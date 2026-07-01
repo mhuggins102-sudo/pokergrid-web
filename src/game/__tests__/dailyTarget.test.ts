@@ -38,21 +38,18 @@ describe('dailyTargetFor', () => {
       expect(dailyTargetFor('medium', 'poker-purist')).toBe(350);
       expect(dailyTargetFor('hard', 'poker-purist')).toBe(350);
     });
-
-    it('three-tricks is 400 across all difficulties', () => {
-      expect(dailyTargetFor('easy', 'three-tricks')).toBe(400);
-      expect(dailyTargetFor('medium', 'three-tricks')).toBe(400);
-      expect(dailyTargetFor('hard', 'three-tricks')).toBe(400);
-    });
   });
 
-  describe('bull-market — full base target (delta 0)', () => {
+  describe('base-target twists (delta 0) — bull-market, three-tricks', () => {
+    const BASE_TWISTS = ['bull-market', 'three-tricks'] as const;
     it.each([
       ['easy', 400],
       ['medium', 450],
       ['hard', 500],
     ])('%s → %s', (difficulty, expected) => {
-      expect(dailyTargetFor(difficulty as 'easy', 'bull-market')).toBe(expected);
+      for (const twist of BASE_TWISTS) {
+        expect(dailyTargetFor(difficulty as 'easy', twist)).toBe(expected);
+      }
     });
   });
 
@@ -61,6 +58,6 @@ describe('dailyTargetFor', () => {
     // recipeFor output, but the formula still resolves sanely.
     expect(dailyTargetFor('extreme', 'no-discards')).toBe(400); // 450 − 50
     expect(dailyTargetFor('extreme', 'poker-purist')).toBe(350); // fixed
-    expect(dailyTargetFor('extreme', 'three-tricks')).toBe(400); // fixed
+    expect(dailyTargetFor('extreme', 'three-tricks')).toBe(450); // base, delta 0
   });
 });

@@ -57,15 +57,15 @@ describe('daily recipe', () => {
       const d = new Date(start.getTime() + i * 86400_000);
       counts[recipeFor(currentDateISO(d)).difficulty] += 1;
     }
-    // Expected ratios per RECIPE_CONFIG: easy 20%, medium 35%, hard 35%, extreme 10%.
+    // Expected ratios per RECIPE_CONFIG: easy 25%, medium 30%, hard 35%, extreme 10%.
     // Allow ±3% absolute tolerance per bucket — over 10 years of
-    // samples the binomial std-dev for a 20% bucket is ~0.66%, so 3%
-    // is ~5σ. Tight enough to catch real regressions in the hash /
+    // samples the binomial std-dev for a 25% bucket is ~0.72%, so 3%
+    // is ~4σ. Tight enough to catch real regressions in the hash /
     // distribution, loose enough that the test isn't flaky.
-    expect(counts.easy / TOTAL).toBeGreaterThan(0.17);
-    expect(counts.easy / TOTAL).toBeLessThan(0.23);
-    expect(counts.medium / TOTAL).toBeGreaterThan(0.32);
-    expect(counts.medium / TOTAL).toBeLessThan(0.38);
+    expect(counts.easy / TOTAL).toBeGreaterThan(0.22);
+    expect(counts.easy / TOTAL).toBeLessThan(0.28);
+    expect(counts.medium / TOTAL).toBeGreaterThan(0.27);
+    expect(counts.medium / TOTAL).toBeLessThan(0.33);
     expect(counts.hard / TOTAL).toBeGreaterThan(0.32);
     expect(counts.hard / TOTAL).toBeLessThan(0.38);
     expect(counts.extreme / TOTAL).toBeGreaterThan(0.07);

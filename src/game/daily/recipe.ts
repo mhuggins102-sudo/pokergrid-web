@@ -62,7 +62,7 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {
-  difficultyWeights: { easy: 20, medium: 35, hard: 35, extreme: 10 },
+  difficultyWeights: { easy: 25, medium: 30, hard: 35, extreme: 10 },
   // Twists land on half of non-Extreme days. Suppressed on Extreme so
   // the hardest baseline doesn't compound with a structural handicap.
   twistProbability: 0.5,
@@ -158,17 +158,16 @@ export const recipeFor = (
 // modifies how hard it FEELS within the mode.
 const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
   'poker-purist': 350,
-  'three-tricks': 400,
 };
 
 // Delta applied to the difficulty's base target for scoring-active
 // twists. The default drops the bar by 50 so a twisted day feels
 // comparable to the plain day; per-twist overrides tune specific ones —
-// Bull Market keeps the full base target (its invests can push scores
-// well past a −50 bar).
+// Bull Market and Three Tricks keep the full base target (400/450/500).
 const DEFAULT_TWIST_DELTA = -50;
 const TWIST_DELTA_OVERRIDE: Partial<Record<ChallengeId, number>> = {
   'bull-market': 0,
+  'three-tricks': 0,
 };
 
 // Daily target = base difficulty target, optionally adjusted by the
