@@ -82,7 +82,7 @@
 }
 
 .dualTop {
-  top: 8cqh;
+  top: 7cqh;
   left: 9cqw;
 }
 
@@ -90,17 +90,29 @@
   bottom: 8cqh;
   right: 9cqw;
   transform: rotate(180deg);
-  opacity: 0.65;
 }
 
 .dualRank {
   font-weight: 700;
-  font-size: 28cqh;
   letter-spacing: -0.02em;
 }
 
-.dualPip {
+/* Size hierarchy: the active (top) half reads larger; render always
+   puts the active identity on top, so the sizes swap on flip. */
+.dualTop .dualRank {
+  font-size: 32cqh;
+}
+
+.dualTop .dualPip {
+  font-size: 27cqh;
+}
+
+.dualBottom .dualRank {
   font-size: 24cqh;
+}
+
+.dualBottom .dualPip {
+  font-size: 20cqh;
 }
 
 .dualDivider {

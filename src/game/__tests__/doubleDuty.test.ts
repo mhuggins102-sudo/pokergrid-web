@@ -88,6 +88,31 @@ describe('Double Duty', () => {
     expect((s.drawn as StandardCard).dual).toBeDefined();
   });
 
+  it('keeps the un-stripped opening card for the intro pose', () => {
+    // The seat card is deck[0], which can be a joker (jokers have no
+    // dual face → openingCard stays null); otherwise openingCard is the
+    // same physical card as the seat (uid) with its dual intact.
+    let standardSeats = 0;
+    for (let seed = 1; seed <= 10; seed++) {
+      const s = newDoubleDuty(seededRng(seed));
+      const seated = s.grid[12]!;
+      if (seated.kind !== 'standard') {
+        expect(s.openingCard).toBeNull();
+        continue;
+      }
+      standardSeats++;
+      const opening = s.openingCard as StandardCard;
+      expect(opening).not.toBeNull();
+      expect(opening.dual).toBeDefined();
+      expect(opening.uid).toBe(seated.uid);
+    }
+    expect(standardSeats).toBeGreaterThan(0);
+  });
+
+  it('openingCard stays null outside Double Duty', () => {
+    expect(newGame('hard', seededRng(3)).openingCard).toBeNull();
+  });
+
   it('two seeded games deal identical decks including duals', () => {
     const a = newDoubleDuty(seededRng(11));
     const b = newDoubleDuty(seededRng(11));

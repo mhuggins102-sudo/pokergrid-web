@@ -31,6 +31,11 @@ const jokerCount = (g: Grid): number =>
 /** How long a card poses in the well before flying to its cell. */
 const STAGE_MS = 350;
 
+/** Double Duty's opening card poses longer: it shows BOTH halves of the
+ *  two-way card, and the player needs a beat to read them before the
+ *  top half seats. */
+const DUAL_OPENING_STAGE_MS = 900;
+
 /** Pose time for the opening deal of a pre-scattered board (Gridlock):
  *  every seat is dealt one at a time. Exported so the sound layer can
  *  tick a placement per card on the same cadence. */
@@ -128,25 +133,43 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
     setCurrent(queueRef.current[0]);
   }
 
+  const card = cur !== null ? state.grid[cur] : null;
+
+  // Double Duty: the engine seats the opening card stripped of its dual
+  // half, but the pose should show the FULL two-way face — swap in the
+  // un-stripped openingCard when this flight is that seat (matched by
+  // uid; cardLayoutId ignores `dual`, so the well→cell FLIP handoff to
+  // the stripped grid copy still matches).
+  const opening = state.openingCard;
+  const isDualOpening =
+    card !== null &&
+    opening !== null &&
+    card.kind === 'standard' &&
+    opening.kind === 'standard' &&
+    card.uid !== undefined &&
+    card.uid === opening.uid;
+  const shownCard = isDualOpening ? opening : card;
+
   // …and release it after a beat — clearing it from the queue lands
   // the card on the grid, which is what triggers the FLIP travel.
   useEffect(() => {
     if (cur === null) return;
     const stageMs = openingSeatsRef.current.has(cur)
       ? OPENING_RAPID_MS
-      : STAGE_MS;
+      : isDualOpening
+        ? DUAL_OPENING_STAGE_MS
+        : STAGE_MS;
     const t = window.setTimeout(() => {
       queueRef.current = queueRef.current.filter(s => s !== cur);
       setCurrent(null);
     }, stageMs);
     return () => window.clearTimeout(t);
-  }, [cur]);
+  }, [cur, isDualOpening]);
 
-  const card = cur !== null ? state.grid[cur] : null;
   return {
     flight:
-      cur !== null && card
-        ? { slot: cur, card, layoutId: flightLayoutId(card, cur) }
+      cur !== null && shownCard
+        ? { slot: cur, card: shownCard, layoutId: flightLayoutId(shownCard, cur) }
         : null,
     hiddenSlots:
       queueRef.current.length > 0 ? new Set(queueRef.current) : EMPTY,
