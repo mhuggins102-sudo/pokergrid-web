@@ -161,8 +161,8 @@ export function RulesPage() {
         </p>
         <p className={styles.body}>
           <strong>Challenges</strong> — {CHALLENGES.length} twisted rule sets
-          on the Hard ruleset, from random perks to a board pre-scattered
-          with 15 cards. Beat one to unlock the next.
+          on the Hard ruleset, from random perks to two-way cards with a
+          second identity. All are open from the start.
         </p>
         <p className={styles.body}>
           <strong>Daily</strong> — one puzzle per UTC day, the same deal for

@@ -40,11 +40,12 @@ const ALL_TWISTS: ChallengeId[] = [
   'three-tricks',
   'scatter',
   'bull-market',
+  'double-duty',
 ];
 
 // Relative odds of each twist when a day is twisted (common / normal /
 // rare tiers, 3 : 2 : 1). Uniform selection is replaced by a weighted
-// bag keyed on the twist-index channel.
+// bag keyed on the twist-index channel. Total weight 22.
 const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // Common (3)
   'short-deck': 3,
@@ -58,6 +59,7 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   gridlock: 2,
   // Rare (1)
   'bull-market': 1,
+  'double-duty': 1,
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {
@@ -167,6 +169,8 @@ const DEFAULT_TWIST_DELTA = -50;
 const TWIST_DELTA_OVERRIDE: Partial<Record<ChallengeId, number>> = {
   'bull-market': 0,
   'three-tricks': 0,
+  // Two-way flexibility buff ≈ burn cost — full base target.
+  'double-duty': 0,
 };
 
 // Daily target = base difficulty target, optionally adjusted by the

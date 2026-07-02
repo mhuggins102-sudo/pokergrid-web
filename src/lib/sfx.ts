@@ -102,6 +102,14 @@ export const sfxJoker = (): void => {
   tone(1108.73, 0.58, 0.14, 0.045);
 };
 
+/** Double Duty flip — a rotational whoosh down and back up (the 180°),
+ *  with a low papery tick as the burned card leaves the deck. */
+export const sfxFlip = (): void => {
+  tone(520, 0, 0.09, 0.05, 'triangle', 260);
+  tone(260, 0.07, 0.11, 0.06, 'triangle', 520);
+  tone(200, 0.2, 0.05, 0.035, 'square', 150);
+};
+
 /** Target beaten — rising arpeggio. */
 export const sfxWin = (): void => {
   [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
@@ -201,7 +209,8 @@ export type SfxName =
   | 'enchant'
   | 'riffle'
   | 'revive'
-  | 'joker';
+  | 'joker'
+  | 'flip';
 
 export const SFX: Record<SfxName, () => void> = {
   place: sfxPlace,
@@ -213,6 +222,7 @@ export const SFX: Record<SfxName, () => void> = {
   riffle: sfxRiffle,
   revive: sfxRevive,
   joker: sfxJoker,
+  flip: sfxFlip,
 };
 
 /**
@@ -239,5 +249,7 @@ export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   if (entry.startsWith('Shuffle on')) return 'riffle';
   if (entry.startsWith('Rewind on')) return 'riffle';
   if (entry.startsWith('Revive discard')) return 'revive';
+  // Double Duty two-way card rotation (+ its unseen burn).
+  if (entry.startsWith('Flip')) return 'flip';
   return null; // 'Discard', 'Game start', …
 };

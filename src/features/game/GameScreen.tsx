@@ -391,6 +391,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     {rowActions[1] && actionBtn(rowActions[1], styles.stageBtn)}
                   </div>
                 </div>
+                {/* Overflow row for a 3rd+ secondary action (Double Duty's
+                    Flip) — the flanking sides only hold one button each. */}
+                {rowActions.length > 2 && (
+                  <div className={styles.stageExtraRow}>
+                    {rowActions.slice(2).map(a => actionBtn(a, styles.stageBtn))}
+                  </div>
+                )}
                 {commitBtn(
                   commitAction?.id === 'cancel' ? 'secondary' : undefined
                 )}

@@ -65,9 +65,10 @@ The full assessment and phased plan live in the original repo at
   runs), Achievements catalog with earned state, Rules, Settings (with
   full progress reset)
 - Challenges: the full catalog of twisted rule sets playable at
-  `/challenges/:id` on the Hard ruleset with sequential unlocks —
+  `/challenges/:id` on the Hard ruleset, all open from the start —
   including the Three Tricks one-time specials (all twelve targeting
-  flows wired through usePhaseUI) and Mixed Bag's categorized slots
+  flows wired through usePhaseUI), Mixed Bag's categorized slots, and
+  Double Duty's two-way cards with the Flip action
 - Targets Up ladder at `/targets` — difficulty/target per level, S/SS
   reward picks (supercharge a board card, power up a bonus card),
   carry-over into the next level's decks, loss ends the run

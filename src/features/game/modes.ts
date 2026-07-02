@@ -95,7 +95,8 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               : undefined,
             mode.id === 'gridlock' ? 15 : 0,
             mode.id === 'scatter',
-            mode.id === 'bull-market'
+            mode.id === 'bull-market',
+            mode.id === 'double-duty'
           ),
       };
     }
@@ -163,7 +164,10 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               : undefined,
             twist === 'gridlock' ? 15 : 0,
             twist === 'scatter',
-            twist === 'bull-market'
+            twist === 'bull-market',
+            // Dual pairing draws from the same seeded rng inside newGame,
+            // so a Double Duty daily is globally identical for free.
+            twist === 'double-duty'
           ),
       };
     }

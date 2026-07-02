@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { ToastProvider } from '../../../design/primitives';
+import { CHALLENGES } from '../../../game/challenges';
 import { EMPTY_STATS } from '../../../lib/stats';
 import { useStatsStore } from '../statsStore';
 import { useTargetsStore } from '../../targets/targetsStore';
@@ -81,14 +82,17 @@ describe('challenges', () => {
     expect(useStatsStore.getState().stats.challengesDone).toHaveLength(0);
   });
 
-  it('challenge completion unlocks the next catalog entry', () => {
+  it('every challenge is playable; beaten ones stay marked', () => {
     useStatsStore.getState().recordChallenge('short-circuit');
     renderAt('/challenges');
-    // First unbeaten two are open: no-discards + gridlock.
     expect(screen.getByText('✓ Beaten')).toBeInTheDocument();
-    const locked = screen.getAllByText('Locked');
-    // 9 total − 1 beaten − 2 open = 6 locked.
-    expect(locked).toHaveLength(6);
+    // No lock gating — every catalog entry has a Start / Play again link.
+    expect(screen.queryByText('Locked')).not.toBeInTheDocument();
+    const starts = [
+      ...screen.getAllByRole('button', { name: 'Start' }),
+      ...screen.getAllByRole('button', { name: 'Play again' }),
+    ];
+    expect(starts).toHaveLength(CHALLENGES.length);
   });
 
   it('three-tricks seeds three one-time specials', () => {

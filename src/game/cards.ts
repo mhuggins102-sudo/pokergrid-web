@@ -57,11 +57,30 @@ export type StandardCard = {
   rank: Rank;
   suit: Suit;
   supercharge?: Supercharge;
+  // Double Duty challenge: the second identity printed upside-down on the
+  // bottom half of this physical card. FLIP_CARD swaps it with the active
+  // rank/suit. Stripped (activeHalf) when the card leaves the draw well.
+  dual?: { rank: Rank; suit: Suit };
+  // Double Duty challenge: stable physical-card id (0..51). Two placed
+  // cards can share a rank+suit in this mode, so layout/React keys fold
+  // the uid in to stay unique. Survives placement; only `dual` is stripped.
+  uid?: number;
 };
 export type JokerCard = { kind: 'joker' };
 export type Card = StandardCard | JokerCard;
 
 export const isJoker = (c: Card): c is JokerCard => c.kind === 'joker';
+
+// The card as its active (face-up) identity only — the `dual` bottom half
+// is dropped, uid/supercharge kept. Applied wherever a Double Duty card
+// leaves the draw well (grid, discards, perkSpent) so downstream rendering,
+// scoring, and persistence see a normal single-identity card. No-op for
+// jokers and non-Double-Duty cards.
+export const activeHalf = (c: Card): Card => {
+  if (c.kind !== 'standard' || c.dual === undefined) return c;
+  const { dual: _dual, ...rest } = c;
+  return rest;
+};
 
 export const fullDeck = (jokerCount: number = 1): Card[] => {
   const deck: Card[] = [];

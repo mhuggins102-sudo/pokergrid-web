@@ -1,5 +1,5 @@
-import { Card, isJoker, shiftRank, StandardCard, Suit } from './cards';
-import { freshShuffledDeck, shuffle } from './deck';
+import { activeHalf, Card, isJoker, shiftRank, StandardCard, Suit } from './cards';
+import { assignDualIdentities, freshShuffledDeck, shuffle } from './deck';
 import {
   emptyGrid,
   Grid,
@@ -320,11 +320,25 @@ export interface GameState {
   investHands: boolean;
   // Accumulated per-hand base-value boosts from invest perks.
   handBoost: Partial<Record<HandRank, number>>;
+  // Double Duty challenge: every standard card carries a second identity
+  // (dual); FLIP_CARD rotates the drawn card so the bottom half becomes
+  // active, at the cost of burning the next deck card unseen.
+  doubleDuty: boolean;
+  // True once the current drawn card has been flipped — one flip per
+  // card, no flip-back. Reset on every new draw.
+  flippedDrawn: boolean;
+  // Cards burned by FLIP_CARD, removed from the game sight-unseen. Kept
+  // separate from `discards` on purpose: burned cards feed nothing —
+  // not Trash Joker, not any other discard-counting effect.
+  burned: Card[];
 }
 
 export type Action =
   | { type: 'PLACE' }
   | { type: 'DISCARD_NONE' } // sends drawn to discards (no perk used)
+  // Double Duty: rotate the drawn two-way card so its bottom half becomes
+  // active; the next deck card is burned unseen as the cost.
+  | { type: 'FLIP_CARD' }
   | { type: 'BEGIN_SUIT_ACTION'; forSuit?: Suit }
   | { type: 'RESOLVE_HOP'; i: number; j: number }
   | { type: 'SLIDE_SELECT_SOURCE'; slot: number }
@@ -398,6 +412,7 @@ const drawNext = (
       deck: rest,
       drawn: next,
       scatterSlot,
+      flippedDrawn: false,
       phase: { kind: 'awaiting-action' },
     };
   }
@@ -464,7 +479,11 @@ export const newGame = (
   scatter = false,
   // Bull Market challenge: ♣ invests the drawn club's value into a
   // random hand type (paired with noBonusCards = true).
-  investHands = false
+  investHands = false,
+  // Double Duty challenge: every standard card gets a dual (bottom-half)
+  // identity — a derangement of the 52 ranks+suits — and FLIP_CARD
+  // becomes available on the drawn card.
+  doubleDuty = false
 ): GameState => {
   // Joker count is determined by difficulty (Easy ships 2 jokers, Hard
   // ships 1, Extreme ships 0). Targets-Up infers difficulty from level
@@ -472,6 +491,9 @@ export const newGame = (
   // mode without per-mode special casing.
   const jokerCount = JOKERS_BY_DIFFICULTY[difficulty];
   let deck = freshShuffledDeck(rng, jokerCount);
+  // Double Duty: pair every standard card with a dual identity before any
+  // card leaves the deck, so the pairing covers all 52 physical cards.
+  if (doubleDuty) deck = assignDualIdentities(deck, rng);
   if (deckLimit !== undefined && deckLimit < deck.length) {
     deck = deck.slice(0, deckLimit);
   }
@@ -573,7 +595,9 @@ export const newGame = (
     ).slice(0, initialCards.length);
     const g = emptyGrid();
     for (let i = 0; i < initialCards.length; i++) {
-      g[positions[i]] = initialCards[i];
+      // activeHalf: grid cards never carry a dual (Double Duty strips it
+      // wherever a card leaves the draw well). No-op in every other mode.
+      g[positions[i]] = activeHalf(initialCards[i]);
     }
     grid = g;
   } else {
@@ -582,8 +606,8 @@ export const newGame = (
     // Scatter seats even the very first card at a random slot instead of
     // the center; otherwise the spiral starts from the middle.
     grid = scatter
-      ? placeAt(emptyGrid(), randomEmptySlot(emptyGrid(), rng)!, first)
-      : placeAtSpiralNext(emptyGrid(), first);
+      ? placeAt(emptyGrid(), randomEmptySlot(emptyGrid(), rng)!, activeHalf(first))
+      : placeAtSpiralNext(emptyGrid(), activeHalf(first));
   }
   const initial: GameState = {
     deck: rest,
@@ -613,6 +637,9 @@ export const newGame = (
     scatterSlot: null,
     investHands,
     handBoost: {},
+    doubleDuty,
+    flippedDrawn: false,
+    burned: [],
   };
   return drawNext(initial, rng);
 };
@@ -627,10 +654,11 @@ const pushDiscard = (s: GameState, card: Card): GameState => ({
 });
 
 // Cards spent on a suit perk: the drawn ♥/♠/♦/♣ that triggered the perk.
-// Burnout / Frugal look here.
+// Burnout / Frugal look here. activeHalf keeps Double Duty duals out of
+// the persisted pile (no-op elsewhere).
 const pushPerkSpent = (s: GameState, card: Card): GameState => ({
   ...s,
-  perkSpent: [...s.perkSpent, card],
+  perkSpent: [...s.perkSpent, activeHalf(card)],
 });
 
 // ---------- action handlers ----------
@@ -644,14 +672,52 @@ const handlePlace = (s: GameState, rng: () => number): GameState => {
       ? s.scatterSlot
       : nextSpiralSlot(s.grid);
   if (slot === null) return s;
-  const grid = placeAt(s.grid, slot, s.drawn);
+  // activeHalf: a Double Duty card seats as its face-up identity only.
+  // (Cards that later leave the grid — Rewind back to the deck, Revive
+  // from discards — were stripped here and can never flip again; both
+  // specials are unreachable in Double Duty anyway.)
+  const grid = placeAt(s.grid, slot, activeHalf(s.drawn));
   return drawNext(log({ ...s, grid }, 'Place'), rng);
 };
 
 const handleDiscardNone = (s: GameState, rng: () => number): GameState => {
   if (s.phase.kind !== 'awaiting-action' || !s.drawn || isJoker(s.drawn)) return s;
   if (s.noDiscards) return s; // No Discards challenge — reject the action.
-  return drawNext(log(pushDiscard(s, s.drawn), 'Discard'), rng);
+  return drawNext(log(pushDiscard(s, activeHalf(s.drawn)), 'Discard'), rng);
+};
+
+// Double Duty: rotate the drawn card 180° so its bottom half becomes the
+// active identity. One flip per card (no flip-back), and the cost is
+// burning the next deck card sight-unseen — it goes to `burned`, feeding
+// nothing (a burned joker does NOT count for Trash Joker). The history
+// entry deliberately never names the burned card.
+const handleFlip = (s: GameState): GameState => {
+  if (!s.doubleDuty || s.phase.kind !== 'awaiting-action') return s;
+  const drawn = s.drawn;
+  if (!drawn || isJoker(drawn) || !drawn.dual) return s; // jokers can't flip
+  if (s.flippedDrawn) return s; // one flip per card
+  if (s.deck.length === 0) return s; // nothing left to burn
+  const [burn, ...rest] = s.deck;
+  const flipped: StandardCard = {
+    kind: 'standard',
+    rank: drawn.dual.rank,
+    suit: drawn.dual.suit,
+    dual: { rank: drawn.rank, suit: drawn.suit },
+    uid: drawn.uid,
+    // supercharge deliberately not carried — it belongs to the printed
+    // top half. Unreachable today (supercharges exist only in Targets-Up,
+    // which never runs Double Duty), noted for safety.
+  };
+  return log(
+    {
+      ...s,
+      deck: rest,
+      drawn: flipped,
+      flippedDrawn: true,
+      burned: [...s.burned, activeHalf(burn)],
+    },
+    'Flip (1 card burned)'
+  );
 };
 
 // Short Circuit: pick a uniformly-random suit whose perk would
@@ -1669,6 +1735,9 @@ const handleCancelAction = (s: GameState): GameState => {
 const SNAP_ACTIONS = new Set<Action['type']>([
   'PLACE',
   'DISCARD_NONE',
+  // Double Duty: undo restores the pre-flip orientation AND returns the
+  // burned card to the top of the deck (full-state snapshot).
+  'FLIP_CARD',
   'RESOLVE_HOP',
   'RESOLVE_SLIDE',
   'RESOLVE_DESTROY',
@@ -1714,6 +1783,9 @@ export const step = (
       break;
     case 'DISCARD_NONE':
       next = handleDiscardNone(state, rng);
+      break;
+    case 'FLIP_CARD':
+      next = handleFlip(state);
       break;
     case 'BEGIN_SUIT_ACTION':
       next = handleBeginSuitAction(state, rng, action.forSuit);
