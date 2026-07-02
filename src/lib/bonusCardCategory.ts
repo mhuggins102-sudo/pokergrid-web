@@ -205,12 +205,17 @@ export interface CategoryStyle {
 // Inline style for the icon span. transform (not font-size) so the
 // enlarged glyph paints bigger WITHOUT inflating the line box — a
 // font-size bump pushed conditional card titles below their siblings'.
+// The translateY (in unscaled em, so it precedes the scale) lifts the
+// ✦, which rides low in its em box — magnified by the scale.
 export const categoryIconStyle = (
   s: Pick<CategoryStyle, 'iconScale'>
 ): CSSProperties =>
   s.iconScale === 1
     ? {}
-    : { display: 'inline-block', transform: `scale(${s.iconScale})` };
+    : {
+        display: 'inline-block',
+        transform: `translateY(-0.08em) scale(${s.iconScale})`,
+      };
 
 export const styleFor = (card: BonusCard): CategoryStyle => {
   const cat = categoryOf(card);

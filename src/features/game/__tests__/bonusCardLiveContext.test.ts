@@ -44,16 +44,44 @@ describe('bonusCardLiveContext', () => {
     expect(lines[0]).toMatch(/^♥ Hearts on the board: \d+$/);
   });
 
-  it('reports per-line firing status for line cards', () => {
+  it('reports the specific firing lines for line cards', () => {
     const lines = bonusCardLiveContext(cardById('rainbow-line-x2'), state);
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toMatch(/^(Not firing on any line yet|Firing on \d+ lines? right now)$/);
+    expect(lines[0]).toMatch(
+      /^(Not firing on any line yet|Firing on [RC]\d(, [RC]\d)*)$/
+    );
   });
 
-  it('names the hand for hand-type cards', () => {
+  it('names the hand and its lines for hand-type cards', () => {
     const handCard = BONUS_DECK_POOL.find(c => c.id.startsWith('hand-pair'));
     expect(handCard).toBeDefined();
     const lines = bonusCardLiveContext(handCard!, state);
-    expect(lines[0]).toMatch(/^(Lines scoring Pair right now: \d+|No line scores this hand yet)$/);
+    expect(lines[0]).toMatch(
+      /^(Scoring Pair on [RC]\d(, [RC]\d)*|No line scores this hand yet)$/
+    );
+  });
+
+  it('final mode drops every in-progress phrasing', () => {
+    const banned = /so far|right now|ended now|yet\b/i;
+    for (const card of BONUS_DECK_POOL) {
+      for (const line of bonusCardLiveContext(card, state, { final: true })) {
+        expect(line).not.toMatch(banned);
+      }
+    }
+  });
+
+  it('final mode uses completed wording', () => {
+    expect(
+      bonusCardLiveContext(cardById('burnout-x1_25'), state, { final: true })[0]
+    ).toBe('Suit perks spent: 0');
+    expect(
+      bonusCardLiveContext(cardById('deck-bank-x1_05'), state, {
+        final: true,
+      })[0]
+    ).toBe(`Deck cards left at the end: ${state.deck.length}`);
+    const frugal = bonusCardLiveContext(cardById('frugal-x1_5'), state, {
+      final: true,
+    });
+    expect(frugal.some(l => l.startsWith('Paid out: ×1.5'))).toBe(true);
   });
 });
