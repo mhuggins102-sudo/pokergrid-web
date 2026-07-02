@@ -48,13 +48,13 @@
 
 .topRight {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-sm);
 }
 
 .chevron {
   color: var(--ink-3);
-  font-size: 20px;
+  flex-shrink: 0;
   transition: transform 160ms ease;
 }
 

@@ -42,8 +42,8 @@
 }
 
 .caret {
-  font-size: 18px;
-  line-height: 1;
+  align-self: center;
+  flex-shrink: 0;
   color: var(--ink-3);
   transition: transform 120ms ease;
 }

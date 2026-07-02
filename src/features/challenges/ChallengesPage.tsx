@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { CHALLENGES, ChallengeId } from '../../game/challenges';
-import { Button } from '../../design/primitives';
+import { Button, Chevron } from '../../design/primitives';
 import { useStatsStore } from '../progress/statsStore';
 import styles from './ChallengesPage.module.css';
 
@@ -56,12 +56,9 @@ export function ChallengesPage() {
                       ✓ Beaten
                     </span>
                   )}
-                  <span
+                  <Chevron
                     className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ''}`}
-                    aria-hidden="true"
-                  >
-                    ▾
-                  </span>
+                  />
                 </span>
               </button>
               <span className={styles.synopsis}>{challenge.synopsis}</span>

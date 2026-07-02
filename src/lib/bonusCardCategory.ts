@@ -105,11 +105,23 @@ const CATEGORY_ICON: Record<BonusCategory, string> = {
   hand: '≡',              // hand type — stack of three lines = a poker hand
   line: '⊞',              // row / column — grid axis
   suit: '◆',              // suit density — overridden below per actual suit
-  conditional: '✱',       // per-line conditional — spark (heavy asterisk;
-                          // ✦ rendered visibly smaller than its siblings)
+  conditional: '✦',       // per-line conditional — spark
   grid: '▦',              // grid achievement — full-board pattern
   'deck-management': '▤', // deck management — horizontal stack (cards in a deck)
   special: '★',           // one-time action — star (consume-on-use)
+};
+
+// The ✦ spark draws visibly smaller than its sibling glyphs at the same
+// font size (worse on iOS), so it gets a per-icon em multiplier that
+// render sites apply to the icon span. Everything else stays at 1.
+const CATEGORY_ICON_SCALE: Record<BonusCategory, number> = {
+  hand: 1,
+  line: 1,
+  suit: 1,
+  conditional: 1.45,
+  grid: 1,
+  'deck-management': 1,
+  special: 1,
 };
 
 // In-game icons all share the warn tint; end-game multiplier categories
@@ -176,6 +188,9 @@ export interface CategoryStyle {
   // icon when settings.colorBlindAssist is on.
   icon: string;
   iconColor: string;
+  // Em multiplier for the icon span — evens out glyphs whose fonts draw
+  // them smaller than their siblings (the ✦ spark).
+  iconScale: number;
   // Always-on signals: chip / sheet border, title text. In the editorial
   // system these render as hairline rings + tints, never glows.
   borderColor: string;
@@ -193,6 +208,7 @@ export const styleFor = (card: BonusCard): CategoryStyle => {
   return {
     icon: suit ? SUIT_GLYPH[suit] : CATEGORY_ICON[cat],
     iconColor: suit ? SUIT_COLOR[suit] : CATEGORY_ICON_COLOR[cat],
+    iconScale: suit ? 1 : CATEGORY_ICON_SCALE[cat],
     borderColor: toneColor,
     titleColor: toneColor,
     flashColor: withAlpha(toneColor, 0.55),

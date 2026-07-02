@@ -1,5 +1,7 @@
 export { Button } from './Button';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button';
+export { Chevron } from './Chevron';
+export type { ChevronProps } from './Chevron';
 export { Dialog } from './Dialog';
 export type { DialogProps } from './Dialog';
 export { Sheet } from './Sheet';

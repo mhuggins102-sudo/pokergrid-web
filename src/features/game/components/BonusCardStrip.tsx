@@ -206,7 +206,13 @@ function DetailSheet({
           style={{ '--chip-tone': detailStyle.borderColor } as CSSProperties}
         >
           <span className={styles.detailCategory}>
-            {detailStyle.icon} {detailStyle.label}
+            <span
+              style={{ fontSize: `${detailStyle.iconScale}em` }}
+              aria-hidden="true"
+            >
+              {detailStyle.icon}
+            </span>{' '}
+            {detailStyle.label}
           </span>
           <p className="text-body">{card.description}</p>
           {contextLines.length > 0 && (
