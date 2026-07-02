@@ -17,19 +17,24 @@ function PlayedCell({
   date,
   play,
   target,
+  isToday,
 }: {
   date: string;
   play: DailyPlay;
   target: number;
+  isToday: boolean;
 }) {
   const rank = useArchiveRank(date);
   return (
     <span className={styles.rightCol}>
-      <span
-        className={`${styles.score} ${play.won ? styles.won : styles.lost}`}
-      >
-        {play.score} ·{' '}
-        {tierForRun({ score: play.score, target, won: play.won })}
+      <span className={styles.scoreRow}>
+        {isToday && <span className={styles.today}>Today</span>}
+        <span
+          className={`${styles.score} ${play.won ? styles.won : styles.lost}`}
+        >
+          {play.score} ·{' '}
+          {tierForRun({ score: play.score, target, won: play.won })}
+        </span>
       </span>
       {rank.data && (
         <span className={styles.rank}>
@@ -70,11 +75,20 @@ export function DailyArchivePage() {
                   {twist && <span className={styles.twist}> · {twist.name}</span>}
                 </span>
               </span>
-              {date === today && <span className={styles.today}>Today</span>}
               {play ? (
-                <PlayedCell date={date} play={play} target={target} />
+                <PlayedCell
+                  date={date}
+                  play={play}
+                  target={target}
+                  isToday={date === today}
+                />
               ) : (
-                <span className={styles.state}>Play</span>
+                <span className={styles.scoreRow}>
+                  {date === today && (
+                    <span className={styles.today}>Today</span>
+                  )}
+                  <span className={styles.state}>Play</span>
+                </span>
               )}
             </Link>
           );

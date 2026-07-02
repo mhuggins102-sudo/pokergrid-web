@@ -212,6 +212,22 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
       'what every hand pays.',
   },
   {
+    id: 'score-tiers',
+    kind: 'info',
+    title: 'Chasing a grade?',
+    body:
+      'Your result earns a tier from D up to SS (Perfect). Tap the score itself any ' +
+      'time to see every tier and the exact score it needs.',
+  },
+  {
+    id: 'spotlight',
+    kind: 'info',
+    title: 'Inspect any card',
+    body:
+      'Tap a card already on the grid to spotlight its row and column with their ' +
+      'current totals — handy before committing a swap or slide. Tap it again to clear.',
+  },
+  {
     id: 'bonus-hand',
     kind: 'info',
     title: 'Your bonus hand',
@@ -228,11 +244,20 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
       '(Easy and Medium). When the deck runs dry, unfilled slots become −25 lines.',
   },
   {
+    id: 'undo',
+    kind: 'info',
+    title: 'One step back',
+    body:
+      'Easy and Medium free play include an undo, and every daily puzzle grants one ' +
+      'free undo — it rolls back your whole last move. Hard, Extreme, and Challenges ' +
+      'play for keeps.',
+  },
+  {
     id: 'free',
     kind: 'free',
     title: 'You’re on your own',
     body:
       `Finish the deal: fill all 25 slots, spend perks when they pay, and beat ${TUTORIAL_TARGET}. ` +
-      'Good luck!',
+      'When you’re done, the Daily puzzle and the Challenges are waiting. Good luck!',
   },
 ];
