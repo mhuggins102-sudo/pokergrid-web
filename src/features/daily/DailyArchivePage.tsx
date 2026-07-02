@@ -17,24 +17,19 @@ function PlayedCell({
   date,
   play,
   target,
-  isToday,
 }: {
   date: string;
   play: DailyPlay;
   target: number;
-  isToday: boolean;
 }) {
   const rank = useArchiveRank(date);
   return (
     <span className={styles.rightCol}>
-      <span className={styles.scoreRow}>
-        {isToday && <span className={styles.today}>Today</span>}
-        <span
-          className={`${styles.score} ${play.won ? styles.won : styles.lost}`}
-        >
-          {play.score} ·{' '}
-          {tierForRun({ score: play.score, target, won: play.won })}
-        </span>
+      <span
+        className={`${styles.score} ${play.won ? styles.won : styles.lost}`}
+      >
+        {play.score} ·{' '}
+        {tierForRun({ score: play.score, target, won: play.won })}
       </span>
       {rank.data && (
         <span className={styles.rank}>
@@ -69,26 +64,21 @@ export function DailyArchivePage() {
           return (
             <Link key={date} to={`/daily/${date}`} className={styles.row}>
               <span className={styles.dateCol}>
-                <span className={styles.date}>{date}</span>
+                <span className={styles.dateLine}>
+                  <span className={styles.date}>{date}</span>
+                  {date === today && (
+                    <span className={styles.today}>Today</span>
+                  )}
+                </span>
                 <span className={styles.recipe}>
                   {recipe.difficulty} · target {target}
                   {twist && <span className={styles.twist}> · {twist.name}</span>}
                 </span>
               </span>
               {play ? (
-                <PlayedCell
-                  date={date}
-                  play={play}
-                  target={target}
-                  isToday={date === today}
-                />
+                <PlayedCell date={date} play={play} target={target} />
               ) : (
-                <span className={styles.scoreRow}>
-                  {date === today && (
-                    <span className={styles.today}>Today</span>
-                  )}
-                  <span className={styles.state}>Play</span>
-                </span>
+                <span className={styles.state}>Play</span>
               )}
             </Link>
           );

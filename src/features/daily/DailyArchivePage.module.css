@@ -68,9 +68,8 @@
   gap: 2px;
 }
 
-/* Top line of the right side: the Today badge sits inline beside the
-   score (or the Play affordance on an unplayed today row). */
-.scoreRow {
+/* Top line of the left column: the Today badge sits beside the date. */
+.dateLine {
   display: flex;
   align-items: baseline;
   gap: var(--space-sm);
