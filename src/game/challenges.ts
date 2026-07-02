@@ -103,7 +103,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'mixed-bag',
     name: 'Mixed Bag',
     synopsis: 'Twist: Bonus slots locked to green/yellow/purple',
-    goal: 'Score 500+ points with bonus slots locked to categories — slot 1 holds a green (one-time) card, slot 2 holds a yellow (per-line) card, slot 3 holds a purple (end-game) card. ♣ asks which slot to draw for, then shows 2 category-matching cards to pick from.',
+    goal: 'Score 500+ points with bonus slots locked to categories. Slot 1 holds a green one-time action card — tap it to read what it does, then tap Use to fire it; it\'s consumed on use. Slot 2 holds a yellow (per-line) card and slot 3 a purple (end-game) card. ♣ asks which slot to draw for, then shows 2 category-matching cards to pick from.',
     scoreTarget: 500,
     // Enforced at newGame via slotCategories — placeholders seed the
     // three slots in category order, and ♣ filters draws to match.
@@ -113,7 +113,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'three-tricks',
     name: 'Three Tricks',
     synopsis: 'Twist: One-time actions (green) replace bonus cards',
-    goal: 'Score 500+ points with no bonus-card deck. You start holding three one-time action cards drawn at random from the special deck — tap any held card to read what it does, then tap Use to activate it. Each is consumed on use.',
+    goal: 'Score 500+ points with no bonus-card deck. Instead you start holding three green one-time action cards (the kind Mixed Bag\'s green slot draws), dealt at random from the full special deck — tap one to read it, tap Use to fire it; each is consumed on use.',
     scoreTarget: 500,
     // Enforced at newGame: noBonusCards strips the regular bonus deck,
     // and initialBonusCards seeds the hand with three random specials.
