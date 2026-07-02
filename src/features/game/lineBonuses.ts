@@ -36,6 +36,20 @@ export const fmtMult = (m: number): string =>
   `×${m.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}`;
 
 /**
+ * True when the held hand contains at least one real scoring bonus
+ * card. Bull Market / Poker Purist hold none and Three Tricks holds
+ * only one-time specials — their breakdowns skip the "no bonus cards
+ * fired" placeholder row entirely.
+ */
+export const hasScoringBonusCards = (cards: BonusCard[]): boolean =>
+  cards.some(
+    c =>
+      !isPlaceholder(c) &&
+      !isSpecialCard(c) &&
+      (c.lineEffect !== undefined || c.gridEffect !== undefined)
+  );
+
+/**
  * Split a line's (possibly boosted) base into the hand's regular value
  * and the Bull Market ♣ invest on top. `invested` is 0 everywhere
  * outside Bull Market — line.base IS the table value then.
