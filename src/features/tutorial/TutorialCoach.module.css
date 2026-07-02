@@ -38,8 +38,10 @@
   text-decoration: underline;
 }
 
-.skip:hover {
-  color: var(--ink-2);
+@media (hover: hover) {
+  .skip:hover {
+    color: var(--ink-2);
+  }
 }
 
 .title {

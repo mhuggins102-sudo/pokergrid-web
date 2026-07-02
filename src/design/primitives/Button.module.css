@@ -36,8 +36,12 @@
   box-shadow: var(--shadow-sm);
 }
 
-.primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+/* hover-capable pointers only — on touch, :hover sticks to the last
+   tapped button (and to whatever sits under a dismissed overlay). */
+@media (hover: hover) {
+  .primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+  }
 }
 
 .secondary {
@@ -47,8 +51,10 @@
   box-shadow: var(--shadow-sm);
 }
 
-.secondary:hover:not(:disabled) {
-  border-color: var(--ink-3);
+@media (hover: hover) {
+  .secondary:hover:not(:disabled) {
+    border-color: var(--ink-3);
+  }
 }
 
 .ghost {
@@ -56,9 +62,11 @@
   color: var(--ink-2);
 }
 
-.ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
-  color: var(--ink);
+@media (hover: hover) {
+  .ghost:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    color: var(--ink);
+  }
 }
 
 .danger {
@@ -67,8 +75,10 @@
   box-shadow: var(--shadow-sm);
 }
 
-.danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--danger) 88%, var(--ink));
+@media (hover: hover) {
+  .danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--danger) 88%, var(--ink));
+  }
 }
 
 .sm {

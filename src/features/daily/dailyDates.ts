@@ -1,9 +1,9 @@
 import { currentDateISO } from '../../game/daily/seed';
 import { DailyPlay } from './sync/playsStore';
 
-// The first daily ever published (carried over from the original site)
-// — the archive runs all the way back to it.
-export const DAILY_LAUNCH_ISO = '2026-05-01';
+// The first daily ever published — the archive runs all the way back
+// to it.
+export const DAILY_LAUNCH_ISO = '2026-03-01';
 
 export const dayMs = 86_400_000;
 

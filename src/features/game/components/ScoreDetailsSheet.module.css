@@ -35,8 +35,10 @@
   display: none;
 }
 
-.lineSummary:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .lineSummary:hover {
+    color: var(--accent);
+  }
 }
 
 .caret {

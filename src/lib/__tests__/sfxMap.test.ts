@@ -24,7 +24,7 @@ describe('sfxForHistoryEntry', () => {
   });
 
   it('covers the Double Duty flip', () => {
-    expect(sfxForHistoryEntry('Flip (1 card burned)')).toBe('flip');
+    expect(sfxForHistoryEntry('Flip (2 cards burned)')).toBe('flip');
   });
 
   it('stays silent for non-action entries', () => {

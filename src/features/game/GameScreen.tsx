@@ -295,7 +295,20 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // until I left and came back" bug).
               key={bonusOpen ? `board-bonus-${bonusBoardSize ?? 'init'}` : 'board-full'}
               grid={state.grid}
-              roleOf={ui.roleOf}
+              roleOf={idx => {
+                const role = ui.roleOf(idx);
+                // Hold the next-slot ring until any staged flight
+                // (opening pose, joker arrival) has landed — otherwise
+                // it highlights the SECOND slot while the first card
+                // is still posing in the well.
+                if (
+                  role === 'next' &&
+                  (flight !== null || hiddenSlots.size > 0)
+                ) {
+                  return null;
+                }
+                return role;
+              }}
               isTappable={idx =>
                 ui.isTappable(idx) ||
                 (spotlightEnabled && state.grid[idx] !== null)
@@ -377,7 +390,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 {banner}
                 <div className={styles.stageRow}>
                   <div className={styles.stageSide}>
+                    {/* A 3rd+ secondary action (Double Duty's Flip)
+                        stacks under the perk on the left side. */}
                     {rowActions[0] && actionBtn(rowActions[0], styles.stageBtn)}
+                    {rowActions.slice(2).map(a => actionBtn(a, styles.stageBtn))}
                   </div>
                   <div className={styles.stageWell}>
                     <NextCardWell
@@ -391,13 +407,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     {rowActions[1] && actionBtn(rowActions[1], styles.stageBtn)}
                   </div>
                 </div>
-                {/* Overflow row for a 3rd+ secondary action (Double Duty's
-                    Flip) — the flanking sides only hold one button each. */}
-                {rowActions.length > 2 && (
-                  <div className={styles.stageExtraRow}>
-                    {rowActions.slice(2).map(a => actionBtn(a, styles.stageBtn))}
-                  </div>
-                )}
                 {commitBtn(
                   commitAction?.id === 'cancel' ? 'secondary' : undefined
                 )}

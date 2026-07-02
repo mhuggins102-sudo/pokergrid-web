@@ -38,9 +38,11 @@
   line-height: 1;
 }
 
-.close:hover {
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
-  color: var(--ink);
+@media (hover: hover) {
+  .close:hover {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    color: var(--ink);
+  }
 }
 
 .close:focus-visible {

@@ -30,8 +30,10 @@
   border-bottom: none;
 }
 
-.row:hover {
-  background: color-mix(in srgb, var(--ink) 3%, var(--paper-raised));
+@media (hover: hover) {
+  .row:hover {
+    background: color-mix(in srgb, var(--ink) 3%, var(--paper-raised));
+  }
 }
 
 .dateCol {

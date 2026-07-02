@@ -26,9 +26,11 @@
   transition: box-shadow 120ms ease, transform 120ms ease;
 }
 
-.card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
 }
 
 .card:focus-visible {

@@ -40,8 +40,8 @@ describe('dailyTargetFor', () => {
     });
   });
 
-  describe('base-target twists (delta 0) — bull-market, three-tricks, double-duty', () => {
-    const BASE_TWISTS = ['bull-market', 'three-tricks', 'double-duty'] as const;
+  describe('base-target twists (delta 0) — bull-market, three-tricks', () => {
+    const BASE_TWISTS = ['bull-market', 'three-tricks'] as const;
     it.each([
       ['easy', 400],
       ['medium', 450],
@@ -50,6 +50,16 @@ describe('dailyTargetFor', () => {
       for (const twist of BASE_TWISTS) {
         expect(dailyTargetFor(difficulty as 'easy', twist)).toBe(expected);
       }
+    });
+  });
+
+  describe('raised-target twist (delta +100) — double-duty', () => {
+    it.each([
+      ['easy', 500],
+      ['medium', 550],
+      ['hard', 600],
+    ])('%s → %s', (difficulty, expected) => {
+      expect(dailyTargetFor(difficulty as 'easy', 'double-duty')).toBe(expected);
     });
   });
 

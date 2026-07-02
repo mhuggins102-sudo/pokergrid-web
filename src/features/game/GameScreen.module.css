@@ -209,21 +209,16 @@
 .stageSide {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: var(--space-xs);
 }
 
 .stageBtn {
   width: 100%;
   max-width: 130px;
   min-height: 44px;
-}
-
-/* Overflow row for a 3rd+ secondary action (Double Duty's Flip) — the
-   two flanking sides hold one button each. */
-.stageExtraRow {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-md);
 }
 
 .stageWell [class*='cardSlot'] {

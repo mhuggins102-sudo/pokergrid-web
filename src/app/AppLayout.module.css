@@ -61,9 +61,11 @@
   flex-shrink: 0;
 }
 
-.navLink:hover {
-  color: var(--ink);
-  background: color-mix(in srgb, var(--ink) 5%, transparent);
+@media (hover: hover) {
+  .navLink:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+  }
 }
 
 .navLinkActive {

@@ -2,7 +2,7 @@
 //
 // Every player worldwide gets the same recipe on the same UTC day
 // because the function is deterministic from the date string. Twists
-// land on half of non-Extreme days (see RECIPE_CONFIG.twistProbability).
+// land on most non-Extreme days (see RECIPE_CONFIG.twistProbability).
 
 import type { Difficulty } from '../rules';
 import { TARGET_BY_DIFFICULTY } from '../rules';
@@ -64,9 +64,10 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
 
 export const RECIPE_CONFIG: RecipeConfig = {
   difficultyWeights: { easy: 25, medium: 30, hard: 35, extreme: 10 },
-  // Twists land on half of non-Extreme days. Suppressed on Extreme so
-  // the hardest baseline doesn't compound with a structural handicap.
-  twistProbability: 0.5,
+  // Twists land on three-quarters of non-Extreme days. Suppressed on
+  // Extreme so the hardest baseline doesn't compound with a structural
+  // handicap.
+  twistProbability: 0.75,
   twistEligibility: {
     easy: ALL_TWISTS,
     medium: ALL_TWISTS,
@@ -169,8 +170,9 @@ const DEFAULT_TWIST_DELTA = -50;
 const TWIST_DELTA_OVERRIDE: Partial<Record<ChallengeId, number>> = {
   'bull-market': 0,
   'three-tricks': 0,
-  // Two-way flexibility buff ≈ burn cost — full base target.
-  'double-duty': 0,
+  // Two-way flexibility outweighs the burn cost — raised bar
+  // (500/550/600 on easy/medium/hard), matching the 600 challenge.
+  'double-duty': 100,
 };
 
 // Daily target = base difficulty target, optionally adjusted by the
