@@ -2,7 +2,11 @@ import { useEffect, useRef } from 'react';
 import { GameState } from '../../game/state';
 import { SFX, sfxChime, sfxForHistoryEntry, sfxLose, sfxWin } from '../../lib/sfx';
 import { useSettingsStore } from '../settings/settingsStore';
-import { OPENING_RAPID_MS } from './useAutoPlaceFlights';
+import {
+  DUAL_OPENING_STAGE_MS,
+  OPENING_RAPID_MS,
+  STAGE_MS,
+} from './useAutoPlaceFlights';
 
 /**
  * State-transition sounds, derived from the reducer's history log —
@@ -42,8 +46,14 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
             );
           }
         } else {
-          // Normal opening: a single card seats from the well.
-          openingTimers.current.push(window.setTimeout(() => SFX.place(), 350));
+          // Normal opening: a single card seats from the well. Double
+          // Duty's two-way opener (openingCard set) poses longer, so its
+          // tick waits for the extended stage to release.
+          const stageMs =
+            state.openingCard !== null ? DUAL_OPENING_STAGE_MS : STAGE_MS;
+          openingTimers.current.push(
+            window.setTimeout(() => SFX.place(), stageMs)
+          );
         }
       }
       return;

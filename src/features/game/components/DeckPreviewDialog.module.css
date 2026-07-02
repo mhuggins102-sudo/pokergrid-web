@@ -49,6 +49,12 @@
   box-shadow: inset 0 0 0 1px var(--suit-tone);
 }
 
+/* Double Duty: an identity with only ONE of its two copies left renders
+   half-dimmed; full brightness means both halves are still in the deck. */
+.presentFaded {
+  opacity: 0.45;
+}
+
 /* Targets-Up upgraded card (wild / double): override the suit ring with
    the charge tone so a peeked deck flags which cards were changed. */
 .charged {

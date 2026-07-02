@@ -28,13 +28,14 @@ const flightLayoutId = (card: Card, slot: number): string =>
 const jokerCount = (g: Grid): number =>
   g.reduce((n, c) => n + (c && isJoker(c) ? 1 : 0), 0);
 
-/** How long a card poses in the well before flying to its cell. */
-const STAGE_MS = 350;
+/** How long a card poses in the well before flying to its cell.
+ *  Exported so the sound layer can land the placement tick with it. */
+export const STAGE_MS = 350;
 
 /** Double Duty's opening card poses longer: it shows BOTH halves of the
  *  two-way card, and the player needs a beat to read them before the
- *  top half seats. */
-const DUAL_OPENING_STAGE_MS = 900;
+ *  top half seats. Exported for the same sound-timing reason. */
+export const DUAL_OPENING_STAGE_MS = 900;
 
 /** Pose time for the opening deal of a pre-scattered board (Gridlock):
  *  every seat is dealt one at a time. Exported so the sound layer can

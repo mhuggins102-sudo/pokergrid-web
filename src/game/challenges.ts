@@ -144,7 +144,7 @@ export const CHALLENGES: Challenge[] = [
   {
     id: 'double-duty',
     name: 'Double Duty',
-    synopsis: 'Twist: Two-way cards — Flip burns a card',
+    synopsis: 'Twist: Two-way cards — Flip burns 2 cards',
     goal: 'Score 600+ points with a two-way deck. Every card carries a second identity printed upside-down on its bottom half — each rank+suit appears exactly twice across the deck, paired at random each game. Flip the drawn card (once per card) to play its other half; the cost: the next two deck cards are burned, sight unseen — so neither of the last 2 cards can flip. Jokers can\'t flip.',
     scoreTarget: 600,
     // Enforced at newGame (dual identities assigned to the deck) and by
