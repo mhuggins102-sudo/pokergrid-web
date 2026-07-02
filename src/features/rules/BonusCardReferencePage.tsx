@@ -8,6 +8,7 @@ import {
 import {
   BonusCategory,
   CATEGORY_LABEL,
+  categoryIconStyle,
   categoryOf,
   styleFor,
 } from '../../lib/bonusCardCategory';
@@ -45,7 +46,7 @@ function CardEntry({ card }: { card: BonusCard }) {
     >
       <div className={styles.cardTop}>
         <span className={styles.cardTitle}>
-          <span style={{ fontSize: `${tone.iconScale}em` }} aria-hidden="true">
+          <span style={categoryIconStyle(tone)} aria-hidden="true">
             {tone.icon}
           </span>{' '}
           {card.title}
@@ -94,7 +95,7 @@ export function BonusCardReferencePage() {
             >
               <span
                 className={styles.groupIcon}
-                style={{ fontSize: `${tone.iconScale}em` }}
+                style={categoryIconStyle(tone)}
                 aria-hidden="true"
               >
                 {tone.icon}
