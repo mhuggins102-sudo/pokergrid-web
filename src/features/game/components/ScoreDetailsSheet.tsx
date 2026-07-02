@@ -4,7 +4,7 @@ import {
   ScoreReport,
   ScoredLine,
 } from '../../../game/scoring';
-import { Sheet } from '../../../design/primitives';
+import { Chevron, Sheet } from '../../../design/primitives';
 import { HAND_LABEL, lineLabel } from '../handLabels';
 import { appliedLineBonuses, fmtMult } from '../lineBonuses';
 import { BonusCardStrip } from './BonusCardStrip';
@@ -32,9 +32,7 @@ function LineRow({
   return (
     <details className={styles.lineRow}>
       <summary className={styles.lineSummary}>
-        <span className={styles.caret} aria-hidden="true">
-          ▸
-        </span>
+        <Chevron direction="right" size={18} className={styles.caret} />
         <span className={styles.label}>{lineLabel(line.kind, line.index)}</span>
         {line.hand ? (
           <span className={styles.hand}>{HAND_LABEL[line.hand]}</span>

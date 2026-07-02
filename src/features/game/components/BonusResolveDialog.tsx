@@ -25,7 +25,10 @@ function CardOption({
     >
       <span className={styles.optionTop}>
         <span className={styles.optionTitle}>
-          {cat.icon} {card.title}
+          <span style={{ fontSize: `${cat.iconScale}em` }} aria-hidden="true">
+            {cat.icon}
+          </span>{' '}
+          {card.title}
         </span>
         <span className={styles.optionMult}>{card.mult}</span>
       </span>

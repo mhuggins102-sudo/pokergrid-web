@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
-import { Button, Sheet } from '../../../design/primitives';
+import { Button, Chevron, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
 import type { Achievement } from '../../../game/achievements';
@@ -208,9 +208,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
       <details className={styles.linesDetails}>
         <summary className={styles.linesSummary}>
           <span className={styles.summaryLabel}>
-            <span className={styles.summaryCaret} aria-hidden="true">
-              ▸
-            </span>
+            <Chevron direction="right" size={18} className={styles.summaryCaret} />
             Lines subtotal
           </span>
           <span>{report.subtotal}</span>

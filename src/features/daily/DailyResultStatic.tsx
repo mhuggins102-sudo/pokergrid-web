@@ -4,7 +4,7 @@ import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../game/scoring';
 import { dailyTargetFor } from '../../game/daily/recipe';
 import { findChallenge } from '../../game/challenges';
 import { tierForRun } from '../../lib/stats';
-import { Button } from '../../design/primitives';
+import { Button, Chevron } from '../../design/primitives';
 import { LineRails } from '../game/components/LineRails';
 import { LinesPanel } from '../game/components/LinesPanel';
 import { LineDetailSheet } from '../game/components/LineDetailSheet';
@@ -56,9 +56,7 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
       <details className={styles.linesDetails}>
         <summary className={styles.linesSummary}>
           <span className={styles.summaryLabel}>
-            <span className={styles.summaryCaret} aria-hidden="true">
-              ▸
-            </span>
+            <Chevron direction="right" size={18} className={styles.summaryCaret} />
             Lines subtotal
           </span>
           <span>{report.subtotal}</span>

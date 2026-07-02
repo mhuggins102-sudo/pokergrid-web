@@ -45,7 +45,10 @@ function CardEntry({ card }: { card: BonusCard }) {
     >
       <div className={styles.cardTop}>
         <span className={styles.cardTitle}>
-          {tone.icon} {card.title}
+          <span style={{ fontSize: `${tone.iconScale}em` }} aria-hidden="true">
+            {tone.icon}
+          </span>{' '}
+          {card.title}
         </span>
         {card.mult && <span className={styles.cardMult}>{card.mult}</span>}
       </div>
@@ -89,7 +92,11 @@ export function BonusCardReferencePage() {
               className={styles.groupHeader}
               style={{ '--group-tone': tone.borderColor } as CSSProperties}
             >
-              <span className={styles.groupIcon} aria-hidden="true">
+              <span
+                className={styles.groupIcon}
+                style={{ fontSize: `${tone.iconScale}em` }}
+                aria-hidden="true"
+              >
                 {tone.icon}
               </span>
               <h2 className="text-section">
