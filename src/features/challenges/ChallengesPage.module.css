@@ -54,7 +54,7 @@
 
 .chevron {
   color: var(--ink-3);
-  font-size: 13px;
+  font-size: 20px;
   transition: transform 160ms ease;
 }
 

@@ -105,7 +105,8 @@ const CATEGORY_ICON: Record<BonusCategory, string> = {
   hand: '≡',              // hand type — stack of three lines = a poker hand
   line: '⊞',              // row / column — grid axis
   suit: '◆',              // suit density — overridden below per actual suit
-  conditional: '✦',       // per-line conditional — spark
+  conditional: '✱',       // per-line conditional — spark (heavy asterisk;
+                          // ✦ rendered visibly smaller than its siblings)
   grid: '▦',              // grid achievement — full-board pattern
   'deck-management': '▤', // deck management — horizontal stack (cards in a deck)
   special: '★',           // one-time action — star (consume-on-use)
