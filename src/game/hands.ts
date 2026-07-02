@@ -22,6 +22,11 @@ export type HandRank =
   | 'FIVE_OF_A_KIND'
   | 'ROYAL_FLUSH';
 
+// Five of a Kind outranks Royal Flush: it pays more (150 vs 120) and is
+// rarer — with one joker there are 13 ways to assemble a 5K vs 24 ways
+// to a Royal (4 natural + 4 suits × 5 joker-completions). No 5-card
+// line can ever be both, so the ordering only matters for cross-line
+// comparisons (Lowhand's lowest-hand tie) and tier-sorted displays.
 export const HAND_TIER: Record<HandRank, number> = {
   HIGH_CARD: 0,
   PAIR: 1,
@@ -32,8 +37,8 @@ export const HAND_TIER: Record<HandRank, number> = {
   FULL_HOUSE: 6,
   FOUR_OF_A_KIND: 7,
   STRAIGHT_FLUSH: 8,
-  FIVE_OF_A_KIND: 9,
-  ROYAL_FLUSH: 10,
+  ROYAL_FLUSH: 9,
+  FIVE_OF_A_KIND: 10,
 };
 
 // Evaluates 5 standard cards, accounting for any 'wild' or 'double'

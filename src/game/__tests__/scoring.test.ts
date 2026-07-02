@@ -256,8 +256,8 @@ describe('universal-effect detection (scoring chart)', () => {
   });
 });
 
-describe('deck-bank ×1.05/card bonus', () => {
-  test('multiplies the final total by 1.05^deckRemaining', () => {
+describe('deck-bank ×1.04/card bonus', () => {
+  test('multiplies the final total by 1.04^deckRemaining', () => {
     const deckBank = findCard('deck-bank-x1_05');
     // Grid with row 0 = Pair, rest filled with non-pairing cards.
     const g = emptyGrid();
@@ -275,8 +275,8 @@ describe('deck-bank ×1.05/card bonus', () => {
 
     const baseline = scoreGrid(g, [deckBank], { deckRemaining: 0 }).total;
     const ten = scoreGrid(g, [deckBank], { deckRemaining: 10 }).total;
-    // ceil(baseline × 1.05^10), since the card contributes only the multiplier.
-    expect(ten).toBe(Math.ceil(baseline * Math.pow(1.05, 10)));
+    // ceil(baseline × 1.04^10), since the card contributes only the multiplier.
+    expect(ten).toBe(Math.ceil(baseline * Math.pow(1.04, 10)));
     // Zero deck cards = no effect.
     const zero = scoreGrid(g, [deckBank], { deckRemaining: 0 }).total;
     expect(zero).toBe(baseline);
@@ -305,7 +305,7 @@ describe('new grid-wide bonuses', () => {
     const g = filledNonPair();
     const baseline = scoreGrid(g, [card]).total;
     const withJoker = scoreGrid(g, [card], { discards: [{ kind: 'joker' }] }).total;
-    expect(withJoker).toBe(Math.ceil(baseline * 1.25));
+    expect(withJoker).toBe(Math.ceil(baseline * 1.5));
   });
 
   test('No Flushes activates only when no flush of any kind appears', () => {
@@ -425,9 +425,9 @@ describe('new grid-wide bonuses', () => {
   test('Symmetric Frame multiplies on matching row pairs / column pairs', () => {
     const card = findCard('symmetric-frame-x1_25');
 
-    // Full grid: R1 & R5 both Pair; C1 & C5 both High Card (which now
-    // counts after the High-Card-no-longer-excluded change). Both
-    // axes match, so the multiplier stacks to ×1.25².
+    // Full grid: R1 & R5 both Pair → the row axis matches (×1.25).
+    // C1 & C5 both come out High Card, which does NOT count — matching
+    // "nothing" shouldn't pay, so only one ×1.25 applies.
     const g = emptyGrid();
     g[0] = C('2','H'); g[1] = C('2','C'); g[2] = C('5','D'); g[3] = C('8','S'); g[4] = C('K','H');
     g[20] = C('3','H'); g[21] = C('3','C'); g[22] = C('6','D'); g[23] = C('9','S'); g[24] = C('Q','H');
@@ -437,7 +437,7 @@ describe('new grid-wide bonuses', () => {
 
     const base = scoreGrid(g, []).total;
     const with1 = scoreGrid(g, [card]).total;
-    expect(with1).toBe(Math.ceil(base * 1.25 * 1.25));
+    expect(with1).toBe(Math.ceil(base * 1.25));
   });
 
   test('Symmetric Frame requires the line to be FULL — incomplete lines never count', () => {
@@ -458,7 +458,7 @@ describe('new grid-wide bonuses', () => {
     expect(with1).toBe(base);
   });
 
-  test('Burnout triggers at 20+ perks spent', () => {
+  test('Burnout triggers at 22+ perks spent', () => {
     const card = findCard('burnout-x1_25');
     const g = filledNonPair();
     const base = scoreGrid(g, [card]).total;
@@ -466,12 +466,12 @@ describe('new grid-wide bonuses', () => {
     // Plain discards never count toward Burnout, no matter how many.
     const lotsOfDiscards = Array(30).fill(C('2','H'));
     expect(scoreGrid(g, [card], { discards: lotsOfDiscards }).total).toBe(base);
-    // 19 perks → still inactive.
-    const nineteenPerks = Array(19).fill(C('2','H'));
-    expect(scoreGrid(g, [card], { perkSpent: nineteenPerks }).total).toBe(base);
-    // 20 perks → ×1.5 (was 1.25, bumped to reward the harder threshold).
-    const twentyPerks = Array(20).fill(C('2','H'));
-    expect(scoreGrid(g, [card], { perkSpent: twentyPerks }).total).toBe(Math.ceil(base * 1.5));
+    // 21 perks → still inactive.
+    const twentyOnePerks = Array(21).fill(C('2','H'));
+    expect(scoreGrid(g, [card], { perkSpent: twentyOnePerks }).total).toBe(base);
+    // 22 perks → ×1.5.
+    const twentyTwoPerks = Array(22).fill(C('2','H'));
+    expect(scoreGrid(g, [card], { perkSpent: twentyTwoPerks }).total).toBe(Math.ceil(base * 1.5));
   });
 
   test('Frugal triggers at ≤14 perks spent', () => {
@@ -526,7 +526,7 @@ describe('live-score ignore-penalty option', () => {
 });
 
 describe('grid-level achievements', () => {
-  test('Clean Border ×1.15 (each) — per-edge, stacks up to ×1.15⁴', () => {
+  test('Clean Border ×1.1 (each) — per-edge, stacks up to ×1.1⁴', () => {
     const clean = findCard('clean-border-x1_5');
     // Fill the entire grid with non-face cards so all 4 edges qualify by default.
     const g: Grid = emptyGrid();
@@ -538,8 +538,8 @@ describe('grid-level achievements', () => {
 
     const noBonus = scoreGrid(g, []).total;
     const withClean = scoreGrid(g, [clean]).total;
-    // All 4 edges clean → ×1.15⁴.
-    expect(withClean).toBe(Math.ceil(noBonus * Math.pow(1.15, 4)));
+    // All 4 edges clean → ×1.1⁴.
+    expect(withClean).toBe(Math.ceil(noBonus * Math.pow(1.1, 4)));
 
     // Place a face card on the top edge → that edge no longer clean.
     // Bottom + left + right still clean (left/right also include slot 0/4
@@ -550,11 +550,11 @@ describe('grid-level achievements', () => {
     //   - bottom edge: still clean
     //   - left edge:   slot 0..20, no face → still clean
     //   - right edge:  slot 4..24, no face → still clean
-    // → 3 edges qualify → ×1.15³.
+    // → 3 edges qualify → ×1.1³.
     g[2] = C('K', 'C');
     const noBonusFace = scoreGrid(g, []).total;
     const threeEdges = scoreGrid(g, [clean]).total;
-    expect(threeEdges).toBe(Math.ceil(noBonusFace * Math.pow(1.15, 3)));
+    expect(threeEdges).toBe(Math.ceil(noBonusFace * Math.pow(1.1, 3)));
   });
 
   test('Clean Border: partially-filled edges do NOT qualify', () => {
@@ -569,14 +569,14 @@ describe('grid-level achievements', () => {
     // No other edges are full → only the top edge qualifies.
     const noBonus = scoreGrid(g, []).total;
     const withClean = scoreGrid(g, [clean]).total;
-    expect(withClean).toBe(Math.ceil(noBonus * 1.15));
+    expect(withClean).toBe(Math.ceil(noBonus * 1.1));
   });
 
-  test('Monochrome Border ×1.1 (each) — per-edge, stacks up to ×1.1⁴', () => {
+  test('Monochrome Border ×1.15 (each) — per-edge, stacks up to ×1.15⁴', () => {
     const mono = findCard('monochrome-border-x1_75');
     // Fill the grid with a baseline of mixed-color borders so no edge
     // qualifies. We'll then flip edges to all-red one at a time and
-    // confirm each flip adds a single ×1.1 factor.
+    // confirm each flip adds a single ×1.15 factor.
     const g: Grid = emptyGrid();
     const ranks2to10: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10'];
     const suitCycle: Suit[] = ['H', 'S', 'D', 'C'];
@@ -593,13 +593,13 @@ describe('grid-level achievements', () => {
     g[0] = C('2', 'H'); g[1] = C('3', 'D'); g[2] = C('4', 'H'); g[3] = C('5', 'D'); g[4] = C('6', 'H');
     const noBonusTop = scoreGrid(g, []).total;
     const oneEdge = scoreGrid(g, [mono]).total;
-    expect(oneEdge).toBe(Math.ceil(noBonusTop * 1.1));
+    expect(oneEdge).toBe(Math.ceil(noBonusTop * 1.15));
 
     // Bottom edge ALSO all red — second factor stacks multiplicatively.
     g[20] = C('7', 'H'); g[21] = C('8', 'D'); g[22] = C('9', 'H'); g[23] = C('10', 'D'); g[24] = C('2', 'H');
     const noBonusTwo = scoreGrid(g, []).total;
     const twoEdges = scoreGrid(g, [mono]).total;
-    expect(twoEdges).toBe(Math.ceil(noBonusTwo * 1.1 * 1.1));
+    expect(twoEdges).toBe(Math.ceil(noBonusTwo * 1.15 * 1.15));
   });
 
   test('Monochrome Border: partially-filled edges do NOT qualify', () => {
