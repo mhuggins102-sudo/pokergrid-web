@@ -331,6 +331,11 @@ export interface GameState {
   // separate from `discards` on purpose: burned cards feed nothing —
   // not Trash Joker, not any other discard-counting effect.
   burned: Card[];
+  // Double Duty: the UN-stripped two-way card auto-seated at game start,
+  // so the opening flight can pose both halves in the well before the
+  // grid shows the top half only. Null outside Double Duty; never
+  // mutated after newGame.
+  openingCard: Card | null;
 }
 
 export type Action =
@@ -583,6 +588,7 @@ export const newGame = (
   // placeAtSpiralNext helper stays untouched.
   let grid: Grid;
   let rest: Card[];
+  let openingCard: Card | null = null;
   if (randomGridFill > 0) {
     const initialCards = deck.slice(0, randomGridFill);
     rest = deck.slice(randomGridFill);
@@ -603,6 +609,11 @@ export const newGame = (
   } else {
     const [first, ...remaining] = deck;
     rest = remaining;
+    // Double Duty: remember the full two-way card so the opening flight
+    // can show both halves before the grid seats the stripped top half.
+    if (doubleDuty && first.kind === 'standard' && first.dual) {
+      openingCard = first;
+    }
     // Scatter seats even the very first card at a random slot instead of
     // the center; otherwise the spiral starts from the middle.
     grid = scatter
@@ -640,6 +651,7 @@ export const newGame = (
     doubleDuty,
     flippedDrawn: false,
     burned: [],
+    openingCard,
   };
   return drawNext(initial, rng);
 };
