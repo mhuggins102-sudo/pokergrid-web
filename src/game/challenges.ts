@@ -46,15 +46,12 @@ export interface Challenge {
 // only — every challenge is playable from the start.
 export const CHALLENGES: Challenge[] = [
   {
-    id: 'short-circuit',
-    name: 'Short Circuit',
-    synopsis: 'Twist: Suit perks fire at random',
-    goal: "Score 500+ points with random suit perks — you won't know which of ♥/♠/♦/♣'s effects you'll get until you commit to spending the card.",
+    id: 'short-deck',
+    name: 'Short Deck',
+    synopsis: 'Twist: Deck contains only 45 cards',
+    goal: 'Score 500+ points with a 45-card deck. 8 cards are removed at random before the start of the game.',
     scoreTarget: 500,
-    // The randomness is enforced at the reducer level (state.randomPerks
-    // is true and handleBeginSuitAction picks a uniformly-random perk
-    // from those currently available). Hitting the score target is the
-    // only end-state check.
+    deckLimit: 45,
     conditionMet: () => true,
   },
   {
@@ -69,6 +66,18 @@ export const CHALLENGES: Challenge[] = [
     conditionMet: () => true,
   },
   {
+    id: 'short-circuit',
+    name: 'Short Circuit',
+    synopsis: 'Twist: Suit perks fire at random',
+    goal: "Score 500+ points with random suit perks — you won't know which of ♥/♠/♦/♣'s effects you'll get until you commit to spending the card.",
+    scoreTarget: 500,
+    // The randomness is enforced at the reducer level (state.randomPerks
+    // is true and handleBeginSuitAction picks a uniformly-random perk
+    // from those currently available). Hitting the score target is the
+    // only end-state check.
+    conditionMet: () => true,
+  },
+  {
     id: 'gridlock',
     name: 'Gridlock',
     synopsis: 'Twist: First 15 cards pre-placed at random',
@@ -77,36 +86,6 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame: randomGridFill seeds 15 cards into random
     // positions before drawNext runs. The remaining deck is intact
     // and the spiral picks up from whichever slots stayed empty.
-    conditionMet: () => true,
-  },
-  {
-    id: 'scatter',
-    name: 'Scatter',
-    synopsis: 'Twist: Each card lands at a random spot',
-    goal: 'Score 500+ points with no spiral. Every card drawn from the deck targets a random empty slot, re-rolled for each new card — even after you spend one on a suit perk. Jokers scatter too.',
-    scoreTarget: 500,
-    // Enforced at newGame: the scatter flag makes drawNext pick (and
-    // re-roll) a random empty slot for every drawn card and auto-placed
-    // joker, instead of following the spiral order.
-    conditionMet: () => true,
-  },
-  {
-    id: 'bull-market',
-    name: 'Bull Market',
-    synopsis: 'Twist: ♣ invests in hand values',
-    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its ♣ perk "invests" twice its blackjack value (2–9 face, 10–K = 10, A = 11; so a 7 adds 14, an Ace adds 22) into a random hand type, permanently raising that hand\'s base value. Boosts stack — press ⓘ to see the revised hand values.',
-    scoreTarget: 500,
-    // Enforced at newGame: noBonusCards strips the bonus deck and
-    // investHands repurposes the ♣ perk to boost a random hand's base.
-    conditionMet: () => true,
-  },
-  {
-    id: 'short-deck',
-    name: 'Short Deck',
-    synopsis: 'Twist: Deck contains only 45 cards',
-    goal: 'Score 500+ points with a 45-card deck. 8 cards are removed at random before the start of the game.',
-    scoreTarget: 500,
-    deckLimit: 45,
     conditionMet: () => true,
   },
   {
@@ -139,6 +118,27 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame: noBonusCards strips the regular bonus deck,
     // and initialBonusCards seeds the hand with three random specials.
     // App.tsx wires the seeding via contextInitialBonusCards.
+    conditionMet: () => true,
+  },
+  {
+    id: 'scatter',
+    name: 'Scatter',
+    synopsis: 'Twist: Each card lands at a random spot',
+    goal: 'Score 500+ points with no spiral. Every card drawn from the deck targets a random empty slot, re-rolled for each new card — even after you spend one on a suit perk. Jokers scatter too.',
+    scoreTarget: 500,
+    // Enforced at newGame: the scatter flag makes drawNext pick (and
+    // re-roll) a random empty slot for every drawn card and auto-placed
+    // joker, instead of following the spiral order.
+    conditionMet: () => true,
+  },
+  {
+    id: 'bull-market',
+    name: 'Bull Market',
+    synopsis: 'Twist: ♣ invests in hand values',
+    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its ♣ perk "invests" twice its blackjack value (2–9 face, 10–K = 10, A = 11; so a 7 adds 14, an Ace adds 22) into a random hand type, permanently raising that hand\'s base value. Boosts stack — press ⓘ to see the revised hand values.',
+    scoreTarget: 500,
+    // Enforced at newGame: noBonusCards strips the bonus deck and
+    // investHands repurposes the ♣ perk to boost a random hand's base.
     conditionMet: () => true,
   },
   {
