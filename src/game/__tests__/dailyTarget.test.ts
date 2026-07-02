@@ -1,4 +1,5 @@
 import { dailyTargetFor } from '../daily/recipe';
+import { CHALLENGES } from '../challenges';
 
 describe('dailyTargetFor', () => {
   describe('no twist — base difficulty target', () => {
@@ -12,21 +13,16 @@ describe('dailyTargetFor', () => {
     });
   });
 
-  describe('scoring-active twists — base − 50', () => {
-    const SCORING_TWISTS = [
-      'short-circuit',
-      'no-discards',
-      'gridlock',
-      'short-deck',
-      'mixed-bag',
-      'scatter',
-    ] as const;
+  describe('every twist keeps the full base target — except poker-purist', () => {
+    const FULL_BASE_TWISTS = CHALLENGES.map(c => c.id).filter(
+      id => id !== 'poker-purist'
+    );
     it.each([
-      ['easy', 350],
-      ['medium', 400],
-      ['hard', 450],
-    ])('%s with any scoring-active twist → %s', (difficulty, expected) => {
-      for (const twist of SCORING_TWISTS) {
+      ['easy', 400],
+      ['medium', 450],
+      ['hard', 500],
+    ])('%s → %s', (difficulty, expected) => {
+      for (const twist of FULL_BASE_TWISTS) {
         expect(dailyTargetFor(difficulty as 'easy', twist)).toBe(expected);
       }
     });
@@ -40,23 +36,16 @@ describe('dailyTargetFor', () => {
     });
   });
 
-  describe('base-target twists (delta 0) — bull-market, three-tricks, double-duty', () => {
-    const BASE_TWISTS = ['bull-market', 'three-tricks', 'double-duty'] as const;
-    it.each([
-      ['easy', 400],
-      ['medium', 450],
-      ['hard', 500],
-    ])('%s → %s', (difficulty, expected) => {
-      for (const twist of BASE_TWISTS) {
-        expect(dailyTargetFor(difficulty as 'easy', twist)).toBe(expected);
-      }
-    });
+  it('every challenge target equals its hard-daily value', () => {
+    for (const c of CHALLENGES) {
+      expect(c.scoreTarget).toBe(dailyTargetFor('hard', c.id));
+    }
   });
 
   it('defensively handles extreme + twist even though the recipe never emits it', () => {
     // Extreme has empty twistEligibility so this shouldn't appear in
     // recipeFor output, but the formula still resolves sanely.
-    expect(dailyTargetFor('extreme', 'no-discards')).toBe(400); // 450 − 50
+    expect(dailyTargetFor('extreme', 'no-discards')).toBe(450); // base, delta 0
     expect(dailyTargetFor('extreme', 'poker-purist')).toBe(350); // fixed
     expect(dailyTargetFor('extreme', 'three-tricks')).toBe(450); // base, delta 0
   });

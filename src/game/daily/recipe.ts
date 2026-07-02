@@ -162,17 +162,11 @@ const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
   'poker-purist': 350,
 };
 
-// Delta applied to the difficulty's base target for scoring-active
-// twists. The default drops the bar by 50 so a twisted day feels
-// comparable to the plain day; per-twist overrides tune specific ones —
-// Bull Market and Three Tricks keep the full base target (400/450/500).
-const DEFAULT_TWIST_DELTA = -50;
-const TWIST_DELTA_OVERRIDE: Partial<Record<ChallengeId, number>> = {
-  'bull-market': 0,
-  'three-tricks': 0,
-  // Two-way flexibility ≈ the 2-card burn cost — full base target.
-  'double-duty': 0,
-};
+// Delta applied to the difficulty's base target when a twist is active.
+// Every twist now keeps the full base target (400/450/500); the override
+// map stays as the tuning knob if playtesting singles one out again.
+const DEFAULT_TWIST_DELTA = 0;
+const TWIST_DELTA_OVERRIDE: Partial<Record<ChallengeId, number>> = {};
 
 // Daily target = base difficulty target, optionally adjusted by the
 // active twist. Twists with a fixed entry override the delta path.
