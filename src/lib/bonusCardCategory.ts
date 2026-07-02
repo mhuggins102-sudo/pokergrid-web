@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { BonusCard } from '../game/bonusCards';
 import { Suit } from '../game/cards';
 import { colors } from '../design/tokens';
@@ -188,8 +189,9 @@ export interface CategoryStyle {
   // icon when settings.colorBlindAssist is on.
   icon: string;
   iconColor: string;
-  // Em multiplier for the icon span — evens out glyphs whose fonts draw
-  // them smaller than their siblings (the ✦ spark).
+  // Paint multiplier for the icon span — evens out glyphs whose fonts
+  // draw them smaller than their siblings (the ✦ spark). Apply via
+  // categoryIconStyle so the enlargement can't affect layout.
   iconScale: number;
   // Always-on signals: chip / sheet border, title text. In the editorial
   // system these render as hairline rings + tints, never glows.
@@ -199,6 +201,16 @@ export interface CategoryStyle {
   flashColor: string;
   label: string;
 }
+
+// Inline style for the icon span. transform (not font-size) so the
+// enlarged glyph paints bigger WITHOUT inflating the line box — a
+// font-size bump pushed conditional card titles below their siblings'.
+export const categoryIconStyle = (
+  s: Pick<CategoryStyle, 'iconScale'>
+): CSSProperties =>
+  s.iconScale === 1
+    ? {}
+    : { display: 'inline-block', transform: `scale(${s.iconScale})` };
 
 export const styleFor = (card: BonusCard): CategoryStyle => {
   const cat = categoryOf(card);

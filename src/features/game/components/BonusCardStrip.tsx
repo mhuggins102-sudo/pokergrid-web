@@ -1,6 +1,6 @@
 import { CSSProperties, useState } from 'react';
 import { BonusCard, isPlaceholder, isSpecialCard } from '../../../game/bonusCards';
-import { styleFor } from '../../../lib/bonusCardCategory';
+import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
 import { Button, Sheet } from '../../../design/primitives';
 import styles from './BonusCardStrip.module.css';
 
@@ -206,10 +206,7 @@ function DetailSheet({
           style={{ '--chip-tone': detailStyle.borderColor } as CSSProperties}
         >
           <span className={styles.detailCategory}>
-            <span
-              style={{ fontSize: `${detailStyle.iconScale}em` }}
-              aria-hidden="true"
-            >
+            <span style={categoryIconStyle(detailStyle)} aria-hidden="true">
               {detailStyle.icon}
             </span>{' '}
             {detailStyle.label}

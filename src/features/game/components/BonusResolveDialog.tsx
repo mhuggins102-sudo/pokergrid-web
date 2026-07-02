@@ -1,6 +1,6 @@
 import { CSSProperties } from 'react';
 import { BonusCard, SPOTLIGHT_ID } from '../../../game/bonusCards';
-import { styleFor } from '../../../lib/bonusCardCategory';
+import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
 import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
@@ -25,7 +25,7 @@ function CardOption({
     >
       <span className={styles.optionTop}>
         <span className={styles.optionTitle}>
-          <span style={{ fontSize: `${cat.iconScale}em` }} aria-hidden="true">
+          <span style={categoryIconStyle(cat)} aria-hidden="true">
             {cat.icon}
           </span>{' '}
           {card.title}
