@@ -170,9 +170,8 @@ const DEFAULT_TWIST_DELTA = -50;
 const TWIST_DELTA_OVERRIDE: Partial<Record<ChallengeId, number>> = {
   'bull-market': 0,
   'three-tricks': 0,
-  // Two-way flexibility outweighs the burn cost — raised bar
-  // (500/550/600 on easy/medium/hard), matching the 600 challenge.
-  'double-duty': 100,
+  // Two-way flexibility ≈ the 2-card burn cost — full base target.
+  'double-duty': 0,
 };
 
 // Daily target = base difficulty target, optionally adjusted by the
