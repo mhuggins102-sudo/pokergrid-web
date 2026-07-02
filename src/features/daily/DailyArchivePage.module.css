@@ -15,9 +15,11 @@
   overflow: hidden;
 }
 
+/* Two columns only — a third track's gap used to inset rows without
+   the Today badge, so scores didn't share a right edge. */
 .row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
@@ -64,6 +66,14 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
+}
+
+/* Top line of the right side: the Today badge sits inline beside the
+   score (or the Play affordance on an unplayed today row). */
+.scoreRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
 }
 
 .score {
