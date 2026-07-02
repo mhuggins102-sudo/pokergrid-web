@@ -2,7 +2,12 @@ import { BonusCard } from '../../../game/bonusCards';
 import { INCOMPLETE_LINE_PENALTY, ScoredLine } from '../../../game/scoring';
 import { Sheet } from '../../../design/primitives';
 import { HAND_LABEL, lineLabel } from '../handLabels';
-import { appliedLineBonuses, fmtMult, investedBase } from '../lineBonuses';
+import {
+  appliedLineBonuses,
+  fmtMult,
+  hasScoringBonusCards,
+  investedBase,
+} from '../lineBonuses';
 import { CardFace } from './CardFace';
 import styles from './LineDetailSheet.module.css';
 
@@ -90,7 +95,9 @@ export function LineDetailSheet({
                     </span>
                   </div>
                 ))}
-                {applied.length === 0 && (
+                {/* Placeholder only when the game HAS scoring bonus cards —
+                    meaningless in Bull Market / Poker Purist / Three Tricks. */}
+                {applied.length === 0 && hasScoringBonusCards(bonusCards) && (
                   <div className={`${styles.row} ${styles.muted}`}>
                     <span>No bonus cards fired on this line</span>
                   </div>
