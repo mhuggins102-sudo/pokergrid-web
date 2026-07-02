@@ -99,10 +99,13 @@ export function DeckPreviewDialog({
                     : charge === 'double'
                       ? colors.warn
                       : undefined;
+                // Double Duty: full brightness only while BOTH halves of
+                // an identity remain; one copy left renders half-dimmed.
+                const faded = dualDeck && copies === 1;
                 return (
                   <span
                     key={rank}
-                    className={`${styles.rankCell} ${present ? styles.present : ''} ${charge ? styles.charged : ''}`}
+                    className={`${styles.rankCell} ${present ? styles.present : ''} ${faded ? styles.presentFaded : ''} ${charge ? styles.charged : ''}`}
                     style={
                       {
                         '--suit-tone': SUIT_TONE[suit],
@@ -125,9 +128,6 @@ export function DeckPreviewDialog({
                         {charge === 'wild' ? 'W' : '2'}
                       </sup>
                     )}
-                    {dualDeck && copies === 2 && (
-                      <sup className={styles.chargeMark}>2</sup>
-                    )}
                   </span>
                 );
               })}
@@ -142,9 +142,8 @@ export function DeckPreviewDialog({
         )}
         {dualDeck && (
           <p className={styles.legend}>
-            Counts include both halves of every two-way card — a{' '}
-            <sup className={styles.chargeMark}>2</sup> marks identities with
-            two copies still in the deck.
+            Counts include both halves of every two-way card — bright ranks
+            have both copies still in the deck, dimmed ranks have one left.
           </p>
         )}
         {hasCharged && (
