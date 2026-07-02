@@ -36,6 +36,23 @@ export const useDailyRank = (dateISO: string) => {
   });
 };
 
+/**
+ * Rank for an archive row. Shares the cache key with useDailyRank (so a
+ * fresh result-screen fetch feeds the archive for free) but never polls:
+ * old local-only plays return null forever, and a page of rows polling
+ * every 2s would hammer the backend. Long staleTime — final ranks for
+ * past dates barely move.
+ */
+export const useArchiveRank = (dateISO: string) => {
+  const deviceId = getOrCreateDeviceId();
+  return useQuery({
+    queryKey: ['daily-rank', dateISO, deviceId],
+    queryFn: () => fetchRank(deviceId, dateISO),
+    enabled: isBackendConfigured(),
+    staleTime: 5 * 60_000,
+  });
+};
+
 export const useDailyStats = (dateISO: string, open: boolean) => {
   const deviceId = getOrCreateDeviceId();
   return useQuery({

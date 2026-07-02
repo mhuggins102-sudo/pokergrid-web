@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BonusCard } from '../../../game/bonusCards';
 import {
   INCOMPLETE_LINE_PENALTY,
@@ -23,15 +24,28 @@ function LineRow({
   line,
   bonusCards,
   allLines,
+  open,
+  onToggle,
 }: {
   line: ScoredLine;
   bonusCards: BonusCard[];
   allLines: ScoredLine[];
+  open: boolean;
+  onToggle: () => void;
 }) {
   const applied = appliedLineBonuses(line, bonusCards, allLines);
   return (
-    <details className={styles.lineRow}>
-      <summary className={styles.lineSummary}>
+    // Controlled accordion: opening a row collapses the others. The
+    // summary click is intercepted (keyboard Enter fires click too) so
+    // React owns the open state instead of the native toggle.
+    <details className={styles.lineRow} open={open}>
+      <summary
+        className={styles.lineSummary}
+        onClick={e => {
+          e.preventDefault();
+          onToggle();
+        }}
+      >
         <Chevron direction="right" size={18} className={styles.caret} />
         <span className={styles.label}>{lineLabel(line.kind, line.index)}</span>
         {line.hand ? (
@@ -96,19 +110,29 @@ export function ScoreDetailsSheet({
   shapley,
   liveContext,
 }: ScoreDetailsSheetProps) {
+  // Which line row is expanded — one at a time (accordion). The sheet
+  // unmounts when closed, so this resets on every open.
+  const [expanded, setExpanded] = useState<string | null>(null);
   if (!open) return null;
   return (
     <Sheet open onClose={onClose} title="Details">
       <div className={styles.body}>
         <div className={styles.lines}>
-          {report.lines.map(line => (
-            <LineRow
-              key={`${line.kind}-${line.index}`}
-              line={line}
-              bonusCards={bonusCards}
-              allLines={report.lines}
-            />
-          ))}
+          {report.lines.map(line => {
+            const id = `${line.kind}-${line.index}`;
+            return (
+              <LineRow
+                key={id}
+                line={line}
+                bonusCards={bonusCards}
+                allLines={report.lines}
+                open={expanded === id}
+                onToggle={() =>
+                  setExpanded(cur => (cur === id ? null : id))
+                }
+              />
+            );
+          })}
         </div>
 
         <div className={styles.totals}>

@@ -4,8 +4,41 @@ import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { findChallenge } from '../../game/challenges';
 import { tierForRun } from '../../lib/stats';
 import { DAILY_LAUNCH_ISO, datesBack } from './dailyDates';
-import { usePlaysStore } from './sync/playsStore';
+import { DailyPlay, usePlaysStore } from './sync/playsStore';
+import { useArchiveRank } from './sync/useDailyRank';
 import styles from './DailyArchivePage.module.css';
+
+/**
+ * Right-hand cell of a played row: score · tier on top, the player's
+ * leaderboard standing (#x / y) beneath once it's known. Own component
+ * so each row can hold its rank query.
+ */
+function PlayedCell({
+  date,
+  play,
+  target,
+}: {
+  date: string;
+  play: DailyPlay;
+  target: number;
+}) {
+  const rank = useArchiveRank(date);
+  return (
+    <span className={styles.rightCol}>
+      <span
+        className={`${styles.score} ${play.won ? styles.won : styles.lost}`}
+      >
+        {play.score} ·{' '}
+        {tierForRun({ score: play.score, target, won: play.won })}
+      </span>
+      {rank.data && (
+        <span className={styles.rank}>
+          #{rank.data.rank} / {rank.data.total}
+        </span>
+      )}
+    </span>
+  );
+}
 
 /** /daily/archive — every published daily, play or revisit. */
 export function DailyArchivePage() {
@@ -39,12 +72,7 @@ export function DailyArchivePage() {
               </span>
               {date === today && <span className={styles.today}>Today</span>}
               {play ? (
-                <span
-                  className={`${styles.score} ${play.won ? styles.won : styles.lost}`}
-                >
-                  {play.score} ·{' '}
-                  {tierForRun({ score: play.score, target, won: play.won })}
-                </span>
+                <PlayedCell date={date} play={play} target={target} />
               ) : (
                 <span className={styles.state}>Play</span>
               )}
