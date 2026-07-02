@@ -19,17 +19,25 @@ export const cardAriaLabel = (card: Card): string => {
       : card.supercharge === 'double'
         ? ', doubled'
         : '';
-  return `${card.rank} of ${SUIT_NAME[card.suit]}${charge}`;
+  const dual = card.dual
+    ? `, flips to ${card.dual.rank} of ${SUIT_NAME[card.dual.suit]}`
+    : '';
+  return `${card.rank} of ${SUIT_NAME[card.suit]}${charge}${dual}`;
 };
 
 /**
- * Stable identity for layout (FLIP) animations: a deck holds at most one
- * copy of each rank+suit, so the same card travelling from the draw well
- * to a grid cell — or between cells — shares this id. Jokers never travel
- * (the engine auto-places them), so they don't need a unique id.
+ * Stable identity for layout (FLIP) animations: the same card travelling
+ * from the draw well to a grid cell — or between cells — shares this id.
+ * A normal deck holds at most one copy of each rank+suit; Double Duty can
+ * put the same identity on two physical cards, so its cards fold in the
+ * per-card uid to stay unique (also used as React keys in GridBoard).
+ * Jokers never travel (the engine auto-places them), so they don't need
+ * a unique id.
  */
 export const cardLayoutId = (card: Card): string | undefined =>
-  isJoker(card) ? undefined : `card-${card.rank}${card.suit}`;
+  isJoker(card)
+    ? undefined
+    : `card-${card.rank}${card.suit}${card.uid !== undefined ? `-u${card.uid}` : ''}`;
 
 // Four-color suit palette for the two-color-deck=off setting.
 const SUIT_COLOR: Record<Suit, string> = {
@@ -38,6 +46,15 @@ const SUIT_COLOR: Record<Suit, string> = {
   C: colors.suitC,
   S: colors.suitS,
 };
+
+// Per-half color for the Double Duty two-way face: the root tone class
+// can't cover two suits at once, so each half is colored inline.
+const suitColor = (suit: Suit, twoColorDeck: boolean): string =>
+  twoColorDeck
+    ? suit === 'H' || suit === 'D'
+      ? 'var(--card-red)'
+      : 'var(--card-black)'
+    : SUIT_COLOR[suit];
 
 export function CardFace({ card }: { card: Card }) {
   const twoColorDeck = useSettingsStore(s => s.twoColorDeck);
@@ -48,6 +65,33 @@ export function CardFace({ card }: { card: Card }) {
           ★
         </span>
         <span className={styles.jokerLabel}>JOKER</span>
+      </div>
+    );
+  }
+  if (card.dual) {
+    // Double Duty two-way face (draw well only — placed/discarded cards
+    // are stripped to their active half). Active identity top-left,
+    // the flip identity bottom-right printed upside-down, so a 180°
+    // rotation of the card reads correctly.
+    return (
+      <div className={styles.card}>
+        <span
+          className={`${styles.dualHalf} ${styles.dualTop}`}
+          style={{ color: suitColor(card.suit, twoColorDeck) }}
+          aria-hidden="true"
+        >
+          <span className={styles.dualRank}>{card.rank}</span>
+          <span className={styles.dualPip}>{SUIT_GLYPH[card.suit]}</span>
+        </span>
+        <span className={styles.dualDivider} aria-hidden="true" />
+        <span
+          className={`${styles.dualHalf} ${styles.dualBottom}`}
+          style={{ color: suitColor(card.dual.suit, twoColorDeck) }}
+          aria-hidden="true"
+        >
+          <span className={styles.dualRank}>{card.dual.rank}</span>
+          <span className={styles.dualPip}>{SUIT_GLYPH[card.dual.suit]}</span>
+        </span>
       </div>
     );
   }

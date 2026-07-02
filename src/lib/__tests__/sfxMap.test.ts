@@ -23,6 +23,10 @@ describe('sfxForHistoryEntry', () => {
     expect(sfxForHistoryEntry('Revive discard #2')).toBe('revive');
   });
 
+  it('covers the Double Duty flip', () => {
+    expect(sfxForHistoryEntry('Flip (1 card burned)')).toBe('flip');
+  });
+
   it('stays silent for non-action entries', () => {
     expect(sfxForHistoryEntry('Discard')).toBeNull();
     expect(sfxForHistoryEntry('Game start')).toBeNull();

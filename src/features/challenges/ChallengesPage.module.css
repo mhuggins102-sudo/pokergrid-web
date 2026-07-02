@@ -23,10 +23,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-.cardLocked {
-  opacity: 0.55;
-}
-
 .topRow {
   display: flex;
   align-items: baseline;
@@ -50,10 +46,6 @@
 
 .done {
   color: var(--success);
-}
-
-.locked {
-  color: var(--ink-3);
 }
 
 .synopsis {

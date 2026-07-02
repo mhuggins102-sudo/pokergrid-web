@@ -43,6 +43,13 @@ export function NextCardWell({
       ? cardLayoutId(drawn)
       : undefined;
 
+  // Double Duty: a flip swaps the drawn card's rank/suit, which changes
+  // the element key — the fresh element enters rotated a half-turn and
+  // settles to 0, reading as the physical 180° rotation (the two-way
+  // face is printed so both orientations are coherent). flippedDrawn
+  // resets on the next draw, so ordinary draws keep the drop-in entrance.
+  const flipEntrance = !flight && state.flippedDrawn;
+
   const cardLabel = flight
     ? `Auto-placing: ${cardAriaLabel(flight.card)}`
     : drawn
@@ -67,12 +74,18 @@ export function NextCardWell({
               key={shownLayoutId}
               layoutId={instantLayout ? undefined : shownLayoutId}
               className={styles.cardWrap}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={
+                flipEntrance
+                  ? { opacity: 1, y: 0, rotate: -180 }
+                  : { opacity: 0, y: -10, rotate: 0 }
+              }
+              animate={{ opacity: 1, y: 0, rotate: 0 }}
               transition={
                 instantLayout
                   ? { duration: 0 }
-                  : { type: 'spring', stiffness: 420, damping: 32 }
+                  : flipEntrance
+                    ? { type: 'spring', stiffness: 260, damping: 24 }
+                    : { type: 'spring', stiffness: 420, damping: 32 }
               }
             >
               <CardFace card={shown} />

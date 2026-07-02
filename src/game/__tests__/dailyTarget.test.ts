@@ -40,8 +40,8 @@ describe('dailyTargetFor', () => {
     });
   });
 
-  describe('base-target twists (delta 0) — bull-market, three-tricks', () => {
-    const BASE_TWISTS = ['bull-market', 'three-tricks'] as const;
+  describe('base-target twists (delta 0) — bull-market, three-tricks, double-duty', () => {
+    const BASE_TWISTS = ['bull-market', 'three-tricks', 'double-duty'] as const;
     it.each([
       ['easy', 400],
       ['medium', 450],

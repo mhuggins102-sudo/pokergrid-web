@@ -32,23 +32,41 @@ export function DeckPreviewDialog({
 }) {
   const { state } = useGameSession();
 
-  const { bySuit, charged, jokers } = useMemo(() => {
-    const bySuit: Record<Suit, Set<string>> = { H: new Set(), S: new Set(), D: new Set(), C: new Set() };
+  const dualDeck = state.doubleDuty;
+
+  const { counts, charged, jokers } = useMemo(() => {
+    // How many copies of each identity remain: 0/1 normally; in Double
+    // Duty both halves of every remaining card count, so 0/1/2.
+    const counts: Record<Suit, Map<string, number>> = {
+      H: new Map(),
+      S: new Map(),
+      D: new Map(),
+      C: new Map(),
+    };
+    const bump = (suit: Suit, rank: string) =>
+      counts[suit].set(rank, (counts[suit].get(rank) ?? 0) + 1);
     // Targets-Up upgrades (wild / double) carried into this deck — keyed
     // by `${suit}${rank}` so the peek can flag the exact upgraded card.
+    // Never co-occurs with Double Duty duals (Targets-Up only).
     const charged = new Map<string, Supercharge>();
     let jokers = 0;
     for (const c of state.deck) {
       if (isJoker(c)) jokers++;
       else {
-        bySuit[c.suit].add(c.rank);
+        bump(c.suit, c.rank);
+        if (c.dual) bump(c.dual.suit, c.dual.rank);
         if (c.supercharge) charged.set(`${c.suit}${c.rank}`, c.supercharge);
       }
     }
-    return { bySuit, charged, jokers };
+    return { counts, charged, jokers };
   }, [state.deck]);
 
   const hasCharged = charged.size > 0;
+  const suitTotal = (suit: Suit): number => {
+    let n = 0;
+    for (const v of counts[suit].values()) n += v;
+    return n;
+  };
 
   return (
     <Sheet open={open} onClose={onClose} title="Remaining deck">
@@ -63,12 +81,15 @@ export function DeckPreviewDialog({
                 {SUIT_GLYPH[suit]} {SUIT_NAME[suit]}
               </span>
               <span className={styles.suitCount}>
-                {bySuit[suit].size} / 13
+                {dualDeck
+                  ? `${suitTotal(suit)} / 26`
+                  : `${counts[suit].size} / 13`}
               </span>
             </div>
             <div className={styles.ranks}>
               {RANKS.map(rank => {
-                const present = bySuit[suit].has(rank);
+                const copies = counts[suit].get(rank) ?? 0;
+                const present = copies > 0;
                 const charge = present
                   ? charged.get(`${suit}${rank}`)
                   : undefined;
@@ -92,7 +113,9 @@ export function DeckPreviewDialog({
                       present
                         ? charge
                           ? `in deck, upgraded ${charge}`
-                          : 'in deck'
+                          : dualDeck
+                            ? `in deck, ${copies === 2 ? '2 copies' : '1 copy'}`
+                            : 'in deck'
                         : 'gone'
                     }`}
                   >
@@ -101,6 +124,9 @@ export function DeckPreviewDialog({
                       <sup className={styles.chargeMark}>
                         {charge === 'wild' ? 'W' : '2'}
                       </sup>
+                    )}
+                    {dualDeck && copies === 2 && (
+                      <sup className={styles.chargeMark}>2</sup>
                     )}
                   </span>
                 );
@@ -113,6 +139,13 @@ export function DeckPreviewDialog({
             <span>★ Jokers</span>
             <span className={styles.suitCount}>{jokers} remaining</span>
           </div>
+        )}
+        {dualDeck && (
+          <p className={styles.legend}>
+            Counts include both halves of every two-way card — a{' '}
+            <sup className={styles.chargeMark}>2</sup> marks identities with
+            two copies still in the deck.
+          </p>
         )}
         {hasCharged && (
           <p className={styles.legend}>

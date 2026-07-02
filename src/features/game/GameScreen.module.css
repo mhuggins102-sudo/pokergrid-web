@@ -218,6 +218,14 @@
   min-height: 44px;
 }
 
+/* Overflow row for a 3rd+ secondary action (Double Duty's Flip) — the
+   two flanking sides hold one button each. */
+.stageExtraRow {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
 .stageWell [class*='cardSlot'] {
   width: 76px;
 }

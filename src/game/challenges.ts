@@ -21,7 +21,8 @@ export type ChallengeId =
   | 'mixed-bag'
   | 'gridlock'
   | 'scatter'
-  | 'bull-market';
+  | 'bull-market'
+  | 'double-duty';
 
 export interface Challenge {
   id: ChallengeId;
@@ -41,9 +42,8 @@ export interface Challenge {
   deckLimit?: number;
 }
 
-// Ordered easiest → hardest. Drives the on-screen list order and the
-// sequential-unlock progression (first two not-yet-beaten are
-// playable; clearing one unlocks the next).
+// Ordered roughly easiest → hardest. Drives the on-screen list order
+// only — every challenge is playable from the start.
 export const CHALLENGES: Challenge[] = [
   {
     id: 'short-circuit',
@@ -139,6 +139,17 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame: noBonusCards strips the regular bonus deck,
     // and initialBonusCards seeds the hand with three random specials.
     // App.tsx wires the seeding via contextInitialBonusCards.
+    conditionMet: () => true,
+  },
+  {
+    id: 'double-duty',
+    name: 'Double Duty',
+    synopsis: 'Twist: Two-way cards — Flip burns a card',
+    goal: 'Score 500+ points with a two-way deck. Every card carries a second identity printed upside-down on its bottom half — each rank+suit appears exactly twice across the deck, paired at random each game. Flip the drawn card (once per card) to play its other half; the cost: the next deck card is burned, sight unseen. Jokers can\'t flip.',
+    scoreTarget: 500,
+    // Enforced at newGame (dual identities assigned to the deck) and by
+    // the FLIP_CARD reducer guards. Hitting the score target is the only
+    // end-state check.
     conditionMet: () => true,
   },
 ];
