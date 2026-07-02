@@ -558,17 +558,18 @@ const lowball: BonusCard = {
   },
 };
 
+// (ID keeps the old x2 tag for save compatibility.)
 const blackjack: BonusCard = {
   id: 'blackjack-x2',
-  name: 'Blackjack ×2 (each)',
+  name: 'Blackjack ×3 (each)',
   title: 'Blackjack',
-  mult: '×2 (each)',
+  mult: '×3 (each)',
   description: 'Lines totalling exactly 21 (each A is 1 or 11).',
-  multValue: 2,
-  baseMultValue: 2,
+  multValue: 3,
+  baseMultValue: 3,
   lineEffect: (line, card) => {
     if (!line.hand) return {};
-    return lineCanBlackjack(line) ? { multiplier: card.multValue ?? 2 } : {};
+    return lineCanBlackjack(line) ? { multiplier: card.multValue ?? 3 } : {};
   },
 };
 
@@ -694,17 +695,19 @@ const BORDER_EDGES: readonly (readonly number[])[] = [
   [4, 9, 14, 19, 24],     // right column (C5)
 ];
 
+// Easier condition than Monochrome Border (avoid 3 ranks vs commit to
+// one color), so it pays the smaller per-edge rate of the pair.
 const cleanBorder: BonusCard = {
   id: 'clean-border-x1_5',
-  name: 'Clean Border ×1.15 (each)',
+  name: 'Clean Border ×1.1 (each)',
   title: 'Clean Border',
-  mult: '×1.15 (each)',
+  mult: '×1.1 (each)',
   description:
-    'Each grid edge (top / bottom / left / right) that is fully filled and contains no face cards. Stacks up to ×1.15⁴.',
-  multValue: 1.15,
-  baseMultValue: 1.15,
+    'Each grid edge (top / bottom / left / right) that is fully filled and contains no face cards. Stacks up to ×1.1⁴.',
+  multValue: 1.1,
+  baseMultValue: 1.1,
   gridEffect: ({ grid }, card) => {
-    const m = card.multValue ?? 1.15;
+    const m = card.multValue ?? 1.1;
     let mult = 1;
     for (const edge of BORDER_EDGES) {
       // Edge must be fully filled — partials don't count.
@@ -721,15 +724,15 @@ const cleanBorder: BonusCard = {
 
 const monochromeBorder: BonusCard = {
   id: 'monochrome-border-x1_75',
-  name: 'Monochrome Border ×1.1 (each)',
+  name: 'Monochrome Border ×1.15 (each)',
   title: 'Monochrome Border',
-  mult: '×1.1 (each)',
+  mult: '×1.15 (each)',
   description:
-    'Each grid edge (top / bottom / left / right) that is fully filled with cards of the same color (red or black). Stacks up to ×1.1⁴.',
-  multValue: 1.1,
-  baseMultValue: 1.1,
+    'Each grid edge (top / bottom / left / right) that is fully filled with cards of the same color (red or black). Stacks up to ×1.15⁴.',
+  multValue: 1.15,
+  baseMultValue: 1.15,
   gridEffect: ({ grid }, card) => {
-    const m = card.multValue ?? 1.1;
+    const m = card.multValue ?? 1.15;
     let mult = 1;
     for (const edge of BORDER_EDGES) {
       // Edge must be fully filled — partials don't count.
@@ -809,18 +812,19 @@ const cozyJoker: BonusCard = {
   },
 };
 
-// Compounds 1.05 per playing card remaining in the deck at game end. Effective
-// multiplier is 1.05^deckRemaining, so 10 left ≈ 1.63×, 20 ≈ 2.65×.
+// Compounds 1.04 per playing card remaining in the deck at game end. Effective
+// multiplier is 1.04^deckRemaining, so 10 left ≈ 1.48×, 20 ≈ 2.19×. (ID keeps
+// the old x1_05 tag for save compatibility.)
 const deckBank: BonusCard = {
   id: 'deck-bank-x1_05',
-  name: 'Speedrun ×1.05 (each)',
+  name: 'Speedrun ×1.04 (each)',
   title: 'Speedrun',
-  mult: '×1.05 (each)',
+  mult: '×1.04 (each)',
   description: 'Each playing card still in the deck at game end.',
-  multValue: 1.05,
-  baseMultValue: 1.05,
+  multValue: 1.04,
+  baseMultValue: 1.04,
   gridEffect: ({ deckRemaining }, card) => {
-    const base = card.multValue ?? 1.05;
+    const base = card.multValue ?? 1.04;
     return {
       totalMultiplier: deckRemaining > 0 ? Math.pow(base, deckRemaining) : 1,
     };
@@ -914,17 +918,18 @@ const diversity: BonusCard = {
 // On Easy (2 jokers) Trash Joker multi-triggers — every joker that
 // ended up in the discard pile compounds the multiplier. Collapses to
 // a single trigger when there's only one joker in the deck.
+// (ID keeps the old x1_25 tag for save compatibility.)
 const trashJoker: BonusCard = {
   id: 'trash-joker-x1_25',
-  name: 'Trash Joker ×1.25 (each)',
+  name: 'Trash Joker ×1.5 (each)',
   title: 'Trash Joker',
-  mult: '×1.25 (each)',
+  mult: '×1.5 (each)',
   description: 'Each joker destroyed during the run.',
-  multValue: 1.25,
-  baseMultValue: 1.25,
+  multValue: 1.5,
+  baseMultValue: 1.5,
   gridEffect: ({ discards }, card) => {
     const jokersOut = discards.filter(c => isJoker(c)).length;
-    const base = card.multValue ?? 1.25;
+    const base = card.multValue ?? 1.5;
     return jokersOut > 0
       ? { totalMultiplier: Math.pow(base, jokersOut) }
       : {};
@@ -970,15 +975,17 @@ const diagonalRun: BonusCard = {
   },
 };
 
-// Mirror-symmetric scoring: R1 and R5 share a hand type → ×1.2, and again
-// C1 and C5 share one → ×1.2. Both at once = ×1.44. High Card is excluded
-// since matching "nothing" shouldn't pay out.
+// Mirror-symmetric scoring: R1 and R5 share a scoring hand type → ×1.25,
+// and again C1 and C5 share one → ×1.25. Both at once = ×1.5625. High
+// Card is excluded — two full junk lines matching at "nothing" shouldn't
+// pay out; the match has to be built.
 const symmetricFrame: BonusCard = {
   id: 'symmetric-frame-x1_25',
   name: 'Symmetric Frame ×1.25 (each)',
   title: 'Symmetric Frame',
   mult: '×1.25 (each)',
-  description: 'R1/R5 or C1/C5 sharing a hand type. The line must be full to count.',
+  description:
+    'R1/R5 or C1/C5 sharing a scoring hand type (Pair or better). The line must be full to count.',
   multValue: 1.25,
   baseMultValue: 1.25,
   gridEffect: ({ lines }, card) => {
@@ -986,11 +993,10 @@ const symmetricFrame: BonusCard = {
     const handAt = (kind: 'row' | 'col', idx: number): HandRank | null =>
       lines.find(l => l.kind === kind && l.index === idx)?.hand ?? null;
     // Both lines must be fully scored (hand !== null means the row/column
-    // had all 5 slots filled at game end) and share the same hand rank.
-    // High Card now qualifies — the line must be FULL, but the rank can
-    // be anything from High Card up.
+    // had all 5 slots filled at game end) and share the same SCORING
+    // hand rank — High Card pairs don't count.
     const matches = (a: HandRank | null, b: HandRank | null): boolean =>
-      a !== null && a === b;
+      a !== null && a !== 'HIGH_CARD' && a === b;
     let mult = 1;
     if (matches(handAt('row', 0), handAt('row', 4))) mult *= m;
     if (matches(handAt('col', 0), handAt('col', 4))) mult *= m;
@@ -1038,11 +1044,11 @@ const burnout: BonusCard = {
   name: 'Burnout ×1.5',
   title: 'Burnout',
   mult: '×1.5',
-  description: '20+ suit perks spent across the run.',
+  description: '22+ suit perks spent across the run.',
   multValue: 1.5,
   baseMultValue: 1.5,
   gridEffect: ({ perkSpent }, card) =>
-    perkSpent.length >= 20 ? { totalMultiplier: card.multValue ?? 1.5 } : {},
+    perkSpent.length >= 22 ? { totalMultiplier: card.multValue ?? 1.5 } : {},
 };
 
 const frugal: BonusCard = {
@@ -1209,6 +1215,24 @@ export const applyGridEffects = (
 // Round a multiplier to one decimal place — used everywhere a powered-up
 // value is computed so chip text and scoring stay in lockstep.
 const roundTenth = (n: number): number => Math.round(n * 10) / 10;
+const roundHundredth = (n: number): number => Math.round(n * 100) / 100;
+
+// Cards whose multValue is a per-unit EXPONENT BASE (×m per matching
+// card / edge / joker / deck card). Powering these up must scale the
+// MARGIN (1 + (m − 1) × factor), not the whole value — whole-value
+// ×1.2 rounded to a tenth turned Speedrun's 1.05/card into 1.3/card
+// (×1.3^N!). Margin scaling gives 1.05 → 1.06, 1.1 → 1.12, etc.
+const COMPOUNDING_BASE_IDS: ReadonlySet<string> = new Set([
+  'deck-bank-x1_05',
+  'suit-density-h',
+  'suit-density-s',
+  'suit-density-d',
+  'suit-density-c',
+  'cozy-joker-x1_15',
+  'trash-joker-x1_25',
+  'clean-border-x1_5',
+  'monochrome-border-x1_75',
+]);
 
 // Targets-Up reward: scale a held bonus card's multiplier by `factor`
 // (default ×1.2) and round to the nearest tenth. Returns a NEW BonusCard
@@ -1233,9 +1257,13 @@ export const powerUpBonusCard = (
   // steps don't compose cleanly with multiplication — additive +5 per
   // power-up keeps the math exact and matches the design intent.
   const isPatience = card.id.startsWith('patience-');
+  const baseIdForKind = card.id.replace(/-pwr\d+$/, '');
+  const isCompounding = COMPOUNDING_BASE_IDS.has(baseIdForKind);
   const newMultValue = isPatience
     ? card.multValue + 5
-    : roundTenth(card.multValue * factor);
+    : isCompounding
+      ? roundHundredth(1 + (card.multValue - 1) * factor)
+      : roundTenth(card.multValue * factor);
   const newPowerLevel = (card.powerLevel ?? 0) + 1;
   // Patience's chip text doesn't have a "×N" segment to rewrite —
   // generate fresh copy that reflects the net bonus per blank line.

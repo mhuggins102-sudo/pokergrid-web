@@ -29,12 +29,12 @@ describe('powerUpBonusCard', () => {
     expect(powerUpBonusCard(row2).multValue).toBe(2.4);
   });
 
-  it('scales suit-density per-card multipliers (1.1 → 1.3)', () => {
+  it('scales compounding per-unit multipliers by their MARGIN (1.1 → 1.12)', () => {
     const density = findCard('suit-density-h');
     const powered = powerUpBonusCard(density);
-    expect(powered.multValue).toBe(1.3);
-    // The compound effect on a 3-heart line goes from 1.1^3 = 1.331 to
-    // 1.3^3 = 2.197 — that's the intended power-up bite.
+    // Margin scaling: 1 + (1.1 − 1) × 1.2 = 1.12 — NOT whole-value ×1.2
+    // rounded to a tenth, which exploded exponent bases (1.1 → 1.3/card).
+    expect(powered.multValue).toBe(1.12);
     const line: LineContext = {
       kind: 'row',
       index: 0,
@@ -42,7 +42,13 @@ describe('powerUpBonusCard', () => {
       hand: 'HIGH_CARD',
     };
     const e = powered.lineEffect!(line, powered);
-    expect(e.multiplier).toBeCloseTo(Math.pow(1.3, 3), 5);
+    expect(e.multiplier).toBeCloseTo(Math.pow(1.12, 3), 5);
+
+    // Speedrun is the sharpest curve in the pool: 1.04 → 1.05 per deck
+    // card, instead of the old catastrophic 1.2+/card.
+    const speedrun = findCard('deck-bank-x1_05');
+    expect(powerUpBonusCard(speedrun).multValue).toBe(1.05);
+    expect(powerUpBonusCard(speedrun).mult).toBe('×1.05 (each)');
   });
 
   it('updates the chip text and detail name to match the new multiplier', () => {
