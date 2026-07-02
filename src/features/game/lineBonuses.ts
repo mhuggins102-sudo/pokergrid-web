@@ -4,7 +4,7 @@ import {
   isPlaceholder,
   isSpecialCard,
 } from '../../game/bonusCards';
-import { ScoredLine } from '../../game/scoring';
+import { HAND_BASE_VALUE, ScoredLine } from '../../game/scoring';
 
 export interface AppliedLineBonus {
   card: BonusCard;
@@ -34,3 +34,15 @@ export const appliedLineBonuses = (
 
 export const fmtMult = (m: number): string =>
   `×${m.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}`;
+
+/**
+ * Split a line's (possibly boosted) base into the hand's regular value
+ * and the Bull Market ♣ invest on top. `invested` is 0 everywhere
+ * outside Bull Market — line.base IS the table value then.
+ */
+export const investedBase = (
+  line: ScoredLine
+): { raw: number; invested: number } => {
+  const raw = line.hand ? HAND_BASE_VALUE[line.hand] : 0;
+  return { raw, invested: line.base - raw };
+};
