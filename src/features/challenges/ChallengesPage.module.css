@@ -23,6 +23,9 @@
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   user-select: none;
+  /* The whole card is tappable — suppress the browser's gray
+     tap-highlight rectangle on the accordion toggle. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* The name row doubles as the accordion's accessible toggle. */
@@ -38,6 +41,7 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .topRow:focus-visible {
