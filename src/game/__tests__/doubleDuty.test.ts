@@ -120,10 +120,10 @@ describe('Double Duty', () => {
     expect(a.drawn).toEqual(b.drawn);
   });
 
-  it('FLIP_CARD swaps the halves and burns the next card unseen', () => {
+  it('FLIP_CARD swaps the halves and burns the next two cards unseen', () => {
     const s = newDoubleDuty(seededRng(5));
     const drawn = s.drawn as StandardCard;
-    const expectedBurn = activeHalf(s.deck[0]);
+    const expectedBurns = [activeHalf(s.deck[0]), activeHalf(s.deck[1])];
     const flipped = step(s, { type: 'FLIP_CARD' }, seededRng(1));
 
     const d = flipped.drawn as StandardCard;
@@ -131,15 +131,17 @@ describe('Double Duty', () => {
     expect(d.dual).toEqual({ rank: drawn.rank, suit: drawn.suit });
     expect(d.uid).toBe(drawn.uid);
     expect(flipped.flippedDrawn).toBe(true);
-    expect(flipped.deck).toHaveLength(s.deck.length - 1);
-    // The burned card is removed from the game — never into discards —
-    // and stored without its dual.
-    expect(flipped.burned).toEqual([expectedBurn]);
-    expect((flipped.burned[0] as StandardCard).dual).toBeUndefined();
+    expect(flipped.deck).toHaveLength(s.deck.length - 2);
+    // The burned cards are removed from the game — never into discards —
+    // and stored without their duals.
+    expect(flipped.burned).toEqual(expectedBurns);
+    for (const b of flipped.burned) {
+      expect((b as StandardCard).dual).toBeUndefined();
+    }
     expect(flipped.discards).toEqual(s.discards);
-    // History records the flip without naming the burned card.
+    // History records the flip without naming the burned cards.
     const last = flipped.history[flipped.history.length - 1];
-    expect(last).toBe('Flip (1 card burned)');
+    expect(last).toBe('Flip (2 cards burned)');
     expect(flipped.phase.kind).toBe('awaiting-action');
   });
 
@@ -150,10 +152,14 @@ describe('Double Duty', () => {
     expect(twice).toBe(once);
   });
 
-  it('flip is rejected with an empty deck, outside Double Duty, and off-phase', () => {
+  it('flip is rejected under 2 deck cards, outside Double Duty, and off-phase', () => {
     const s = newDoubleDuty(seededRng(5));
     const empty: GameState = { ...s, deck: [] };
     expect(step(empty, { type: 'FLIP_CARD' }, seededRng(1))).toBe(empty);
+
+    // One card left isn't enough to pay the 2-card burn either.
+    const one: GameState = { ...s, deck: s.deck.slice(0, 1) };
+    expect(step(one, { type: 'FLIP_CARD' }, seededRng(1))).toBe(one);
 
     const free = newGame('hard', seededRng(5));
     expect(step(free, { type: 'FLIP_CARD' }, seededRng(1))).toBe(free);
@@ -166,7 +172,7 @@ describe('Double Duty', () => {
     const s = newDoubleDuty(seededRng(5));
     const withJokerNext: GameState = { ...s, deck: [{ kind: 'joker' }, ...s.deck] };
     const flipped = step(withJokerNext, { type: 'FLIP_CARD' }, seededRng(1));
-    expect(flipped.burned).toEqual([{ kind: 'joker' }]);
+    expect(flipped.burned).toEqual([{ kind: 'joker' }, activeHalf(s.deck[0])]);
     // Not in discards → the Trash Joker bonus card can never count it.
     expect(flipped.discards.some(isJoker)).toBe(false);
   });
@@ -221,11 +227,12 @@ describe('Double Duty', () => {
     expect(undone.undoCount).toBe(1);
   });
 
-  it('burning the last deck card is allowed; game ends on the next draw', () => {
+  it('burning the last two deck cards is allowed; game ends on the next draw', () => {
     const s = newDoubleDuty(seededRng(17));
-    const lastCard: GameState = { ...s, deck: s.deck.slice(0, 1) };
-    const flipped = step(lastCard, { type: 'FLIP_CARD' }, seededRng(1));
+    const lastTwo: GameState = { ...s, deck: s.deck.slice(0, 2) };
+    const flipped = step(lastTwo, { type: 'FLIP_CARD' }, seededRng(1));
     expect(flipped.deck).toHaveLength(0);
+    expect(flipped.burned).toHaveLength(2);
     expect(flipped.phase.kind).toBe('awaiting-action');
     // A second flip is impossible (nothing to burn)…
     expect(step(flipped, { type: 'FLIP_CARD' }, seededRng(1))).toBe(flipped);

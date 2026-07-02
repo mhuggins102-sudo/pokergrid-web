@@ -700,16 +700,16 @@ const handleDiscardNone = (s: GameState, rng: () => number): GameState => {
 
 // Double Duty: rotate the drawn card 180° so its bottom half becomes the
 // active identity. One flip per card (no flip-back), and the cost is
-// burning the next deck card sight-unseen — it goes to `burned`, feeding
-// nothing (a burned joker does NOT count for Trash Joker). The history
-// entry deliberately never names the burned card.
+// burning the next TWO deck cards sight-unseen — they go to `burned`,
+// feeding nothing (a burned joker does NOT count for Trash Joker). The
+// history entry deliberately never names the burned cards.
 const handleFlip = (s: GameState): GameState => {
   if (!s.doubleDuty || s.phase.kind !== 'awaiting-action') return s;
   const drawn = s.drawn;
   if (!drawn || isJoker(drawn) || !drawn.dual) return s; // jokers can't flip
   if (s.flippedDrawn) return s; // one flip per card
-  if (s.deck.length === 0) return s; // nothing left to burn
-  const [burn, ...rest] = s.deck;
+  if (s.deck.length < 2) return s; // needs two cards to burn
+  const [burn1, burn2, ...rest] = s.deck;
   const flipped: StandardCard = {
     kind: 'standard',
     rank: drawn.dual.rank,
@@ -726,9 +726,9 @@ const handleFlip = (s: GameState): GameState => {
       deck: rest,
       drawn: flipped,
       flippedDrawn: true,
-      burned: [...s.burned, activeHalf(burn)],
+      burned: [...s.burned, activeHalf(burn1), activeHalf(burn2)],
     },
-    'Flip (1 card burned)'
+    'Flip (2 cards burned)'
   );
 };
 

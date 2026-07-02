@@ -172,9 +172,11 @@
   color: var(--ink-2);
 }
 
-.heroInfo:hover {
-  color: var(--ink);
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
+@media (hover: hover) {
+  .heroInfo:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+  }
 }
 
 .heroInfo:focus-visible {
@@ -198,8 +200,10 @@
   display: none;
 }
 
-.linesSummary:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .linesSummary:hover {
+    color: var(--accent);
+  }
 }
 
 .summaryLabel {
@@ -270,10 +274,12 @@
   text-decoration: none;
 }
 
-.dockLink:hover {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) {
+  .dockLink:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .commitButton {

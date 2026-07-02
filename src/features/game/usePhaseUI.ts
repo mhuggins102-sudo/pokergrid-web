@@ -228,15 +228,15 @@ export function usePhaseUI(): PhaseUI {
               });
             }
             // Double Duty: rotate the two-way card so its bottom half
-            // becomes active; the next deck card is burned unseen.
-            // Disabled (not hidden) after a flip / on an empty deck so
-            // the dock doesn't reflow mid-turn.
+            // becomes active; the next two deck cards are burned unseen.
+            // Disabled (not hidden) after a flip / when fewer than two
+            // cards remain, so the dock doesn't reflow mid-turn.
             if (state.doubleDuty && drawn.dual) {
               actions.push({
                 id: 'flip',
                 label: 'Flip',
                 variant: 'secondary',
-                disabled: state.flippedDrawn || state.deck.length === 0,
+                disabled: state.flippedDrawn || state.deck.length < 2,
                 onPress: () => dispatch({ type: 'FLIP_CARD' }),
               });
             }

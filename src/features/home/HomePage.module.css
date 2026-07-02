@@ -68,8 +68,10 @@
   text-decoration: none;
 }
 
-.introStart:hover {
-  filter: brightness(1.08);
+@media (hover: hover) {
+  .introStart:hover {
+    filter: brightness(1.08);
+  }
 }
 
 .introDismiss {
@@ -82,8 +84,10 @@
   cursor: pointer;
 }
 
-.introDismiss:hover {
-  color: var(--ink-2);
+@media (hover: hover) {
+  .introDismiss:hover {
+    color: var(--ink-2);
+  }
 }
 
 .tutorialLink {
@@ -113,10 +117,12 @@
     transform 120ms ease;
 }
 
-.tile:hover {
-  border-color: var(--ink-3);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .tile:hover {
+    border-color: var(--ink-3);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
 }
 
 .tile:focus-visible {

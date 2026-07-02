@@ -13,9 +13,11 @@
   align-self: flex-start;
 }
 
-.back:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) {
+  .back:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .group {

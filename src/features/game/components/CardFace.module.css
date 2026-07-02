@@ -94,25 +94,12 @@
 
 .dualRank {
   font-weight: 700;
+  font-size: 32cqh;
   letter-spacing: -0.02em;
 }
 
-/* Size hierarchy: the active (top) half reads larger; render always
-   puts the active identity on top, so the sizes swap on flip. */
-.dualTop .dualRank {
-  font-size: 32cqh;
-}
-
-.dualTop .dualPip {
+.dualPip {
   font-size: 27cqh;
-}
-
-.dualBottom .dualRank {
-  font-size: 24cqh;
-}
-
-.dualBottom .dualPip {
-  font-size: 20cqh;
 }
 
 .dualDivider {
