@@ -32,16 +32,22 @@ export function InvestWheel({
   const [landed, setLanded] = useState(false);
   const startedRef = useRef(false);
 
-  // A long reel that cycles the ten hands several times, ending on the
-  // chosen hand so the spin decelerates onto it.
-  const reel = useMemo(() => {
-    const out: HandRank[] = [];
-    for (let i = 0; i < 6; i++) out.push(...INVEST_HANDS);
-    out.push(hand);
-    return out;
+  // A long reel that follows ONE continuous cycle of the ten hands —
+  // like a real wheel, so no label can ever sit next to a duplicate of
+  // itself. Six full turns, then the cycle continues up to the chosen
+  // hand, then keeps going a few rows past it so the window below the
+  // pointer stays populated after the reel stops.
+  const { reel, targetIndex } = useMemo(() => {
+    const idx = INVEST_HANDS.indexOf(hand);
+    const items: HandRank[] = [];
+    for (let i = 0; i < 6; i++) items.push(...INVEST_HANDS);
+    items.push(...INVEST_HANDS.slice(0, idx + 1));
+    const target = items.length - 1;
+    for (let k = 1; k <= CENTER + 1; k++) {
+      items.push(INVEST_HANDS[(idx + k) % INVEST_HANDS.length]);
+    }
+    return { reel: items, targetIndex: target };
   }, [hand]);
-
-  const targetIndex = reel.length - 1;
   // Land the target row under the centered highlight band.
   const finalY = -(targetIndex - CENTER) * ITEM_H;
   const rowsScrolled = targetIndex - CENTER;

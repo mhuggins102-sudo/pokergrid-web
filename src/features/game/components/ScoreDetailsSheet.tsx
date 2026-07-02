@@ -7,7 +7,7 @@ import {
 } from '../../../game/scoring';
 import { Chevron, Sheet } from '../../../design/primitives';
 import { HAND_LABEL, lineLabel } from '../handLabels';
-import { appliedLineBonuses, fmtMult } from '../lineBonuses';
+import { appliedLineBonuses, fmtMult, investedBase } from '../lineBonuses';
 import { BonusCardStrip } from './BonusCardStrip';
 import styles from './ScoreDetailsSheet.module.css';
 
@@ -62,8 +62,17 @@ function LineRow({
           <>
             <div className={styles.calcRow}>
               <span>{HAND_LABEL[line.hand]} base</span>
-              <span>{line.base}</span>
+              <span>{investedBase(line).raw}</span>
             </div>
+            {/* Bull Market: the ♣ invests raise the base additively —
+                not a multiplier, not a bonus card — so they get their
+                own line on top of the regular table value. */}
+            {investedBase(line).invested > 0 && (
+              <div className={`${styles.calcRow} ${styles.bonus}`}>
+                <span>♣ Invested</span>
+                <span>+{investedBase(line).invested}</span>
+              </div>
+            )}
             {applied.map(({ card, mult, flat }, i) => (
               <div key={`${card.id}-${i}`} className={`${styles.calcRow} ${styles.bonus}`}>
                 <span>{card.title}</span>

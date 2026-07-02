@@ -2,7 +2,7 @@ import { BonusCard } from '../../../game/bonusCards';
 import { INCOMPLETE_LINE_PENALTY, ScoredLine } from '../../../game/scoring';
 import { Sheet } from '../../../design/primitives';
 import { HAND_LABEL, lineLabel } from '../handLabels';
-import { appliedLineBonuses, fmtMult } from '../lineBonuses';
+import { appliedLineBonuses, fmtMult, investedBase } from '../lineBonuses';
 import { CardFace } from './CardFace';
 import styles from './LineDetailSheet.module.css';
 
@@ -68,8 +68,16 @@ export function LineDetailSheet({
                   <span className={styles.rowLabel}>
                     {HAND_LABEL[line.hand]} base
                   </span>
-                  <span>{line.base}</span>
+                  <span>{investedBase(line).raw}</span>
                 </div>
+                {/* Bull Market ♣ invests raise the base additively —
+                    shown apart from the regular table value. */}
+                {investedBase(line).invested > 0 && (
+                  <div className={`${styles.row} ${styles.bonus}`}>
+                    <span className={styles.rowLabel}>♣ Invested</span>
+                    <span>+{investedBase(line).invested}</span>
+                  </div>
+                )}
                 {applied.map(({ card, mult, flat }, i) => (
                   <div key={`${card.id}-${i}`} className={`${styles.row} ${styles.bonus}`}>
                     {/* title, not name — names carry "×N (each)" suffixes
