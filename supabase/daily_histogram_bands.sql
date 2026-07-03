@@ -8,21 +8,20 @@
 -- client already parses: { bins: [{lo, hi, count}], median, min, max,
 -- total }.
 --
--- BEFORE RUNNING: this assumes the plays live in
--- `public.daily_plays(date, score)` like the other daily_* RPCs. To
--- confirm the table/column names your project actually uses, run:
+-- `security definer` (+ pinned search_path) is REQUIRED, matching the
+-- other daily_* RPCs: daily_plays has row-level security that blocks
+-- anonymous reads, so a plain function runs as the caller and sees
+-- zero rows. Table confirmed as public.daily_plays(date, score).
 --
---   select pg_get_functiondef(oid)
---   from pg_proc where proname = 'daily_histogram';
---
--- and align the `scores` CTE below if they differ. Run this whole file
--- in the Supabase SQL editor; the old daily_histogram function can stay
--- (harmless) or be dropped once this ships.
+-- Run this whole file in the Supabase SQL editor; the old
+-- daily_histogram function can stay (harmless) or be dropped.
 
 create or replace function public.daily_histogram_bands(p_date date)
 returns jsonb
 language sql
 stable
+security definer
+set search_path to 'public'
 as $$
   with scores as (
     select score
