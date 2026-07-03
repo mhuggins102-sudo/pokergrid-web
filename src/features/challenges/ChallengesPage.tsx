@@ -20,8 +20,8 @@ export function ChallengesPage() {
       <header>
         <h1 className="text-title">Challenges</h1>
         <p className="text-body" style={{ color: 'var(--ink-2)' }}>
-          Twisted puzzles on the Hard ruleset, ranked from easiest to
-          hardest. Tap a card for the full rules.
+          Twisted puzzles on the Hard ruleset, ordered from simplest to
+          most complex. Tap any card for the full rules.
         </p>
       </header>
       <div className={styles.list}>

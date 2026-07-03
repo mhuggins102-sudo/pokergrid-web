@@ -42,7 +42,7 @@ export interface Challenge {
   deckLimit?: number;
 }
 
-// Ordered roughly easiest → hardest. Drives the on-screen list order
+// Ordered simplest → most complex. Drives the on-screen list order
 // only — every challenge is playable from the start.
 export const CHALLENGES: Challenge[] = [
   {
@@ -52,6 +52,17 @@ export const CHALLENGES: Challenge[] = [
     goal: 'Score 500+ points with a 45-card deck. 8 cards are removed at random before the start of the game.',
     scoreTarget: 500,
     deckLimit: 45,
+    conditionMet: () => true,
+  },
+  {
+    id: 'poker-purist',
+    name: 'Poker Purist',
+    synopsis: 'Twist: No bonus cards',
+    goal: 'Score 350+ points with no bonus cards at all — no starter, no ♣ draws, no multipliers. Pure rows and columns scoring as 5-card poker hands.',
+    scoreTarget: 350,
+    // Enforced at newGame: bonusCards and bonusDeck are both empty,
+    // which naturally disables ♣ (canDrawBonus returns false) and
+    // hides the bonus card strip in the UI.
     conditionMet: () => true,
   },
   {
@@ -89,14 +100,14 @@ export const CHALLENGES: Challenge[] = [
     conditionMet: () => true,
   },
   {
-    id: 'poker-purist',
-    name: 'Poker Purist',
-    synopsis: 'Twist: No bonus cards',
-    goal: 'Score 350+ points with no bonus cards at all — no starter, no ♣ draws, no multipliers. Pure rows and columns scoring as 5-card poker hands.',
-    scoreTarget: 350,
-    // Enforced at newGame: bonusCards and bonusDeck are both empty,
-    // which naturally disables ♣ (canDrawBonus returns false) and
-    // hides the bonus card strip in the UI.
+    id: 'scatter',
+    name: 'Scatter',
+    synopsis: 'Twist: Each card lands at a random spot',
+    goal: 'Score 500+ points with no spiral. Every card drawn from the deck targets a random empty slot, re-rolled for each new card — even after you spend one on a suit perk. Jokers scatter too.',
+    scoreTarget: 500,
+    // Enforced at newGame: the scatter flag makes drawNext pick (and
+    // re-roll) a random empty slot for every drawn card and auto-placed
+    // joker, instead of following the spiral order.
     conditionMet: () => true,
   },
   {
@@ -118,17 +129,6 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame: noBonusCards strips the regular bonus deck,
     // and initialBonusCards seeds the hand with three random specials.
     // App.tsx wires the seeding via contextInitialBonusCards.
-    conditionMet: () => true,
-  },
-  {
-    id: 'scatter',
-    name: 'Scatter',
-    synopsis: 'Twist: Each card lands at a random spot',
-    goal: 'Score 500+ points with no spiral. Every card drawn from the deck targets a random empty slot, re-rolled for each new card — even after you spend one on a suit perk. Jokers scatter too.',
-    scoreTarget: 500,
-    // Enforced at newGame: the scatter flag makes drawNext pick (and
-    // re-roll) a random empty slot for every drawn card and auto-placed
-    // joker, instead of following the spiral order.
     conditionMet: () => true,
   },
   {
