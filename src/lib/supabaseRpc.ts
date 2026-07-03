@@ -184,14 +184,16 @@ export const fetchRank = async (
   };
 };
 
+// Fixed 100-point bands (0-99, 100-199, ...) including interior
+// zero-count bands — see supabase/daily_histogram_bands.sql. Until that
+// function is applied to the project the RPC errors, and the client
+// simply hides the distribution section.
 export const fetchHistogram = async (
-  dateISO: string,
-  bins: number = 15
+  dateISO: string
 ): Promise<HistogramSnapshot> => {
   const c = requireClient();
-  const { data, error } = await c.rpc('daily_histogram', {
+  const { data, error } = await c.rpc('daily_histogram_bands', {
     p_date: dateISO,
-    p_bins: bins,
   });
   if (error) throw error;
   const h = (data ?? {}) as Partial<HistogramSnapshot>;

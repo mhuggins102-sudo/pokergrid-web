@@ -129,10 +129,20 @@
   align-items: flex-end;
   gap: 2px;
   height: 72px;
+  /* Baseline axis — empty bands read as gaps sitting ON the axis. */
+  border-bottom: 1px solid var(--rule);
+}
+
+/* One slot per 100-point band; empty bands render the slot alone. */
+.histoSlot {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
 }
 
 .histoBar {
-  flex: 1;
+  width: 100%;
   background: var(--accent);
   border-radius: var(--radius-xs) var(--radius-xs) 0 0;
   min-height: 2px;
@@ -141,10 +151,16 @@
 
 .histoLabels {
   display: flex;
-  justify-content: space-between;
+  gap: 2px;
+  margin-top: 2px;
   font-size: 11px;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+}
+
+.histoTick {
+  flex: 1;
+  min-height: 1em;
 }
 
 /* ---- handle editor ---- */
