@@ -147,20 +147,30 @@ function DayStatsSheet({
         {histo.data && histo.data.bins.length > 0 && (
           <div>
             <h3 className="text-section">Score distribution</h3>
+            {/* Fixed 100-point bands; interior zero-count bands render
+                as empty slots on the axis so gaps read truthfully. */}
             <div className={styles.histo}>
               {histo.data.bins.map((b, i) => (
                 <div
                   key={i}
-                  className={styles.histoBar}
-                  style={{ height: `${(b.count / maxCount) * 100}%` }}
+                  className={styles.histoSlot}
                   title={`${b.lo}–${b.hi}: ${b.count}`}
-                />
+                >
+                  {b.count > 0 && (
+                    <div
+                      className={styles.histoBar}
+                      style={{ height: `${(b.count / maxCount) * 100}%` }}
+                    />
+                  )}
+                </div>
               ))}
             </div>
             <div className={styles.histoLabels}>
-              <span>{histo.data.min}</span>
-              <span>median {histo.data.median ?? '—'}</span>
-              <span>{histo.data.max}</span>
+              {histo.data.bins.map((b, i) => (
+                <span key={i} className={styles.histoTick}>
+                  {histo.data!.bins.length <= 6 || i % 2 === 0 ? b.lo : ''}
+                </span>
+              ))}
             </div>
           </div>
         )}
