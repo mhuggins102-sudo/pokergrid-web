@@ -245,6 +245,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   // These are cumulative across all daily plays, so they're recorded by
   // earnedCumulativeAchievements (driven from the daily plays map), not
   // by the per-run engine below. conditionMet is never invoked for them.
+  // Two writers share that check: useRecordResult's daily branch (which
+  // also surfaces the end-of-game 🏆 toast) and useSyncDailyAchievements
+  // (silent catch-up for pre-feature / synced-in plays).
   {
     id: 'daily-first',
     tier: 'daily',
