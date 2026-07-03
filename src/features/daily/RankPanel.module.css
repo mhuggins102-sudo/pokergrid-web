@@ -149,6 +149,18 @@
   opacity: 0.75;
 }
 
+/* The band holding the player's own score — full-strength accent,
+   mirroring the own-row highlight in the Top Scores list. */
+.histoBarOwn {
+  opacity: 1;
+}
+
+/* Everyone else's bands once the player's band is known. */
+.histoBarMuted {
+  background: color-mix(in srgb, var(--ink) 28%, var(--paper-raised));
+  opacity: 1;
+}
+
 .histoLabels {
   display: flex;
   gap: 2px;

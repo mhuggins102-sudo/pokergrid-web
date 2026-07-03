@@ -7,6 +7,7 @@ import {
   setHandleRemote,
 } from '../../lib/supabaseRpc';
 import { getOrCreateDeviceId, KEY_HANDLE } from './sync/deviceId';
+import { usePlaysStore } from './sync/playsStore';
 import { useQueueStore } from './sync/queue';
 import { drainQueue } from './sync/sync';
 import {
@@ -106,6 +107,7 @@ export function RankPanel({ dateISO }: { dateISO: string }) {
         dateISO={dateISO}
         open={statsOpen}
         onClose={() => setStatsOpen(false)}
+        ownScore={rank.data?.score}
       />
     </section>
   );
@@ -115,14 +117,21 @@ function DayStatsSheet({
   dateISO,
   open,
   onClose,
+  ownScore,
 }: {
   dateISO: string;
   open: boolean;
   onClose: () => void;
+  /** The player's submitted score for the date (from the rank RPC) —
+   *  used to highlight their band in the distribution. */
+  ownScore?: number;
 }) {
   const stats = useDailyStats(dateISO, open);
   const histo = useDailyHistogram(dateISO, open);
   const maxCount = Math.max(1, ...(histo.data?.bins.map(b => b.count) ?? []));
+  // The local play is authoritative even while the rank RPC is pending.
+  const localScore = usePlaysStore(s => s.plays[dateISO]?.score);
+  const own = localScore ?? ownScore;
 
   return (
     <Sheet open={open} onClose={onClose} title={`Leaderboard — ${dateISO}`}>
@@ -150,20 +159,33 @@ function DayStatsSheet({
             {/* Fixed 100-point bands; interior zero-count bands render
                 as empty slots on the axis so gaps read truthfully. */}
             <div className={styles.histo}>
-              {histo.data.bins.map((b, i) => (
-                <div
-                  key={i}
-                  className={styles.histoSlot}
-                  title={`${b.lo}–${b.hi}: ${b.count}`}
-                >
-                  {b.count > 0 && (
-                    <div
-                      className={styles.histoBar}
-                      style={{ height: `${(b.count / maxCount) * 100}%` }}
-                    />
-                  )}
-                </div>
-              ))}
+              {histo.data.bins.map((b, i) => {
+                // "Green = you", matching the own-row highlight in the
+                // Top Scores list; the rest of the field mutes to a
+                // neutral once the player's band is known.
+                const isOwn = own !== undefined && own >= b.lo && own <= b.hi;
+                const muted = own !== undefined && !isOwn;
+                return (
+                  <div
+                    key={i}
+                    className={styles.histoSlot}
+                    title={`${b.lo}–${b.hi}: ${b.count}${isOwn ? ' · you' : ''}`}
+                  >
+                    {b.count > 0 && (
+                      <div
+                        className={`${styles.histoBar} ${
+                          isOwn
+                            ? styles.histoBarOwn
+                            : muted
+                              ? styles.histoBarMuted
+                              : ''
+                        }`}
+                        style={{ height: `${(b.count / maxCount) * 100}%` }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <div className={styles.histoLabels}>
               {histo.data.bins.map((b, i) => (

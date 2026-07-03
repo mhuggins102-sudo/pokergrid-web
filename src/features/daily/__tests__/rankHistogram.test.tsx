@@ -62,5 +62,12 @@ describe('daily score distribution (fixed 100-point bands)', () => {
     const half = slots[0].querySelector('[class*=histoBar]') as HTMLElement;
     expect(tall.style.height).toBe('100%');
     expect(half.style.height).toBe('50%');
+
+    // The player's score (550, from the rank data) highlights its band;
+    // the rest of the field mutes.
+    const ownBar = slots[3].querySelector('[class*=histoBar]') as HTMLElement;
+    expect(ownBar.className).toContain('histoBarOwn');
+    expect(tall.className).toContain('histoBarMuted');
+    expect(slots[3].getAttribute('title')).toContain('· you');
   });
 });
