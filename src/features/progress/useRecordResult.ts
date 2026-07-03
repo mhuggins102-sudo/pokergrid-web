@@ -10,7 +10,9 @@ import { CHALLENGES, challengeWon } from '../../game/challenges';
 import { Difficulty } from '../../game/rules';
 import { ScoreReport } from '../../game/scoring';
 import { RunRecord, Stats, Tier, recordRun, tierForRun } from '../../lib/stats';
+import { usePlaysStore } from '../daily/sync/playsStore';
 import { useGameSession } from '../game/GameSessionProvider';
+import { newlyEarnedFromDailyFinish } from './cumulativeInputs';
 import { useStatsStore } from './statsStore';
 
 export interface RecordedResult {
@@ -86,6 +88,34 @@ export function useRecordResult(
       }
     } else if (mode.kind === 'targets' && won) {
       store.recordTargetsUp(mode.level);
+    }
+
+    // Daily finishes skip the per-run engine (its achievements are all
+    // free/challenge-gated) but can cross a cumulative threshold — first
+    // daily win, a streak, a combined-win milestone. Check against an
+    // overlay that includes THIS run (the play is saved by ResultView's
+    // later effect) so the newly crossed ones surface in the 🏆 callout;
+    // useSyncDailyAchievements would otherwise record them silently.
+    if (mode.kind === 'daily') {
+      const ids = newlyEarnedFromDailyFinish(
+        usePlaysStore.getState().plays,
+        {
+          dateISO: mode.dateISO,
+          score: report.total,
+          won,
+          recipe: mode.recipe,
+          completedAt: Date.now(),
+          state,
+        },
+        before
+      );
+      for (const id of ids) store.recordAchievement(id);
+      if (ids.length > 0) {
+        setNewAchievements(
+          ids.flatMap(id => ACHIEVEMENTS.filter(a => a.id === id))
+        );
+      }
+      return;
     }
 
     if (achMode === 'targets-up') return;

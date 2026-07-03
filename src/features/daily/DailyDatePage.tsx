@@ -12,5 +12,7 @@ export function DailyDatePage() {
   if (!date || parseDateISO(date) === null || date > today) {
     return <Navigate to="/daily" replace />;
   }
-  return <DailyDay dateISO={date} />;
+  // Keyed by date so param-only navigation (e.g. "Next daily") remounts
+  // and re-takes DailyDay's played-on-entry snapshot for the new date.
+  return <DailyDay key={date} dateISO={date} />;
 }

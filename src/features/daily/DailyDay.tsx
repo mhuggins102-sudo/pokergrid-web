@@ -20,12 +20,21 @@ import styles from './DailyDay.module.css';
  */
 export function DailyDay({ dateISO }: { dateISO: string }) {
   const play = usePlaysStore(s => s.plays[dateISO]);
+  // Entry-time snapshot, NOT a live check: finishing the puzzle during
+  // this visit saves the play, and swapping to the static view then
+  // would unmount the live result screen mid-look — including the 🏆
+  // callout for any achievement the finish just earned. Only a date
+  // that was already played when we arrived shows the static replay;
+  // callers remount per date (key), so revisits still get it.
+  const [playedOnEntry] = useState(
+    () => usePlaysStore.getState().plays[dateISO] !== undefined
+  );
   const [started, setStarted] = useState(false);
   // First-encounter twist explainer: opens over the board right after
   // Play, once per twist per device.
   const [twistInfoOpen, setTwistInfoOpen] = useState(false);
 
-  if (play) return <DailyResultStatic play={play} />;
+  if (playedOnEntry && play) return <DailyResultStatic play={play} />;
 
   const recipe = recipeFor(dateISO);
   const twist = recipe.twist ? findChallenge(recipe.twist) : null;
