@@ -180,25 +180,27 @@
 
 /* Segmented radio pickers (theme / appearance / dock), inline on the
    right of their row title — the Display section stays short enough
-   that the preview is visible without much scrolling. Compact labels:
-   the widest set ("Classic / Hand stack / Center stage" beside "Dock")
-   fits a 375px viewport without wrapping. */
+   that the preview is visible without much scrolling. The group FILLS
+   the space right of the title (segments share it evenly), so the
+   buttons keep their full-width-era presence instead of huddling at
+   the edge; if a viewport is ever too tight for title + group on one
+   line, the row's flex-wrap drops the whole group to its own
+   full-width line — the original stacked layout — never a mid-title
+   wrap. */
 .segmented {
   display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-  /* If a width ever gets too tight for title + pickers on one line
-     (row is flex-wrap), the group drops to its own line, right-aligned
-     — never a mid-title wrap. */
+  gap: var(--space-xs);
+  flex: 1 1 200px;
   margin-left: auto;
 }
 
 .segment {
-  padding: 8px 5px;
+  flex: 1;
+  padding: 8px 2px;
   border: 1px solid var(--rule);
   border-radius: var(--radius-sm);
   background: var(--paper);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink-2);
   white-space: nowrap;

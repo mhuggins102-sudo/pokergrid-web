@@ -192,7 +192,10 @@ export function BonusCardStrip({
   );
 }
 
-function DetailSheet({
+// Exported for the ♣ draw's chip-ⓘ popup (BonusResolveDialog), so a
+// card reads IDENTICALLY whether it's being offered or already held:
+// name + mult in the title, category line, description.
+export function DetailSheet({
   detail,
   onClose,
   onUse,

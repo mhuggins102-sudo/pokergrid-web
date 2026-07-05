@@ -8,15 +8,20 @@
   flex-direction: column;
   gap: var(--space-xs);
   width: 100%;
-  /* Vertical auto margins center the short panel in the pinned dock. */
-  margin: auto 0;
+  /* Fill the dock's pinned height and center the CONTENT internally —
+     not the panel itself — so the absolutely-positioned ✕ pins to the
+     dock's actual top-right corner instead of riding down with the
+     centering slack (visible on phones, where the safe-area inset
+     makes that slack large). */
+  flex: 1;
+  justify-content: center;
 }
 
 /* Decline (resolving) / back (replacing), top-right — replaces the old
    full-width "Decline both" footer button that stretched the dock. */
 .close {
   position: absolute;
-  top: -6px;
+  top: 0;
   right: -2px;
   z-index: 1;
   display: flex;
@@ -147,29 +152,3 @@
   outline-offset: 1px;
 }
 
-.infoBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-/* Category line, toned to the card — same read as the held-card
-   details sheet (BonusCardStrip's .detailCategory). */
-.infoCategory {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--chip-tone, var(--ink-2));
-}
-
-.infoMult {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.infoDesc {
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--ink);
-}
