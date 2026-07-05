@@ -1,6 +1,6 @@
 /* Natural height — the panel sizes to its contents (never scrolls), and
-   the board above is measured/resized to fit whatever room is left (see
-   GameScreen's bonus-board sizing). */
+   the board above flexes to whatever room is left (GameScreen's
+   .boardArea is the flexible middle of the column). */
 .panel {
   display: flex;
   flex-direction: column;

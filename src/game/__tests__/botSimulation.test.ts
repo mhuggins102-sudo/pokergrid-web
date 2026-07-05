@@ -30,7 +30,7 @@
  *       cost priced in. Discarding now means a slot still gets
  *       filled later from the projection's deck; destroying now
  *       leaves a permanently empty slot that the projection can't
- *       refill, so the projected score takes the -50/line hit.
+ *       refill, so the projected score takes the -25/line hit.
  *
  *   Bonus card picking uses the same projection: when ♣ offers two
  *   options, simulate the rest of the deck with EACH option added
@@ -181,7 +181,7 @@ const bestDestroy = (s: GameState): { score: number; slot: number } | null => {
 // How many cards are still in the deck minus how many empty slots we
 // have to fill. ≥ 0 means we can refill the grid even after this
 // turn. Used as a safety floor for actions that leave slots empty
-// (discard, destroy) so we don't strand ourselves into a -50/line
+// (discard, destroy) so we don't strand ourselves into a -25/line
 // penalty hellscape.
 const deckHeadroom = (s: GameState): number => {
   const empty = s.grid.filter(c => c === null).length;

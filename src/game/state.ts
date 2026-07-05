@@ -18,6 +18,7 @@ import {
 import { HandRank } from './hands';
 import { clubInvestValue, pickInvestHand } from './invest';
 import {
+  baseId,
   BonusCard,
   BONUS_DECK_POOL,
   BONUS_HAND_LIMIT,
@@ -328,7 +329,7 @@ export interface GameState {
   handBoost: Partial<Record<HandRank, number>>;
   // Double Duty challenge: every standard card carries a second identity
   // (dual); FLIP_CARD rotates the drawn card so the bottom half becomes
-  // active, at the cost of burning the next deck card unseen.
+  // active, at the cost of burning the next TWO deck cards unseen.
   doubleDuty: boolean;
   // True once the current drawn card has been flipped — one flip per
   // card, no flip-back. Reset on every new draw.
@@ -358,7 +359,7 @@ export type Action =
   | { type: 'PLACE' }
   | { type: 'DISCARD_NONE' } // sends drawn to discards (no perk used)
   // Double Duty: rotate the drawn two-way card so its bottom half becomes
-  // active; the next deck card is burned unseen as the cost.
+  // active; the next TWO deck cards are burned unseen as the cost.
   | { type: 'FLIP_CARD' }
   | { type: 'BEGIN_SUIT_ACTION'; forSuit?: Suit }
   | { type: 'RESOLVE_HOP'; i: number; j: number }
@@ -443,69 +444,90 @@ const drawNext = (
 // now in src/game/rules.ts alongside every other per-difficulty knob so
 // the engine, UI popups, and rules screen all read from one place.
 
-export const newGame = (
-  difficulty: Difficulty,
-  rng: () => number = Math.random,
-  targetOverride?: number,
-  // Optional: cap the playing deck to this many cards (after shuffle, before
-  // the first card is placed). Used by the Short Deck challenge to remove 8
+// Everything a mode can configure beyond the difficulty. All optional —
+// a plain Free Play run passes nothing.
+export interface NewGameOptions {
+  targetOverride?: number;
+  // Cap the playing deck to this many cards (after shuffle, before the
+  // first card is placed). Used by the Short Deck challenge to remove 8
   // random cards from circulation.
-  deckLimit?: number,
-  // Optional: lock in No Swap rules — ♣ is unavailable at the bonus-hand cap.
-  noSwap = false,
-  // Optional: lock in No Discards rules — DISCARD_NONE is rejected by the
+  deckLimit?: number;
+  // Lock in No Swap rules — ♣ is unavailable at the bonus-hand cap.
+  noSwap?: boolean;
+  // Lock in No Discards rules — DISCARD_NONE is rejected by the
   // reducer; the Discard button hides in GameScreen.
-  noDiscards = false,
+  noDiscards?: boolean;
   // Targets-Up carry-over: cards the player kept from the previous level's
   // power-up pick, pre-placed in the starting hand. The free easy/medium
   // starter is drawn AROUND these so the same card type isn't duplicated.
-  keptBonusCards: BonusCard[] = [],
+  keptBonusCards?: BonusCard[];
   // Targets-Up carry-over: extra bonus cards (the two NOT kept from each
   // previous level, powered up) shuffled into this level's bonus deck.
-  deckExtras: BonusCard[] = [],
+  deckExtras?: BonusCard[];
   // Targets-Up S-tier reward: standard cards with a supercharge ('wild'
   // or 'double') the player earned in a previous level. We replace the
   // matching un-supercharged card in the fresh shuffled deck so the
   // supercharged version can be drawn in this level.
-  superchargedDeckCards: Card[] = [],
-  // Optional: lock in Short Circuit rules — the drawn card's suit no
-  // longer dictates which perk fires; instead BEGIN_SUIT_ACTION picks
-  // a uniformly-random perk from those currently available.
-  randomPerks = false,
-  // Optional: lock in Poker Purist rules — no bonus cards anywhere.
-  // Both the starting hand and the bonus deck are emptied; ♣ becomes
-  // unavailable (canDrawBonus → false against an empty deck) and the
-  // UI hides the bonus card strip.
-  noBonusCards = false,
+  superchargedDeckCards?: Card[];
+  // Lock in Short Circuit rules — the drawn card's suit no longer
+  // dictates which perk fires; instead BEGIN_SUIT_ACTION picks a
+  // uniformly-random perk from those currently available.
+  randomPerks?: boolean;
+  // Lock in Poker Purist rules — no bonus cards anywhere. Both the
+  // starting hand and the bonus deck are emptied; ♣ becomes unavailable
+  // (canDrawBonus → false against an empty deck) and the UI hides the
+  // bonus card strip.
+  noBonusCards?: boolean;
   // Three Tricks challenge: a fixed initial bonus hand that REPLACES
-  // the normal starter draw. Combined with noBonusCards=true the
-  // player starts with these specific cards (the three one-time
-  // specials) and the bonus deck stays empty, so the ♣ perk can't
-  // draw anything.
-  initialBonusCards: BonusCard[] = [],
+  // the normal starter draw. Combined with noBonusCards=true the player
+  // starts with these specific cards (the three one-time specials) and
+  // the bonus deck stays empty, so the ♣ perk can't draw anything.
+  initialBonusCards?: BonusCard[];
   // Mixed Bag challenge: positionally-categorized slots. Slot N is
-  // locked to slotCategories[N]'s category (placeholder card seeded
-  // at start). ♣ draws are filtered by slot category. The bonus deck
-  // is built from BONUS_DECK_POOL + SPECIAL_DECK_POOL so the green
-  // slot has something to draw.
-  slotCategories?: SlotKind[],
+  // locked to slotCategories[N]'s category (placeholder card seeded at
+  // start). ♣ draws are filtered by slot category. The bonus deck is
+  // built from BONUS_DECK_POOL + SPECIAL_DECK_POOL so the green slot
+  // has something to draw.
+  slotCategories?: SlotKind[];
   // Gridlock challenge: pre-place N cards at random positions on the
   // grid before the spiral fill begins. The cards are pulled off the
-  // top of the shuffled deck (so RNG drives both which cards and
-  // where they land). 0 / undefined = standard spiral-from-center
-  // start.
-  randomGridFill: number = 0,
+  // top of the shuffled deck (so RNG drives both which cards and where
+  // they land). 0 / undefined = standard spiral-from-center start.
+  randomGridFill?: number;
   // Scatter challenge: every drawn card targets a random empty slot
   // (re-rolled per draw) instead of the spiral.
-  scatter = false,
+  scatter?: boolean;
   // Bull Market challenge: ♣ invests the drawn club's value into a
   // random hand type (paired with noBonusCards = true).
-  investHands = false,
+  investHands?: boolean;
   // Double Duty challenge: every standard card gets a dual (bottom-half)
   // identity — a derangement of the 52 ranks+suits — and FLIP_CARD
   // becomes available on the drawn card.
-  doubleDuty = false
+  doubleDuty?: boolean;
+}
+
+export const newGame = (
+  difficulty: Difficulty,
+  rng: () => number = Math.random,
+  options: NewGameOptions = {}
 ): GameState => {
+  const {
+    targetOverride,
+    deckLimit,
+    noSwap = false,
+    noDiscards = false,
+    keptBonusCards = [],
+    deckExtras = [],
+    superchargedDeckCards = [],
+    randomPerks = false,
+    noBonusCards = false,
+    initialBonusCards = [],
+    slotCategories,
+    randomGridFill = 0,
+    scatter = false,
+    investHands = false,
+    doubleDuty = false,
+  } = options;
   // Joker count is determined by difficulty (Easy ships 2 jokers, Hard
   // ships 1, Extreme ships 0). Targets-Up infers difficulty from level
   // and Challenges always use Hard, so this single lookup covers every
@@ -539,12 +561,8 @@ export const newGame = (
   // in the deck rather than coexisting with it. Otherwise the player
   // could draw both an upgraded Royal Touch ×1.8 AND a fresh Royal
   // Touch ×1.5 in the same level.
-  const heldBaseIds = new Set(
-    keptBonusCards.map(c => c.id.replace(/-pwr\d+$/, ''))
-  );
-  const poweredBaseIds = new Set(
-    deckExtras.map(c => c.id.replace(/-pwr\d+$/, ''))
-  );
+  const heldBaseIds = new Set(keptBonusCards.map(baseId));
+  const poweredBaseIds = new Set(deckExtras.map(baseId));
   const excludedBaseIds = new Set<string>([...heldBaseIds, ...poweredBaseIds]);
   // Joker-dependent bonus cards (Trash Joker, Cozy Joker, Joker Line)
   // can never trigger when the deck has no jokers — Extreme runs and
@@ -700,11 +718,17 @@ const pushPerkSpent = (s: GameState, card: Card): GameState => ({
 const handlePlace = (s: GameState, rng: () => number): GameState => {
   if (s.phase.kind !== 'awaiting-action' || !s.drawn) return s;
   // Scatter lands the card on its pre-rolled random slot; otherwise the
-  // spiral picks the next slot.
-  const slot =
+  // spiral picks the next slot. If the pre-rolled slot has since been
+  // occupied (no current mode can do that, but grid-moving effects and
+  // Scatter are composed programmatically by the daily recipe), re-roll
+  // rather than letting placeAt throw and take down the reducer.
+  let slot =
     s.scatter && s.scatterSlot !== null
       ? s.scatterSlot
       : nextSpiralSlot(s.grid);
+  if (slot !== null && s.grid[slot] !== null) {
+    slot = s.scatter ? randomEmptySlot(s.grid, rng) : nextSpiralSlot(s.grid);
+  }
   if (slot === null) return s;
   // activeHalf: a Double Duty card seats as its face-up identity only.
   // (Cards that later leave the grid — Rewind back to the deck, Revive

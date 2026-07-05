@@ -73,31 +73,28 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
         maxUndos: 0,
         challenge,
         start: rng =>
-          newGame(
-            difficulty,
-            rng,
-            challenge.scoreTarget,
-            challenge.deckLimit,
-            false, // noSwap
-            mode.id === 'no-discards',
-            [], // keptBonusCards
-            [], // deckExtras
-            [], // superchargedDeckCards
-            mode.id === 'short-circuit',
-            mode.id === 'poker-purist' ||
+          newGame(difficulty, rng, {
+            targetOverride: challenge.scoreTarget,
+            deckLimit: challenge.deckLimit,
+            noDiscards: mode.id === 'no-discards',
+            randomPerks: mode.id === 'short-circuit',
+            noBonusCards:
+              mode.id === 'poker-purist' ||
               mode.id === 'three-tricks' ||
               mode.id === 'bull-market',
-            mode.id === 'three-tricks'
-              ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
-              : [],
-            mode.id === 'mixed-bag'
-              ? ['special', 'in-game', 'end-game']
-              : undefined,
-            mode.id === 'gridlock' ? 15 : 0,
-            mode.id === 'scatter',
-            mode.id === 'bull-market',
-            mode.id === 'double-duty'
-          ),
+            initialBonusCards:
+              mode.id === 'three-tricks'
+                ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
+                : [],
+            slotCategories:
+              mode.id === 'mixed-bag'
+                ? ['special', 'in-game', 'end-game']
+                : undefined,
+            randomGridFill: mode.id === 'gridlock' ? 15 : 0,
+            scatter: mode.id === 'scatter',
+            investHands: mode.id === 'bull-market',
+            doubleDuty: mode.id === 'double-duty',
+          }),
       };
     }
     case 'targets': {
@@ -109,17 +106,13 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
         maxUndos: UNDOS_BY_DIFFICULTY[difficulty],
         challenge: null,
         start: rng =>
-          newGame(
-            difficulty,
-            rng,
-            target,
-            undefined,
-            false,
-            false,
-            [], // keptBonusCards — no hand carry-over in current spec
-            mode.deckExtras,
-            mode.superchargedDeckCards
-          ),
+          newGame(difficulty, rng, {
+            targetOverride: target,
+            // keptBonusCards stays empty — no hand carry-over in the
+            // current spec; carried cards ride the deck instead.
+            deckExtras: mode.deckExtras,
+            superchargedDeckCards: mode.superchargedDeckCards,
+          }),
       };
     }
     case 'daily': {
@@ -136,39 +129,36 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
         maxUndos: 1,
         challenge: twist ? findChallenge(twist) : null,
         start: rng =>
-          newGame(
-            difficulty,
-            rng,
-            target,
-            twist === 'short-deck' ? 45 : undefined,
-            false, // noSwap
-            twist === 'no-discards',
-            [],
-            [],
-            [],
-            twist === 'short-circuit',
-            twist === 'poker-purist' ||
+          newGame(difficulty, rng, {
+            targetOverride: target,
+            deckLimit: twist === 'short-deck' ? 45 : undefined,
+            noDiscards: twist === 'no-discards',
+            randomPerks: twist === 'short-circuit',
+            noBonusCards:
+              twist === 'poker-purist' ||
               twist === 'three-tricks' ||
               twist === 'bull-market',
             // The Three Tricks trio is seeded off the date (its own
             // salt) so it's globally identical without sharing the
             // deck's rng stream.
-            twist === 'three-tricks'
-              ? shuffle(
-                  SPECIAL_DECK_POOL,
-                  seededRng(seedForInitialSpecials(mode.dateISO))
-                ).slice(0, 3)
-              : [],
-            twist === 'mixed-bag'
-              ? ['special', 'in-game', 'end-game']
-              : undefined,
-            twist === 'gridlock' ? 15 : 0,
-            twist === 'scatter',
-            twist === 'bull-market',
+            initialBonusCards:
+              twist === 'three-tricks'
+                ? shuffle(
+                    SPECIAL_DECK_POOL,
+                    seededRng(seedForInitialSpecials(mode.dateISO))
+                  ).slice(0, 3)
+                : [],
+            slotCategories:
+              twist === 'mixed-bag'
+                ? ['special', 'in-game', 'end-game']
+                : undefined,
+            randomGridFill: twist === 'gridlock' ? 15 : 0,
+            scatter: twist === 'scatter',
+            investHands: twist === 'bull-market',
             // Dual pairing draws from the same seeded rng inside newGame,
             // so a Double Duty daily is globally identical for free.
-            twist === 'double-duty'
-          ),
+            doubleDuty: twist === 'double-duty',
+          }),
       };
     }
   }

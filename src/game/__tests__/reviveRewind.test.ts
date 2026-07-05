@@ -17,20 +17,10 @@ const stateWithSpecials = (): GameState => {
   const rng = seededRng(424242);
   // Three Tricks-style setup: noBonusCards + seed the hand with the
   // two new specials so we can activate them directly.
-  return newGame(
-    'hard',
-    rng,
-    undefined,
-    undefined,
-    false,
-    false,
-    [],
-    [],
-    [],
-    false,
-    true, // noBonusCards
-    [REVIVE_CARD, REWIND_CARD],
-  );
+  return newGame('hard', rng, {
+    noBonusCards: true,
+    initialBonusCards: [REVIVE_CARD, REWIND_CARD],
+  });
 };
 
 describe('Revive', () => {
@@ -63,6 +53,41 @@ describe('Revive', () => {
     expect(s.grid.some(c => c === recoveredCard)).toBe(true);
     // Revive card itself is marked used.
     expect(s.bonusCards[0].used).toBe(true);
+  });
+
+  it('filling the grid via Revive always leaves a legal out for the drawn card', () => {
+    // Regression for an implicit invariant: Revive can fill the grid
+    // while a card is still drawn (game-over only triggers in drawNext,
+    // which Revive doesn't call). The player must always have an escape
+    // — discard or a suit perk — that routes through drawNext and ends
+    // the game cleanly.
+    let s = stateWithSpecials();
+    s = step(s, { type: 'DISCARD_NONE' }); // seed the discard pile
+    expect(s.discards.length).toBe(1);
+
+    // Surgery: fill every slot but one from the deck, so Revive tops
+    // the grid off.
+    const grid = s.grid.slice();
+    const deck = [...s.deck];
+    const empties = grid
+      .map((c, i) => (c === null ? i : -1))
+      .filter(i => i >= 0);
+    empties.pop(); // leave one slot for the revived card
+    for (const idx of empties) grid[idx] = deck.shift()!;
+    s = { ...s, grid, deck };
+
+    s = step(s, { type: 'ACTIVATE_SPECIAL_CARD', idx: 0 });
+    s = step(s, { type: 'RESOLVE_REVIVE', discardIdx: 0 });
+    expect(s.grid.every(c => c !== null)).toBe(true);
+    expect(s.phase.kind).toBe('awaiting-action');
+    expect(s.drawn).not.toBeNull();
+
+    // PLACE is impossible (grid full, rejected as a no-op)…
+    expect(step(s, { type: 'PLACE' })).toBe(s);
+    // …but discarding the drawn card still works and ends the game.
+    const out = step(s, { type: 'DISCARD_NONE' });
+    expect(out).not.toBe(s);
+    expect(out.phase.kind).toBe('game-over');
   });
 });
 

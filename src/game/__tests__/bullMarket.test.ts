@@ -8,24 +8,11 @@ import { isJoker } from '../cards';
 // Build a Bull Market game (investHands is newGame's last positional arg;
 // paired with noBonusCards = true like the real challenge).
 const newBullMarket = (rng: () => number) =>
-  newGame(
-    'hard',
-    rng,
-    500, // targetOverride
-    undefined,
-    false,
-    false,
-    [],
-    [],
-    [],
-    false,
-    true, // noBonusCards
-    [],
-    undefined,
-    0,
-    false, // scatter
-    true // investHands
-  );
+  newGame('hard', rng, {
+    targetOverride: 500,
+    noBonusCards: true,
+    investHands: true,
+  });
 
 // Draw cards until a club is in hand, returning that state.
 const drawUntilClub = (s: GameState, rng: () => number): GameState => {

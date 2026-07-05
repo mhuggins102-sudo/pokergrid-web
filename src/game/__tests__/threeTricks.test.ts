@@ -27,20 +27,11 @@ const C = (rank: StandardCard['rank'], suit: StandardCard['suit']): StandardCard
 const threeTricks = (
   initial: BonusCard[] = [POWER_SWAP_CARD, DOUBLER_CARD, WILDCARD_CARD]
 ): GameState =>
-  newGame(
-    'hard',
-    seededRng(7),
-    findChallenge('three-tricks').scoreTarget,
-    undefined,
-    false,
-    false,
-    [],
-    [],
-    [],
-    false,
-    true, // noBonusCards
-    initial
-  );
+  newGame('hard', seededRng(7), {
+    targetOverride: findChallenge('three-tricks').scoreTarget,
+    noBonusCards: true,
+    initialBonusCards: initial,
+  });
 
 describe('Three Tricks challenge', () => {
   it('starts with three specials in the hand and an empty bonus deck', () => {

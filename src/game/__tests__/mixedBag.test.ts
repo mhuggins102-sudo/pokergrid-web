@@ -16,21 +16,10 @@ const SLOT_KINDS: SlotKind[] = ['special', 'in-game', 'end-game'];
 // Mixed Bag challenge — newGame seeded with slotCategories. The Hard
 // difficulty matches what App.tsx uses for challenges.
 const mixedBag = (): GameState =>
-  newGame(
-    'hard',
-    seededRng(42),
-    findChallenge('mixed-bag').scoreTarget,
-    undefined,
-    false,
-    false,
-    [],
-    [],
-    [],
-    false,
-    false,
-    [],
-    SLOT_KINDS
-  );
+  newGame('hard', seededRng(42), {
+    targetOverride: findChallenge('mixed-bag').scoreTarget,
+    slotCategories: SLOT_KINDS,
+  });
 
 describe('Mixed Bag challenge', () => {
   it('seeds 3 placeholder slots in category order', () => {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
+import { baseId } from '../../../game/bonusCards';
 import { rngStep } from '../../../game/deck';
 import { Button, Chevron, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
@@ -93,7 +94,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
       ? [...mode.superchargedDeckCards, result.superchargedCard]
       : mode.superchargedDeckCards;
     const lastKept = result.poweredBonus
-      ? result.poweredBonus.id.replace(/-pwr\d+$/, '')
+      ? baseId(result.poweredBonus)
       : (targets.save?.lastKeptBaseId ?? null);
     targets.saveProgress(
       mode.level + 1,

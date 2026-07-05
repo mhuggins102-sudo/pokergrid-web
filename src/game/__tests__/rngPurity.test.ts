@@ -14,23 +14,7 @@ import { Action, GameState, newGame, step } from '../state';
  */
 
 const scatterGame = (seed: number): GameState =>
-  newGame(
-    'hard',
-    seededRng(seed),
-    500,
-    undefined,
-    false,
-    false,
-    [],
-    [],
-    [],
-    false,
-    false,
-    [],
-    undefined,
-    0,
-    true // scatter
-  );
+  newGame('hard', seededRng(seed), { targetOverride: 500, scatter: true });
 
 // Drive a game forward with PLACE (the rng-consuming commit) — skipping
 // is fine when a phase interlude appears; scatter games place-only run

@@ -1,11 +1,4 @@
-import {
-  ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import { ScoreReport, bonusShapleyValues, scoreGrid } from '../../game/scoring';
 import { Button, Sheet, useToast } from '../../design/primitives';
@@ -149,70 +142,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   prevBonusOpen.current = bonusOpen;
   const instantLayout = bonusOpen || bonusToggled;
 
-  // During the ♣ draw the dock is replaced by a content-sized panel of
-  // varying height. The board can't shrink via flex here (the page is
-  // allowed to grow past the viewport), so measure the room left between
-  // the board's top and the dock and size the board to fit — the dock
-  // stays at its natural height (never scrolls) and the board flexes to
-  // whatever is left. Only runs while the panel is open.
-  const scoreSlotRef = useRef<HTMLDivElement>(null);
-  const boardAreaRef = useRef<HTMLDivElement>(null);
-  const dockRef = useRef<HTMLDivElement>(null);
-  // The panel's height changes only at these transitions (entering the
-  // draw, and resolving → replacing when the hand is full). Re-measuring
-  // on `dockMode` is the reliable trigger — the ResizeObserver alone
-  // didn't fire for the swap-list step on iOS.
-  const dockMode = ui.bonusDialog?.mode ?? null;
-  const [bonusBoardSize, setBonusBoardSize] = useState<number | null>(null);
-  useLayoutEffect(() => {
-    if (!bonusOpen) {
-      setBonusBoardSize(null);
-      return;
-    }
-    const measure = () => {
-      const score = scoreSlotRef.current;
-      const boardArea = boardAreaRef.current;
-      const dock = dockRef.current;
-      if (!score || !boardArea || !dock) return;
-      // Desktop lays the board and dock in separate grid columns — no
-      // vertical contention — so leave it to CSS there.
-      if (window.matchMedia?.('(min-width: 1024px)').matches) {
-        setBonusBoardSize(null);
-        return;
-      }
-      // Measure from the (fixed) score bar, NOT the board: the board is
-      // vertically centered by margin:auto, so its own top moves with its
-      // size and would make the measurement oscillate.
-      const vh = window.visualViewport?.height ?? window.innerHeight;
-      const scoreBottom = score.getBoundingClientRect().bottom;
-      const dockH = dock.getBoundingClientRect().height;
-      const GAPS = 16; // column gaps above and below the board
-      const avail = vh - scoreBottom - dockH - GAPS;
-      // Parent width (stable) — NOT the board's own width, which we set.
-      const containerW = boardArea.parentElement?.clientWidth ?? avail;
-      setBonusBoardSize(Math.max(140, Math.min(avail, 440, containerW)));
-    };
-    measure();
-    // Re-measure after paint and on the next tick too, in case the new
-    // panel's layout (and iOS's viewport) settle a frame late.
-    const raf = requestAnimationFrame(measure);
-    const t = window.setTimeout(measure, 0);
-    // Keep an observer as well for orientation / font / chrome changes
-    // mid-draw; the dockMode dep handles the resolving → replacing step.
-    let ro: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(measure);
-      if (dockRef.current) ro.observe(dockRef.current);
-    }
-    window.addEventListener('resize', measure);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(t);
-      ro?.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, [bonusOpen, dockMode]);
-
   // Tracked here because the board below remounts on the ♣ toggle —
   // the same commit a ♣-triggered joker auto-places in.
   const jokerArrivals = useJokerArrivals(state.grid);
@@ -344,7 +273,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             .filter(Boolean)
             .join(' ')}
         >
-          <div className={styles.scoreSlot} ref={scoreSlotRef}>
+          <div className={styles.scoreSlot}>
             <ScoreBar
               onShowHandValues={() => setHandsOpen(true)}
               onShowLines={() => setLinesOpen(true)}
@@ -359,53 +288,48 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             <LinesPanel report={liveReport} />
           </div>
 
-          <div
-            className={styles.boardArea}
-            ref={boardAreaRef}
-            style={
-              bonusOpen && bonusBoardSize !== null
-                ? { width: bonusBoardSize, minWidth: 0, maxWidth: '100%' }
-                : undefined
-            }
-          >
-            <GridBoard
-              // Remount on the ♣ toggle AND whenever the measured board
-              // size changes during the draw (resolving → replacing): a
-              // fresh mount renders seated cards exactly where CSS puts
-              // them, so motion's LayoutGroup never pins them to stale
-              // geometry from the previous size (the "board slid right
-              // until I left and came back" bug).
-              key={bonusOpen ? `board-bonus-${bonusBoardSize ?? 'init'}` : 'board-full'}
-              grid={state.grid}
-              roleOf={boardRole}
-              isTappable={idx =>
-                ui.isTappable(idx) ||
-                (spotlightEnabled && state.grid[idx] !== null) ||
-                // Normal play: every empty cell responds — the pulsing
-                // next slot places, the rest nudge toward it.
-                (spotlightEnabled && placeArmed && state.grid[idx] === null)
-              }
-              onCellTap={idx => {
-                if (spotlightEnabled && state.grid[idx] !== null) {
-                  setSpotlight(s => (s === idx ? null : idx));
-                  return;
+          <div className={styles.boardArea}>
+            <div className={styles.boardFrame}>
+              <GridBoard
+                // Remount on the ♣ open/close toggle: a fresh mount
+                // renders seated cards exactly where CSS puts them, so
+                // motion's LayoutGroup never pins them to stale geometry
+                // (the "board slid right until I left and came back"
+                // bug — stripping layoutIds alone didn't purge the stale
+                // projection). Mid-draw resizes are pure CSS while every
+                // layoutId is stripped, so no per-size remount is needed.
+                key={bonusOpen ? 'board-bonus' : 'board-full'}
+                grid={state.grid}
+                roleOf={boardRole}
+                isTappable={idx =>
+                  ui.isTappable(idx) ||
+                  (spotlightEnabled && state.grid[idx] !== null) ||
+                  // Normal play: every empty cell responds — the pulsing
+                  // next slot places, the rest nudge toward it.
+                  (spotlightEnabled && placeArmed && state.grid[idx] === null)
                 }
-                if (spotlightEnabled && placeArmed && state.grid[idx] === null) {
-                  // Same dispatch path as the dock's Place button, so
-                  // tutorial gating and sfx behave identically.
-                  if (boardRole(idx) === 'next') placeAction?.onPress();
-                  else nudgePlacement();
-                  return;
-                }
-                ui.onCellTap(idx);
-              }}
-              instantLayout={instantLayout}
-              jokerArrivals={jokerArrivals}
-              openingDeal={cssDeal}
-              hiddenSlots={hiddenSlots}
-              spotlight={spotlightProp}
-              sweepSlots={sweepSlots}
-            />
+                onCellTap={idx => {
+                  if (spotlightEnabled && state.grid[idx] !== null) {
+                    setSpotlight(s => (s === idx ? null : idx));
+                    return;
+                  }
+                  if (spotlightEnabled && placeArmed && state.grid[idx] === null) {
+                    // Same dispatch path as the dock's Place button, so
+                    // tutorial gating and sfx behave identically.
+                    if (boardRole(idx) === 'next') placeAction?.onPress();
+                    else nudgePlacement();
+                    return;
+                  }
+                  ui.onCellTap(idx);
+                }}
+                instantLayout={instantLayout}
+                jokerArrivals={jokerArrivals}
+                openingDeal={cssDeal}
+                hiddenSlots={hiddenSlots}
+                spotlight={spotlightProp}
+                sweepSlots={sweepSlots}
+              />
+            </div>
           </div>
 
           {/* Hidden during the ♣ draw — the panel lists held cards
@@ -433,7 +357,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           )}
 
-          <div className={styles.dock} ref={dockRef}>
+          <div className={styles.dock}>
             {ui.bonusDialog ? (
               // ♣ draw takes over the whole dock — the well hides so the
               // board keeps as much room as possible. Safe to unmount:
@@ -504,7 +428,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   flight={flight}
                 />
                 <div className={styles.actionStack}>
-                  {banner}
+                  {/* Always mounted (even empty): the reserved line keeps
+                      the dock height stable when a targeting banner
+                      appears, so the flexed board doesn't breathe. */}
+                  <span
+                    className={styles.dockText}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {ui.banner ?? ''}
+                  </span>
                   {commitAction?.id === 'place' && commitBtn()}
                   {rowActions.length > 0 && (
                     <div className={styles.actionRow}>

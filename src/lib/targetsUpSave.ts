@@ -1,4 +1,5 @@
 import {
+  baseId,
   BONUS_DECK_POOL,
   BonusCard,
   powerUpBonusCard,
@@ -36,7 +37,7 @@ export interface TUSave {
 }
 
 export const serializeBonusCard = (c: BonusCard): SerializedBonusCard => ({
-  baseId: c.id.replace(/-pwr\d+$/, ''),
+  baseId: baseId(c),
   powerLevel: c.powerLevel ?? 0,
 });
 

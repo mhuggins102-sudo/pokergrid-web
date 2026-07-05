@@ -112,6 +112,24 @@ export const movementPip = (c: StandardCard): number => {
   }
 };
 
+// Blackjack pip value: 2–9 face value, 10/J/Q/K = 10, A = 1 or 11
+// depending on aceHigh. Shared by the Highball / Lowball / Blackjack
+// bonus cards and the Bull Market invest perk so the two tables can't
+// drift apart.
+export const blackjackPip = (rank: Rank, aceHigh: boolean): number => {
+  switch (rank) {
+    case 'A':
+      return aceHigh ? 11 : 1;
+    case '10':
+    case 'J':
+    case 'Q':
+    case 'K':
+      return 10;
+    default:
+      return parseInt(rank, 10);
+  }
+};
+
 // Club bonus uses pip with A=14
 export const clubPip = (c: StandardCard): number => {
   switch (c.rank) {

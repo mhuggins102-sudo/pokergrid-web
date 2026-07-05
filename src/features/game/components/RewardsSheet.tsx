@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { BonusCard, isPlaceholder, isSpecialCard, powerUpBonusCard } from '../../../game/bonusCards';
+import { BonusCard, baseId, isPlaceholder, isSpecialCard, powerUpBonusCard } from '../../../game/bonusCards';
 import { Card, Supercharge, isJoker } from '../../../game/cards';
 import { Grid } from '../../../game/grid';
 import { Button, Sheet } from '../../../design/primitives';
@@ -33,8 +33,6 @@ export interface RewardsSheetProps {
   superchargeRoll: number;
   onDone: (result: RewardsResult) => void;
 }
-
-const baseIdOf = (c: BonusCard) => c.id.replace(/-pwr\d+$/, '');
 
 // After a pick, the chosen card's transformation plays before the flow
 // continues — so the upgrade is something the player sees happen.
@@ -69,7 +67,7 @@ export function RewardsSheet({
     c =>
       !isPlaceholder(c) &&
       !isSpecialCard(c) &&
-      baseIdOf(c) !== (blockedBaseId ?? '')
+      baseId(c) !== (blockedBaseId ?? '')
   );
 
   const rolledSupercharge: Supercharge =
