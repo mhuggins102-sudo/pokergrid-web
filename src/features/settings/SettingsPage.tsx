@@ -1,6 +1,12 @@
 import { ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, Chevron, Dialog, useToast } from '../../design/primitives';
+import {
+  Button,
+  Chevron,
+  Dialog,
+  Sheet,
+  useToast,
+} from '../../design/primitives';
 import { DOCK_LAYOUT_LABEL } from './DockLayoutPreview';
 import { DisplayPreview } from './DisplayPreview';
 import {
@@ -17,22 +23,42 @@ import { clearTwistsSeen } from '../daily/twistSeen';
 import { clearTutorialSeen } from '../tutorial/tutorialSeen';
 import styles from './SettingsPage.module.css';
 
+// Small ⓘ next to a row title — same glyph treatment as the result
+// screen's score-details button. Opens the row's explainer popup.
+function InfoButton({ title, onInfo }: { title: string; onInfo: () => void }) {
+  return (
+    <button
+      type="button"
+      className={styles.rowInfo}
+      aria-label={`About ${title}`}
+      onClick={onInfo}
+    >
+      ⓘ
+    </button>
+  );
+}
+
 function ToggleRow({
   title,
   hint,
   value,
   onChange,
+  onInfo,
 }: {
   title: string;
-  hint: string;
+  hint?: string;
   value: boolean;
   onChange: (v: boolean) => void;
+  onInfo?: () => void;
 }) {
   return (
     <div className={styles.row}>
       <div className={styles.rowText}>
-        <span className={styles.rowTitle}>{title}</span>
-        <span className={styles.rowHint}>{hint}</span>
+        <span className={styles.rowTitle}>
+          {title}
+          {onInfo && <InfoButton title={title} onInfo={onInfo} />}
+        </span>
+        {hint && <span className={styles.rowHint}>{hint}</span>}
       </div>
       <button
         type="button"
@@ -53,18 +79,23 @@ function SegmentedRow<T extends string>({
   options,
   value,
   onChange,
+  onInfo,
 }: {
   title: string;
   hint?: string;
   options: readonly [T, string][];
   value: T;
   onChange: (v: T) => void;
+  onInfo?: () => void;
 }) {
   return (
     <>
       <div className={`${styles.row} ${styles.segmentedHead}`}>
         <div className={styles.rowText}>
-          <span className={styles.rowTitle}>{title}</span>
+          <span className={styles.rowTitle}>
+            {title}
+            {onInfo && <InfoButton title={title} onInfo={onInfo} />}
+          </span>
           {hint && <span className={styles.rowHint}>{hint}</span>}
         </div>
       </div>
@@ -115,6 +146,11 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
+  // Row explainer popup (the ⓘ next to Line rails / Dock) — the text
+  // that used to live inline; the live preview covers the rest.
+  const [info, setInfo] = useState<{ title: string; body: string } | null>(
+    null
+  );
 
   const patch = (p: Partial<Settings>) => settings.set(p);
 
@@ -127,7 +163,6 @@ export function SettingsPage() {
       <Section title="Display" defaultOpen>
         <SegmentedRow<ThemeFamily>
           title="Theme"
-          hint="Card Room is the refreshed table look; Morning Paper is the original editorial style."
           options={[
             ['card-room', 'Card Room'],
             ['paper', 'Morning Paper'],
@@ -137,7 +172,6 @@ export function SettingsPage() {
         />
         <SegmentedRow<Appearance>
           title="Appearance"
-          hint="System follows your device's light/dark preference."
           options={[
             ['light', 'Light'],
             ['dark', 'Dark'],
@@ -148,24 +182,33 @@ export function SettingsPage() {
         />
         <ToggleRow
           title="Line rails"
-          hint="Show each row and column's running total along the board edges."
           value={settings.lineRails}
           onChange={v => patch({ lineRails: v })}
+          onInfo={() =>
+            setInfo({
+              title: 'Line rails',
+              body: "Show each row and column's running total along the board edges during play. Tapping a total opens that line's full scoring breakdown. Off restores the plain board — line totals stay available via the Lines sheet.",
+            })
+          }
         />
         <ToggleRow
           title="Two-color deck"
-          hint="Classic red/black faces; off gives each suit its own color."
           value={settings.twoColorDeck}
           onChange={v => patch({ twoColorDeck: v })}
         />
         <SegmentedRow<DockLayout>
           title="Dock"
-          hint="How the drawn card and action buttons arrange under the board."
           options={(['classic', 'hand-stack', 'center-stage'] as const).map(
             l => [l, DOCK_LAYOUT_LABEL[l]] as [DockLayout, string]
           )}
           value={settings.dockLayout}
           onChange={dockLayout => patch({ dockLayout })}
+          onInfo={() =>
+            setInfo({
+              title: 'Dock',
+              body: 'How the drawn card and action buttons arrange under the board. Classic keeps a slim card row with a full-width Place; Hand stack makes the drawn card the hero with actions stacked beside it; Center stage puts the card front and center with its actions flanking it.',
+            })
+          }
         />
         <div className={styles.previewSlot}>
           <span className={styles.previewLabel}>Preview</span>
@@ -232,6 +275,14 @@ export function SettingsPage() {
       >
         Build {__BUILD_ID__}
       </p>
+
+      <Sheet
+        open={info !== null}
+        onClose={() => setInfo(null)}
+        title={info?.title}
+      >
+        {info && <p className="text-body">{info.body}</p>}
+      </Sheet>
 
       <Dialog
         open={confirmReset}
