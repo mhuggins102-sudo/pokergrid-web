@@ -1,7 +1,10 @@
 .board {
   position: relative; /* anchors the spotlight line tags */
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* minmax(0, …): columns may shrink below any cell content's
+     min-content, so the board always fits the width it's given (see
+     LineRails.module.css .wrap for the overflow this prevents). */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   /* Fixed gap so external rails (line totals on the result screen) can
      mirror the row/column rhythm exactly. */
   gap: 6px;
