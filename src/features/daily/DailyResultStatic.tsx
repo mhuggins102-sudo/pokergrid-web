@@ -6,6 +6,8 @@ import { findChallenge } from '../../game/challenges';
 import { tierForRun } from '../../lib/stats';
 import { Button, Chevron } from '../../design/primitives';
 import { LineRails } from '../game/components/LineRails';
+import { computeScoreBreakdown } from '../game/scoreBreakdown';
+import { ScoreBreakdown } from '../game/components/ScoreBreakdown';
 import { LinesPanel } from '../game/components/LinesPanel';
 import { LineDetailSheet } from '../game/components/LineDetailSheet';
 import { BonusCardStrip } from '../game/components/BonusCardStrip';
@@ -35,16 +37,27 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
   const target = dailyTargetFor(play.recipe.difficulty, play.recipe.twist);
   const twist = play.recipe.twist ? findChallenge(play.recipe.twist) : null;
 
-  const { report, shapley } = useMemo(() => {
+  const { report, shapley, breakdown, baseTotals } = useMemo(() => {
     const options = {
       deckRemaining: state.deck.length,
       discards: state.discards,
       perkSpent: state.perkSpent,
       handBoost: state.handBoost,
     };
+    const fullReport = scoreGrid(state.grid, state.bonusCards, options);
+    const bd = computeScoreBreakdown(
+      state.grid,
+      state.bonusCards,
+      fullReport,
+      options
+    );
     return {
-      report: scoreGrid(state.grid, state.bonusCards, options),
+      report: fullReport,
       shapley: bonusShapleyValues(state.grid, state.bonusCards, options),
+      breakdown: bd,
+      baseTotals: new Map(
+        bd.baseReport.lines.map(l => [`${l.kind}${l.index}`, l.total])
+      ),
     };
   }, [state]);
 
@@ -101,6 +114,7 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
         >
           ⓘ
         </button>
+        <ScoreBreakdown breakdown={breakdown} />
         <span className={`${styles.verdict} ${play.won ? styles.win : styles.loss}`}>
           {play.won ? 'Daily solved' : 'Daily missed'}
         </span>
@@ -125,7 +139,12 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
       </div>
 
       <div className={styles.boardSlot}>
-        <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />
+        <LineRails
+          grid={state.grid}
+          report={report}
+          onLineTap={setDetailLine}
+          tally={{ baseTotals, stage: 'boosted' }}
+        />
       </div>
 
       <div className={styles.mathSlot}>{scoreMath}</div>
