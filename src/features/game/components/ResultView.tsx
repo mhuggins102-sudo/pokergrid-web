@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
+import { rngStep } from '../../../game/deck';
 import { Button, Chevron, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
@@ -371,6 +372,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
           grid={state.grid}
           bonusCards={state.bonusCards}
           blockedBaseId={targets.save?.lastKeptBaseId ?? null}
+          // Derived from the finished run's RNG word (not Math.random) so
+          // a seeded run's reward roll is reproducible too.
+          superchargeRoll={rngStep(state.rngState >>> 0).value}
           onDone={finishTargets}
         />
       )}

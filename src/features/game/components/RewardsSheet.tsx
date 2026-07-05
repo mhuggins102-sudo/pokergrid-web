@@ -25,6 +25,12 @@ export interface RewardsSheetProps {
   bonusCards: BonusCard[];
   /** Base id blocked from a consecutive power-up (cooldown). */
   blockedBaseId: string | null;
+  /**
+   * Roll in [0, 1) deciding wild (< 0.5) vs double for the grid-card
+   * supercharge. Derived by the caller from the finished run's RNG
+   * state so seeded runs stay fully reproducible.
+   */
+  superchargeRoll: number;
   onDone: (result: RewardsResult) => void;
 }
 
@@ -41,16 +47,18 @@ const chargeTone = (s: Supercharge): string =>
 
 /**
  * Targets-Up S/SS reward picker. S: pick ONE — supercharge a grid card
- * (50/50 wild or double, rolled at tap time) OR power up a held bonus
- * card. SS: both, grid first. The sheet can't be dismissed without
- * choosing (a skip is offered when a side has nothing eligible). Each
- * pick plays a short transform animation before continuing.
+ * (50/50 wild or double, from the run-derived superchargeRoll) OR power
+ * up a held bonus card. SS: both, grid first. The sheet can't be
+ * dismissed without choosing (a skip is offered when a side has nothing
+ * eligible). Each pick plays a short transform animation before
+ * continuing.
  */
 export function RewardsSheet({
   tier,
   grid,
   bonusCards,
   blockedBaseId,
+  superchargeRoll,
   onDone,
 }: RewardsSheetProps) {
   const [gridPick, setGridPick] = useState<Card | null>(null);
@@ -64,13 +72,13 @@ export function RewardsSheet({
       baseIdOf(c) !== (blockedBaseId ?? '')
   );
 
-  const rollSupercharge = (): Supercharge =>
-    Math.random() < 0.5 ? 'wild' : 'double';
+  const rolledSupercharge: Supercharge =
+    superchargeRoll < 0.5 ? 'wild' : 'double';
 
   const pickGridCard = (idx: number) => {
     const card = grid[idx];
     if (!card || isJoker(card)) return;
-    const charged: Card = { ...card, supercharge: rollSupercharge() };
+    const charged: Card = { ...card, supercharge: rolledSupercharge };
     const advanceToBonus = tier === 'SS' && eligibleBonus.length > 0;
     setReveal({
       kind: 'grid',

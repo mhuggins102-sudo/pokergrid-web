@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { CSSProperties, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Card, isJoker } from '../../../game/cards';
 import { GRID_SIZE, Grid } from '../../../game/grid';
@@ -41,6 +41,13 @@ export interface GridBoardProps {
    * row/column edges — the in-place answer to "which line is R3?".
    */
   spotlight?: { idx: number; rowText: string; colText: string } | null;
+  /**
+   * Slots on a line that just completed with a scoring hand (from
+   * GameScreen's useLineCompletions): each flashes a solid ring,
+   * staggered along the line by the mapped index so the sweep reads
+   * in line order. The "you finished a poker hand" moment.
+   */
+  sweepSlots?: ReadonlyMap<number, number>;
 }
 
 const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
@@ -50,7 +57,7 @@ const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
   const content = card ? cardAriaLabel(card) : 'empty';
   const hint =
     role === 'next'
-      ? ', next card lands here'
+      ? ', next card lands here — tap to place'
       : role === 'selected'
         ? ', selected'
         : role === 'target'
@@ -111,6 +118,8 @@ export function useJokerArrivals(grid: Grid): ReadonlySet<number> {
   return arrivedSlots;
 }
 
+const NO_SWEEP: ReadonlyMap<number, number> = new Map();
+
 export function GridBoard({
   grid,
   roleOf,
@@ -121,6 +130,7 @@ export function GridBoard({
   openingDeal = NO_ARRIVALS,
   hiddenSlots = NO_ARRIVALS,
   spotlight = null,
+  sweepSlots = NO_SWEEP,
 }: GridBoardProps) {
   const dealOrder = [...openingDeal];
   const spotRow = spotlight ? Math.floor(spotlight.idx / GRID_SIZE) : -1;
@@ -137,6 +147,7 @@ export function GridBoard({
           spotlight !== null &&
           Math.floor(idx / GRID_SIZE) !== spotRow &&
           idx % GRID_SIZE !== spotCol;
+        const sweepIdx = sweepSlots.get(idx);
         const cls = [
           styles.cell,
           card ? styles.filled : null,
@@ -144,6 +155,7 @@ export function GridBoard({
           role === 'selected' ? styles.selected : null,
           role === 'next' ? styles.next : null,
           dimmed ? styles.dimmed : null,
+          sweepIdx !== undefined ? styles.sweep : null,
         ]
           .filter(Boolean)
           .join(' ');
@@ -155,6 +167,11 @@ export function GridBoard({
             disabled={!tappable}
             aria-label={cellLabel(idx, card, role)}
             onClick={tappable ? () => onCellTap?.(idx) : undefined}
+            style={
+              sweepIdx !== undefined
+                ? ({ '--sweep-delay': `${sweepIdx * 60}ms` } as CSSProperties)
+                : undefined
+            }
           >
             <AnimatePresence initial={false}>
               {card &&

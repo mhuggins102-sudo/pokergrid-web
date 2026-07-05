@@ -1,5 +1,11 @@
 import { activeHalf, Card, isJoker, shiftRank, StandardCard, Suit } from './cards';
-import { assignDualIdentities, freshShuffledDeck, shuffle } from './deck';
+import {
+  assignDualIdentities,
+  freshShuffledDeck,
+  rngStep,
+  rngWordOf,
+  shuffle,
+} from './deck';
 import {
   emptyGrid,
   Grid,
@@ -336,6 +342,16 @@ export interface GameState {
   // grid shows the top half only. Null outside Double Duty; never
   // mutated after newGame.
   openingCard: Card | null;
+  // Mulberry32 state word for every random call the reducer makes after
+  // newGame (Scatter slots, Short Circuit perk picks, Bull Market invest
+  // spins, Shuffle / Rewind specials). Owning the stream in state makes
+  // step(state, action) pure — React may invoke a reducer more than once
+  // per action, and UNDO snapshots rewind the stream along with the rest
+  // of the state, so undo + redo replays the identical outcome instead
+  // of granting a re-roll. Seeded from the setup rng's current word, so
+  // a seeded (daily) run continues the exact stream the historical
+  // shared-closure implementation produced.
+  rngState: number;
 }
 
 export type Action =
@@ -652,8 +668,14 @@ export const newGame = (
     flippedDrawn: false,
     burned: [],
     openingCard,
+    rngState: 0, // placeholder — captured from `rng` below, after setup
   };
-  return drawNext(initial, rng);
+  const started = drawNext(initial, rng);
+  // Capture the rng's CURRENT word (after all setup consumption) so the
+  // in-play stream continues exactly where the setup stream left off —
+  // bit-identical to the old behavior of threading one shared closure
+  // through every step() call, but now owned by the state (pure reducer).
+  return { ...started, rngState: rngWordOf(rng) };
 };
 
 // ---------- helpers ----------
@@ -1782,12 +1804,31 @@ const handleUndo = (s: GameState): GameState => {
   };
 };
 
+// Pure reducer. Random calls draw from state.rngState (a Mulberry32
+// word), so calling step twice with the same state + action returns the
+// same result — safe for React's re-invocation semantics and exact
+// under UNDO (snapshots carry the pre-action word, so undo + redo
+// replays the identical outcome rather than re-rolling).
+//
+// `rngOverride` is a legacy escape hatch for tests that thread their
+// own closure; when provided, the in-state word is neither read nor
+// advanced (the override owns the stream, as before).
 export const step = (
   state: GameState,
   action: Action,
-  rng: () => number = Math.random
+  rngOverride?: () => number
 ): GameState => {
   if (action.type === 'UNDO') return handleUndo(state);
+  // >>> 0 normalizes states hydrated from older saves (no rngState) to
+  // a valid word instead of NaN.
+  let rngWord = state.rngState >>> 0;
+  const rng =
+    rngOverride ??
+    (() => {
+      const r = rngStep(rngWord);
+      rngWord = r.next;
+      return r.value;
+    });
   let next: GameState;
   switch (action.type) {
     case 'PLACE':
@@ -1903,6 +1944,13 @@ export const step = (
       break;
   }
   if (next === state) return state;
+  // Persist the advanced stream. Rejected actions (next === state, above)
+  // deliberately don't advance it, and the snapshot below captures the
+  // PRE-action word so UNDO rewinds the stream too. Skipped under
+  // rngOverride — the caller's closure owns the stream in that mode.
+  if (!rngOverride && rngWord !== (state.rngState >>> 0)) {
+    next = { ...next, rngState: rngWord };
+  }
   if (SNAP_ACTIONS.has(action.type) && state.phase.kind !== 'game-over') {
     const snap: GameState = { ...state, past: [] };
     return { ...next, past: [...state.past, snap] };

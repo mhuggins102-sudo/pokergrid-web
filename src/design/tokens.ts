@@ -14,7 +14,7 @@ export const colors = {
   // Ink
   ink: '#1a1a1a',
   ink2: '#5f5a51',
-  ink3: '#938c7d',
+  ink3: '#736c5c',
   hairline: 'rgba(26, 26, 26, 0.14)',
   scrim: 'rgba(26, 26, 26, 0.4)',
   rule: '#d9d1c0',

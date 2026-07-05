@@ -36,6 +36,7 @@ const baseState = (overrides: Partial<GameState>): GameState => ({
   flippedDrawn: false,
   burned: [],
   openingCard: null,
+  rngState: 1,
   ...overrides,
 });
 

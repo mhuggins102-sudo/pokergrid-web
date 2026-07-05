@@ -2,6 +2,7 @@ import { CSSProperties } from 'react';
 import { BonusCard, SPOTLIGHT_ID } from '../../../game/bonusCards';
 import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
 import { Button } from '../../../design/primitives';
+import { useSettingsStore } from '../../settings/settingsStore';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
 import styles from './BonusResolveDialog.module.css';
@@ -16,6 +17,8 @@ function CardOption({
   onPick: () => void;
 }) {
   const cat = styleFor(card);
+  // Glyph gated on colorBlindAssist per the category-style contract.
+  const assist = useSettingsStore(s => s.colorBlindAssist);
   return (
     <button
       type="button"
@@ -25,9 +28,13 @@ function CardOption({
     >
       <span className={styles.optionTop}>
         <span className={styles.optionTitle}>
-          <span style={categoryIconStyle(cat)} aria-hidden="true">
-            {cat.icon}
-          </span>{' '}
+          {assist && (
+            <>
+              <span style={categoryIconStyle(cat)} aria-hidden="true">
+                {cat.icon}
+              </span>{' '}
+            </>
+          )}
           {card.title}
         </span>
         <span className={styles.optionMult}>{card.mult}</span>

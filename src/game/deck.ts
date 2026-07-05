@@ -49,14 +49,48 @@ export const assignDualIdentities = (
   });
 };
 
+// One Mulberry32 step as a pure function of the 32-bit state word.
+// The reducer stores the word in GameState (state.rngState) so that
+// step(state, action) is pure: the same state + action always produce
+// the same next state, UNDO rewinds the stream along with everything
+// else, and React re-invoking a reducer can't silently advance it.
+export const rngStep = (word: number): { value: number; next: number } => {
+  const next = (word + 0x6d2b79f5) >>> 0;
+  let t = next;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return { value: ((t ^ (t >>> 14)) >>> 0) / 4294967296, next };
+};
+
+// A seeded rng closure that also exposes its current state word, so
+// newGame can seed GameState.rngState to CONTINUE the same stream —
+// bit-exact with the historical single-closure behavior that daily
+// deals (shared with the original site) depend on.
+export interface SeededRng {
+  (): number;
+  /** Current Mulberry32 state word (read without consuming a value). */
+  state: () => number;
+}
+
 // Simple Mulberry32 seeded RNG for deterministic tests / replays.
-export const seededRng = (seed: number): (() => number) => {
+export const seededRng = (seed: number): SeededRng => {
   let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  const fn = () => {
+    const r = rngStep(s);
+    s = r.next;
+    return r.value;
   };
+  fn.state = () => s;
+  return fn;
+};
+
+// The Mulberry32 word to seed GameState.rngState from. Seeded rngs
+// expose their word directly (no value consumed, so existing deck
+// streams are unchanged); plain closures (Math.random) draw one value
+// to derive a word — non-deterministic runs stay non-deterministic at
+// setup, but become internally replayable from then on.
+export const rngWordOf = (rng: () => number): number => {
+  const withState = rng as Partial<SeededRng>;
+  if (typeof withState.state === 'function') return withState.state();
+  return Math.floor(rng() * 0x100000000) >>> 0;
 };

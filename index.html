@@ -2,7 +2,13 @@
 <html lang="en" data-theme="paper">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover extends the layout under notch/home-indicator
+         areas so env(safe-area-inset-*) resolves to real values — the
+         dock and sheets pad with it. Without the flag it's always 0. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta
       name="description"
       content="PokerGrid — a daily 5×5 poker solitaire puzzle. Place cards, build ten poker hands, beat the target."

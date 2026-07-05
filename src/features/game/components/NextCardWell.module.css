@@ -46,13 +46,22 @@ button.cardSlot:focus-visible {
 }
 
 .peek {
-  font-size: 11px;
+  position: relative;
+  font-size: 12px;
   font-weight: 500;
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
   text-align: left;
   white-space: nowrap;
+}
+
+/* Invisible hit-area extension — the link renders one text line tall,
+   far under the 44px touch guideline. */
+.peek::after {
+  content: '';
+  position: absolute;
+  inset: -12px 0;
 }
 
 .peek:focus-visible {
