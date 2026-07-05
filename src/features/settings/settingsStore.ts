@@ -16,6 +16,10 @@ export interface Settings {
   sounds: boolean;
   // In-game bottom bar arrangement (see DockLayoutPreview).
   dockLayout: DockLayout;
+  // Live line rails: each row/column's running total rides the board
+  // edge during play. Off restores the plain board (line totals stay
+  // available via the Lines sheet and the tap-spotlight popup).
+  lineRails: boolean;
   // Force-reduce animations regardless of the OS-level setting.
   reduceMotion: boolean;
   // Augment color-coded UI with glyphs for colorblind players.
@@ -28,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   sounds: true,
   dockLayout: 'classic',
+  lineRails: true,
   reduceMotion: false,
   colorBlindAssist: false,
   // Four-color suits by default — suit identity carries scoring meaning

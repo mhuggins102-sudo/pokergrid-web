@@ -21,6 +21,11 @@ export interface LineRailsProps {
    * props). Defaults to a plain read-only GridBoard of `grid`.
    */
   children?: ReactNode;
+  /**
+   * Spotlight: light up the chips for this row + column (the in-place
+   * replacement for the floating line tags while rails are showing).
+   */
+  highlight?: { row: number; col: number } | null;
 }
 
 const toneOf = (line: ScoredLine): string =>
@@ -50,9 +55,16 @@ export function LineRails({
   onLineTap,
   stagger = false,
   children,
+  highlight = null,
 }: LineRailsProps) {
   const rows = report.lines.filter(l => l.kind === 'row');
   const cols = report.lines.filter(l => l.kind === 'col');
+
+  const isLit = (line: ScoredLine): boolean =>
+    highlight !== null &&
+    (line.kind === 'row'
+      ? line.index === highlight.row
+      : line.index === highlight.col);
 
   const chip = (line: ScoredLine, tallyIndex: number) => (
     <button
@@ -60,10 +72,13 @@ export function LineRails({
       type="button"
       className={`${styles.chip} ${
         line.kind === 'row' ? styles.rowChip : ''
-      } ${toneOf(line)} ${stagger ? styles.tallyIn : ''}`}
+      } ${toneOf(line)} ${stagger ? styles.tallyIn : ''} ${
+        isLit(line) ? styles.chipLit : ''
+      }`}
       style={stagger ? { animationDelay: `${tallyIndex * 110}ms` } : undefined}
       onClick={() => onLineTap?.(line)}
       aria-label={chipLabel(line)}
+      aria-current={isLit(line) || undefined}
     >
       {chipText(line)}
     </button>

@@ -101,6 +101,42 @@ export function SettingsPage() {
             </button>
           ))}
         </div>
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowTitle}>Dock</span>
+            <span className={styles.rowHint}>
+              How the drawn card and action buttons arrange under the board.
+            </span>
+          </div>
+        </div>
+        <div
+          className={styles.segmented}
+          role="radiogroup"
+          aria-label="Dock layout"
+        >
+          {(['classic', 'hand-stack', 'center-stage'] as DockLayout[]).map(
+            l => (
+              <button
+                key={l}
+                type="button"
+                role="radio"
+                aria-checked={settings.dockLayout === l}
+                className={`${styles.segment} ${
+                  settings.dockLayout === l ? styles.segmentOn : ''
+                }`}
+                onClick={() => pickDock(l)}
+              >
+                {DOCK_LAYOUT_LABEL[l]}
+              </button>
+            )
+          )}
+        </div>
+        <ToggleRow
+          title="Line rails"
+          hint="Show each row and column's running total along the board edges."
+          value={settings.lineRails}
+          onChange={v => patch({ lineRails: v })}
+        />
         <ToggleRow
           title="Sounds"
           hint="Card and scoring sound effects."
@@ -125,36 +161,6 @@ export function SettingsPage() {
           value={settings.twoColorDeck}
           onChange={v => patch({ twoColorDeck: v })}
         />
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowTitle}>Game controls</span>
-            <span className={styles.rowHint}>
-              How the drawn card and action buttons arrange under the board.
-            </span>
-          </div>
-        </div>
-        <div
-          className={styles.segmented}
-          role="radiogroup"
-          aria-label="Game controls layout"
-        >
-          {(['classic', 'hand-stack', 'center-stage'] as DockLayout[]).map(
-            l => (
-              <button
-                key={l}
-                type="button"
-                role="radio"
-                aria-checked={settings.dockLayout === l}
-                className={`${styles.segment} ${
-                  settings.dockLayout === l ? styles.segmentOn : ''
-                }`}
-                onClick={() => pickDock(l)}
-              >
-                {DOCK_LAYOUT_LABEL[l]}
-              </button>
-            )
-          )}
-        </div>
       </div>
 
       <div className={styles.panel}>
