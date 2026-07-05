@@ -8,13 +8,27 @@
     <script>
       try {
         var s = JSON.parse(localStorage.getItem('pokergrid:settings:v1'));
-        var t = (s && s.state && s.state.theme) || 'system';
-        if (t === 'system') {
-          t = matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'card-room-dark'
-            : 'card-room';
+        var st = (s && s.state) || {};
+        // v1 keys, with the v0 single-choice `theme` as fallback for
+        // saves the store hasn't migrated yet.
+        var fam = st.themeFamily;
+        var app = st.appearance;
+        if (!fam) {
+          var legacy = st.theme || 'system';
+          fam = legacy === 'paper' ? 'paper' : 'card-room';
+          app =
+            legacy === 'card-room-dark'
+              ? 'dark'
+              : legacy === 'system'
+                ? 'system'
+                : 'light';
         }
-        document.documentElement.dataset.theme = t;
+        var dark =
+          app === 'dark' ||
+          (app !== 'light' &&
+            matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme =
+          (fam === 'paper' ? 'paper' : 'card-room') + (dark ? '-dark' : '');
       } catch (e) {
         /* keep the static fallback */
       }

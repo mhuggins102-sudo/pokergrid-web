@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, Dialog, Sheet, useToast } from '../../design/primitives';
-import { DOCK_LAYOUT_LABEL, DockLayoutPreview } from './DockLayoutPreview';
+import { Button, Chevron, Dialog, useToast } from '../../design/primitives';
+import { DOCK_LAYOUT_LABEL } from './DockLayoutPreview';
+import { DisplayPreview } from './DisplayPreview';
 import {
+  Appearance,
   DockLayout,
   Settings,
-  ThemeChoice,
+  ThemeFamily,
   useSettingsStore,
 } from './settingsStore';
 import { useStatsStore } from '../progress/statsStore';
@@ -44,6 +46,68 @@ function ToggleRow({
   );
 }
 
+// A labeled radio-segment picker; generic over the option value type.
+function SegmentedRow<T extends string>({
+  title,
+  hint,
+  options,
+  value,
+  onChange,
+}: {
+  title: string;
+  hint?: string;
+  options: readonly [T, string][];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <>
+      <div className={`${styles.row} ${styles.segmentedHead}`}>
+        <div className={styles.rowText}>
+          <span className={styles.rowTitle}>{title}</span>
+          {hint && <span className={styles.rowHint}>{hint}</span>}
+        </div>
+      </div>
+      <div className={styles.segmented} role="radiogroup" aria-label={title}>
+        {options.map(([v, label]) => (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={value === v}
+            className={`${styles.segment} ${value === v ? styles.segmentOn : ''}`}
+            onClick={() => onChange(v)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// Accordion section: styled native <details>, so open/close state and
+// keyboard behavior come free.
+function Section({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details className={styles.section} open={defaultOpen}>
+      <summary className={styles.sectionSummary}>
+        {title}
+        <Chevron direction="right" size={18} className={styles.sectionCaret} />
+      </summary>
+      <div className={styles.sectionBody}>{children}</div>
+    </details>
+  );
+}
+
 export function SettingsPage() {
   const settings = useSettingsStore();
   const resetStats = useStatsStore(s => s.reset);
@@ -51,15 +115,8 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
-  // Preview sheet for the just-picked dock layout.
-  const [previewLayout, setPreviewLayout] = useState<DockLayout | null>(null);
 
   const patch = (p: Partial<Settings>) => settings.set(p);
-
-  const pickDock = (layout: DockLayout) => {
-    patch({ dockLayout: layout });
-    setPreviewLayout(layout);
-  };
 
   return (
     <section className={styles.wrap}>
@@ -67,76 +124,56 @@ export function SettingsPage() {
         <h1 className="text-title">Settings</h1>
       </header>
 
-      <div className={styles.panel}>
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowTitle}>Theme</span>
-            <span className={styles.rowHint}>
-              Card Room is the refreshed look (System follows your
-              device&apos;s light/dark preference). Morning Paper is the
-              original.
-            </span>
-          </div>
-        </div>
-        <div className={styles.segmented} role="radiogroup" aria-label="Theme">
-          {(
-            [
-              ['system', 'System'],
-              ['card-room', 'Card Room'],
-              ['card-room-dark', 'Dark'],
-              ['paper', 'Morning Paper'],
-            ] as [ThemeChoice, string][]
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={settings.theme === value}
-              className={`${styles.segment} ${
-                settings.theme === value ? styles.segmentOn : ''
-              }`}
-              onClick={() => patch({ theme: value })}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowTitle}>Dock</span>
-            <span className={styles.rowHint}>
-              How the drawn card and action buttons arrange under the board.
-            </span>
-          </div>
-        </div>
-        <div
-          className={styles.segmented}
-          role="radiogroup"
-          aria-label="Dock layout"
-        >
-          {(['classic', 'hand-stack', 'center-stage'] as DockLayout[]).map(
-            l => (
-              <button
-                key={l}
-                type="button"
-                role="radio"
-                aria-checked={settings.dockLayout === l}
-                className={`${styles.segment} ${
-                  settings.dockLayout === l ? styles.segmentOn : ''
-                }`}
-                onClick={() => pickDock(l)}
-              >
-                {DOCK_LAYOUT_LABEL[l]}
-              </button>
-            )
-          )}
-        </div>
+      <Section title="Display" defaultOpen>
+        <SegmentedRow<ThemeFamily>
+          title="Theme"
+          hint="Card Room is the refreshed table look; Morning Paper is the original editorial style."
+          options={[
+            ['card-room', 'Card Room'],
+            ['paper', 'Morning Paper'],
+          ]}
+          value={settings.themeFamily}
+          onChange={themeFamily => patch({ themeFamily })}
+        />
+        <SegmentedRow<Appearance>
+          title="Appearance"
+          hint="System follows your device's light/dark preference."
+          options={[
+            ['light', 'Light'],
+            ['dark', 'Dark'],
+            ['system', 'System'],
+          ]}
+          value={settings.appearance}
+          onChange={appearance => patch({ appearance })}
+        />
         <ToggleRow
           title="Line rails"
           hint="Show each row and column's running total along the board edges."
           value={settings.lineRails}
           onChange={v => patch({ lineRails: v })}
         />
+        <ToggleRow
+          title="Two-color deck"
+          hint="Classic red/black faces; off gives each suit its own color."
+          value={settings.twoColorDeck}
+          onChange={v => patch({ twoColorDeck: v })}
+        />
+        <SegmentedRow<DockLayout>
+          title="Dock"
+          hint="How the drawn card and action buttons arrange under the board."
+          options={(['classic', 'hand-stack', 'center-stage'] as const).map(
+            l => [l, DOCK_LAYOUT_LABEL[l]] as [DockLayout, string]
+          )}
+          value={settings.dockLayout}
+          onChange={dockLayout => patch({ dockLayout })}
+        />
+        <div className={styles.previewSlot}>
+          <span className={styles.previewLabel}>Preview</span>
+          <DisplayPreview />
+        </div>
+      </Section>
+
+      <Section title="Preferences">
         <ToggleRow
           title="Sounds"
           hint="Card and scoring sound effects."
@@ -155,15 +192,9 @@ export function SettingsPage() {
           value={settings.colorBlindAssist}
           onChange={v => patch({ colorBlindAssist: v })}
         />
-        <ToggleRow
-          title="Two-color deck"
-          hint="Classic red/black faces; off gives each suit its own color."
-          value={settings.twoColorDeck}
-          onChange={v => patch({ twoColorDeck: v })}
-        />
-      </div>
+      </Section>
 
-      <div className={styles.panel}>
+      <Section title="More">
         <div className={styles.row}>
           <div className={styles.rowText}>
             <span className={styles.rowTitle}>Replay tutorial</span>
@@ -175,9 +206,6 @@ export function SettingsPage() {
             Replay
           </Button>
         </div>
-      </div>
-
-      <div className={styles.panel}>
         <div className={styles.row}>
           <div className={styles.rowText}>
             <span className={`${styles.rowTitle} ${styles.danger}`}>
@@ -192,7 +220,7 @@ export function SettingsPage() {
             Reset
           </Button>
         </div>
-      </div>
+      </Section>
 
       <p
         style={{
@@ -204,21 +232,6 @@ export function SettingsPage() {
       >
         Build {__BUILD_ID__}
       </p>
-
-      <Sheet
-        open={previewLayout !== null}
-        onClose={() => setPreviewLayout(null)}
-        title={previewLayout ? DOCK_LAYOUT_LABEL[previewLayout] : ''}
-      >
-        {previewLayout && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <DockLayoutPreview layout={previewLayout} />
-            <p className="text-label" style={{ color: 'var(--ink-3)' }}>
-              Applied — your next game uses this arrangement.
-            </p>
-          </div>
-        )}
-      </Sheet>
 
       <Dialog
         open={confirmReset}

@@ -4,14 +4,17 @@ import { safeJSONStorage } from '../../lib/safeStorage';
 
 export type DockLayout = 'hand-stack' | 'center-stage' | 'classic';
 
-// Visual theme. 'system' resolves to Card Room light or dark from the
-// OS preference; 'paper' is the original Morning Paper look, retained
-// as a first-class option.
-export type ThemeChoice = 'system' | 'card-room' | 'card-room-dark' | 'paper';
+// Visual theme, two axes: the look (Card Room refresh vs the original
+// Morning Paper) and the appearance (light/dark/system). Both looks
+// have both appearances; useApplyTheme resolves the pair to one of the
+// four data-theme token blocks.
+export type ThemeFamily = 'card-room' | 'paper';
+export type Appearance = 'light' | 'dark' | 'system';
 
 export interface Settings {
-  // Visual theme (see ThemeChoice / useApplyTheme).
-  theme: ThemeChoice;
+  // Visual theme (see ThemeFamily/Appearance / useApplyTheme).
+  themeFamily: ThemeFamily;
+  appearance: Appearance;
   // Card and scoring sound effects (see useGameSfx).
   sounds: boolean;
   // In-game bottom bar arrangement (see DockLayoutPreview).
@@ -29,7 +32,8 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: 'system',
+  themeFamily: 'card-room',
+  appearance: 'system',
   sounds: true,
   dockLayout: 'classic',
   lineRails: true,
@@ -46,12 +50,39 @@ interface SettingsStore extends Settings {
   set: (patch: Partial<Settings>) => void;
 }
 
+// v0 stored a single `theme` choice; v1 splits it into family +
+// appearance. Exported for tests.
+export const migrateSettings = (
+  persisted: unknown,
+  version: number
+): unknown => {
+  if (version >= 1 || persisted === null || typeof persisted !== 'object') {
+    return persisted;
+  }
+  const legacy = persisted as { theme?: string } & Record<string, unknown>;
+  const { theme, ...rest } = legacy;
+  const mapped: { themeFamily: ThemeFamily; appearance: Appearance } =
+    theme === 'paper'
+      ? { themeFamily: 'paper', appearance: 'light' }
+      : theme === 'card-room'
+        ? { themeFamily: 'card-room', appearance: 'light' }
+        : theme === 'card-room-dark'
+          ? { themeFamily: 'card-room', appearance: 'dark' }
+          : { themeFamily: 'card-room', appearance: 'system' };
+  return { ...rest, ...mapped };
+};
+
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     set => ({
       ...DEFAULT_SETTINGS,
       set: patch => set(patch),
     }),
-    { name: 'pokergrid:settings:v1', storage: safeJSONStorage() }
+    {
+      name: 'pokergrid:settings:v1',
+      storage: safeJSONStorage(),
+      version: 1,
+      migrate: migrateSettings,
+    }
   )
 );
