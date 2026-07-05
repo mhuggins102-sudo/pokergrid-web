@@ -58,13 +58,18 @@ test('tapping a seated card spotlights its row and column', async ({
 }) => {
   await page.goto('/play?difficulty=easy&seed=42');
   await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
-  // The opening card sits at the center (row 3, column 3).
+  // The opening card sits at the center (row 3, column 3). With the
+  // line rails showing (default), the spotlight lights the R3 + C3
+  // rail chips instead of floating text tags.
   await page.getByLabel(/^row 3 column 3: (?!empty)/).click();
-  await expect(page.getByText(/^R3 · /)).toBeVisible();
-  await expect(page.getByText(/^C3 · /)).toBeVisible();
+  await expect(page.getByLabel(/^R3: /)).toHaveAttribute('aria-current', 'true');
+  await expect(page.getByLabel(/^C3: /)).toHaveAttribute('aria-current', 'true');
   // Tapping the same card again clears the spotlight.
   await page.getByLabel(/^row 3 column 3: (?!empty)/).click();
-  await expect(page.getByText(/^R3 · /)).toHaveCount(0);
+  await expect(page.getByLabel(/^R3: /)).not.toHaveAttribute(
+    'aria-current',
+    'true'
+  );
 });
 
 test('hop targeting: tap two cards in a row to swap', async ({ page }) => {

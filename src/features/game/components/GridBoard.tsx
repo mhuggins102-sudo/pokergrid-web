@@ -36,11 +36,13 @@ export interface GridBoardProps {
    */
   hiddenSlots?: ReadonlySet<number>;
   /**
-   * Line spotlight: highlight this slot's row + column, dim the rest,
-   * and float the line tags (e.g. "R3 · 25" / "C2 · open") at the
-   * row/column edges — the in-place answer to "which line is R3?".
+   * Line spotlight: highlight this slot's row + column and dim the
+   * rest. With rowText/colText set, floating line tags (e.g. "R3 · 25")
+   * render at the row/column edges — the answer to "which line is R3?"
+   * when the line rails are hidden. Rails-on mode omits the texts and
+   * lights the rail chips instead (LineRails highlight).
    */
-  spotlight?: { idx: number; rowText: string; colText: string } | null;
+  spotlight?: { idx: number; rowText?: string; colText?: string } | null;
   /**
    * Slots on a line that just completed with a scoring hand (from
    * GameScreen's useLineCompletions): each flashes a solid ring,
@@ -220,29 +222,29 @@ export function GridBoard({
           </button>
         );
       })}
-      {spotlight && (
-        <>
-          <span
-            className={styles.lineTag}
-            style={{
-              top: `calc(${spotRow} * 20% + 10%)`,
-              left: '4px',
-              transform: 'translateY(-50%)',
-            }}
-          >
-            {spotlight.rowText}
-          </span>
-          <span
-            className={styles.lineTag}
-            style={{
-              left: `calc(${spotCol} * 20% + 10%)`,
-              top: '4px',
-              transform: 'translateX(-50%)',
-            }}
-          >
-            {spotlight.colText}
-          </span>
-        </>
+      {spotlight?.rowText !== undefined && (
+        <span
+          className={styles.lineTag}
+          style={{
+            top: `calc(${spotRow} * 20% + 10%)`,
+            left: '4px',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          {spotlight.rowText}
+        </span>
+      )}
+      {spotlight?.colText !== undefined && (
+        <span
+          className={styles.lineTag}
+          style={{
+            left: `calc(${spotCol} * 20% + 10%)`,
+            top: '4px',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          {spotlight.colText}
+        </span>
       )}
     </div>
   );

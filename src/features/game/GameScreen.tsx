@@ -1,6 +1,11 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
-import { ScoreReport, bonusShapleyValues, scoreGrid } from '../../game/scoring';
+import {
+  ScoredLine,
+  ScoreReport,
+  bonusShapleyValues,
+  scoreGrid,
+} from '../../game/scoring';
 import { Button, Sheet, useToast } from '../../design/primitives';
 import { useGameSession } from './GameSessionProvider';
 import { useCoachHighlight } from './coach';
@@ -11,6 +16,7 @@ import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { lineLabel } from './handLabels';
 import { GridBoard, useJokerArrivals } from './components/GridBoard';
 import { LineRails } from './components/LineRails';
+import { LineDetailSheet } from './components/LineDetailSheet';
 import { useAutoPlaceFlights } from './useAutoPlaceFlights';
 import { NextCardWell } from './components/NextCardWell';
 import { ScoreBar } from './components/ScoreBar';
@@ -83,6 +89,18 @@ function useLineCompletions(report: ScoreReport): ReadonlyMap<number, number> {
   return sweep;
 }
 
+// Rails on → wrap the board with LineRails; off → board as-is.
+function MaybeRails({
+  enabled,
+  children,
+  ...rails
+}: {
+  enabled: boolean;
+  children: ReactNode;
+} & Omit<Parameters<typeof LineRails>[0], 'children'>) {
+  return enabled ? <LineRails {...rails}>{children}</LineRails> : <>{children}</>;
+}
+
 /**
  * One running game. Composition only — all phase logic lives in
  * usePhaseUI, all rules in the ported reducer.
@@ -100,6 +118,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const [peekOpen, setPeekOpen] = useState(false);
   const [handsOpen, setHandsOpen] = useState(false);
   const [linesOpen, setLinesOpen] = useState(false);
+  // Rail chip tapped → that line's full scoring breakdown.
+  const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
+  const lineRails = useSettingsStore(s => s.lineRails);
 
   const liveReport = useMemo(
     () =>
@@ -167,6 +188,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const [spotlight, setSpotlight] = useState<number | null>(null);
   useEffect(() => {
     setSpotlight(null);
+    // A commit can change any line's math — close a stale detail sheet.
+    setDetailLine(null);
   }, [state]);
   useEffect(() => {
     if (spotlight === null) return;
@@ -183,13 +206,22 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     if (!line || line.incomplete) return `${label} · open`;
     return `${label} · ${line.total}`;
   };
+  // With the rails showing, the spotlight lights the rail chips instead
+  // of floating text tags — the values are already on screen. Rails
+  // off restores the tags (they're the only per-line readout then).
   const spotlightProp =
     spotlight !== null
-      ? {
-          idx: spotlight,
-          rowText: lineText('row', Math.floor(spotlight / 5)),
-          colText: lineText('col', spotlight % 5),
-        }
+      ? lineRails
+        ? { idx: spotlight }
+        : {
+            idx: spotlight,
+            rowText: lineText('row', Math.floor(spotlight / 5)),
+            colText: lineText('col', spotlight % 5),
+          }
+      : null;
+  const railHighlight =
+    lineRails && spotlight !== null
+      ? { row: Math.floor(spotlight / 5), col: spotlight % 5 }
       : null;
 
   if (ui.isGameOver) {
@@ -290,15 +322,21 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           </div>
 
           <div className={styles.boardArea}>
-            <div className={styles.boardFrame}>
-              {/* Live line rails: each row/column's running total rides
-                  the board edge, so per-line scoring is visible without
-                  opening the Lines sheet (tapping a chip still opens
-                  it for the full math). */}
-              <LineRails
+            <div
+              className={`${styles.boardFrame} ${
+                lineRails ? '' : styles.boardFrameBare
+              }`}
+            >
+              {/* Live line rails (optional, Settings): each row/column's
+                  running total rides the board edge; tapping a chip
+                  opens that line's full scoring breakdown. The spotlight
+                  lights the tapped card's rail chips. */}
+              <MaybeRails
+                enabled={lineRails}
                 grid={state.grid}
                 report={liveReport}
-                onLineTap={() => setLinesOpen(true)}
+                onLineTap={setDetailLine}
+                highlight={railHighlight}
               >
               <GridBoard
                 // Remount on the ♣ open/close toggle: a fresh mount
@@ -339,7 +377,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 spotlight={spotlightProp}
                 sweepSlots={sweepSlots}
               />
-              </LineRails>
+              </MaybeRails>
             </div>
           </div>
 
@@ -438,14 +476,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   stacked
                   flight={flight}
                 />
-                {/* actionStackHasBanner swaps the trailing reserved line
-                    for the real banner (see the CSS ::after) so dock
-                    height — and therefore board size — stays put. */}
-                <div
-                  className={`${styles.actionStack} ${
-                    ui.banner ? styles.actionStackHasBanner : ''
-                  }`}
-                >
+                <div className={styles.actionStack}>
                   {banner}
                   {commitAction?.id === 'place' && commitBtn()}
                   {rowActions.length > 0 && (
@@ -484,6 +515,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       <Sheet open={linesOpen} onClose={() => setLinesOpen(false)} title="Lines">
         <LinesPanel report={liveReport} />
       </Sheet>
+      <LineDetailSheet
+        line={detailLine}
+        bonusCards={state.bonusCards}
+        allLines={liveReport.lines}
+        gridBonusesApplied={
+          liveReport.gridMultiplier !== 1 || liveReport.gridFlat !== 0
+        }
+        onClose={() => setDetailLine(null)}
+      />
       <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
       <HandValuesDialog
         open={handsOpen}

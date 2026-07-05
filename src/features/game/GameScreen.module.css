@@ -37,7 +37,8 @@
   /* Board + line rails sized to the smaller of the area's two axes —
      the rails add the same ~30px to width (left rail) and height
      (bottom rail), so the wrap stays square and one min() covers both.
-     Cap = old 440px board + 30px rails.
+     Cap = old 440px board + 30px rails; the rails-off variant below
+     restores the original caps.
      NO width transition: motion measures card layouts in the same
      commit that adds/removes .bonusOpen, and a CSS transition makes
      it measure mid-flight geometry — cards end up pinned to stale
@@ -45,6 +46,11 @@
      until I tabbed away" bug). The width snaps; the cards' own
      layout animations carry the visual transition. */
   width: min(100cqw, 100cqh, 470px);
+}
+
+/* Line rails disabled (Settings): the plain board at its original cap. */
+.boardFrameBare {
+  width: min(100cqw, 100cqh, 440px);
 }
 
 /* Tutorial coach: a FIXED slice of the vertical budget — every step
@@ -141,6 +147,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  /* Pinned to the tallest phase shape (banner line + action row +
+     commit + gaps) so the dock height — which now directly sets the
+     flexed board size — never changes as phases swap the stack's
+     contents. Slack collects below the buttons (flex-start), keeping
+     them top-aligned with the deck card. */
+  min-height: 124px;
 }
 
 .actionStack .dockText {
@@ -149,23 +161,7 @@
   padding-top: 2px;
 }
 
-/* Reserve the banner line BELOW the buttons while idle: the dock's
-   height now directly sets the flexed board size, so a line appearing
-   on a targeting prompt would make the whole board breathe mid-turn.
-   Trailing (not leading) slack keeps the buttons top-aligned with the
-   deck card while no banner is showing. Mirrors .dockText's metrics
-   (13px / 1.25, +2px padding) so the swap is height-neutral. */
-.actionStack::after {
-  content: '';
-  flex: none;
-  font-size: 13px;
-  line-height: 1.25;
-  height: calc(1lh + 2px);
-}
 
-.actionStackHasBanner::after {
-  content: none;
-}
 
 .actionStack .commitButton {
   min-height: 48px;
@@ -243,6 +239,10 @@
 
   .boardFrame {
     width: min(100cqw, 100cqh, 550px);
+  }
+
+  .boardFrameBare {
+    width: min(100cqw, 100cqh, 520px);
   }
 
   .dockText {

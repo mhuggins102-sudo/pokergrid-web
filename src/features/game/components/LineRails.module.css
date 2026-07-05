@@ -22,6 +22,10 @@
   display: grid;
   grid-template-rows: repeat(5, 1fr);
   gap: 6px;
+  /* Track the cells, not the board box: Card Room pads the board with
+     a felt panel (--board-pad); inset the rail by the same amount so
+     each chip aligns with its row exactly. Zero under Morning Paper. */
+  padding: var(--board-pad, 0) 0;
 }
 
 .colRail {
@@ -30,6 +34,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
+  padding: 0 var(--board-pad, 0);
 }
 
 .chip {
@@ -48,20 +53,30 @@
   line-height: 1;
 }
 
-/* Row chips run their text vertically so the left rail is exactly as
-   slim as the column chips are short — the board gets the width back. */
+/* Row chips: slim horizontal digits, stretched to exactly span their
+   row (grid align-stretch). The old vertical writing-mode sized the
+   chip to its text — chips visibly changed height when a dot became a
+   number — and rotated digits read worse anyway. */
 .rowChip {
-  /* vertical-rl glyphs face left; the 180° turn makes them face right. */
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  min-width: 24px;
-  min-height: 38px;
-  padding: 4px 0;
+  min-width: 26px;
+  min-height: 0;
+  padding: 0 2px;
+  height: 100%;
 }
 
 .chip:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+/* Spotlight: the tapped card's row + column chips light up — the
+   in-place replacement for the floating line tags while rails show. */
+.chipLit {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  background: var(--paper-raised);
+  color: var(--accent);
+  font-weight: 800;
 }
 
 .pos {
