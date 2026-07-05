@@ -4,8 +4,15 @@
 .wrap {
   display: grid;
   /* Row totals on the LEFT edge (thumb-near on phones), column totals
-     underneath. */
-  grid-template-columns: auto 1fr;
+     underneath. minmax(0, 1fr) — NOT bare 1fr — so the board column
+     can shrink below its contents' min-widths: the col-rail chips'
+     38px floors sum to ~230px of min-content, and on very short
+     viewports (a compact Safari window + the tutorial coach) the
+     whole frame gets less width than that. Bare 1fr floors at
+     min-content, so the board burst out of the frame and overlapped
+     its neighbors — the long-hunted "tutorial grid in the wrong
+     place" bug. */
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto auto;
   gap: 6px;
   width: 100%;
@@ -32,9 +39,17 @@
   grid-column: 2;
   grid-row: 2;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   padding: 0 var(--board-pad, 0);
+}
+
+/* Column chips track their column's width, however small — the 38px
+   preference is a comfortable-tap floor, not a minimum worth
+   overflowing the whole board for. */
+.colRail > .chip {
+  min-width: 0;
+  padding: 0 2px;
 }
 
 .chip {
