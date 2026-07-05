@@ -28,18 +28,25 @@ export interface GameSessionProviderProps {
   mode: GameMode;
   /**
    * Deterministic seed for the run. Normally undefined (Math.random);
-   * E2E tests and the future daily mode pass a number so the whole run
-   * is reproducible.
+   * E2E tests and daily mode pass a number so the whole run — deal and
+   * every in-play random outcome — is reproducible.
    */
   seed?: number;
   children: ReactNode;
 }
 
+// Module-level so the reducer identity is stable across renders. `step`
+// is pure — every random call draws from state.rngState — so React is
+// free to invoke it more than once per action (eager state computation,
+// replayed renders, StrictMode) without desyncing seeded (daily) runs.
+const reduce = (s: GameState, a: Action): GameState => step(s, a);
+
 /**
- * Owns the ported game reducer for one run. The pure `step` reducer
- * needs an rng for a few actions (shuffle/rewind specials, Short
- * Circuit's random perks), so we keep one rng for the session's
- * lifetime and thread it through dispatch.
+ * Owns the ported game reducer for one run. Randomness lives inside
+ * GameState (state.rngState), so the reducer is pure; the only impure
+ * moment is the initializer, which builds a fresh rng per invocation —
+ * a seeded run therefore initializes identically even if React runs
+ * the initializer twice.
  *
  * Remount (via key) to start a fresh run.
  */
@@ -48,22 +55,14 @@ export function GameSessionProvider({
   seed,
   children,
 }: GameSessionProviderProps) {
-  const rngRef = useRef<(() => number) | null>(null);
-  if (rngRef.current === null) {
-    rngRef.current = seed !== undefined ? seededRng(seed) : Math.random;
-  }
-  const rng = rngRef.current;
-
   const setupRef = useRef<ModeSetup | null>(null);
   if (setupRef.current === null) {
     setupRef.current = setupForMode(mode);
   }
   const setup = setupRef.current;
 
-  const [state, rawDispatch] = useReducer(
-    (s: GameState, a: Action) => step(s, a, rng),
-    undefined,
-    () => setup.start(rng)
+  const [state, rawDispatch] = useReducer(reduce, undefined, () =>
+    setup.start(seed !== undefined ? seededRng(seed) : Math.random)
   );
 
   const dispatch = useCallback((action: Action) => rawDispatch(action), []);

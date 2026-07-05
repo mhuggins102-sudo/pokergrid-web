@@ -2,6 +2,7 @@ import { CSSProperties, useState } from 'react';
 import { BonusCard, isPlaceholder, isSpecialCard } from '../../../game/bonusCards';
 import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
 import { Button, Sheet } from '../../../design/primitives';
+import { useSettingsStore } from '../../settings/settingsStore';
 import styles from './BonusCardStrip.module.css';
 
 export function BonusChip({
@@ -22,6 +23,9 @@ export function BonusChip({
   hideEach?: boolean;
 }) {
   const cat = styleFor(card);
+  // Colorblind assist: the chip's category is otherwise color-only
+  // (border tone) — the glyph is the non-color cue.
+  const assist = useSettingsStore(s => s.colorBlindAssist);
   const dimmed = card.used || isPlaceholder(card);
   const multText = hideEach
     ? card.mult.replace(/\s*\(each\)\s*$/i, '')
@@ -39,6 +43,16 @@ export function BonusChip({
       }`}
     >
       <span className={styles.chipTitle}>
+        {assist && (
+          <>
+            <span
+              style={{ color: cat.iconColor, ...categoryIconStyle(cat) }}
+              aria-hidden="true"
+            >
+              {cat.icon}
+            </span>{' '}
+          </>
+        )}
         {card.title}
         {card.used ? ' ✓' : ''}
       </span>
@@ -191,6 +205,7 @@ function DetailSheet({
 }) {
   const card = detail?.card ?? null;
   const detailStyle = card ? styleFor(card) : null;
+  const assist = useSettingsStore(s => s.colorBlindAssist);
   const contextLines = card && liveContext ? liveContext(card) : [];
   const usable =
     card !== null &&
@@ -206,9 +221,15 @@ function DetailSheet({
           style={{ '--chip-tone': detailStyle.borderColor } as CSSProperties}
         >
           <span className={styles.detailCategory}>
-            <span style={categoryIconStyle(detailStyle)} aria-hidden="true">
-              {detailStyle.icon}
-            </span>{' '}
+            {/* Glyph gated on colorBlindAssist per the category-style
+                contract — the text label always names the category. */}
+            {assist && (
+              <>
+                <span style={categoryIconStyle(detailStyle)} aria-hidden="true">
+                  {detailStyle.icon}
+                </span>{' '}
+              </>
+            )}
             {detailStyle.label}
           </span>
           <p className="text-body">{card.description}</p>

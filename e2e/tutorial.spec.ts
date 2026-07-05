@@ -86,9 +86,15 @@ test('tutorial guides the scripted opening and releases into free play', async (
   await next.click();
   await expect(coach).toContainText('Your dashboards');
   await next.click();
+  await expect(coach).toContainText('Chasing a grade?');
+  await next.click();
+  await expect(coach).toContainText('Inspect any card');
+  await next.click();
   await expect(coach).toContainText('Your bonus hand');
   await next.click();
   await expect(coach).toContainText('Watch the deck');
+  await next.click();
+  await expect(coach).toContainText('One step back');
   await next.click();
   await expect(coach).toContainText('on your own');
   await coach.getByRole('button', { name: 'Got it' }).click();

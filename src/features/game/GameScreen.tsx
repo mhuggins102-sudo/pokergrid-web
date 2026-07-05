@@ -7,8 +7,8 @@ import {
   useState,
 } from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
-import { bonusShapleyValues, scoreGrid } from '../../game/scoring';
-import { Button, Sheet } from '../../design/primitives';
+import { ScoreReport, bonusShapleyValues, scoreGrid } from '../../game/scoring';
+import { Button, Sheet, useToast } from '../../design/primitives';
 import { useGameSession } from './GameSessionProvider';
 import { useCoachHighlight } from './coach';
 import { usePhaseUI } from './usePhaseUI';
@@ -35,6 +35,58 @@ export interface GameScreenProps {
   /** Tutorial coach panel; when present the board budget shrinks to
    *  make room (the same trick the ♣ panel uses). */
   coach?: ReactNode;
+}
+
+const lineKeyOf = (kind: 'row' | 'col', index: number) => `${kind}${index}`;
+
+/**
+ * Slots on lines that JUST completed with a scoring hand (Pair+),
+ * mapped to their stagger position along the line, so the board can
+ * flash a sweep across them. High Card completions stay silent — they
+ * score 0 and celebrating them would teach the wrong thing. Clears
+ * itself once the flash has played; lives here (not in GridBoard) so
+ * the board's ♣-toggle remounts can't replay it.
+ */
+function useLineCompletions(report: ScoreReport): ReadonlyMap<number, number> {
+  const [sweep, setSweep] = useState<ReadonlyMap<number, number>>(
+    () => new Map()
+  );
+  const prevRef = useRef<ReadonlySet<string> | null>(null);
+  const completed = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of report.lines) {
+      if (l.hand && l.hand !== 'HIGH_CARD') set.add(lineKeyOf(l.kind, l.index));
+    }
+    return set;
+  }, [report]);
+
+  // Kept in a ref so unrelated state changes re-running the effect
+  // can't cancel a pending clear (the flash must always expire).
+  const timerRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevRef.current;
+    prevRef.current = completed;
+    if (prev === null) return; // opening state — nothing "just" completed
+    const slots = new Map<number, number>();
+    for (const l of report.lines) {
+      const key = lineKeyOf(l.kind, l.index);
+      if (!completed.has(key) || prev.has(key)) continue;
+      for (let pos = 0; pos < 5; pos++) {
+        const idx = l.kind === 'row' ? l.index * 5 + pos : pos * 5 + l.index;
+        // A cell on two newly-completed lines keeps the earlier flash.
+        const existing = slots.get(idx);
+        if (existing === undefined || pos < existing) slots.set(idx, pos);
+      }
+    }
+    if (slots.size === 0) return;
+    setSweep(slots);
+    // 250ms landing hold + 4 × 60ms stagger + 500ms flash ≈ 1s.
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setSweep(new Map()), 1100);
+  }, [completed, report]);
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  return sweep;
 }
 
 /**
@@ -167,6 +219,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Engine-placed cards (opening deal, auto-placed jokers) pose in the
   // well, then fly to their cell via the same FLIP a manual Place gets.
   const { flight, hiddenSlots, cssDeal } = useAutoPlaceFlights(state);
+  // Cells of a line that just completed with a scoring hand — flashed
+  // as a staggered sweep on the board.
+  const sweepSlots = useLineCompletions(liveReport);
+
+  // Tap-to-place: during normal play the pulsing next slot commits a
+  // PLACE directly (same dispatch path as the dock button, so tutorial
+  // gating applies unchanged). Tapping any other empty cell nudges — a
+  // first-run rescue for the universal "tap the board" instinct.
+  const { toast } = useToast();
+  const lastNudgeRef = useRef(0);
 
   // Line spotlight: tapping a seated card (outside perk targeting)
   // lights up its row + column with their R/C names and live values —
@@ -206,10 +268,30 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
   // The dock's commit action (Place while deciding, Cancel while
   // targeting); remaining actions arrange per the dock-layout setting.
-  const commitAction =
-    ui.actions.find(a => a.id === 'place') ??
-    ui.actions.find(a => a.id === 'cancel');
+  const placeAction = ui.actions.find(a => a.id === 'place');
+  const commitAction = placeAction ?? ui.actions.find(a => a.id === 'cancel');
   const rowActions = ui.actions.filter(a => a !== commitAction);
+
+  // Mirrors the dock's pause: while an engine flight is posing in the
+  // well, a board tap must not commit the drawn card either.
+  const placeArmed =
+    placeAction !== undefined && flight === null && hiddenSlots.size === 0;
+  const boardRole = (idx: number) => {
+    const role = ui.roleOf(idx);
+    // Hold the next-slot ring until any staged flight (opening pose,
+    // joker arrival) has landed — otherwise it highlights the SECOND
+    // slot while the first card is still posing in the well.
+    if (role === 'next' && (flight !== null || hiddenSlots.size > 0)) {
+      return null;
+    }
+    return role;
+  };
+  const nudgePlacement = () => {
+    const now = Date.now();
+    if (now - lastNudgeRef.current < 4000) return;
+    lastNudgeRef.current = now;
+    toast('Cards land on the pulsing slot — tap it (or press Place).');
+  };
 
   const actionBtn = (a: (typeof ui.actions)[number], cls?: string) => (
     <Button
@@ -295,27 +377,24 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // until I left and came back" bug).
               key={bonusOpen ? `board-bonus-${bonusBoardSize ?? 'init'}` : 'board-full'}
               grid={state.grid}
-              roleOf={idx => {
-                const role = ui.roleOf(idx);
-                // Hold the next-slot ring until any staged flight
-                // (opening pose, joker arrival) has landed — otherwise
-                // it highlights the SECOND slot while the first card
-                // is still posing in the well.
-                if (
-                  role === 'next' &&
-                  (flight !== null || hiddenSlots.size > 0)
-                ) {
-                  return null;
-                }
-                return role;
-              }}
+              roleOf={boardRole}
               isTappable={idx =>
                 ui.isTappable(idx) ||
-                (spotlightEnabled && state.grid[idx] !== null)
+                (spotlightEnabled && state.grid[idx] !== null) ||
+                // Normal play: every empty cell responds — the pulsing
+                // next slot places, the rest nudge toward it.
+                (spotlightEnabled && placeArmed && state.grid[idx] === null)
               }
               onCellTap={idx => {
                 if (spotlightEnabled && state.grid[idx] !== null) {
                   setSpotlight(s => (s === idx ? null : idx));
+                  return;
+                }
+                if (spotlightEnabled && placeArmed && state.grid[idx] === null) {
+                  // Same dispatch path as the dock's Place button, so
+                  // tutorial gating and sfx behave identically.
+                  if (boardRole(idx) === 'next') placeAction?.onPress();
+                  else nudgePlacement();
                   return;
                 }
                 ui.onCellTap(idx);
@@ -325,6 +404,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               openingDeal={cssDeal}
               hiddenSlots={hiddenSlots}
               spotlight={spotlightProp}
+              sweepSlots={sweepSlots}
             />
           </div>
 

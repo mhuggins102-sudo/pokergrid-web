@@ -82,10 +82,20 @@
 }
 
 .sm {
+  position: relative;
   min-height: 32px;
   padding: 0 var(--space-md);
   font-size: 13px;
   border-radius: var(--radius-sm);
+}
+
+/* Invisible vertical hit-area extension: 32px visual, 44px touch
+   target. Vertical only — small buttons sit in tight rows, and a
+   horizontal bleed would overlap the neighbor's target. */
+.sm::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
 }
 
 .lg {

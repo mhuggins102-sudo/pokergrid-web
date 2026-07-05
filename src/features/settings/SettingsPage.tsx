@@ -65,7 +65,7 @@ export function SettingsPage() {
       <div className={styles.panel}>
         <ToggleRow
           title="Sounds"
-          hint="Card and scoring sound effects (arriving with the polish pass)."
+          hint="Card and scoring sound effects."
           value={settings.sounds}
           onChange={v => patch({ sounds: v })}
         />

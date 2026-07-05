@@ -60,11 +60,53 @@
   color: var(--ink-2);
 }
 
-.penalty {
-  color: var(--danger);
-  font-size: 12px;
-  font-weight: 500;
+/* Floating delta chip — rises off the score and fades as the number
+   ticks in. Anchored to the score row so it reads as "the score just
+   gained this". */
+.delta {
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  animation: delta-rise 0.9s ease-out both;
+  pointer-events: none;
+}
+
+.deltaDown {
+  color: var(--danger);
+}
+
+@keyframes delta-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .delta {
+    animation: delta-fade 0.9s ease-out both;
+  }
+
+  @keyframes delta-fade {
+    0%,
+    70% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 }
 
 .controls {

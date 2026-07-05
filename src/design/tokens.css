@@ -19,7 +19,9 @@
   /* ---- Ink ---- */
   --ink: #1a1a1a;
   --ink-2: #5f5a51;
-  --ink-3: #938c7d;
+  /* Darkened from #938c7d — that read ~3.1:1 on --paper, under the
+     4.5:1 AA floor for the many 11-13px labels that use it. */
+  --ink-3: #736c5c;
   --hairline: rgba(26, 26, 26, 0.14);
   --scrim: rgba(26, 26, 26, 0.4);
   --rule: #d9d1c0;
