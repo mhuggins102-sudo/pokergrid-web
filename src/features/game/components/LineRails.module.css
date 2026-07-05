@@ -83,7 +83,7 @@
    flip and pops on its own beat. Independent `scale` — never
    transform — so nothing else is clobbered. */
 .chipGoldIn {
-  animation: gold-pop 0.3s ease-out;
+  animation: gold-pop 0.6s ease-out;
 }
 
 @keyframes gold-pop {
@@ -136,12 +136,11 @@
    animation-delay), rows first, then columns — the score assembles
    line by line. backwards-fill hides chips until their turn. */
 .tallyIn {
-  animation: rail-tally-in 0.3s ease-out backwards;
+  animation: rail-tally-in 0.6s ease-out backwards;
 }
 
-/* The independent `scale` property, NOT transform — row chips already
-   carry transform: rotate(180deg) for their vertical text, and a
-   transform keyframe would clobber it. */
+/* The independent `scale` property, NOT transform — keeps the keyframe
+   composable with any transform a chip might carry. */
 @keyframes rail-tally-in {
   0% {
     opacity: 0;

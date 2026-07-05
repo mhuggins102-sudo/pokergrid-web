@@ -105,9 +105,9 @@ export function LineRails({
           // entrance has finished by the time the stage flips, and the
           // flip swaps the animation property wholesale.
           goldNow && tally?.animate
-            ? { animationDelay: `${tallyIndex * 80}ms` }
+            ? { animationDelay: `${tallyIndex * 160}ms` }
             : stagger
-              ? { animationDelay: `${tallyIndex * 110}ms` }
+              ? { animationDelay: `${tallyIndex * 220}ms` }
               : undefined
         }
         onClick={() => onLineTap?.(line)}
