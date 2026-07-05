@@ -200,6 +200,54 @@ export const sfxWheelSpin = (durationS: number, ticks: number): void => {
   }
 };
 
+// Result-screen tally: one tick family per scoring color.
+export type TallyTier = 'base' | 'gold' | 'purple';
+
+const TALLY_FREQ: Record<TallyTier, number> = {
+  base: 820, // green — the line-by-line assemble
+  gold: 1050, // gold bonus add
+  purple: 1300, // grid multiplier
+};
+
+/**
+ * Tick times for one tally segment — evenly spaced at `ticksPerS`,
+ * always inside [0, durationS]. Pure; exported for tests.
+ */
+export const tallyTickTimes = (
+  durationS: number,
+  ticksPerS = 16
+): number[] => {
+  if (!(durationS > 0)) return [];
+  const n = Math.max(2, Math.round(durationS * ticksPerS));
+  const times: number[] = [];
+  for (let k = 0; k < n; k++) times.push((k / (n - 1)) * durationS);
+  return times;
+};
+
+/**
+ * Game-show count-up ratchet for one tally color segment: rapid soft
+ * ticks for the segment's length, drifting slightly upward in pitch so
+ * the count audibly climbs. Each tier sits a step higher than the
+ * last (green → gold → purple), and purple lands its multiply with a
+ * tiny two-note flourish. Fired by ResultView in the same effect that
+ * drives the visual stages, so sound and count can't desync.
+ */
+export const sfxTallyCount = (durationS: number, tier: TallyTier): void => {
+  const c = audio();
+  if (!c) return;
+  const f0 = TALLY_FREQ[tier];
+  const times = tallyTickTimes(durationS);
+  const last = times.length - 1;
+  for (let k = 0; k < times.length; k++) {
+    // ~+18% drift across the segment — the ratchet climbs with the sum.
+    clickTick(times[k], f0 * (1 + 0.18 * (k / Math.max(1, last))), 0.038);
+  }
+  if (tier === 'purple' && times.length > 0) {
+    tone(f0 * 1.25, durationS + 0.02, 0.09, 0.05, 'triangle');
+    tone((f0 * 5) / 3, durationS + 0.09, 0.16, 0.05, 'triangle');
+  }
+};
+
 export type SfxName =
   | 'place'
   | 'chime'
