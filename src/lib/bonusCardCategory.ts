@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { BonusCard } from '../game/bonusCards';
+import { BonusCard, baseId } from '../game/bonusCards';
 import { Suit } from '../game/cards';
 import { colors } from '../design/tokens';
 
@@ -77,13 +77,13 @@ export const categoryOf = (card: BonusCard): BonusCategory => {
   // Rainbow stays in the 'conditional' bucket instead of falling through
   // to the default 'grid' (which would flip its chip tone from warn to
   // purple).
-  const baseId = card.id.replace(/-pwr\d+$/, '');
-  if (baseId.startsWith('hand-')) return 'hand';
-  if (baseId.startsWith('row-') || baseId.startsWith('col-')) return 'line';
-  if (LINE_LOCATION_IDS.has(baseId)) return 'line';
-  if (baseId.startsWith('suit-density-')) return 'suit';
-  if (CONDITIONAL_IDS.has(baseId)) return 'conditional';
-  if (DECK_MANAGEMENT_IDS.has(baseId)) return 'deck-management';
+  const base = baseId(card);
+  if (base.startsWith('hand-')) return 'hand';
+  if (base.startsWith('row-') || base.startsWith('col-')) return 'line';
+  if (LINE_LOCATION_IDS.has(base)) return 'line';
+  if (base.startsWith('suit-density-')) return 'suit';
+  if (CONDITIONAL_IDS.has(base)) return 'conditional';
+  if (DECK_MANAGEMENT_IDS.has(base)) return 'deck-management';
   return 'grid';
 };
 

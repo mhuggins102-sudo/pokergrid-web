@@ -5,7 +5,7 @@ import {
   AchievementCheckCtx,
   achievementEarned,
 } from '../../game/achievements';
-import { BONUS_DECK_POOL } from '../../game/bonusCards';
+import { BONUS_DECK_POOL, baseId } from '../../game/bonusCards';
 import { CHALLENGES, challengeWon } from '../../game/challenges';
 import { Difficulty } from '../../game/rules';
 import { ScoreReport } from '../../game/scoring';
@@ -59,7 +59,7 @@ export function useRecordResult(
 
     // Per-card attribution with any -pwrN suffix stripped.
     const attribution = state.bonusCards.map((c, i) => ({
-      cardId: c.id.replace(/-pwr\d+$/, ''),
+      cardId: baseId(c),
       shapley: shapley[i] ?? 0,
     }));
 

@@ -1,4 +1,5 @@
 import {
+  baseId,
   BonusCard,
   GridSnapshot,
   LineContext,
@@ -52,7 +53,7 @@ export const bonusCardLiveContext = (
   if (isPlaceholder(card) || isSpecialCard(card)) return [];
 
   const final = opts.final ?? false;
-  const baseId = card.id.replace(/-pwr\d+$/, '');
+  const base = baseId(card);
   const out: string[] = [];
 
   const ctxs: LineContext[] = gridLines(state.grid).map(l => ({
@@ -83,31 +84,31 @@ export const bonusCardLiveContext = (
 
   // ---- targeted counters ----
 
-  if (baseId === 'burnout-x1_25' || baseId === 'frugal-x1_5') {
+  if (base === 'burnout-x1_25' || base === 'frugal-x1_5') {
     out.push(
       final
         ? `Suit perks spent: ${state.perkSpent.length}`
         : `Suit perks spent so far: ${state.perkSpent.length}`
     );
   }
-  if (baseId === 'deck-bank-x1_05') {
+  if (base === 'deck-bank-x1_05') {
     out.push(
       final
         ? `Deck cards left at the end: ${state.deck.length}`
         : `Deck cards remaining: ${state.deck.length}`
     );
   }
-  if (baseId === 'trash-joker-x1_25') {
+  if (base === 'trash-joker-x1_25') {
     const n = state.discards.filter(isJoker).length;
     out.push(final ? `Jokers destroyed: ${n}` : `Jokers destroyed so far: ${n}`);
   }
-  if (baseId === 'cozy-joker-x1_15' || baseId === 'joker-line-x1_5') {
+  if (base === 'cozy-joker-x1_15' || base === 'joker-line-x1_5') {
     out.push(
       `Jokers on the board: ${state.grid.filter(c => c !== null && isJoker(c)).length}`
     );
   }
-  if (baseId.startsWith('suit-density-')) {
-    const tail = baseId.slice('suit-density-'.length).toUpperCase();
+  if (base.startsWith('suit-density-')) {
+    const tail = base.slice('suit-density-'.length).toUpperCase();
     if (tail === 'H' || tail === 'S' || tail === 'D' || tail === 'C') {
       const suit = tail as Suit;
       const n = state.grid.filter(
@@ -116,7 +117,7 @@ export const bonusCardLiveContext = (
       out.push(`${SUIT_GLYPH[suit]} ${SUIT_NAME[suit]} on the board: ${n}`);
     }
   }
-  if (baseId === 'diversity-x1_25') {
+  if (base === 'diversity-x1_25') {
     const types = new Set(
       ctxs.map(c => c.hand).filter(h => h !== null && h !== 'HIGH_CARD')
     );
@@ -126,7 +127,7 @@ export const bonusCardLiveContext = (
         : `Distinct scoring hand types right now: ${types.size} (needs 6+)`
     );
   }
-  if (baseId === 'balance-x1_25') {
+  if (base === 'balance-x1_25') {
     const missing = ctxs.filter(
       c => c.hand === null || c.hand === 'HIGH_CARD'
     );
@@ -136,7 +137,7 @@ export const bonusCardLiveContext = (
       !final && missing.length > 0 ? ` (missing ${labelList(missing)})` : '';
     out.push(`Lines at Pair or better: ${ok} of 10${where}`);
   }
-  if (baseId === 'no-flushes-x1_25') {
+  if (base === 'no-flushes-x1_25') {
     const offenders = ctxs.filter(
       c =>
         c.hand === 'FLUSH' || c.hand === 'STRAIGHT_FLUSH' || c.hand === 'ROYAL_FLUSH'
@@ -148,7 +149,7 @@ export const bonusCardLiveContext = (
         : `Flushes on the board right now: ${offenders.length}${where}`
     );
   }
-  if (baseId === 'no-straights-x1_25') {
+  if (base === 'no-straights-x1_25') {
     const offenders = ctxs.filter(
       c =>
         c.hand === 'STRAIGHT' ||
@@ -162,7 +163,7 @@ export const bonusCardLiveContext = (
         : `Straights on the board right now: ${offenders.length}${where}`
     );
   }
-  if (baseId === 'rainbow-corners-x1_25') {
+  if (base === 'rainbow-corners-x1_25') {
     const corners = [0, 4, 20, 24]
       .map(i => state.grid[i])
       .filter((c): c is NonNullable<typeof c> => c !== null);
@@ -173,7 +174,7 @@ export const bonusCardLiveContext = (
       `Corners filled: ${corners.length} of 4 · distinct suits: ${suits.size}`
     );
   }
-  if (baseId === 'patience-no-penalty') {
+  if (base === 'patience-no-penalty') {
     const open = ctxs.filter(c => c.cards.some(x => x === null));
     const where = open.length > 0 ? ` (${labelList(open)})` : '';
     out.push(
@@ -182,7 +183,7 @@ export const bonusCardLiveContext = (
         : `Open lines right now: ${open.length}${where} (−25 each at game end without this)`
     );
   }
-  if (baseId.startsWith('hand-') && card.lineEffect) {
+  if (base.startsWith('hand-') && card.lineEffect) {
     // Name the hand the card pays for AND the specific lines scoring it.
     const firing = firingLines(card, ctxs);
     const hand = firing[0]?.hand;

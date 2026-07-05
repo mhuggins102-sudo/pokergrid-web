@@ -6,25 +6,7 @@ import { activeHalf, cardLabel, fullDeck, isJoker, StandardCard } from '../cards
 // Build a Double Duty game (doubleDuty is newGame's last positional arg).
 // Runs on the Hard ruleset like the real challenge.
 const newDoubleDuty = (rng: () => number) =>
-  newGame(
-    'hard',
-    rng,
-    500, // targetOverride
-    undefined,
-    false,
-    false,
-    [],
-    [],
-    [],
-    false,
-    false, // noBonusCards
-    [],
-    undefined,
-    0,
-    false, // scatter
-    false, // investHands
-    true // doubleDuty
-  );
+  newGame('hard', rng, { targetOverride: 500, doubleDuty: true });
 
 const standards = (cards: readonly (GameState['deck'][number] | null)[]) =>
   cards.filter((c): c is StandardCard => c !== null && c.kind === 'standard');

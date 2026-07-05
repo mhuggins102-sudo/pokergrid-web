@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { hydrateBonusCards } from '../../../game/bonusCards';
 import { safeJSONStorage } from '../../../lib/safeStorage';
+import { PLAYS_STORE_NAME, PLAYS_STORE_VERSION } from './playsStoreKey';
 import type { GameState } from '../../../game/state';
 import type { DailyRecipe } from '../../../game/daily/recipe';
 
@@ -62,7 +63,8 @@ export const usePlaysStore = create<PlaysStore>()(
       reset: () => set({ plays: {} }),
     }),
     {
-      name: 'pokergrid:daily:plays:v1',
+      name: PLAYS_STORE_NAME,
+      version: PLAYS_STORE_VERSION,
       storage: safeJSONStorage(),
       merge: (persisted, current) => {
         const raw =

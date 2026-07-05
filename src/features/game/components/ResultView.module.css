@@ -358,10 +358,6 @@
     grid-row: 3;
   }
 
-  .bonusRowSlot {
-    display: none;
-  }
-
   .bonusPanelSlot {
     display: block;
     grid-column: 3;

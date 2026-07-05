@@ -14,67 +14,45 @@
 }
 
 .boardArea {
-  /* svh (smallest viewport height) keeps the whole loop on screen even
-     with the mobile browser's URL bar expanded: on short viewports the
-     board shrinks instead of the page scrolling. ~285px covers header,
-     status strip, bonus row, dock, and gaps. */
-  width: min(100%, 440px, calc(100svh - 302px));
-  /* Equal breathing room: vertical auto margins split layout slack
-     evenly above and below the board. */
-  margin: auto;
-  /* NO width transition here: motion measures card layouts in the
-     same commit that adds/removes .bonusOpen, and a CSS transition
-     makes it measure mid-flight geometry — cards end up pinned to
-     stale positions until the next re-measure (the "board shifted
-     right until I tabbed away" bug). The width snaps; the cards'
-     own layout animations carry the visual transition. */
+  /* The flexible middle of the column: takes exactly the slack between
+     the status strip and the dock, so the board fits whatever the
+     score bar / coach / bonus row / dock leave over — no viewport
+     math. container-type (contain: size) severs the content→size
+     feedback loop, so flex-basis 0 + grow is the whole story. */
+  flex: 1 1 0;
+  /* Floor on tiny phones / tall ♣ panels; below it the page scrolls
+     (the shell caps at min-height, not height — same as the old
+     Math.max(140, …) measurement behavior). */
+  min-height: 140px;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* NO margin:auto here — a cross-axis auto margin defeats flex
+     stretch, and combined with contain:size that collapses this box
+     to width 0. The inner flexbox does the centering instead. */
 }
 
-/* ♣ draw open: the dock panel needs ~210px more than the normal dock,
-   so the board temporarily shrinks by that budget — overall page
-   height never changes. */
-.bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 350px));
-  min-width: 180px;
+.boardFrame {
+  /* Square board sized to the smaller of the area's two axes.
+     NO width transition: motion measures card layouts in the same
+     commit that adds/removes .bonusOpen, and a CSS transition makes
+     it measure mid-flight geometry — cards end up pinned to stale
+     positions until the next re-measure (the "board shifted right
+     until I tabbed away" bug). The width snaps; the cards' own
+     layout animations carry the visual transition. */
+  width: min(100cqw, 100cqh, 440px);
 }
 
 /* Tutorial coach: a FIXED slice of the vertical budget — every step
    renders the same panel height (long copy scrolls inside), so the
-   layout never jumps between steps. The board shrinks by the same
-   amount (mirrors the ♣ panel's budget trick); while the ♣ panel has
-   the dock the coach unmounts entirely. */
+   layout never jumps between steps; the board flexes around it. While
+   the ♣ panel has the dock the coach unmounts entirely. */
 .coachSlot {
   /* Sized for the longest step body (~3 lines) — tutorialSteps.ts
      keeps copy short so the board stays the main event. */
   height: 158px;
   flex-shrink: 0;
-}
-
-.coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 460px));
-}
-
-/* Classic dock is ~30px shorter; center stage ~35px taller. */
-.dockClassic .boardArea {
-  width: min(100%, 440px, calc(100svh - 293px));
-}
-
-.dockClassic.coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 451px));
-}
-
-.dockStage .boardArea {
-  width: min(100%, 440px, calc(100svh - 334px));
-}
-
-.dockStage.coachOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 492px));
-}
-
-.dockClassic.bonusOpen .boardArea,
-.dockStage.bonusOpen .boardArea {
-  width: min(100%, 440px, calc(100svh - 350px));
-  min-width: 180px;
 }
 
 /* Spotlight on the move the coach is asking for. */
@@ -98,11 +76,6 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
-}
-
-.bonusRowSlot {
-  /* No auto margins below the board: the board + bonus row + dock
-     cluster hugs the bottom and slack collects under the score bar. */
 }
 
 /* Bottom control dock, pinned to the bottom edge: top row = drawn card
@@ -171,6 +144,16 @@
   flex: none;
   text-align: left;
   padding-top: 2px;
+  /* Reserve the banner line even while empty: the dock's height now
+     directly sets the flexed board size, so a line appearing on a
+     targeting prompt would make the whole board breathe mid-turn. */
+  min-height: 1lh;
+}
+
+.actionStack .dockText:empty {
+  /* Override the global :empty hide — the reserved line must keep its
+     height when there's no banner text. */
+  display: block;
 }
 
 .actionStack .commitButton {
@@ -247,37 +230,8 @@
     gap: var(--space-lg);
   }
 
-  .boardArea {
-    width: min(100%, 520px, calc(100svh - 333px));
-  }
-
-  .bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 381px));
-  }
-
-  .coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 491px));
-  }
-
-  .dockClassic .boardArea {
-    width: min(100%, 520px, calc(100svh - 324px));
-  }
-
-  .dockClassic.coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 482px));
-  }
-
-  .dockStage .boardArea {
-    width: min(100%, 520px, calc(100svh - 365px));
-  }
-
-  .dockStage.coachOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 523px));
-  }
-
-  .dockClassic.bonusOpen .boardArea,
-  .dockStage.bonusOpen .boardArea {
-    width: min(100%, 520px, calc(100svh - 381px));
+  .boardFrame {
+    width: min(100cqw, 100cqh, 520px);
   }
 
   .dockText {
@@ -313,6 +267,16 @@
     grid-column: 2;
     grid-row: 1 / span 2;
     width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
+    /* Reset the mobile flex/container treatment: size containment
+       would zero the auto grid rows here (the board's height must come
+       from its content), and cq units without a container fall back to
+       viewport units. */
+    container-type: normal;
+    min-height: 0;
+  }
+
+  .boardFrame {
+    width: 100%;
   }
 
   .dock {
@@ -356,14 +320,5 @@
 
   .coachOpen .bonusSlot {
     grid-row: 2 / span 2;
-  }
-
-  .coachOpen .boardArea,
-  .dockClassic .boardArea,
-  .dockStage .boardArea,
-  .dockClassic.coachOpen .boardArea,
-  .dockStage.coachOpen .boardArea {
-    width: clamp(420px, min(44vw, calc(100dvh - 260px)), 540px);
-    min-width: 0;
   }
 }

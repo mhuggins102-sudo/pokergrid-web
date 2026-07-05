@@ -1,4 +1,4 @@
-import { Card, isJoker, Rank, Suit } from './cards';
+import { blackjackPip, Card, isJoker, Rank, Suit } from './cards';
 import {
   CORNER_SLOTS,
   Grid,
@@ -398,24 +398,13 @@ const suitDensity = (suit: Suit): BonusCard => ({
   },
 });
 
-// Blackjack-style pip value of a single card. 2–10 = face, J/Q/K = 10,
-// A is 1 or 11 depending on aceHigh. Used by Highball / Lowball /
-// Blackjack to score lines by total pip value rather than poker rank.
+// Blackjack-style pip value of a single card. Used by Highball /
+// Lowball / Blackjack to score lines by total pip value rather than
+// poker rank; the shared table lives in cards.ts (blackjackPip).
 const blackjackValue = (
   c: Exclude<Card, { kind: 'joker' }>,
   aceHigh: boolean
-): number => {
-  switch (c.rank) {
-    case 'A': return aceHigh ? 11 : 1;
-    case 'J':
-    case 'Q':
-    case 'K':
-    case '10':
-      return 10;
-    default:
-      return parseInt(c.rank, 10);
-  }
-};
+): number => blackjackPip(c.rank, aceHigh);
 
 // Sum the line's standard cards as blackjack pip values. Jokers
 // contribute 0 (they're excluded). The same physical Ace on the board
@@ -1131,7 +1120,7 @@ export const BONUS_DECK_POOL: BonusCard[] = [
   lowhand,
   highKicker,
 
-  // Grid-wide (14)
+  // Grid-wide (16)
   cleanBorder,
   monochromeBorder,
   rainbowCorners,
@@ -1212,6 +1201,17 @@ export const applyGridEffects = (
 
 // ---------- Power-up ----------
 
+// A card's id minus any power-up suffix ("royal-touch-x1_5-pwr2" →
+// "royal-touch-x1_5"). Save data, stats, cooldowns, and hydration all
+// key off the base id — this is the ONE place the suffix format is
+// known, so an id-scheme change can't silently orphan a subset of the
+// call sites.
+export const baseId = (idOrCard: string | BonusCard): string =>
+  (typeof idOrCard === 'string' ? idOrCard : idOrCard.id).replace(
+    /-pwr\d+$/,
+    ''
+  );
+
 // Round a multiplier to one decimal place — used everywhere a powered-up
 // value is computed so chip text and scoring stay in lockstep.
 const roundTenth = (n: number): number => Math.round(n * 10) / 10;
@@ -1257,8 +1257,7 @@ export const powerUpBonusCard = (
   // steps don't compose cleanly with multiplication — additive +5 per
   // power-up keeps the math exact and matches the design intent.
   const isPatience = card.id.startsWith('patience-');
-  const baseIdForKind = card.id.replace(/-pwr\d+$/, '');
-  const isCompounding = COMPOUNDING_BASE_IDS.has(baseIdForKind);
+  const isCompounding = COMPOUNDING_BASE_IDS.has(baseId(card));
   const newMultValue = isPatience
     ? card.multValue + 5
     : isCompounding
@@ -1277,12 +1276,11 @@ export const powerUpBonusCard = (
   const newDescription = isPatience
     ? `Removes the -25 penalty AND adds +${newMultValue} for each incomplete row or column at game end.`
     : card.description;
-  // Strip any existing -pwrN suffix so repeated power-ups don't stack
-  // "-pwr1-pwr2-pwr3" tails — replace with a single counter.
-  const baseId = card.id.replace(/-pwr\d+$/, '');
   return {
     ...card,
-    id: `${baseId}-pwr${newPowerLevel}`,
+    // baseId strips any existing -pwrN suffix so repeated power-ups
+    // don't stack "-pwr1-pwr2-pwr3" tails — a single counter instead.
+    id: `${baseId(card)}-pwr${newPowerLevel}`,
     name: newName,
     mult: newMultText,
     description: newDescription,
@@ -1367,17 +1365,31 @@ export const universalEffectSum = (
 //
 // Runtime-mutable fields (`used` for one-time specials) are copied
 // over the rehydrated card so a spent Doubler stays spent on reload.
+// Unknown ids already warned about — one line per id per session, not
+// one per hydrated play.
+const warnedUnknownIds = new Set<string>();
+
 export const hydrateBonusCard = (raw: BonusCard): BonusCard => {
   // Placeholders carry no logic in the first place — return as-is.
   if (raw.placeholderKind) return raw;
 
-  const baseId = raw.id.replace(/-pwr\d+$/, '');
+  const base = baseId(raw);
   const fromPool =
-    BONUS_DECK_POOL.find(p => p.id === baseId) ??
-    SPECIAL_DECK_POOL.find(p => p.id === baseId);
+    BONUS_DECK_POOL.find(p => p.id === base) ??
+    SPECIAL_DECK_POOL.find(p => p.id === base);
   if (!fromPool) {
     // Unknown id — nothing to rehydrate against. The chip still
     // renders from its display fields; scoring just won't see it.
+    // Warn (once per id) so a renamed/removed pool entry silently
+    // zeroing old saves is diagnosable instead of invisible.
+    if (!warnedUnknownIds.has(base)) {
+      warnedUnknownIds.add(base);
+      console.warn(
+        `hydrateBonusCard: unknown bonus card id "${raw.id}" — ` +
+          'saved chip will render but not score. Was the card removed ' +
+          'or renamed in BONUS_DECK_POOL / SPECIAL_DECK_POOL?'
+      );
+    }
     return raw;
   }
 

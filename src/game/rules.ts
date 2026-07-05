@@ -26,7 +26,8 @@ export const JOKERS_BY_DIFFICULTY: Record<Difficulty, number> = {
 };
 
 // Free Play undo cap per difficulty. Targets-Up and Challenges set their
-// own caps via App.tsx; this only applies to Free Play runs.
+// own caps via setupForMode (src/features/game/modes.ts); this only
+// applies to Free Play runs.
 export const UNDOS_BY_DIFFICULTY: Record<Difficulty, number> = {
   easy: 1,
   medium: 1,

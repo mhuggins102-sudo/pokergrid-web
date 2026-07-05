@@ -5,22 +5,10 @@ import { GameState, newGame } from '../state';
 // Gridlock challenge — newGame with randomGridFill = 15. Hard
 // difficulty matches what App.tsx uses for every challenge.
 const gridlock = (seed: number): GameState =>
-  newGame(
-    'hard',
-    seededRng(seed),
-    findChallenge('gridlock').scoreTarget,
-    undefined,
-    false,
-    false,
-    [],
-    [],
-    [],
-    false,
-    false,
-    [],
-    undefined,
-    15
-  );
+  newGame('hard', seededRng(seed), {
+    targetOverride: findChallenge('gridlock').scoreTarget,
+    randomGridFill: 15,
+  });
 
 describe('Gridlock challenge', () => {
   it('seeds 15 cards across random distinct grid positions', () => {

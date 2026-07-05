@@ -71,7 +71,7 @@ const sameCard = (a: Card, b: Card): boolean =>
  */
 export const tutorialStart = (): GameState => {
   const rng = seededRng(TUTORIAL_SEED);
-  const base = newGame('easy', rng, TUTORIAL_TARGET);
+  const base = newGame('easy', rng, { targetOverride: TUTORIAL_TARGET });
 
   const used = [TUTORIAL_CENTER_CARD, ...TUTORIAL_OPENING];
   const remainderPool: Card[] = [];

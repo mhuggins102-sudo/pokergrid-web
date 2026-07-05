@@ -382,15 +382,7 @@ describe('GameState — Poker Purist challenge', () => {
     const state = newGame(
       'easy', // easy normally ships a starter; noBonusCards must override
       seededRng(1),
-      undefined, // target
-      undefined, // deckLimit
-      false,     // noSwap
-      false,     // noDiscards
-      [],        // keptBonusCards
-      [],        // deckExtras
-      [],        // superchargedDeckCards
-      false,     // randomPerks
-      true       // noBonusCards
+      { noBonusCards: true }
     );
     expect(state.bonusCards).toEqual([]);
     expect(state.bonusDeck).toEqual([]);
@@ -507,7 +499,7 @@ describe('GameState — Spotlight exclusivity rule', () => {
 describe('GameState — short deck (challenge mode)', () => {
   test('newGame respects deckLimit by truncating the shuffled deck', () => {
     const full = newGame('hard', seededRng(1));
-    const short = newGame('hard', seededRng(1), undefined, 45);
+    const short = newGame('hard', seededRng(1), { deckLimit: 45 });
     // 53-card source deck → 52 in deck after auto-placing 1 (or fewer if a
     // joker auto-place chain consumed more). With deckLimit=45, after the
     // first card placement + any joker chain, there should be 8 fewer cards

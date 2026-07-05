@@ -1,26 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { newGame, step } from '../state';
 import { seededRng } from '../deck';
+import { Card } from '../cards';
+import { placeAt } from '../grid';
 
 // Build a Scatter game (scatter is newGame's final positional arg).
 const newScatter = (rng: () => number) =>
-  newGame(
-    'hard',
-    rng,
-    undefined, // targetOverride
-    undefined, // deckLimit
-    false, // noSwap
-    false, // noDiscards
-    [], // keptBonusCards
-    [], // deckExtras
-    [], // superchargedDeckCards
-    false, // randomPerks
-    false, // noBonusCards
-    [], // initialBonusCards
-    undefined, // slotCategories
-    0, // randomGridFill
-    true // scatter
-  );
+  newGame('hard', rng, { scatter: true });
 
 describe('Scatter twist', () => {
   it('targets a random empty slot for the drawn card', () => {
@@ -73,5 +59,24 @@ describe('Scatter twist', () => {
     expect(s.scatter).toBe(false);
     expect(s.scatterSlot).toBeNull();
     expect(s.grid[12]).not.toBeNull();
+  });
+
+  it('re-rolls a stale scatter target instead of throwing (occupied slot)', () => {
+    // No current mode moves grid cards under Scatter, but the daily
+    // recipe composes twists programmatically — if a grid-moving effect
+    // ever seats a card on the pre-rolled target, PLACE must recover
+    // (re-roll) rather than let placeAt throw and crash the reducer.
+    const s0 = newScatter(seededRng(7));
+    const target = s0.scatterSlot!;
+    const blocker: Card = { kind: 'standard', rank: '2', suit: 'H' };
+    const blocked = { ...s0, grid: placeAt(s0.grid, target, blocker) };
+    const occBefore = blocked.grid.filter(c => c !== null).length;
+
+    const after = step(blocked, { type: 'PLACE' });
+
+    expect(after).not.toBe(blocked); // the action committed
+    expect(after.grid[target]).toBe(blocker); // blocker untouched
+    // The drawn card landed on a re-rolled empty slot.
+    expect(after.grid.filter(c => c !== null).length).toBe(occBefore + 1);
   });
 });
