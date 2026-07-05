@@ -211,20 +211,51 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // rotation (and sometimes first layout), leaving the board mis-sized
   // until an app switch forces a style flush; the observer fires
   // reliably there, so the px vars win whenever they exist. No React
-  // state: the write happens outside the render cycle entirely.
-  const roRef = useRef<ResizeObserver | null>(null);
+  // state: the writes happen outside the render cycle entirely.
+  //
+  // Belt and braces: iOS can also hand the observer its ONLY fire
+  // during a transient first layout (URL bar settling, safe-area
+  // application, font swap) and then reflow without resizing this
+  // element again from the observer's point of view — so we re-read
+  // the box on the late signals those passes emit: a double-rAF after
+  // mount, visualViewport resizes, orientation changes, pageshow, and
+  // fonts.ready.
+  const measureCleanupRef = useRef<(() => void) | null>(null);
   const boardAreaRef = useCallback((el: HTMLDivElement | null) => {
-    roRef.current?.disconnect();
-    roRef.current = null;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(entries => {
-      const r = entries[0]?.contentRect;
-      if (!r) return;
-      el.style.setProperty('--avail-w', `${r.width}px`);
-      el.style.setProperty('--avail-h', `${r.height}px`);
+    measureCleanupRef.current?.();
+    measureCleanupRef.current = null;
+    if (!el) return;
+    const write = (w: number, h: number) => {
+      el.style.setProperty('--avail-w', `${w}px`);
+      el.style.setProperty('--avail-h', `${h}px`);
+    };
+    const remeasure = () => {
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) write(r.width, r.height);
+    };
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(entries => {
+        const r = entries[0]?.contentRect;
+        if (r) write(r.width, r.height);
+      });
+      ro.observe(el);
+    }
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(remeasure);
     });
-    ro.observe(el);
-    roRef.current = ro;
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', remeasure);
+    window.addEventListener('orientationchange', remeasure);
+    window.addEventListener('pageshow', remeasure);
+    document.fonts?.ready.then(remeasure, () => {});
+    measureCleanupRef.current = () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+      vv?.removeEventListener('resize', remeasure);
+      window.removeEventListener('orientationchange', remeasure);
+      window.removeEventListener('pageshow', remeasure);
+    };
   }, []);
 
   const spotlightEnabled = ui.phaseKind === 'awaiting-action';

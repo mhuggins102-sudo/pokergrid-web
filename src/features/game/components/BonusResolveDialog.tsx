@@ -16,7 +16,9 @@ function CardChip({
   card: BonusCard;
   ariaPrefix: string;
   onPick: () => void;
-  onInfo: () => void;
+  /** Omitted on the swap-out chips — held cards' details already live
+   *  in the bonus row. */
+  onInfo?: () => void;
 }) {
   const cat = styleFor(card);
   // Glyph gated on colorBlindAssist per the category-style contract.
@@ -44,14 +46,16 @@ function CardChip({
         </span>
         <span className={styles.chipMult}>{card.mult}</span>
       </button>
-      <button
-        type="button"
-        className={styles.chipInfo}
-        onClick={onInfo}
-        aria-label={`About ${card.title}`}
-      >
-        i
-      </button>
+      {onInfo && (
+        <button
+          type="button"
+          className={styles.chipInfo}
+          onClick={onInfo}
+          aria-label={`About ${card.title}`}
+        >
+          ⓘ
+        </button>
+      )}
     </div>
   );
 }
@@ -106,7 +110,6 @@ export function BonusResolvePanel({ ui }: { ui: BonusDialogUI }) {
               card={card}
               ariaPrefix="Swap out"
               onPick={() => dispatch({ type: 'BONUS_REPLACE', oldIdx: i })}
-              onInfo={() => setInfo(card)}
             />
           ))}
         </div>
@@ -139,11 +142,18 @@ export function BonusResolvePanel({ ui }: { ui: BonusDialogUI }) {
       <p className={styles.hint}>
         ♣ Bonus draw —{' '}
         {ui.atCap
-          ? 'hand full: keeping a card swaps one out'
+          ? 'hand full'
           : ui.drawn.length > 1
             ? 'keep one of the two'
             : 'keep this card?'}
       </p>
+      {ui.atCap && (
+        <p className={styles.hintSub}>
+          {ui.canDecline
+            ? 'Keep one, or tap ✕ to decline'
+            : 'Keep one, then swap out a held card'}
+        </p>
+      )}
       <div className={styles.choices}>
         {ui.drawn.map((card, i) => (
           <CardChip

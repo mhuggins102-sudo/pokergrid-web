@@ -7,8 +7,8 @@ import styles from './DisplayPreview.module.css';
 
 const c = (rank: Rank, suit: Suit): Card => ({ kind: 'standard', rank, suit });
 
-// A mostly-full 5×3 sample slice of a board: all four suits present
-// (so two- vs four-color reads instantly), a made top row, two gaps.
+// A mostly-full 5×5 board: all four suits present (so two- vs
+// four-color reads instantly), a made top row, a few open cells.
 const SAMPLE: (Card | null)[] = [
   c('A', 'S'),
   c('K', 'H'),
@@ -25,8 +25,18 @@ const SAMPLE: (Card | null)[] = [
   c('7', 'D'),
   c('7', 'C'),
   c('3', 'S'),
+  c('5', 'D'),
+  c('5', 'S'),
+  c('8', 'C'),
+  null,
+  c('K', 'D'),
+  c('A', 'H'),
+  c('6', 'C'),
+  c('J', 'D'),
+  c('Q', 'S'),
+  null,
 ];
-const ROW_TOTALS = [30, 2, 0];
+const ROW_TOTALS = [30, 2, 0, 5, 0];
 const COL_TOTALS = [4, 0, 8, 21, 2];
 
 /**

@@ -48,6 +48,15 @@
   padding: 0 36px;
 }
 
+/* Second hint line (hand-full only): what keeping a card entails. */
+.hintSub {
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  padding: 0 36px;
+}
+
 .choices {
   display: flex;
   justify-content: center;
@@ -101,28 +110,36 @@
   white-space: nowrap;
 }
 
-/* Serif-circled "i" — the full description without spending dock
-   height on it. A real sibling (not nested) so both stay buttons. */
+/* The full description without spending dock height on it. Same bare
+   ⓘ glyph as the result screen's score-details button (.heroInfo) for
+   a consistent read, in a 32×32 hit box — big enough that a thumb aim
+   can't fall through onto the card button underneath (which would
+   keep the card). A real sibling (not nested) so both stay buttons. */
 .chipInfo {
   position: absolute;
-  top: 3px;
-  right: 3px;
+  top: -2px;
+  right: -2px;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: 1px solid var(--hairline);
-  border-radius: 50%;
-  background: var(--paper);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
   color: var(--ink-2);
-  font-family: var(--font-serif, serif);
-  font-size: 11px;
-  font-style: italic;
-  font-weight: 700;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
+}
+
+@media (hover: hover) {
+  .chipInfo:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+  }
 }
 
 .chipInfo:focus-visible {

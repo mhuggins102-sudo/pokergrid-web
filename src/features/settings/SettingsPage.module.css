@@ -94,6 +94,38 @@
   color: var(--ink-2);
 }
 
+/* ⓘ beside a row title — same bare glyph as the result screen's
+   score-details button; opens the row's explainer sheet. */
+.rowInfo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: -6px 0 -6px 2px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .rowInfo:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+}
+
+.rowInfo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* Editorial toggle: pill track, ink knob. */
 .toggle {
   position: relative;
