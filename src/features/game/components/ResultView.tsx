@@ -100,8 +100,8 @@ export function ResultView({ onReplay }: ResultViewProps) {
   useEffect(() => {
     if (staticTally) return;
     const timers: number[] = [];
-    const GOLD_AT = 1650;
-    const PURPLE_AT = 2350;
+    const GOLD_AT = 3300;
+    const PURPLE_AT = 4700;
     if (breakdown.hasGold) {
       timers.push(window.setTimeout(() => setStage('boosted'), GOLD_AT));
       timers.push(
@@ -124,17 +124,19 @@ export function ResultView({ onReplay }: ResultViewProps) {
         ? report.subtotal
         : report.total;
   const displayTotal = useAnimatedNumber(stageTarget, !staticTally, {
-    durationMs: staticTally ? 0 : stage === 'assemble' ? 1200 : 400,
+    durationMs: staticTally ? 0 : stage === 'assemble' ? 2400 : 800,
     initial: staticTally ? undefined : 0,
   });
-  // Corner-row fade-in beats, aligned with the stage flips (base row
-  // lands as the assemble count finishes).
+  // Corner-row fade-in beats: each color row reveals at the START of
+  // its counting segment, so the hero number visibly counts alongside
+  // the row that explains it (green with the base count, gold with
+  // base→subtotal, purple with subtotal→total).
   const beatDelays = staticTally
     ? undefined
     : [
-        1150,
-        ...(breakdown.hasGold ? [1650] : []),
-        ...(breakdown.hasPurple ? [breakdown.hasGold ? 2350 : 1650] : []),
+        150,
+        ...(breakdown.hasGold ? [3300] : []),
+        ...(breakdown.hasPurple ? [breakdown.hasGold ? 4700 : 3300] : []),
       ];
 
   // ---- Daily: save locally, then queue-first submit ----

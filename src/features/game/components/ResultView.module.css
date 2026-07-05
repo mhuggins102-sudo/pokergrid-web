@@ -101,7 +101,7 @@
 }
 
 .breakRowIn {
-  animation: break-row-in 0.3s ease-out backwards;
+  animation: break-row-in 0.6s ease-out backwards;
 }
 
 @keyframes break-row-in {
@@ -117,7 +117,7 @@
 
 /* The multiply beat: the hero number gets kicked up by the purple row. */
 .scoreKick {
-  animation: score-kick 0.35s ease-out;
+  animation: score-kick 0.5s ease-out;
 }
 
 @keyframes score-kick {
