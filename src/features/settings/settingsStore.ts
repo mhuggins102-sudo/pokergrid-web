@@ -4,7 +4,14 @@ import { safeJSONStorage } from '../../lib/safeStorage';
 
 export type DockLayout = 'hand-stack' | 'center-stage' | 'classic';
 
+// Visual theme. 'system' resolves to Card Room light or dark from the
+// OS preference; 'paper' is the original Morning Paper look, retained
+// as a first-class option.
+export type ThemeChoice = 'system' | 'card-room' | 'card-room-dark' | 'paper';
+
 export interface Settings {
+  // Visual theme (see ThemeChoice / useApplyTheme).
+  theme: ThemeChoice;
   // Card and scoring sound effects (see useGameSfx).
   sounds: boolean;
   // In-game bottom bar arrangement (see DockLayoutPreview).
@@ -18,6 +25,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  theme: 'system',
   sounds: true,
   dockLayout: 'classic',
   reduceMotion: false,

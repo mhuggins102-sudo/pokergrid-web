@@ -144,16 +144,24 @@
   flex: none;
   text-align: left;
   padding-top: 2px;
-  /* Reserve the banner line even while empty: the dock's height now
-     directly sets the flexed board size, so a line appearing on a
-     targeting prompt would make the whole board breathe mid-turn. */
-  min-height: 1lh;
 }
 
-.actionStack .dockText:empty {
-  /* Override the global :empty hide — the reserved line must keep its
-     height when there's no banner text. */
-  display: block;
+/* Reserve the banner line BELOW the buttons while idle: the dock's
+   height now directly sets the flexed board size, so a line appearing
+   on a targeting prompt would make the whole board breathe mid-turn.
+   Trailing (not leading) slack keeps the buttons top-aligned with the
+   deck card while no banner is showing. Mirrors .dockText's metrics
+   (13px / 1.25, +2px padding) so the swap is height-neutral. */
+.actionStack::after {
+  content: '';
+  flex: none;
+  font-size: 13px;
+  line-height: 1.25;
+  height: calc(1lh + 2px);
+}
+
+.actionStackHasBanner::after {
+  content: none;
 }
 
 .actionStack .commitButton {

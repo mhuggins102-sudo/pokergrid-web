@@ -1,7 +1,24 @@
 <!doctype html>
-<html lang="en" data-theme="paper">
+<html lang="en" data-theme="card-room">
   <head>
     <meta charset="UTF-8" />
+    <!-- Pre-paint theme stamp so the first frame doesn't flash the wrong
+         theme. Mirrors useApplyTheme's resolution; that hook owns every
+         change after boot. Falls back to the attribute above. -->
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem('pokergrid:settings:v1'));
+        var t = (s && s.state && s.state.theme) || 'system';
+        if (t === 'system') {
+          t = matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'card-room-dark'
+            : 'card-room';
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        /* keep the static fallback */
+      }
+    </script>
     <!-- viewport-fit=cover extends the layout under notch/home-indicator
          areas so env(safe-area-inset-*) resolves to real values — the
          dock and sheets pad with it. Without the flag it's always 0. -->

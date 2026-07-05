@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 import { BonusCard, baseId } from '../game/bonusCards';
 import { Suit } from '../game/cards';
-import { colors } from '../design/tokens';
 
 // Each bonus card belongs to one of five categories based on its id prefix.
 // Two visual signals are derived from the category:
@@ -89,11 +88,13 @@ export const categoryOf = (card: BonusCard): BonusCategory => {
 
 const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
 
+// var() references so the glyphs follow the active theme (the dark
+// theme brightens UI suit colors for contrast on dark surfaces).
 const SUIT_COLOR: Record<Suit, string> = {
-  H: colors.suitH,
-  S: colors.suitS,
-  D: colors.suitD,
-  C: colors.suitC,
+  H: 'var(--suit-h)',
+  S: 'var(--suit-s)',
+  D: 'var(--suit-d)',
+  C: 'var(--suit-c)',
 };
 
 const suitOf = (card: BonusCard): Suit | null => {
@@ -132,13 +133,13 @@ const CATEGORY_ICON_SCALE: Record<BonusCategory, number> = {
 // tell the four density cards apart. 'special' uses the success green
 // to match its chip border.
 const CATEGORY_ICON_COLOR: Record<BonusCategory, string> = {
-  hand: colors.warn,
-  line: colors.warn,
-  suit: colors.warn,
-  conditional: colors.warn,
-  grid: colors.joker,
-  'deck-management': colors.joker,
-  special: colors.success,
+  hand: 'var(--warn)',
+  line: 'var(--warn)',
+  suit: 'var(--warn)',
+  conditional: 'var(--warn)',
+  grid: 'var(--joker)',
+  'deck-management': 'var(--joker)',
+  special: 'var(--success)',
 };
 
 export const CATEGORY_LABEL: Record<BonusCategory, string> = {
@@ -170,18 +171,9 @@ const TONE_OF: Record<BonusCategory, CategoryTone> = {
 };
 
 const TONE_COLOR: Record<CategoryTone, string> = {
-  gold: colors.warn,
-  purple: colors.joker,
-  green: colors.success,
-};
-
-const withAlpha = (hex: string, alpha: number): string => {
-  // Expect #rrggbb. Convert to rgba(...) so it composes anywhere a color
-  // string is accepted.
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  gold: 'var(--warn)',
+  purple: 'var(--joker)',
+  green: 'var(--success)',
 };
 
 export interface CategoryStyle {
@@ -197,7 +189,7 @@ export interface CategoryStyle {
   // system these render as hairline rings + tints, never glows.
   borderColor: string;
   titleColor: string;
-  // rgba(...) string for the fired-flash overlay on the in-game chip.
+  // Translucent tone for the fired-flash overlay on the in-game chip.
   flashColor: string;
   label: string;
 }
@@ -228,7 +220,9 @@ export const styleFor = (card: BonusCard): CategoryStyle => {
     iconScale: suit ? 1 : CATEGORY_ICON_SCALE[cat],
     borderColor: toneColor,
     titleColor: toneColor,
-    flashColor: withAlpha(toneColor, 0.55),
+    // color-mix keeps the translucent flash theme-aware (the tone is a
+    // var() reference, so a hex→rgba conversion can't see through it).
+    flashColor: `color-mix(in srgb, ${toneColor} 55%, transparent)`,
     label: CATEGORY_LABEL[cat],
   };
 };

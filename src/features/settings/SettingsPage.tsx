@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button, Dialog, Sheet, useToast } from '../../design/primitives';
 import { DOCK_LAYOUT_LABEL, DockLayoutPreview } from './DockLayoutPreview';
-import { DockLayout, Settings, useSettingsStore } from './settingsStore';
+import {
+  DockLayout,
+  Settings,
+  ThemeChoice,
+  useSettingsStore,
+} from './settingsStore';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from '../targets/targetsStore';
 import { resetDailyProgress } from '../daily/sync/sync';
@@ -63,6 +68,39 @@ export function SettingsPage() {
       </header>
 
       <div className={styles.panel}>
+        <div className={styles.row}>
+          <div className={styles.rowText}>
+            <span className={styles.rowTitle}>Theme</span>
+            <span className={styles.rowHint}>
+              Card Room is the refreshed look (System follows your
+              device&apos;s light/dark preference). Morning Paper is the
+              original.
+            </span>
+          </div>
+        </div>
+        <div className={styles.segmented} role="radiogroup" aria-label="Theme">
+          {(
+            [
+              ['system', 'System'],
+              ['card-room', 'Card Room'],
+              ['card-room-dark', 'Dark'],
+              ['paper', 'Morning Paper'],
+            ] as [ThemeChoice, string][]
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={settings.theme === value}
+              className={`${styles.segment} ${
+                settings.theme === value ? styles.segmentOn : ''
+              }`}
+              onClick={() => patch({ theme: value })}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <ToggleRow
           title="Sounds"
           hint="Card and scoring sound effects."

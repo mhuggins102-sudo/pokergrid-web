@@ -1,5 +1,4 @@
 import { Card, Suit, isJoker } from '../../../game/cards';
-import { colors } from '../../../design/tokens';
 import { useSettingsStore } from '../../settings/settingsStore';
 import styles from './CardFace.module.css';
 
@@ -40,11 +39,13 @@ export const cardLayoutId = (card: Card): string | undefined =>
     : `card-${card.rank}${card.suit}${card.uid !== undefined ? `-u${card.uid}` : ''}`;
 
 // Four-color suit palette for the two-color-deck=off setting.
+// --face-suit-*: the on-card-face variants — dark themes keep the faces
+// paper-light, so face inks stay dark while UI suit glyphs brighten.
 const SUIT_COLOR: Record<Suit, string> = {
-  H: colors.suitH,
-  D: colors.suitD,
-  C: colors.suitC,
-  S: colors.suitS,
+  H: 'var(--face-suit-h)',
+  D: 'var(--face-suit-d)',
+  C: 'var(--face-suit-c)',
+  S: 'var(--face-suit-s)',
 };
 
 // Per-half color for the Double Duty two-way face: the root tone class
@@ -101,6 +102,12 @@ export function CardFace({ card }: { card: Card }) {
       className={`${styles.card} ${tone}`}
       style={twoColorDeck ? undefined : { color: SUIT_COLOR[card.suit] }}
     >
+      {/* Low-opacity center pip: glanceable suit reading at small
+          sizes without competing with the rank. Inherits the face's
+          suit color. */}
+      <span className={styles.watermark} aria-hidden="true">
+        {SUIT_GLYPH[card.suit]}
+      </span>
       <span className={styles.rank} aria-hidden="true">
         {card.rank}
       </span>
