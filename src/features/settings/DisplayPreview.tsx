@@ -2,7 +2,7 @@ import { Card, Rank, Suit } from '../../game/cards';
 import { CardFace } from '../game/components/CardFace';
 import { useSettingsStore } from './settingsStore';
 import { useResolvedTheme } from './useTheme';
-import { DOCK_LAYOUT_LABEL, DockLayoutPreview } from './DockLayoutPreview';
+import { DockLayoutPreview } from './DockLayoutPreview';
 import styles from './DisplayPreview.module.css';
 
 const c = (rank: Rank, suit: Suit): Card => ({ kind: 'standard', rank, suit });
@@ -74,7 +74,10 @@ export function DisplayPreview() {
         <div className={styles.board}>
           <div className={styles.grid}>
             {SAMPLE.map((card, i) => (
-              <div key={i} className={styles.cell}>
+              <div
+                key={i}
+                className={`${styles.cell} ${card ? styles.cellFilled : ''}`}
+              >
                 {card && <CardFace card={card} />}
               </div>
             ))}
@@ -87,9 +90,6 @@ export function DisplayPreview() {
         )}
       </div>
       <div className={styles.dockPreview}>
-        <span className={styles.dockLabel}>
-          {DOCK_LAYOUT_LABEL[dockLayout]} dock
-        </span>
         <DockLayoutPreview layout={dockLayout} />
       </div>
     </div>

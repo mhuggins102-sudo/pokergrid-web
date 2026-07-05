@@ -1,12 +1,24 @@
+/* Styled like the real in-game dock: a bar under the board with a
+   hairline top rule — not a boxed inset. (The Settings preview is the
+   only consumer; it bleeds this across its padding so the bar spans
+   edge to edge, exactly as the pinned dock does.) */
 .frame {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  border-top: 1px solid var(--rule);
   background: var(--paper);
   pointer-events: none; /* inert mockup */
+  /* Never wider than the preview panel — the classic row's buttons
+     shrink instead of clipping on narrow phones. */
+  min-width: 0;
+  overflow: hidden;
+}
+
+.classicRow > button {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .card {

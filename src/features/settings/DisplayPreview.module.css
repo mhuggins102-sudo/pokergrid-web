@@ -11,13 +11,15 @@
   border: 1px solid var(--rule);
   background: var(--paper);
   color: var(--ink);
+  /* The dock bar bleeds to the panel edges — clip it to the radius. */
+  overflow: hidden;
 }
 
 /* Board + rails, mirroring LineRails' grid shape at postage-stamp
    scale: row chips left, column chips underneath. */
 .boardWrap {
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .withRails {
@@ -27,7 +29,7 @@
 .rowRail {
   display: grid;
   grid-template-rows: repeat(5, 1fr);
-  gap: 4px;
+  gap: 6px;
   /* Track the cells through the felt panel's padding, like the real
      rails do. */
   padding: var(--board-pad, 0) 0;
@@ -37,7 +39,7 @@
   grid-column: 2;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  gap: 6px;
   padding: 0 var(--board-pad, 0);
 }
 
@@ -75,33 +77,35 @@
 .board {
   background: var(--board-surface, transparent);
   padding: var(--board-pad, 0);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
+/* Mirrors GridBoard's board/cell recipe (same gap, square tiles, same
+   empty-cell dressing) so the preview IS the in-game look at small
+   scale, not an approximation of it. */
 .grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  gap: 6px;
 }
 
 .cell {
-  aspect-ratio: 5 / 7;
-  border-radius: 4px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
   background: var(--paper-sunken);
-  border: 1px dashed var(--hairline);
+  border: 1px dashed var(--rule);
   overflow: hidden;
 }
 
+/* Filled cells: the card face IS the tile (GridBoard .filled). */
+.cellFilled {
+  border: none;
+  background: transparent;
+}
+
+/* The dock rides the preview's bottom edge, full-bleed, as in game. */
 .dockPreview {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.dockLabel {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  margin: 0 calc(-1 * var(--space-md)) calc(-1 * var(--space-md));
 }

@@ -16,20 +16,20 @@
    full-width "Decline both" footer button that stretched the dock. */
 .close {
   position: absolute;
-  top: -4px;
-  right: 0;
+  top: -6px;
+  right: -2px;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: none;
   border-radius: var(--radius-xs);
   background: transparent;
   color: var(--ink-2);
-  font-size: 15px;
+  font-size: 19px;
   line-height: 1;
   cursor: pointer;
 }
@@ -151,6 +151,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+}
+
+/* Category line, toned to the card — same read as the held-card
+   details sheet (BonusCardStrip's .detailCategory). */
+.infoCategory {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chip-tone, var(--ink-2));
 }
 
 .infoMult {
