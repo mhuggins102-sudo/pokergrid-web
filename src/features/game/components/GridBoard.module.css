@@ -7,6 +7,12 @@
   gap: 6px;
   width: 100%;
   container-type: inline-size;
+  /* Card Room themes set these tokens (felt-tinted table panel behind
+     the cells); Morning Paper leaves them unset → transparent, zero
+     padding, exactly the original board. */
+  background: var(--board-surface, transparent);
+  padding: var(--board-pad, 0);
+  border-radius: var(--radius-md);
 }
 
 .cell {

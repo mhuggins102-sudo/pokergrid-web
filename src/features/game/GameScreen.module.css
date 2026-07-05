@@ -34,14 +34,17 @@
 }
 
 .boardFrame {
-  /* Square board sized to the smaller of the area's two axes.
+  /* Board + line rails sized to the smaller of the area's two axes —
+     the rails add the same ~30px to width (left rail) and height
+     (bottom rail), so the wrap stays square and one min() covers both.
+     Cap = old 440px board + 30px rails.
      NO width transition: motion measures card layouts in the same
      commit that adds/removes .bonusOpen, and a CSS transition makes
      it measure mid-flight geometry — cards end up pinned to stale
      positions until the next re-measure (the "board shifted right
      until I tabbed away" bug). The width snaps; the cards' own
      layout animations carry the visual transition. */
-  width: min(100cqw, 100cqh, 440px);
+  width: min(100cqw, 100cqh, 470px);
 }
 
 /* Tutorial coach: a FIXED slice of the vertical budget — every step
@@ -239,7 +242,7 @@
   }
 
   .boardFrame {
-    width: min(100cqw, 100cqh, 520px);
+    width: min(100cqw, 100cqh, 550px);
   }
 
   .dockText {

@@ -12,6 +12,8 @@ import { recordDailyCompletion } from '../../daily/sync/sync';
 import { nextIncompleteDaily } from '../../daily/dailyDates';
 import { usePlaysStore } from '../../daily/sync/playsStore';
 import { RankPanel } from '../../daily/RankPanel';
+import { useSettingsStore } from '../../settings/settingsStore';
+import { useAnimatedNumber } from '../useAnimatedNumber';
 import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
 import { LineDetailSheet } from './LineDetailSheet';
@@ -61,6 +63,16 @@ export function ResultView({ onReplay }: ResultViewProps) {
   }, [state]);
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
+
+  // Game-end tally: the hero score counts up from 0 while the line
+  // rails pop in one by one (LineRails stagger below) — the final
+  // number assembles from its parts instead of just appearing.
+  // Reduced motion (setting or OS) collapses both to instant.
+  const reduceMotion = useSettingsStore(s => s.reduceMotion);
+  const displayTotal = useAnimatedNumber(report.total, !reduceMotion, {
+    durationMs: 1300,
+    initial: 0,
+  });
 
   // ---- Daily: save locally, then queue-first submit ----
   const dailyRecordedRef = useRef(false);
@@ -265,7 +277,15 @@ export function ResultView({ onReplay }: ResultViewProps) {
           aria-label={`Score ${report.total} — show tier thresholds`}
           onClick={() => setTiersOpen(true)}
         >
-          {report.total}
+          {displayTotal}
+          {report.gridMultiplier !== 1 && (
+            // Stamps in after the rails finish tallying — the "and then
+            // it all multiplied" beat. Decorative: the score math panel
+            // carries the accessible version.
+            <span className={styles.multStamp} aria-hidden="true">
+              ×{report.gridMultiplier.toFixed(2)}
+            </span>
+          )}
         </button>
         <span className={`text-body ${styles.targetLine}`}>
           {contextLine} · tier {tier}
@@ -294,7 +314,12 @@ export function ResultView({ onReplay }: ResultViewProps) {
       )}
 
       <div className={styles.boardSlot}>
-        <LineRails grid={state.grid} report={report} onLineTap={setDetailLine} />
+        <LineRails
+          grid={state.grid}
+          report={report}
+          onLineTap={setDetailLine}
+          stagger
+        />
       </div>
 
       <div className={styles.mathSlot}>{scoreMath}</div>
