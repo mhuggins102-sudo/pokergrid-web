@@ -69,6 +69,41 @@
   outline-offset: 1px;
 }
 
+/* Boosted line (result tally): a gold card changed this line's total.
+   The dressing persists after the tally as a "this line was boosted"
+   marker. Defined after the pos/zero/neg tones so gold wins. */
+.chipGold {
+  color: var(--warn);
+  border-color: var(--warn);
+  font-weight: 800;
+}
+
+/* The base→boosted flip re-pop, staggered per chip (inline delay). No
+   fill modes: the chip wears its gold dressing immediately on the
+   flip and pops on its own beat. Independent `scale` — never
+   transform — so nothing else is clobbered. */
+.chipGoldIn {
+  animation: gold-pop 0.3s ease-out;
+}
+
+@keyframes gold-pop {
+  0% {
+    scale: 1;
+  }
+  45% {
+    scale: 1.18;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chipGoldIn {
+    animation: none;
+  }
+}
+
 /* Spotlight: the tapped card's row + column chips light up — the
    in-place replacement for the floating line tags while rails show. */
 .chipLit {

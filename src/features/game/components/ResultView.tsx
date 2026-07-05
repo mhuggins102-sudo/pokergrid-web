@@ -13,7 +13,9 @@ import { nextIncompleteDaily } from '../../daily/dailyDates';
 import { usePlaysStore } from '../../daily/sync/playsStore';
 import { RankPanel } from '../../daily/RankPanel';
 import { useSettingsStore } from '../../settings/settingsStore';
-import { useAnimatedNumber } from '../useAnimatedNumber';
+import { prefersReducedMotion, useAnimatedNumber } from '../useAnimatedNumber';
+import { computeScoreBreakdown } from '../scoreBreakdown';
+import { ScoreBreakdown } from './ScoreBreakdown';
 import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
 import { LineDetailSheet } from './LineDetailSheet';
@@ -49,30 +51,91 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const nextDaily =
     mode.kind === 'daily' ? nextIncompleteDaily(mode.dateISO, plays) : null;
 
-  const { report, shapley } = useMemo(() => {
+  const { report, shapley, breakdown, baseTotals } = useMemo(() => {
     const options = {
       deckRemaining: state.deck.length,
       discards: state.discards,
       perkSpent: state.perkSpent,
       handBoost: state.handBoost,
     };
+    const fullReport = scoreGrid(state.grid, state.bonusCards, options);
+    const bd = computeScoreBreakdown(
+      state.grid,
+      state.bonusCards,
+      fullReport,
+      options
+    );
     return {
-      report: scoreGrid(state.grid, state.bonusCards, options),
+      report: fullReport,
       shapley: bonusShapleyValues(state.grid, state.bonusCards, options),
+      breakdown: bd,
+      baseTotals: new Map(
+        bd.baseReport.lines.map(l => [`${l.kind}${l.index}`, l.total])
+      ),
     };
   }, [state]);
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
 
-  // Game-end tally: the hero score counts up from 0 while the line
-  // rails pop in one by one (LineRails stagger below) — the final
-  // number assembles from its parts instead of just appearing.
-  // Reduced motion (setting or OS) collapses both to instant.
+  // Game-end tally, three beats told by the rail chips:
+  //   1. 'assemble' — chips pop in with their BASE totals while the
+  //      hero counts 0 → base (pure poker, green corner row).
+  //   2. 'boosted'  — gold-touched chips re-pop gold with their final
+  //      totals; hero counts base → subtotal (+N gold corner row).
+  //   3. 'final'    — the purple multiplier kicks the hero from
+  //      subtotal → total (×N purple corner row + scale pulse).
+  // Beats without a factor are skipped; with neither factor it's a
+  // single classic 0 → total count. Reduced motion (setting or OS)
+  // renders the end state immediately — which also keeps tests
+  // reading the true final score.
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
-  const displayTotal = useAnimatedNumber(report.total, !reduceMotion, {
-    durationMs: 1300,
-    initial: 0,
+  const staticTally =
+    reduceMotion ||
+    prefersReducedMotion() ||
+    (!breakdown.hasGold && !breakdown.hasPurple);
+  type TallyStage = 'assemble' | 'boosted' | 'final';
+  const [stage, setStage] = useState<TallyStage>(
+    staticTally ? 'final' : 'assemble'
+  );
+  useEffect(() => {
+    if (staticTally) return;
+    const timers: number[] = [];
+    const GOLD_AT = 1650;
+    const PURPLE_AT = 2350;
+    if (breakdown.hasGold) {
+      timers.push(window.setTimeout(() => setStage('boosted'), GOLD_AT));
+      timers.push(
+        window.setTimeout(
+          () => setStage('final'),
+          breakdown.hasPurple ? PURPLE_AT : GOLD_AT
+        )
+      );
+    } else {
+      timers.push(window.setTimeout(() => setStage('final'), GOLD_AT));
+    }
+    return () => timers.forEach(t => window.clearTimeout(t));
+    // Run once for the mounted result — breakdown is stable per state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const stageTarget =
+    stage === 'assemble'
+      ? breakdown.base
+      : stage === 'boosted'
+        ? report.subtotal
+        : report.total;
+  const displayTotal = useAnimatedNumber(stageTarget, !staticTally, {
+    durationMs: staticTally ? 0 : stage === 'assemble' ? 1200 : 400,
+    initial: staticTally ? undefined : 0,
   });
+  // Corner-row fade-in beats, aligned with the stage flips (base row
+  // lands as the assemble count finishes).
+  const beatDelays = staticTally
+    ? undefined
+    : [
+        1150,
+        ...(breakdown.hasGold ? [1650] : []),
+        ...(breakdown.hasPurple ? [breakdown.hasGold ? 2350 : 1650] : []),
+      ];
 
   // ---- Daily: save locally, then queue-first submit ----
   const dailyRecordedRef = useRef(false);
@@ -270,22 +333,19 @@ export function ResultView({ onReplay }: ResultViewProps) {
         <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
           {verdict}
         </span>
+        <ScoreBreakdown breakdown={breakdown} beatDelays={beatDelays} />
         <button
           type="button"
-          className={`${styles.finalScore} ${styles.finalScoreBtn}`}
+          className={`${styles.finalScore} ${styles.finalScoreBtn} ${
+            !staticTally && stage === 'final' && breakdown.hasPurple
+              ? styles.scoreKick
+              : ''
+          }`}
           data-testid="final-score"
           aria-label={`Score ${report.total} — show tier thresholds`}
           onClick={() => setTiersOpen(true)}
         >
           {displayTotal}
-          {report.gridMultiplier !== 1 && (
-            // Stamps in after the rails finish tallying — the "and then
-            // it all multiplied" beat. Decorative: the score math panel
-            // carries the accessible version.
-            <span className={styles.multStamp} aria-hidden="true">
-              ×{report.gridMultiplier.toFixed(2)}
-            </span>
-          )}
         </button>
         <span className={`text-body ${styles.targetLine}`}>
           {contextLine} · tier {tier}
@@ -318,7 +378,12 @@ export function ResultView({ onReplay }: ResultViewProps) {
           grid={state.grid}
           report={report}
           onLineTap={setDetailLine}
-          stagger
+          stagger={!staticTally}
+          tally={{
+            baseTotals,
+            stage: stage === 'assemble' ? 'base' : 'boosted',
+            animate: !staticTally,
+          }}
         />
       </div>
 
