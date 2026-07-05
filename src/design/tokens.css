@@ -135,6 +135,61 @@
 }
 
 /*
+ * "Morning Paper Dark" — the original editorial look after sundown.
+ * Warm near-black newsprint instead of the Card Room's casino table:
+ * cream ink, the same restrained palette lifted for contrast. CARD
+ * FACES STAY CREAM (same split as Card Room Dark: face-suit inks keep
+ * their printed values while UI suit glyphs brighten). Deliberately NO
+ * --board-surface/--card-shadow/--card-rank-size — paper keeps its
+ * flat board and original faces in both appearances.
+ */
+[data-theme='paper-dark'] {
+  --paper: #17150f;
+  --paper-raised: #211e17;
+  --paper-sunken: #100e09;
+  --felt: #3a8f68;
+
+  --ink: #efe9d8;
+  --ink-2: #b7ae9b;
+  --ink-3: #948b77;
+  --hairline: rgba(239, 233, 216, 0.14);
+  --scrim: rgba(0, 0, 0, 0.55);
+  --rule: #3a352a;
+
+  --card-face: #f6f1e4;
+  --card-red: #b3262e;
+  --card-black: #1f1f1f;
+  --card-back: #33507a;
+
+  /* UI glyph suits (on dark surfaces). */
+  --suit-h: #e0636c;
+  --suit-d: #5b94db;
+  --suit-c: #57a97c;
+  --suit-s: #9aa5b1;
+  --joker: #a78bdb;
+
+  /* Face suits (printed on the cream faces) — the paper-light inks. */
+  --face-suit-h: #b3262e;
+  --face-suit-d: #1d5fa0;
+  --face-suit-c: #2f7d4f;
+  --face-suit-s: #1f2937;
+
+  --accent: #3a8f68;
+  --warn: #c99b3f;
+  --danger: #c4586a;
+  --success: #4caf7d;
+
+  --difficulty-easy: #4caf7d;
+  --difficulty-medium: #d9a93e;
+  --difficulty-hard: #e07a50;
+  --difficulty-extreme: #d45a68;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/*
  * "Card Room Dark" — the dark table. Surfaces go deep warm-black;
  * CARD FACES STAY PAPER (the one bright object class on a dark table
  * reads instantly), so the face-suit inks keep their light-theme

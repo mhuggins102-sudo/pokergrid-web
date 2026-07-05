@@ -13,6 +13,7 @@ import { nextIncompleteDaily } from '../../daily/dailyDates';
 import { usePlaysStore } from '../../daily/sync/playsStore';
 import { RankPanel } from '../../daily/RankPanel';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { sfxTallyCount } from '../../../lib/sfx';
 import { prefersReducedMotion, useAnimatedNumber } from '../useAnimatedNumber';
 import { computeScoreBreakdown } from '../scoreBreakdown';
 import { ScoreBreakdown } from './ScoreBreakdown';
@@ -99,19 +100,29 @@ export function ResultView({ onReplay }: ResultViewProps) {
   );
   useEffect(() => {
     if (staticTally) return;
+    // Count-up ticks ride the same effect as the stage flips so sound
+    // and visuals can't desync; each color segment gets its own pitch.
+    const sounds = useSettingsStore.getState().sounds;
     const timers: number[] = [];
     const GOLD_AT = 3300;
     const PURPLE_AT = 4700;
+    if (sounds) sfxTallyCount(2.4, 'base');
+    const toFinal = () => {
+      setStage('final');
+      if (sounds && breakdown.hasPurple) sfxTallyCount(0.8, 'purple');
+    };
     if (breakdown.hasGold) {
-      timers.push(window.setTimeout(() => setStage('boosted'), GOLD_AT));
       timers.push(
-        window.setTimeout(
-          () => setStage('final'),
-          breakdown.hasPurple ? PURPLE_AT : GOLD_AT
-        )
+        window.setTimeout(() => {
+          setStage('boosted');
+          if (sounds) sfxTallyCount(0.8, 'gold');
+        }, GOLD_AT)
+      );
+      timers.push(
+        window.setTimeout(toFinal, breakdown.hasPurple ? PURPLE_AT : GOLD_AT)
       );
     } else {
-      timers.push(window.setTimeout(() => setStage('final'), GOLD_AT));
+      timers.push(window.setTimeout(toFinal, GOLD_AT));
     }
     return () => timers.forEach(t => window.clearTimeout(t));
     // Run once for the mounted result — breakdown is stable per state.

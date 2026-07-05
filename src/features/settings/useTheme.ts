@@ -1,15 +1,23 @@
-import { useEffect } from 'react';
-import { ThemeChoice, useSettingsStore } from './settingsStore';
+import { useEffect, useSyncExternalStore } from 'react';
+import { Appearance, ThemeFamily, useSettingsStore } from './settingsStore';
 
-// The data-theme value each choice resolves to. 'system' follows the
-// OS color-scheme between the two Card Room variants; 'paper' is the
-// original Morning Paper tokens (also the :root fallback, so a missing
-// attribute degrades to it).
+export type ResolvedTheme =
+  | 'card-room'
+  | 'card-room-dark'
+  | 'paper'
+  | 'paper-dark';
+
+// The data-theme value a (family, appearance) pair resolves to.
+// 'system' follows the OS color-scheme within the chosen family.
 export const resolveTheme = (
-  choice: ThemeChoice,
+  family: ThemeFamily,
+  appearance: Appearance,
   prefersDark: boolean
-): 'card-room' | 'card-room-dark' | 'paper' =>
-  choice === 'system' ? (prefersDark ? 'card-room-dark' : 'card-room') : choice;
+): ResolvedTheme => {
+  const dark = appearance === 'dark' || (appearance === 'system' && prefersDark);
+  if (family === 'paper') return dark ? 'paper-dark' : 'paper';
+  return dark ? 'card-room-dark' : 'card-room';
+};
 
 /**
  * Stamps the resolved theme onto <html data-theme> and keeps the
@@ -19,11 +27,12 @@ export const resolveTheme = (
  * change after boot (setting toggles, OS scheme flips).
  */
 export function useApplyTheme(): void {
-  const choice = useSettingsStore(s => s.theme);
+  const family = useSettingsStore(s => s.themeFamily);
+  const appearance = useSettingsStore(s => s.appearance);
   useEffect(() => {
     const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
     const apply = () => {
-      const resolved = resolveTheme(choice, mq?.matches ?? false);
+      const resolved = resolveTheme(family, appearance, mq?.matches ?? false);
       document.documentElement.dataset.theme = resolved;
       // Browser chrome (address bar / PWA title bar) follows the paper
       // surface. Guard: jsdom returns '' for custom properties.
@@ -36,5 +45,25 @@ export function useApplyTheme(): void {
     apply();
     mq?.addEventListener('change', apply);
     return () => mq?.removeEventListener('change', apply);
-  }, [choice]);
+  }, [family, appearance]);
+}
+
+/**
+ * The currently-resolved theme, live: re-renders on setting changes
+ * AND on OS scheme flips while appearance is 'system'. Used by the
+ * Settings live preview to re-theme its sample independently.
+ */
+export function useResolvedTheme(): ResolvedTheme {
+  const family = useSettingsStore(s => s.themeFamily);
+  const appearance = useSettingsStore(s => s.appearance);
+  const prefersDark = useSyncExternalStore(
+    onChange => {
+      const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+      mq?.addEventListener('change', onChange);
+      return () => mq?.removeEventListener('change', onChange);
+    },
+    () => !!window.matchMedia?.('(prefers-color-scheme: dark)').matches,
+    () => false
+  );
+  return resolveTheme(family, appearance, prefersDark);
 }

@@ -6,13 +6,53 @@
   margin: 0 auto;
 }
 
-.panel {
-  display: flex;
-  flex-direction: column;
+/* Accordion section: a styled native <details> panel. */
+.section {
   border-radius: var(--radius-md);
   background: var(--paper-raised);
   border: 1px solid var(--rule);
   overflow: hidden;
+}
+
+.sectionSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.sectionSummary::-webkit-details-marker {
+  display: none;
+}
+
+.sectionSummary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.sectionCaret {
+  color: var(--ink-3);
+  transition: rotate 140ms ease;
+  flex-shrink: 0;
+}
+
+.section[open] > .sectionSummary {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.section[open] > .sectionSummary .sectionCaret {
+  rotate: 90deg;
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
 }
 
 .row {
@@ -27,6 +67,14 @@
 
 .row:last-child {
   border-bottom: none;
+}
+
+/* A row that introduces a segmented picker below it: the pair reads as
+   one setting, so the divider moves below the segments. */
+.segmentedHead {
+  border-bottom: none;
+  padding-bottom: 0;
+  min-height: 0;
 }
 
 .rowText {
@@ -93,11 +141,14 @@
   }
 }
 
-/* Dock-layout picker. */
+/* Segmented radio pickers (theme / appearance / dock). Inset by the
+   same horizontal padding as .row so the segments never butt against
+   the panel walls. */
 .segmented {
   display: flex;
   gap: var(--space-xs);
-  padding: 4px 0 var(--space-sm);
+  padding: 6px var(--space-lg) var(--space-md);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .segment {
@@ -121,4 +172,20 @@
   border-color: var(--accent);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* The live theme/board sample at the bottom of Display. */
+.previewSlot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+}
+
+.previewLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
 }

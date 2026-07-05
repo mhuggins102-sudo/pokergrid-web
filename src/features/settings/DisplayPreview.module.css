@@ -1,0 +1,107 @@
+/* The preview carries its own data-theme scope, so every var() below
+   resolves against the PICKED theme — including the page-background
+   swatch behind the sample, which is what sells a dark preview inside
+   a light settings page (and vice versa). */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Board + rails, mirroring LineRails' grid shape at postage-stamp
+   scale: row chips left, column chips underneath. */
+.boardWrap {
+  display: grid;
+  gap: 4px;
+}
+
+.withRails {
+  grid-template-columns: auto 1fr;
+}
+
+.rowRail {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4px;
+  /* Track the cells through the felt panel's padding, like the real
+     rails do. */
+  padding: var(--board-pad, 0) 0;
+}
+
+.colRail {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 0 var(--board-pad, 0);
+}
+
+.withRails .board {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 16px;
+  padding: 0 3px;
+  border-radius: var(--radius-xs);
+  background: var(--paper-sunken);
+  border: 1px solid var(--hairline);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.chipPos {
+  color: var(--accent);
+}
+
+.chipZero {
+  color: var(--ink-3);
+}
+
+/* Felt panel per theme — transparent under Morning Paper, exactly as
+   on the real board. */
+.board {
+  background: var(--board-surface, transparent);
+  padding: var(--board-pad, 0);
+  border-radius: var(--radius-sm);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.cell {
+  aspect-ratio: 5 / 7;
+  border-radius: 4px;
+  background: var(--paper-sunken);
+  border: 1px dashed var(--hairline);
+  overflow: hidden;
+}
+
+.dockPreview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.dockLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}

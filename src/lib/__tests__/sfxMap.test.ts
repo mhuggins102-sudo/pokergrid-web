@@ -1,4 +1,4 @@
-import { sfxForHistoryEntry } from '../sfx';
+import { sfxForHistoryEntry, tallyTickTimes } from '../sfx';
 
 describe('sfxForHistoryEntry', () => {
   it('covers placements and all four suit perks', () => {
@@ -30,5 +30,26 @@ describe('sfxForHistoryEntry', () => {
   it('stays silent for non-action entries', () => {
     expect(sfxForHistoryEntry('Discard')).toBeNull();
     expect(sfxForHistoryEntry('Game start')).toBeNull();
+  });
+});
+
+describe('tallyTickTimes', () => {
+  it('spaces ticks across the segment and stays inside it', () => {
+    for (const duration of [0.8, 2.4]) {
+      const times = tallyTickTimes(duration);
+      expect(times.length).toBe(Math.round(duration * 16));
+      expect(times[0]).toBe(0);
+      expect(times[times.length - 1]).toBeCloseTo(duration);
+      for (let i = 1; i < times.length; i++) {
+        expect(times[i]).toBeGreaterThan(times[i - 1]);
+        expect(times[i]).toBeLessThanOrEqual(duration);
+      }
+    }
+  });
+
+  it('is empty for zero/negative durations and bounded for tiny ones', () => {
+    expect(tallyTickTimes(0)).toEqual([]);
+    expect(tallyTickTimes(-1)).toEqual([]);
+    expect(tallyTickTimes(0.01).length).toBe(2); // floor of two ticks
   });
 });
