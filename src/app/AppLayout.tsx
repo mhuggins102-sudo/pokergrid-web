@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../design/primitives';
 import { bootDailySync, queryClient } from '../features/daily/sync/sync';
 import { useSyncDailyAchievements } from '../features/progress/useSyncDailyAchievements';
+import { useApplyTheme } from '../features/settings/useTheme';
 import { UpdatePrompt } from './UpdatePrompt';
 import styles from './AppLayout.module.css';
 
@@ -27,6 +28,10 @@ export function AppLayout() {
 
   // Record Daily-Puzzle / combined-win achievements from local plays.
   useSyncDailyAchievements();
+
+  // Stamp the selected theme onto <html> (and keep it live on OS
+  // color-scheme changes).
+  useApplyTheme();
 
   return (
     <QueryClientProvider client={queryClient}>

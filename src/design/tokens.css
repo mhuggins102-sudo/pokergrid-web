@@ -40,6 +40,15 @@
   --suit-s: #1f2937;
   --joker: #6d4fa3;
 
+  /* Suit colors as printed ON card faces. Defaults chain to the UI suit
+     tokens; dark themes split them — card faces stay paper-light there,
+     so face inks must stay dark while UI glyphs (on dark surfaces)
+     brighten. */
+  --face-suit-h: var(--suit-h);
+  --face-suit-d: var(--suit-d);
+  --face-suit-c: var(--suit-c);
+  --face-suit-s: var(--suit-s);
+
   /* ---- Signals ---- */
   --accent: #1f5d43;
   --warn: #b07d2e;
@@ -77,4 +86,95 @@
   --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
   --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI',
     sans-serif;
+}
+
+/*
+ * "Card Room" — the refreshed light theme. Same editorial bones as
+ * Morning Paper (which stays available above), warmer paper, deeper
+ * felt, and a slightly quieter rule color so hairlines read as
+ * hairlines. Selected via Settings → Theme (default: System, which
+ * picks Card Room light/dark from the OS preference).
+ */
+[data-theme='card-room'] {
+  --paper: #faf8f2;
+  --paper-raised: #ffffff;
+  --paper-sunken: #f1ebdd;
+  --felt: #175a3d;
+
+  --ink: #191712;
+  --ink-2: #575144;
+  --ink-3: #736c5c;
+  --hairline: rgba(25, 23, 18, 0.14);
+  --scrim: rgba(25, 23, 18, 0.4);
+  --rule: #e2daca;
+
+  --card-face: #fffdf8;
+  --card-red: #c22f3a;
+  --card-black: #23272e;
+  --card-back: #28486e;
+
+  --suit-h: #c22f3a;
+  --suit-d: #2465b3;
+  --suit-c: #2e7d4f;
+  --suit-s: #23272e;
+  --joker: #7a5bc0;
+
+  --accent: #175a3d;
+  --warn: #a87b1f;
+  --danger: #9a2433;
+  --success: #2e7d4f;
+}
+
+/*
+ * "Card Room Dark" — the dark table. Surfaces go deep warm-black;
+ * CARD FACES STAY PAPER (the one bright object class on a dark table
+ * reads instantly), so the face-suit inks keep their light-theme
+ * values while UI suit glyphs (rendered on dark surfaces) brighten.
+ * Shadows deepen; signal colors lift for contrast against the dark
+ * ground.
+ */
+[data-theme='card-room-dark'] {
+  --paper: #131210;
+  --paper-raised: #1d1b17;
+  --paper-sunken: #0e0d0b;
+  --felt: #2e8b5e;
+
+  --ink: #f0ebdf;
+  --ink-2: #b5ac99;
+  --ink-3: #9a937f;
+  --hairline: rgba(240, 235, 223, 0.14);
+  --scrim: rgba(0, 0, 0, 0.55);
+  --rule: #33302a;
+
+  --card-face: #f5f0e4;
+  --card-red: #c22f3a;
+  --card-black: #23272e;
+  --card-back: #33507a;
+
+  /* UI glyph suits (on dark surfaces). */
+  --suit-h: #e0636c;
+  --suit-d: #5b94db;
+  --suit-c: #57a97c;
+  --suit-s: #9aa5b1;
+  --joker: #a78bdb;
+
+  /* Face suits (on the paper-light card faces). */
+  --face-suit-h: #c22f3a;
+  --face-suit-d: #2465b3;
+  --face-suit-c: #2e7d4f;
+  --face-suit-s: #23272e;
+
+  --accent: #2e8b5e;
+  --warn: #d9a93e;
+  --danger: #d45a68;
+  --success: #4caf7d;
+
+  --difficulty-easy: #4caf7d;
+  --difficulty-medium: #d9a93e;
+  --difficulty-hard: #e07a50;
+  --difficulty-extreme: #d45a68;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
 }

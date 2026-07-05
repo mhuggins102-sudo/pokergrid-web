@@ -39,11 +39,14 @@ export const colors = {
   success: '#2f7d4f',
 } as const;
 
+// var() references so difficulty tones follow the active theme (dark
+// lifts them for contrast). Every consumer feeds these into CSS custom
+// properties / inline styles, where var() resolves — never canvas.
 export const difficultyColors = {
-  easy: '#2f7d4f',
-  medium: '#b07d2e',
-  hard: '#c2542e',
-  extreme: '#9a2433',
+  easy: 'var(--difficulty-easy)',
+  medium: 'var(--difficulty-medium)',
+  hard: 'var(--difficulty-hard)',
+  extreme: 'var(--difficulty-extreme)',
 } as const;
 
 export const spacing = {

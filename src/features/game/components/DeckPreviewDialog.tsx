@@ -1,6 +1,5 @@
 import { CSSProperties, useMemo } from 'react';
 import { RANKS, SUITS, Suit, Supercharge, isJoker } from '../../../game/cards';
-import { colors } from '../../../design/tokens';
 import { Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import styles from './DeckPreviewDialog.module.css';
@@ -13,10 +12,10 @@ const SUIT_NAME: Record<Suit, string> = {
   C: 'Clubs',
 };
 const SUIT_TONE: Record<Suit, string> = {
-  H: colors.suitH,
-  S: colors.suitS,
-  D: colors.suitD,
-  C: colors.suitC,
+  H: 'var(--suit-h)',
+  S: 'var(--suit-s)',
+  D: 'var(--suit-d)',
+  C: 'var(--suit-c)',
 };
 
 /**
@@ -95,9 +94,9 @@ export function DeckPreviewDialog({
                   : undefined;
                 const chargeTone =
                   charge === 'wild'
-                    ? colors.joker
+                    ? 'var(--joker)'
                     : charge === 'double'
-                      ? colors.warn
+                      ? 'var(--warn)'
                       : undefined;
                 // Double Duty: full brightness only while BOTH halves of
                 // an identity remain; one copy left renders half-dimmed.
@@ -135,7 +134,7 @@ export function DeckPreviewDialog({
           </div>
         ))}
         {jokers > 0 && (
-          <div className={styles.suitHeader} style={{ color: colors.joker }}>
+          <div className={styles.suitHeader} style={{ color: 'var(--joker)' }}>
             <span>★ Jokers</span>
             <span className={styles.suitCount}>{jokers} remaining</span>
           </div>
@@ -149,11 +148,11 @@ export function DeckPreviewDialog({
         {hasCharged && (
           <p className={styles.legend}>
             Upgraded cards are ringed:{' '}
-            <span style={{ color: colors.joker }}>
+            <span style={{ color: 'var(--joker)' }}>
               <sup className={styles.chargeMark}>W</sup> wild
             </span>{' '}
             ·{' '}
-            <span style={{ color: colors.warn }}>
+            <span style={{ color: 'var(--warn)' }}>
               <sup className={styles.chargeMark}>2</sup> double
             </span>
           </p>

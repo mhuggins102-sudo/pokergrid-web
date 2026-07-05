@@ -5,7 +5,6 @@ import { Card, Supercharge, isJoker } from '../../../game/cards';
 import { Grid } from '../../../game/grid';
 import { Button, Sheet } from '../../../design/primitives';
 import { Tier } from '../../../lib/stats';
-import { colors } from '../../../design/tokens';
 import { GridBoard } from './GridBoard';
 import { BonusChip } from './BonusCardStrip';
 import { CardFace } from './CardFace';
@@ -41,7 +40,7 @@ type Reveal =
   | { kind: 'bonus'; from: BonusCard; to: BonusCard; onContinue: () => void };
 
 const chargeTone = (s: Supercharge): string =>
-  s === 'wild' ? colors.joker : colors.warn;
+  s === 'wild' ? 'var(--joker)' : 'var(--warn)';
 
 /**
  * Targets-Up S/SS reward picker. S: pick ONE — supercharge a grid card
@@ -196,7 +195,7 @@ function RevealView({ reveal }: { reveal: Reveal }) {
 
 function GridReveal({ card }: { card: Card }) {
   const charge = isJoker(card) ? undefined : card.supercharge;
-  const tone = charge ? chargeTone(charge) : colors.accent;
+  const tone = charge ? chargeTone(charge) : 'var(--accent)';
   return (
     <>
       <div style={{ position: 'relative', width: 96, height: 96 }}>
@@ -251,14 +250,16 @@ function BonusReveal({ from, to }: { from: BonusCard; to: BonusCard }) {
           fontVariantNumeric: 'tabular-nums',
         }}
       >
-        <span style={{ fontSize: 20, color: colors.ink3 }}>{from.mult}</span>
-        <span style={{ color: colors.ink3 }}>→</span>
+        <span style={{ fontSize: 20, color: 'var(--ink-3)' }}>{from.mult}</span>
+        <span style={{ color: 'var(--ink-3)' }}>→</span>
         <motion.span
           key={to.mult}
-          initial={{ scale: 0.5, color: colors.warn }}
-          animate={{ scale: 1, color: colors.accent }}
+          initial={{ scale: 0.5 }}
+          animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 280, damping: 16 }}
-          style={{ fontSize: 28, fontWeight: 800 }}
+          // Static var() color (motion can't interpolate var() refs, and
+          // the scale pop carries the moment).
+          style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)' }}
         >
           {to.mult}
         </motion.span>
@@ -268,7 +269,7 @@ function BonusReveal({ from, to }: { from: BonusCard; to: BonusCard }) {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        style={{ fontWeight: 700, color: colors.accent, margin: 0 }}
+        style={{ fontWeight: 700, color: 'var(--accent)', margin: 0 }}
       >
         Powered up!
       </motion.p>

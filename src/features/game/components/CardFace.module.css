@@ -48,6 +48,27 @@
   font-family: var(--font-body);
 }
 
+/* Low-opacity center pip — glanceable suit reading at a distance
+   without competing with the rank or the corner pip. Inherits the
+   face's suit color. Part of the Card Room face treatment; Morning
+   Paper keeps its original clean face below. */
+.watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 58cqh;
+  line-height: 1;
+  font-family: var(--font-body);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+:global([data-theme='paper']) .watermark {
+  display: none;
+}
+
 .jokerStar {
   position: absolute;
   top: 50%;
