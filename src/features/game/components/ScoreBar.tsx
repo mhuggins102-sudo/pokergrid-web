@@ -3,6 +3,7 @@ import { scoreGrid } from '../../../game/scoring';
 import { Button } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { useAnimatedNumber } from '../useAnimatedNumber';
 import { TierBreakdownSheet } from './TierBreakdownSheet';
 import styles from './ScoreBar.module.css';
 
@@ -11,41 +12,6 @@ export interface ScoreBarProps {
   /** Opens the line-breakdown sheet (mobile/tablet only — the desktop
    *  layout shows the panel persistently instead). */
   onShowLines: () => void;
-}
-
-const prefersReducedMotion = (): boolean =>
-  typeof window !== 'undefined' &&
-  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
-/**
- * Tick the displayed number from its previous value to `value` over a
- * short ramp, so a placement's points visibly count in. Jumps straight
- * to the target under reduced motion (system preference or the app
- * setting).
- */
-function useAnimatedNumber(value: number, animate: boolean): number {
-  const [display, setDisplay] = useState(value);
-  const fromRef = useRef(value);
-  useEffect(() => {
-    const from = fromRef.current;
-    fromRef.current = value;
-    if (!animate || from === value || prefersReducedMotion()) {
-      setDisplay(value);
-      return;
-    }
-    const start = performance.now();
-    const DURATION = 280;
-    let raf = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / DURATION);
-      const eased = 1 - (1 - t) * (1 - t); // ease-out
-      setDisplay(Math.round(from + (value - from) * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, animate]);
-  return display;
 }
 
 /**

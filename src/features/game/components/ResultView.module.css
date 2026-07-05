@@ -68,6 +68,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Grid-multiplier stamp beside the hero score — lands after the line
+   rails finish their tally (delay covers 10 chips x 110ms + pop). */
+.multStamp {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  vertical-align: middle;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--warn);
+  color: var(--warn);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  animation: mult-stamp-in 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) 1.25s backwards;
+}
+
+@keyframes mult-stamp-in {
+  0% {
+    opacity: 0;
+    scale: 1.7;
+    rotate: -8deg;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+    rotate: -3deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .multStamp {
+    animation: none;
+    rotate: -3deg;
+  }
+}
+
 .achievements {
   margin-top: var(--space-xs);
   font-size: 13px;

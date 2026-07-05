@@ -9,7 +9,9 @@
   border-radius: var(--radius-sm);
   background: var(--card-face);
   border: 1px solid var(--hairline);
-  box-shadow: var(--shadow-sm);
+  /* Card Room themes set --card-shadow (crisper two-layer drop);
+     Morning Paper falls back to the original soft shadow. */
+  box-shadow: var(--card-shadow, var(--shadow-sm));
   user-select: none;
   container-type: size;
 }
@@ -34,7 +36,9 @@
      swashy J especially) read as crooked at tile sizes. */
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 42cqh;
+  /* Card Room bumps the rank (46cqh) for stronger read-at-a-glance;
+     Morning Paper keeps the original size. */
+  font-size: var(--card-rank-size, 42cqh);
   line-height: 1.1;
   letter-spacing: -0.02em;
 }

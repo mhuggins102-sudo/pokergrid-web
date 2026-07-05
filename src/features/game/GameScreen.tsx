@@ -10,6 +10,7 @@ import { useSettingsStore } from '../settings/settingsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { lineLabel } from './handLabels';
 import { GridBoard, useJokerArrivals } from './components/GridBoard';
+import { LineRails } from './components/LineRails';
 import { useAutoPlaceFlights } from './useAutoPlaceFlights';
 import { NextCardWell } from './components/NextCardWell';
 import { ScoreBar } from './components/ScoreBar';
@@ -290,6 +291,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
           <div className={styles.boardArea}>
             <div className={styles.boardFrame}>
+              {/* Live line rails: each row/column's running total rides
+                  the board edge, so per-line scoring is visible without
+                  opening the Lines sheet (tapping a chip still opens
+                  it for the full math). */}
+              <LineRails
+                grid={state.grid}
+                report={liveReport}
+                onLineTap={() => setLinesOpen(true)}
+              >
               <GridBoard
                 // Remount on the ♣ open/close toggle: a fresh mount
                 // renders seated cards exactly where CSS puts them, so
@@ -329,6 +339,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 spotlight={spotlightProp}
                 sweepSlots={sweepSlots}
               />
+              </LineRails>
             </div>
           </div>
 

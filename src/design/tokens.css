@@ -123,6 +123,15 @@
   --warn: #a87b1f;
   --danger: #9a2433;
   --success: #2e7d4f;
+
+  /* Card Room extras (unset in Morning Paper, so its board/faces stay
+     exactly as they were): a faint felt-tinted panel behind the board
+     cells, a crisper two-layer card shadow, and a larger rank. */
+  --board-surface: color-mix(in srgb, var(--felt) 6%, var(--paper-sunken));
+  --board-pad: 6px;
+  --card-shadow: 0 1px 2px rgba(25, 23, 18, 0.14),
+    0 3px 8px rgba(25, 23, 18, 0.07);
+  --card-rank-size: 46cqh;
 }
 
 /*
@@ -177,4 +186,10 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* Card Room extras — felt reads stronger against the dark ground. */
+  --board-surface: color-mix(in srgb, var(--felt) 16%, var(--paper-sunken));
+  --board-pad: 6px;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.35);
+  --card-rank-size: 46cqh;
 }

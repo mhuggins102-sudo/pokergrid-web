@@ -81,3 +81,34 @@
   grid-column: 1;
   grid-row: 2;
 }
+
+/* Result-screen tally: each chip pops in on its own beat (inline
+   animation-delay), rows first, then columns — the score assembles
+   line by line. backwards-fill hides chips until their turn. */
+.tallyIn {
+  animation: rail-tally-in 0.3s ease-out backwards;
+}
+
+/* The independent `scale` property, NOT transform — row chips already
+   carry transform: rotate(180deg) for their vertical text, and a
+   transform keyframe would clobber it. */
+@keyframes rail-tally-in {
+  0% {
+    opacity: 0;
+    scale: 0.7;
+  }
+  60% {
+    opacity: 1;
+    scale: 1.08;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tallyIn {
+    animation: none;
+  }
+}
