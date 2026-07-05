@@ -1,10 +1,10 @@
 import { CSSProperties, useState } from 'react';
 import { BonusCard, SPOTLIGHT_ID } from '../../../game/bonusCards';
 import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
-import { Sheet } from '../../../design/primitives';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
+import { DetailSheet } from './BonusCardStrip';
 import styles from './BonusResolveDialog.module.css';
 
 function CardChip({
@@ -73,36 +73,14 @@ export function BonusResolvePanel({ ui }: { ui: BonusDialogUI }) {
   const { state, dispatch } = useGameSession();
   const [info, setInfo] = useState<BonusCard | null>(null);
 
-  // Mirrors the held-card details sheet: category line in the card's
-  // tone (with the colorblind-assist glyph), then the full description.
-  const infoStyle = info ? styleFor(info) : null;
-  const assist = useSettingsStore(s => s.colorBlindAssist);
+  // THE held-card details sheet, reused verbatim — a card being
+  // offered reads identically to one already in hand (name + mult in
+  // the title, category line, description).
   const infoSheet = (
-    <Sheet
-      open={info !== null}
+    <DetailSheet
+      detail={info ? { card: info, index: 0 } : null}
       onClose={() => setInfo(null)}
-      title={info?.title}
-    >
-      {info && infoStyle && (
-        <div
-          className={styles.infoBody}
-          style={{ '--chip-tone': infoStyle.borderColor } as CSSProperties}
-        >
-          <span className={styles.infoCategory}>
-            {assist && (
-              <>
-                <span style={categoryIconStyle(infoStyle)} aria-hidden="true">
-                  {infoStyle.icon}
-                </span>{' '}
-              </>
-            )}
-            {infoStyle.label}
-          </span>
-          <p className={styles.infoDesc}>{info.description}</p>
-          <p className={styles.infoMult}>{info.mult}</p>
-        </div>
-      )}
-    </Sheet>
+    />
   );
 
   if (ui.mode === 'replacing') {

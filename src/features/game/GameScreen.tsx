@@ -46,6 +46,45 @@ export interface GameScreenProps {
 
 const lineKeyOf = (kind: 'row' | 'col', index: number) => `${kind}${index}`;
 
+// On-device layout forensics: any game URL + `?layoutdebug=1` paints a
+// live readout of every quantity in the board-sizing pipeline — the
+// tutorial mis-layout only reproduces on physical iOS Safari, so this
+// is how a user screenshot pinpoints which number goes wrong. Plain
+// DOM (no React state): updated from the same measure pipeline it
+// reports on.
+function debugReport(area: HTMLElement, frame: HTMLElement): void {
+  if (!new URLSearchParams(window.location.search).has('layoutdebug')) return;
+  let box = document.getElementById('pg-layout-debug');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'pg-layout-debug';
+    Object.assign(box.style, {
+      position: 'fixed',
+      top: '4px',
+      left: '4px',
+      zIndex: '9999',
+      background: 'rgba(0, 0, 0, 0.75)',
+      color: '#9f9',
+      font: '10px/1.5 monospace',
+      padding: '4px 6px',
+      borderRadius: '4px',
+      pointerEvents: 'none',
+      whiteSpace: 'pre',
+    } as Partial<CSSStyleDeclaration>);
+    document.body.appendChild(box);
+  }
+  const fmt = (r: DOMRect) =>
+    `${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.width)}×${Math.round(r.height)}`;
+  const vv = window.visualViewport;
+  box.textContent = [
+    `inner ${window.innerWidth}×${window.innerHeight}`,
+    `vv ${vv ? `${Math.round(vv.width)}×${Math.round(vv.height)}` : 'n/a'}`,
+    `area ${fmt(area.getBoundingClientRect())}`,
+    `frame ${fmt(frame.getBoundingClientRect())}`,
+    `applied ${frame.style.width || '(css fallback)'}`,
+  ].join('\n');
+}
+
 /**
  * Slots on lines that JUST completed with a scoring hand (Pair+),
  * mapped to their stagger position along the line, so the board can
@@ -204,40 +243,60 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     return () => window.clearTimeout(t);
   }, [spotlight]);
 
-  // Board sizing source of truth: a ResizeObserver writes the area's
-  // box to inline px vars that .boardFrame's width min()s against.
-  // The cqw/cqh fallbacks in the CSS cover the observer's first-frame
-  // gap — but iOS Safari fails to re-resolve container-query units on
-  // rotation (and sometimes first layout), leaving the board mis-sized
-  // until an app switch forces a style flush; the observer fires
-  // reliably there, so the px vars win whenever they exist. No React
-  // state: the writes happen outside the render cycle entirely.
-  //
-  // Belt and braces: iOS can also hand the observer its ONLY fire
-  // during a transient first layout (URL bar settling, safe-area
-  // application, font swap) and then reflow without resizing this
-  // element again from the observer's point of view — so we re-read
-  // the box on the late signals those passes emit: a double-rAF after
-  // mount, visualViewport resizes, orientation changes, pageshow, and
-  // fonts.ready.
+  // Board sizing source of truth: a ResizeObserver (plus late-signal
+  // re-reads) measures .boardArea and sets .boardFrame's width as a
+  // PLAIN INLINE PIXEL VALUE — no min(), no custom properties, no
+  // container-query units anywhere in the applied style. The CSS
+  // min(var…, cq…) rule remains only as the no-JS / first-paint
+  // fallback. History: cq units alone broke on iOS Safari (no
+  // re-resolution on rotation/first layout), and a build that fed
+  // measured px through CSS custom properties + min() STILL mis-sized
+  // the tutorial on device — so the applied width now leaves CSS
+  // entirely. Re-reads happen on every signal iOS's late layout passes
+  // emit: double-rAF after mount, visualViewport resize, orientation
+  // change, pageshow, fonts.ready.
   const measureCleanupRef = useRef<(() => void) | null>(null);
+  const boardFrameRef = useRef<HTMLDivElement | null>(null);
+  // Rails add ~30px to the frame; caps mirror the CSS per breakpoint.
+  const railsRef = useRef(lineRails);
+  railsRef.current = lineRails;
+  const remeasureRef = useRef<(() => void) | null>(null);
   const boardAreaRef = useCallback((el: HTMLDivElement | null) => {
     measureCleanupRef.current?.();
     measureCleanupRef.current = null;
+    remeasureRef.current = null;
     if (!el) return;
-    const write = (w: number, h: number) => {
+    const apply = (w: number, h: number) => {
       el.style.setProperty('--avail-w', `${w}px`);
       el.style.setProperty('--avail-h', `${h}px`);
+      const frame = boardFrameRef.current;
+      if (!frame) return;
+      if (window.matchMedia?.('(min-width: 1024px)').matches) {
+        // Desktop: the grid column sizes the board (width: 100%).
+        frame.style.removeProperty('width');
+        return;
+      }
+      const wide = window.matchMedia?.('(min-width: 640px)').matches;
+      const cap = wide
+        ? railsRef.current
+          ? 550
+          : 520
+        : railsRef.current
+          ? 470
+          : 440;
+      frame.style.width = `${Math.min(w, h, cap)}px`;
+      debugReport(el, frame);
     };
     const remeasure = () => {
       const r = el.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) write(r.width, r.height);
+      if (r.width > 0 && r.height > 0) apply(r.width, r.height);
     };
+    remeasureRef.current = remeasure;
     let ro: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(entries => {
         const r = entries[0]?.contentRect;
-        if (r) write(r.width, r.height);
+        if (r && r.width > 0 && r.height > 0) apply(r.width, r.height);
       });
       ro.observe(el);
     }
@@ -257,6 +316,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       window.removeEventListener('pageshow', remeasure);
     };
   }, []);
+  // The rails toggle changes the cap (and the frame's contents) — the
+  // observer won't fire for that, so re-apply explicitly.
+  useEffect(() => {
+    remeasureRef.current?.();
+  }, [lineRails]);
 
   const spotlightEnabled = ui.phaseKind === 'awaiting-action';
   const lineText = (kind: 'row' | 'col', index: number): string => {
@@ -384,6 +448,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
           <div className={styles.boardArea} ref={boardAreaRef}>
             <div
+              ref={boardFrameRef}
               className={`${styles.boardFrame} ${
                 lineRails ? '' : styles.boardFrameBare
               }`}
