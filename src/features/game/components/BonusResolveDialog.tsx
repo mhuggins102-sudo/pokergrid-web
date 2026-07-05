@@ -73,16 +73,33 @@ export function BonusResolvePanel({ ui }: { ui: BonusDialogUI }) {
   const { state, dispatch } = useGameSession();
   const [info, setInfo] = useState<BonusCard | null>(null);
 
+  // Mirrors the held-card details sheet: category line in the card's
+  // tone (with the colorblind-assist glyph), then the full description.
+  const infoStyle = info ? styleFor(info) : null;
+  const assist = useSettingsStore(s => s.colorBlindAssist);
   const infoSheet = (
     <Sheet
       open={info !== null}
       onClose={() => setInfo(null)}
       title={info?.title}
     >
-      {info && (
-        <div className={styles.infoBody}>
-          <p className={styles.infoMult}>{info.mult}</p>
+      {info && infoStyle && (
+        <div
+          className={styles.infoBody}
+          style={{ '--chip-tone': infoStyle.borderColor } as CSSProperties}
+        >
+          <span className={styles.infoCategory}>
+            {assist && (
+              <>
+                <span style={categoryIconStyle(infoStyle)} aria-hidden="true">
+                  {infoStyle.icon}
+                </span>{' '}
+              </>
+            )}
+            {infoStyle.label}
+          </span>
           <p className={styles.infoDesc}>{info.description}</p>
+          <p className={styles.infoMult}>{info.mult}</p>
         </div>
       )}
     </Sheet>

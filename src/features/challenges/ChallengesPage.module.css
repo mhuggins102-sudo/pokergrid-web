@@ -72,6 +72,12 @@
   font-weight: 640;
 }
 
+/* Beaten: same earned dressing as completed achievements
+   (AchievementsPage .cardEarned) — the success ring, "Beaten" stays. */
+.cardDone {
+  border-color: var(--success);
+}
+
 .state {
   font-size: 12px;
   font-weight: 700;

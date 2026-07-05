@@ -89,15 +89,13 @@ function SegmentedRow<T extends string>({
   onInfo?: () => void;
 }) {
   return (
-    <>
-      <div className={`${styles.row} ${styles.segmentedHead}`}>
-        <div className={styles.rowText}>
-          <span className={styles.rowTitle}>
-            {title}
-            {onInfo && <InfoButton title={title} onInfo={onInfo} />}
-          </span>
-          {hint && <span className={styles.rowHint}>{hint}</span>}
-        </div>
+    <div className={`${styles.row} ${styles.rowInline}`}>
+      <div className={styles.rowText}>
+        <span className={styles.rowTitle}>
+          {title}
+          {onInfo && <InfoButton title={title} onInfo={onInfo} />}
+        </span>
+        {hint && <span className={styles.rowHint}>{hint}</span>}
       </div>
       <div className={styles.segmented} role="radiogroup" aria-label={title}>
         {options.map(([v, label]) => (
@@ -113,7 +111,7 @@ function SegmentedRow<T extends string>({
           </button>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 

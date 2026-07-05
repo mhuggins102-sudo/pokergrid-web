@@ -59,23 +59,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-lg);
+  /* space-sm, not lg: the inline segmented rows (title + ⓘ + three
+     pickers) need every pixel on a 375px phone. */
+  gap: var(--space-sm);
+  flex-wrap: wrap;
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--hairline);
   min-height: 56px;
+}
+
+/* Segmented rows only (their titles have no hint text): keep the
+   title's min-content intact so it never wraps internally — with the
+   row's flex-wrap, a too-tight fit drops the whole picker group to
+   the next line instead. Toggle rows keep shrinkable text (their
+   hints must wrap). */
+.rowInline > .rowText {
+  flex-shrink: 0;
 }
 
 .row:last-child {
   border-bottom: none;
 }
 
-/* A row that introduces a segmented picker below it: the pair reads as
-   one setting, so the divider moves below the segments. */
-.segmentedHead {
-  border-bottom: none;
-  padding-bottom: 0;
-  min-height: 0;
-}
 
 .rowText {
   display: flex;
@@ -100,9 +105,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin: -6px 0 -6px 2px;
+  width: 24px;
+  height: 24px;
+  margin: -4px 0 -4px 1px;
   padding: 0;
   border: none;
   border-radius: var(--radius-pill);
@@ -173,25 +178,30 @@
   }
 }
 
-/* Segmented radio pickers (theme / appearance / dock). Inset by the
-   same horizontal padding as .row so the segments never butt against
-   the panel walls. */
+/* Segmented radio pickers (theme / appearance / dock), inline on the
+   right of their row title — the Display section stays short enough
+   that the preview is visible without much scrolling. Compact labels:
+   the widest set ("Classic / Hand stack / Center stage" beside "Dock")
+   fits a 375px viewport without wrapping. */
 .segmented {
   display: flex;
-  gap: var(--space-xs);
-  padding: 6px var(--space-lg) var(--space-md);
-  border-bottom: 1px solid var(--hairline);
+  gap: 2px;
+  flex-shrink: 0;
+  /* If a width ever gets too tight for title + pickers on one line
+     (row is flex-wrap), the group drops to its own line, right-aligned
+     — never a mid-title wrap. */
+  margin-left: auto;
 }
 
 .segment {
-  flex: 1;
-  padding: 8px 4px;
+  padding: 8px 5px;
   border: 1px solid var(--rule);
   border-radius: var(--radius-sm);
   background: var(--paper);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink-2);
+  white-space: nowrap;
   cursor: pointer;
 }
 

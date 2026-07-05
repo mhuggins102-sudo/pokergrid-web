@@ -33,7 +33,7 @@ export function ChallengesPage() {
           return (
             <article
               key={challenge.id}
-              className={styles.card}
+              className={`${styles.card} ${isDone ? styles.cardDone : ''}`}
               onClick={toggle}
             >
               <button
