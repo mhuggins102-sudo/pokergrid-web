@@ -64,7 +64,7 @@ test('tutorial guides the scripted opening and releases into free play', async (
   await expect(coach).toContainText('♣ Bonus');
   await page.getByRole('button', { name: '♣ Bonus' }).click();
   await page
-    .getByRole('button', { name: /tap to keep/i })
+    .getByRole('button', { name: /^keep:/i })
     .first()
     .click();
 

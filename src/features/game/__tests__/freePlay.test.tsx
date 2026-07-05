@@ -81,7 +81,8 @@ describe('free play', () => {
         const isBonus = /Bonus/.test(perk.textContent ?? '');
         fireEvent.click(perk);
         if (isBonus) {
-          // ♣ takes over the dock with full card descriptions.
+          // ♣ takes over the dock with compact keep-chips; the ✕
+          // carries the "Decline both" label.
           expect(screen.getByText(/♣ Bonus draw/)).toBeInTheDocument();
           const decline = screen.queryByRole('button', { name: 'Decline both' });
           expect(decline).not.toBeNull(); // easy allows declining

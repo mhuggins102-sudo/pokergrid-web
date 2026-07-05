@@ -1,33 +1,38 @@
-import { CSSProperties } from 'react';
+import { CSSProperties, useState } from 'react';
 import { BonusCard, SPOTLIGHT_ID } from '../../../game/bonusCards';
 import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
-import { Button } from '../../../design/primitives';
+import { Sheet } from '../../../design/primitives';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
 import styles from './BonusResolveDialog.module.css';
 
-function CardOption({
+function CardChip({
   card,
-  action,
+  ariaPrefix,
   onPick,
+  onInfo,
 }: {
   card: BonusCard;
-  action: string;
+  ariaPrefix: string;
   onPick: () => void;
+  onInfo: () => void;
 }) {
   const cat = styleFor(card);
   // Glyph gated on colorBlindAssist per the category-style contract.
   const assist = useSettingsStore(s => s.colorBlindAssist);
   return (
-    <button
-      type="button"
-      className={styles.option}
+    <div
+      className={styles.chipWrap}
       style={{ '--chip-tone': cat.borderColor } as CSSProperties}
-      onClick={onPick}
     >
-      <span className={styles.optionTop}>
-        <span className={styles.optionTitle}>
+      <button
+        type="button"
+        className={styles.chip}
+        onClick={onPick}
+        aria-label={`${ariaPrefix}: ${card.title}`}
+      >
+        <span className={styles.chipTitle}>
           {assist && (
             <>
               <span style={categoryIconStyle(cat)} aria-hidden="true">
@@ -37,46 +42,75 @@ function CardOption({
           )}
           {card.title}
         </span>
-        <span className={styles.optionMult}>{card.mult}</span>
-      </span>
-      <span className={styles.optionDesc}>{card.description}</span>
-      <span className={styles.optionAction}>{action}</span>
-    </button>
+        <span className={styles.chipMult}>{card.mult}</span>
+      </button>
+      <button
+        type="button"
+        className={styles.chipInfo}
+        onClick={onInfo}
+        aria-label={`About ${card.title}`}
+      >
+        i
+      </button>
+    </div>
   );
 }
 
 /**
  * The ♣ Bonus draw flow, rendered IN the dock — not a modal — so the
- * board stays fully visible while choosing, and each option carries
- * its complete description so the choice never requires memorized
- * card knowledge. At the cap, picking a non-Spotlight card moves to
- * the replace step; Spotlight skips it (it evicts the hand by rule).
+ * board stays fully visible while choosing. The options are compact
+ * chips (title + mult) sized to fit inside the dock's pinned height,
+ * so the board and dock never move during any ♣ step; each chip's ⓘ
+ * opens the full description in a sheet for anyone who wants it. At
+ * the cap, picking a non-Spotlight card moves to the replace step;
+ * Spotlight skips it (it evicts the hand by rule).
  */
 export function BonusResolvePanel({ ui }: { ui: BonusDialogUI }) {
   const { state, dispatch } = useGameSession();
+  const [info, setInfo] = useState<BonusCard | null>(null);
+
+  const infoSheet = (
+    <Sheet
+      open={info !== null}
+      onClose={() => setInfo(null)}
+      title={info?.title}
+    >
+      {info && (
+        <div className={styles.infoBody}>
+          <p className={styles.infoMult}>{info.mult}</p>
+          <p className={styles.infoDesc}>{info.description}</p>
+        </div>
+      )}
+    </Sheet>
+  );
 
   if (ui.mode === 'replacing') {
     const incoming = ui.drawn[ui.pickedNew ?? 0];
     return (
       <div className={styles.panel}>
+        <button
+          type="button"
+          className={styles.close}
+          aria-label="Back"
+          onClick={() => dispatch({ type: 'CANCEL_ACTION' })}
+        >
+          ✕
+        </button>
         <p className={styles.hint}>
-          Keeping “{incoming?.title}” — tap the held card to swap out.
+          Keeping “{incoming?.title}” — swap out which card?
         </p>
         <div className={styles.choices}>
           {state.bonusCards.map((card, i) => (
-            <CardOption
+            <CardChip
               key={`${card.id}-${i}`}
               card={card}
-              action="Tap to swap out"
+              ariaPrefix="Swap out"
               onPick={() => dispatch({ type: 'BONUS_REPLACE', oldIdx: i })}
+              onInfo={() => setInfo(card)}
             />
           ))}
         </div>
-        <div className={styles.footer}>
-          <Button variant="ghost" onClick={() => dispatch({ type: 'CANCEL_ACTION' })}>
-            Back
-          </Button>
-        </div>
+        {infoSheet}
       </div>
     );
   }
@@ -92,31 +126,36 @@ export function BonusResolvePanel({ ui }: { ui: BonusDialogUI }) {
 
   return (
     <div className={styles.panel}>
+      {ui.canDecline && (
+        <button
+          type="button"
+          className={styles.close}
+          aria-label="Decline both"
+          onClick={() => dispatch({ type: 'BONUS_DECLINE' })}
+        >
+          ✕
+        </button>
+      )}
       <p className={styles.hint}>
         ♣ Bonus draw —{' '}
         {ui.atCap
-          ? 'your hand is full; keeping a card means swapping one out'
+          ? 'hand full: keeping a card swaps one out'
           : ui.drawn.length > 1
             ? 'keep one of the two'
             : 'keep this card?'}
       </p>
       <div className={styles.choices}>
         {ui.drawn.map((card, i) => (
-          <CardOption
+          <CardChip
             key={`${card.id}-${i}`}
             card={card}
-            action={ui.atCap && card.id !== SPOTLIGHT_ID ? 'Tap to keep (then pick the swap)' : 'Tap to keep'}
+            ariaPrefix="Keep"
             onPick={() => pick(i)}
+            onInfo={() => setInfo(card)}
           />
         ))}
       </div>
-      {ui.canDecline && (
-        <div className={styles.footer}>
-          <Button variant="ghost" onClick={() => dispatch({ type: 'BONUS_DECLINE' })}>
-            Decline both
-          </Button>
-        </div>
-      )}
+      {infoSheet}
     </div>
   );
 }

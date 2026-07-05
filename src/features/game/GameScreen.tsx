@@ -1,4 +1,11 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import {
   ScoredLine,
@@ -197,6 +204,29 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     return () => window.clearTimeout(t);
   }, [spotlight]);
 
+  // Board sizing source of truth: a ResizeObserver writes the area's
+  // box to inline px vars that .boardFrame's width min()s against.
+  // The cqw/cqh fallbacks in the CSS cover the observer's first-frame
+  // gap — but iOS Safari fails to re-resolve container-query units on
+  // rotation (and sometimes first layout), leaving the board mis-sized
+  // until an app switch forces a style flush; the observer fires
+  // reliably there, so the px vars win whenever they exist. No React
+  // state: the write happens outside the render cycle entirely.
+  const roRef = useRef<ResizeObserver | null>(null);
+  const boardAreaRef = useCallback((el: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(entries => {
+      const r = entries[0]?.contentRect;
+      if (!r) return;
+      el.style.setProperty('--avail-w', `${r.width}px`);
+      el.style.setProperty('--avail-h', `${r.height}px`);
+    });
+    ro.observe(el);
+    roRef.current = ro;
+  }, []);
+
   const spotlightEnabled = ui.phaseKind === 'awaiting-action';
   const lineText = (kind: 'row' | 'col', index: number): string => {
     const line = liveReport.lines.find(
@@ -321,7 +351,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             <LinesPanel report={liveReport} />
           </div>
 
-          <div className={styles.boardArea}>
+          <div className={styles.boardArea} ref={boardAreaRef}>
             <div
               className={`${styles.boardFrame} ${
                 lineRails ? '' : styles.boardFrameBare
@@ -381,11 +411,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           </div>
 
-          {/* Hidden during the ♣ draw — the panel lists held cards
-              itself when the choice involves them (replace flow), and
-              the row's height goes to the board instead. */}
-          {!ui.bonusDialog &&
-            (state.bonusCards.length > 0 || !state.noBonusCards) && (
+          {/* Stays mounted during the ♣ draw: the compact panel fits
+              inside the dock's pinned height, so nothing needs to
+              yield space — and the held cards staying visible is
+              exactly what the swap decision wants. */}
+          {(state.bonusCards.length > 0 || !state.noBonusCards) && (
             <div className={styles.bonusRowSlot}>
               <BonusCardStrip
                 layout="row"

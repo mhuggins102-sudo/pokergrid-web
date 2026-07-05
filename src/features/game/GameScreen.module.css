@@ -44,13 +44,18 @@
      it measure mid-flight geometry — cards end up pinned to stale
      positions until the next re-measure (the "board shifted right
      until I tabbed away" bug). The width snaps; the cards' own
-     layout animations carry the visual transition. */
-  width: min(100cqw, 100cqh, 470px);
+     layout animations carry the visual transition.
+     --avail-w/--avail-h are the area's box in px, written by a
+     ResizeObserver in GameScreen — the primary size source, because
+     iOS Safari fails to re-resolve cq units on rotation/first layout
+     (board stuck mis-sized until an app switch). The cq units remain
+     only as the observer's first-frame fallback. */
+  width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 470px);
 }
 
 /* Line rails disabled (Settings): the plain board at its original cap. */
 .boardFrameBare {
-  width: min(100cqw, 100cqh, 440px);
+  width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 440px);
 }
 
 /* Tutorial coach: a FIXED slice of the vertical budget — every step
@@ -102,6 +107,22 @@
   margin-bottom: calc(-1 * var(--space-lg));
   padding: var(--space-xs) var(--space-lg)
     calc(var(--space-sm) + env(safe-area-inset-bottom));
+  /* Pinned to the layout's tallest natural phase height (measured at
+     390px, safe-area 0) so the dock — and the board flexed above it —
+     never moves when the contents swap: targeting banners, and
+     especially the ♣ panel, which is far shorter than the play dock.
+     The compact ♣ panel centers itself in the slack (margin: auto). */
+  min-height: calc(138px + env(safe-area-inset-bottom));
+}
+
+/* Classic: slim card row + commit. */
+.dockClassic .dock {
+  min-height: calc(118px + env(safe-area-inset-bottom));
+}
+
+/* Center stage: the large centered card sets the height. */
+.dockStage .dock {
+  min-height: calc(159px + env(safe-area-inset-bottom));
 }
 
 .dockRow {
@@ -238,11 +259,11 @@
   }
 
   .boardFrame {
-    width: min(100cqw, 100cqh, 550px);
+    width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 550px);
   }
 
   .boardFrameBare {
-    width: min(100cqw, 100cqh, 520px);
+    width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 520px);
   }
 
   .dockText {
@@ -290,13 +311,17 @@
     width: 100%;
   }
 
-  .dock {
+  .dock,
+  .dockClassic .dock,
+  .dockStage .dock {
     grid-column: 2;
     grid-row: 3;
     margin: 0;
     padding: 0;
     border-top: none;
     background: transparent;
+    /* The board has its own grid track here — no pin needed. */
+    min-height: 0;
   }
 
   .commitButton {
