@@ -427,17 +427,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   stacked
                   flight={flight}
                 />
-                <div className={styles.actionStack}>
-                  {/* Always mounted (even empty): the reserved line keeps
-                      the dock height stable when a targeting banner
-                      appears, so the flexed board doesn't breathe. */}
-                  <span
-                    className={styles.dockText}
-                    role="status"
-                    aria-live="polite"
-                  >
-                    {ui.banner ?? ''}
-                  </span>
+                {/* actionStackHasBanner swaps the trailing reserved line
+                    for the real banner (see the CSS ::after) so dock
+                    height — and therefore board size — stays put. */}
+                <div
+                  className={`${styles.actionStack} ${
+                    ui.banner ? styles.actionStackHasBanner : ''
+                  }`}
+                >
+                  {banner}
                   {commitAction?.id === 'place' && commitBtn()}
                   {rowActions.length > 0 && (
                     <div className={styles.actionRow}>
