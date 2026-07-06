@@ -20,7 +20,7 @@ export function LinesPanel({ report, title = 'Lines', bare = false }: LinesPanel
       className={bare ? undefined : styles.panel}
       aria-label="Line breakdown"
     >
-      {!bare && <h2 className={`text-section ${styles.heading}`}>{title}</h2>}
+      {!bare && <h2 className="text-section">{title}</h2>}
       {report.lines.map(line => (
         <div key={`${line.kind}-${line.index}`} className={styles.line}>
           <span className={styles.label}>{lineLabel(line.kind, line.index)}</span>

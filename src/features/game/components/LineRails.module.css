@@ -1,6 +1,7 @@
 /* Board + line-total rails as one visual: row totals run down the right
    edge (aligned with each row), column totals sit under each column.
-   The 6px gaps mirror GridBoard's so chips track their lines exactly. */
+   The gaps use the same --board-gap as GridBoard so chips track their
+   lines exactly. */
 .wrap {
   display: grid;
   /* Row totals on the LEFT edge (thumb-near on phones), column totals
@@ -14,7 +15,7 @@
      place" bug. */
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto auto;
-  gap: 6px;
+  gap: var(--board-gap);
   width: 100%;
 }
 
@@ -28,7 +29,7 @@
   grid-row: 1;
   display: grid;
   grid-template-rows: repeat(5, 1fr);
-  gap: 6px;
+  gap: var(--board-gap);
 }
 
 .colRail {
@@ -36,7 +37,7 @@
   grid-row: 2;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--board-gap);
 }
 
 /* Column chips track their column's width, however small — the 38px

@@ -9,9 +9,9 @@
   box-shadow: var(--shadow-sm);
 }
 
-.heading {
-  margin-bottom: var(--space-xs);
-}
+/* No own margin: the heading shares the panel's flex `gap` rhythm with
+   every row below it, so the space under the title matches the space
+   between lines (was margin-bottom + gap = 12px vs the rows' 8px). */
 
 .line {
   display: grid;

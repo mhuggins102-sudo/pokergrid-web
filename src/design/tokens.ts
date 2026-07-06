@@ -67,6 +67,10 @@ export const radius = {
   pill: 999,
 } as const;
 
+// Board geometry — the 5×5 grid gap, shared by GridBoard and LineRails
+// (--board-gap in tokens.css). Off the spacing scale on purpose.
+export const boardGap = 6;
+
 export const shadows = {
   sm: '0 1px 2px rgba(26, 26, 26, 0.08)',
   md: '0 2px 8px rgba(26, 26, 26, 0.10)',
