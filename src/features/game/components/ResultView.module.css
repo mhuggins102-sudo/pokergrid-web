@@ -196,7 +196,12 @@
 
 .boardSlot {
   width: min(100%, 440px);
-  margin: 0 auto;
+  /* Vertical auto margins split the column's free space evenly, so
+     the board sits centered between the hero above and the dock's
+     dividing line below (phones hide the math/bonus panels, leaving
+     real slack here). Horizontal auto keeps the width-capped board
+     centered as before. */
+  margin: auto;
 }
 
 /* Daily: the rank bar joins the above-board stack, so cap the board by
@@ -330,7 +335,9 @@
 /* Bottom dock, same pattern as the game screen: secondary links above
    a full-width primary, pinned to the bottom edge. */
 .dock {
-  margin-top: auto;
+  /* No margin-top: auto — the board slot's bottom auto margin owns
+     the slack now (an auto here too would split it 1:2 instead of
+     1:1 around the board). The dock still lands at the bottom. */
   position: sticky;
   bottom: 0;
   z-index: 10;
@@ -414,6 +421,8 @@
     grid-column: 2;
     grid-row: 2;
     width: clamp(420px, 40vw, 520px);
+    /* Desktop grid places the board; no vertical centering margins. */
+    margin: 0;
   }
 
   .linesPanelSlot {

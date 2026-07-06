@@ -50,11 +50,13 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
     const amount = report.total - prev;
     if (amount === 0) return;
     setDelta(d => ({ amount, key: (d?.key ?? 0) + 1 }));
-    const t = window.setTimeout(() => setDelta(null), 1000);
+    const t = window.setTimeout(() => setDelta(null), 2000);
     return () => window.clearTimeout(t);
   }, [report.total]);
 
-  const displayTotal = useAnimatedNumber(report.total, !reduceMotion);
+  const displayTotal = useAnimatedNumber(report.total, !reduceMotion, {
+    durationMs: 560,
+  });
 
   return (
     <div className={styles.bar}>
