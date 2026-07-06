@@ -63,7 +63,7 @@ export function ScoreBreakdown({
       <button
         type="button"
         className={`${styles.breakdown} ${styles.breakdownBtn}`}
-        aria-label="How your score was built"
+        aria-label="Scoring summary"
         onClick={onOpen}
       >
         {rowSpans}

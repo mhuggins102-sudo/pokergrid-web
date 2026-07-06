@@ -19,7 +19,7 @@ export function ScoreBuildSheet({
   build: ScoreBuildData;
 }) {
   return (
-    <Sheet open={open} onClose={onClose} title="How your score was built">
+    <Sheet open={open} onClose={onClose} title="Scoring summary">
       <div className={styles.rows}>
         <div className={styles.row}>
           <span>Lines total</span>
@@ -27,7 +27,7 @@ export function ScoreBuildSheet({
         </div>
         {build.golds.map(({ card, add }, i) => (
           <div key={`${card.id}-${i}`} className={styles.row}>
-            <span className={styles.cardName}>{card.title}</span>
+            <span className={styles.nameGold}>{card.title}</span>
             <span className={styles.gold}>
               {add >= 0 ? '+' : ''}
               {add}
@@ -42,7 +42,7 @@ export function ScoreBuildSheet({
         )}
         {build.purples.map(({ card, multiplier, flat }, i) => (
           <div key={`${card.id}-${i}`} className={styles.row}>
-            <span className={styles.cardName}>{card.title}</span>
+            <span className={styles.namePurple}>{card.title}</span>
             <span className={styles.purple}>
               {multiplier !== 1 ? `×${multiplier.toFixed(2)}` : ''}
               {multiplier !== 1 && flat !== 0 ? ' ' : ''}
