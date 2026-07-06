@@ -82,7 +82,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  /* 5px, not 2: the mult's tight line box (line-height 1) gave back
+     the leading that used to pad this gap visually — this restores
+     the original air while the pair stays flex-centered. */
+  gap: 5px;
   width: 100%;
   height: 64px;
   padding: 4px 10px;
