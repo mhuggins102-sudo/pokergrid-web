@@ -31,7 +31,7 @@ test('difficulty picker links into a game', async ({ page }) => {
 test('seeded easy game plays to completion with Place', async ({ page }) => {
   await page.goto('/play?difficulty=easy&seed=42');
   await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
-  await expect(page.getByText('/ 400 target')).toBeVisible();
+  await expect(page.getByText('/ 400')).toBeVisible();
 
   const place = page.getByRole('button', { name: 'Place', exact: true });
   const finalScore = page.getByTestId('final-score');

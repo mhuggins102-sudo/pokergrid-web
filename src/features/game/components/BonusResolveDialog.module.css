@@ -113,6 +113,10 @@
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  /* Tight line box: the inherited ~1.45 leading hung empty space
+     under the small text, floating the two-line group visibly above
+     the chip's center. */
+  line-height: 1;
 }
 
 /* The full description without spending dock height on it. Same bare

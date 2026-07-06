@@ -68,7 +68,7 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
         >
           <span className={styles.score}>{displayTotal}</span>
           <span className={`text-label ${styles.target}`}>
-            / {state.target} target
+            / {state.target}
           </span>
           <span className={styles.kicker}>{state.difficulty}</span>
           {delta && (
