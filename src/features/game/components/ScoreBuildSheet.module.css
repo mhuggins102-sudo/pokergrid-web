@@ -1,0 +1,45 @@
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.cardName {
+  color: var(--ink-2);
+}
+
+/* The tally's three colors, same reads as the corner stack. */
+.green {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.gold {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.purple {
+  color: var(--joker);
+  font-weight: 700;
+}
+
+.subtotal {
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--space-sm);
+}
+
+.total {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-sm);
+  font-weight: 700;
+  font-size: 16px;
+}

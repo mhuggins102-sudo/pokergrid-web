@@ -6,7 +6,8 @@ import { findChallenge } from '../../game/challenges';
 import { tierForRun } from '../../lib/stats';
 import { Button, Chevron } from '../../design/primitives';
 import { LineRails } from '../game/components/LineRails';
-import { computeScoreBreakdown } from '../game/scoreBreakdown';
+import { computeScoreBreakdown, computeScoreBuild } from '../game/scoreBreakdown';
+import { ScoreBuildSheet } from '../game/components/ScoreBuildSheet';
 import { ScoreBreakdown } from '../game/components/ScoreBreakdown';
 import { LinesPanel } from '../game/components/LinesPanel';
 import { LineDetailSheet } from '../game/components/LineDetailSheet';
@@ -31,13 +32,14 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [tiersOpen, setTiersOpen] = useState(false);
+  const [buildOpen, setBuildOpen] = useState(false);
   const plays = usePlaysStore(s => s.plays);
   const nextDaily = nextIncompleteDaily(play.dateISO, plays);
   const state = play.state;
   const target = dailyTargetFor(play.recipe.difficulty, play.recipe.twist);
   const twist = play.recipe.twist ? findChallenge(play.recipe.twist) : null;
 
-  const { report, shapley, breakdown, baseTotals } = useMemo(() => {
+  const { report, shapley, breakdown, build, baseTotals } = useMemo(() => {
     const options = {
       deckRemaining: state.deck.length,
       discards: state.discards,
@@ -55,6 +57,7 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
       report: fullReport,
       shapley: bonusShapleyValues(state.grid, state.bonusCards, options),
       breakdown: bd,
+      build: computeScoreBuild(state.grid, state.bonusCards, fullReport, options),
       baseTotals: new Map(
         bd.baseReport.lines.map(l => [`${l.kind}${l.index}`, l.total])
       ),
@@ -114,7 +117,7 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
         >
           ⓘ
         </button>
-        <ScoreBreakdown breakdown={breakdown} />
+        <ScoreBreakdown breakdown={breakdown} onOpen={() => setBuildOpen(true)} />
         <span className={`${styles.verdict} ${play.won ? styles.win : styles.loss}`}>
           {play.won ? 'Daily solved' : 'Daily missed'}
         </span>
@@ -188,6 +191,12 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
           </Button>
         </Link>
       </div>
+
+      <ScoreBuildSheet
+        open={buildOpen}
+        onClose={() => setBuildOpen(false)}
+        build={build}
+      />
 
       <TierBreakdownSheet
         open={tiersOpen}

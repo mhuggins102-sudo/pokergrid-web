@@ -88,6 +88,24 @@
   text-align: left;
 }
 
+/* As a button (tap → per-card build-up sheet): interactive again,
+   with a padded hit area that doesn't move the rows. */
+.breakdownBtn {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  top: 4px;
+  left: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.breakdownBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .breakBase {
   color: var(--success);
 }

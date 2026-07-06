@@ -87,6 +87,15 @@ export function Dialog({
 
     const onStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
+      // A dialog stacked INSIDE this one (a card sheet opened from a
+      // details sheet) lives in this dialog's DOM subtree, so its
+      // touches bubble here too — dragging the top sheet must not
+      // also drag (and dismiss) this one underneath.
+      const target = e.target instanceof Element ? e.target : null;
+      if (target && target.closest('dialog') !== el) {
+        mode = 'scroll';
+        return;
+      }
       const sc = scrollerOf(e.target);
       mode = sc && sc.scrollTop > 0 ? 'scroll' : 'idle';
       dy = 0;

@@ -63,20 +63,12 @@
    layout never jumps between steps; the board flexes around it. While
    the ♣ panel has the dock the coach unmounts entirely. */
 .coachSlot {
-  /* Sized for the longest step body (~3 lines) — tutorialSteps.ts
-     keeps copy short so the board stays the main event. */
-  height: 158px;
+  /* Every step renders the compact strip (header line + inlined-title
+     body); one fixed height for the whole tutorial, sized so the
+     longest step copy (4 body lines) fits without an internal
+     scrollbar — the board takes everything else. */
+  height: 126px;
   flex-shrink: 0;
-}
-
-/* Action steps: the coach is a compact instruction strip (header line
-   + inlined-title body) — the board takes the freed height. Fixed per
-   mode, so consecutive action steps never jump; only info↔action
-   transitions resize (a deliberate mode change). */
-.coachSlotCompact {
-  /* Fits the longest action-step instruction (hop/destroy, 4 lines
-     with the inlined title) without an internal scrollbar. */
-  height: 114px;
 }
 
 /* Spotlight on the move the coach is asking for. */
@@ -358,12 +350,11 @@
   /* Desktop: the coach rides the right column, above the bonus cards,
      at the same fixed height. The board has its own column, so no
      width budget changes. */
-  .coachSlot,
-  .coachSlotCompact {
+  .coachSlot {
     grid-column: 3;
     grid-row: 1;
-    /* The coach rides the side column here — a compact slot buys the
-       board nothing, so both modes keep the constant height. */
+    /* The coach rides the side column here — the board has its own
+       column, so the slot keeps a roomier constant height. */
     height: 190px;
   }
 
