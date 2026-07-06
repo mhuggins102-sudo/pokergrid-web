@@ -32,10 +32,11 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  themeFamily: 'card-room',
-  appearance: 'system',
+  // New players start on the original editorial look, light.
+  themeFamily: 'paper',
+  appearance: 'light',
   sounds: true,
-  dockLayout: 'classic',
+  dockLayout: 'hand-stack',
   lineRails: true,
   reduceMotion: false,
   colorBlindAssist: false,

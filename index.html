@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="card-room">
+<html lang="en" data-theme="paper">
   <head>
     <meta charset="UTF-8" />
     <!-- Pre-paint theme stamp so the first frame doesn't flash the wrong
@@ -13,15 +13,20 @@
         // saves the store hasn't migrated yet.
         var fam = st.themeFamily;
         var app = st.appearance;
-        if (!fam) {
-          var legacy = st.theme || 'system';
-          fam = legacy === 'paper' ? 'paper' : 'card-room';
+        if (!fam && st.theme) {
+          // v0 single-choice `theme` the store hasn't migrated yet.
+          fam = st.theme === 'paper' ? 'paper' : 'card-room';
           app =
-            legacy === 'card-room-dark'
+            st.theme === 'card-room-dark'
               ? 'dark'
-              : legacy === 'system'
+              : st.theme === 'system'
                 ? 'system'
                 : 'light';
+        }
+        if (!fam) {
+          // No stored choice at all — the new-player default.
+          fam = 'paper';
+          app = 'light';
         }
         var dark =
           app === 'dark' ||

@@ -62,10 +62,17 @@
   /* space-sm, not lg: the inline segmented rows (title + ⓘ + three
      pickers) need every pixel on a 375px phone. */
   gap: var(--space-sm);
-  flex-wrap: wrap;
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--hairline);
   min-height: 56px;
+}
+
+/* Only the segmented rows may wrap (dropping the picker group to its
+   own line on tight viewports). Toggle rows must NOT: a long hint
+   would push the toggle onto a second line, left-aligned — hints wrap
+   internally instead (rowText has min-width: 0). */
+.rowInline {
+  flex-wrap: wrap;
 }
 
 /* Segmented rows only (their titles have no hint text): keep the
@@ -180,20 +187,25 @@
 
 /* Segmented radio pickers (theme / appearance / dock), inline on the
    right of their row title — the Display section stays short enough
-   that the preview is visible without much scrolling. Buttons take
-   their natural text width plus comfortable padding (no stretching to
-   fill, no squeezing), right-aligned; if a viewport is too tight for
-   title + group on one line, the row's flex-wrap drops the whole
-   group to its own line — never a mid-title wrap. */
+   that the preview is visible without much scrolling. Same button
+   feel as the original full-width pickers (equal segments sharing the
+   space, 13px labels), just sharing the row: the group fills the
+   space right of the title; if a viewport is too tight for both on
+   one line, the row's flex-wrap drops the group to its own full-width
+   line — exactly the original stacked layout. */
 .segmented {
   display: flex;
   gap: var(--space-xs);
-  flex: 0 1 auto;
+  /* Grow to fill the space right of the title, but never shrink below
+     the labels' natural widths — when the row is too tight the group
+     wraps to its own full-width line instead of squeezing text. */
+  flex: 1 0 auto;
   margin-left: auto;
 }
 
 .segment {
-  padding: 8px 4px;
+  flex: 1 0 auto;
+  padding: 8px 3px;
   border: 1px solid var(--rule);
   border-radius: var(--radius-sm);
   background: var(--paper);
