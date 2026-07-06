@@ -535,7 +535,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           )}
 
-          <div className={styles.dock}>
+          <div
+            className={`${styles.dock} ${
+              dockLayout === 'hand-stack' ? styles.dockHandPad : ''
+            }`}
+          >
             {ui.bonusDialog ? (
               // ♣ draw takes over the whole dock — the well hides so the
               // board keeps as much room as possible. Safe to unmount:

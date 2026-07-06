@@ -124,22 +124,23 @@
 
 /* The full description without spending dock height on it. Same bare
    ⓘ glyph as the result screen's score-details button (.heroInfo) for
-   a consistent read, in a 32×32 hit box — big enough that a thumb aim
-   can't fall through onto the card button underneath (which would
-   keep the card). A real sibling (not nested) so both stay buttons. */
+   a consistent read — but the TAP ZONE is the card's whole right
+   third (full height, inside the card's bounds), so aiming anywhere
+   near the icon can't fall through onto the keep button underneath.
+   A real sibling (not nested) so both stay buttons. */
 .chipInfo {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30%;
   z-index: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 5px 7px 0 0;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   background: transparent;
   color: var(--ink-2);
   font-size: 16px;
