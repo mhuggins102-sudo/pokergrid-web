@@ -73,7 +73,7 @@ function LineRow({
                 not a multiplier, not a bonus card — so they get their
                 own line on top of the regular table value. */}
             {investedBase(line).invested > 0 && (
-              <div className={`${styles.calcRow} ${styles.bonus}`}>
+              <div className={`${styles.calcRow} ${styles.invested}`}>
                 <span>♣ Invested</span>
                 <span>+{investedBase(line).invested}</span>
               </div>
@@ -131,7 +131,7 @@ export function ScoreDetailsSheet({
   const [expanded, setExpanded] = useState<string | null>(null);
   if (!open) return null;
   return (
-    <Sheet open onClose={onClose} title="Details">
+    <Sheet open onClose={onClose} title="Scoring details">
       <div className={styles.body}>
         <div className={styles.lines}>
           {report.lines.map(line => {

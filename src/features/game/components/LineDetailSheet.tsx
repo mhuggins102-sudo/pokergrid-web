@@ -78,7 +78,7 @@ export function LineDetailSheet({
                 {/* Bull Market ♣ invests raise the base additively —
                     shown apart from the regular table value. */}
                 {investedBase(line).invested > 0 && (
-                  <div className={`${styles.row} ${styles.bonus}`}>
+                  <div className={`${styles.row} ${styles.invested}`}>
                     <span className={styles.rowLabel}>♣ Invested</span>
                     <span>+{investedBase(line).invested}</span>
                   </div>

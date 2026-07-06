@@ -43,7 +43,14 @@
   white-space: nowrap;
 }
 
+/* Gold-card contribution rows — the tally's gold, not green. */
 .bonus {
+  color: var(--warn);
+}
+
+/* Bull Market's ♣ invests raise the BASE — green, like the corner
+   tally counts them. */
+.invested {
   color: var(--accent);
 }
 

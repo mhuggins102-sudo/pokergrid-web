@@ -12,8 +12,14 @@
   gap: var(--space-md);
 }
 
-.cardName {
-  color: var(--ink-2);
+/* Card names wear their row's tone (normal weight — the value keeps
+   the bold), matching the corner tally's color language. */
+.nameGold {
+  color: var(--warn);
+}
+
+.namePurple {
+  color: var(--joker);
 }
 
 /* The tally's three colors, same reads as the corner stack. */
