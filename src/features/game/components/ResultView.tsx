@@ -15,8 +15,9 @@ import { RankPanel } from '../../daily/RankPanel';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { sfxTallyCount } from '../../../lib/sfx';
 import { prefersReducedMotion, useAnimatedNumber } from '../useAnimatedNumber';
-import { computeScoreBreakdown } from '../scoreBreakdown';
+import { computeScoreBreakdown, computeScoreBuild } from '../scoreBreakdown';
 import { ScoreBreakdown } from './ScoreBreakdown';
+import { ScoreBuildSheet } from './ScoreBuildSheet';
 import { LineRails } from './LineRails';
 import { LinesPanel } from './LinesPanel';
 import { LineDetailSheet } from './LineDetailSheet';
@@ -46,13 +47,15 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [tiersOpen, setTiersOpen] = useState(false);
+  // Corner breakdown tapped → the per-card score build-up.
+  const [buildOpen, setBuildOpen] = useState(false);
   // Tapped just-earned achievement → explainer sheet.
   const [achInfo, setAchInfo] = useState<Achievement | null>(null);
   const plays = usePlaysStore(s => s.plays);
   const nextDaily =
     mode.kind === 'daily' ? nextIncompleteDaily(mode.dateISO, plays) : null;
 
-  const { report, shapley, breakdown, baseTotals } = useMemo(() => {
+  const { report, shapley, breakdown, build, baseTotals } = useMemo(() => {
     const options = {
       deckRemaining: state.deck.length,
       discards: state.discards,
@@ -70,6 +73,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
       report: fullReport,
       shapley: bonusShapleyValues(state.grid, state.bonusCards, options),
       breakdown: bd,
+      build: computeScoreBuild(state.grid, state.bonusCards, fullReport, options),
       baseTotals: new Map(
         bd.baseReport.lines.map(l => [`${l.kind}${l.index}`, l.total])
       ),
@@ -346,7 +350,11 @@ export function ResultView({ onReplay }: ResultViewProps) {
         <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
           {verdict}
         </span>
-        <ScoreBreakdown breakdown={breakdown} beatDelays={beatDelays} />
+        <ScoreBreakdown
+          breakdown={breakdown}
+          beatDelays={beatDelays}
+          onOpen={() => setBuildOpen(true)}
+        />
         <button
           type="button"
           className={`${styles.finalScore} ${styles.finalScoreBtn} ${
@@ -452,6 +460,12 @@ export function ResultView({ onReplay }: ResultViewProps) {
       >
         {achInfo && <p className="text-body">{achInfo.description}</p>}
       </Sheet>
+
+      <ScoreBuildSheet
+        open={buildOpen}
+        onClose={() => setBuildOpen(false)}
+        build={build}
+      />
 
       <TierBreakdownSheet
         open={tiersOpen}

@@ -1,6 +1,12 @@
 import { BonusCard } from '../../game/bonusCards';
 import { Grid } from '../../game/grid';
-import { ScoreOptions, ScoreReport, scoreGrid } from '../../game/scoring';
+import {
+  ScoreOptions,
+  ScoreReport,
+  bonusShapleyValues,
+  scoreGrid,
+} from '../../game/scoring';
+import { categoryOf } from '../../lib/bonusCardCategory';
 
 // The result hero's corner decomposition: how much of the final score
 // is pure poker (base), how much the gold (per-line) bonus cards added,
@@ -49,5 +55,101 @@ export const computeScoreBreakdown = (
     hasGold: goldAdd !== 0,
     hasPurple: report.gridMultiplier !== 1 || report.gridFlat !== 0,
     baseReport,
+  };
+};
+
+// ---- Per-card build-up (the corner-tap popup) ----
+
+export interface GoldContribution {
+  card: BonusCard;
+  /** Points this card added to the lines (integer; rows sum to goldAdd). */
+  add: number;
+}
+
+export interface PurpleContribution {
+  card: BonusCard;
+  /** The multiplier this card actually applied (1 = didn't fire). */
+  multiplier: number;
+  /** Flat points this card actually added at game end. */
+  flat: number;
+}
+
+export interface ScoreBuildData extends ScoreBreakdownData {
+  /** Per-gold-card adds, integer-rounded to sum exactly to goldAdd. */
+  golds: GoldContribution[];
+  subtotal: number;
+  /** Only the purple cards that FIRED (multiplier ≠ 1 or flat ≠ 0). */
+  purples: PurpleContribution[];
+  total: number;
+}
+
+const GOLD_CATEGORIES = new Set(['hand', 'line', 'suit', 'conditional']);
+
+// Round a fractional attribution to integers that sum to `target`:
+// floor everything, then hand the remainder out by largest fraction.
+const roundPreservingSum = (values: number[], target: number): number[] => {
+  const floors = values.map(Math.floor);
+  let remainder = target - floors.reduce((a, b) => a + b, 0);
+  const order = values
+    .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+    .sort((a, b) => b.frac - a.frac);
+  const out = [...floors];
+  for (const { i } of order) {
+    if (remainder === 0) break;
+    const step = remainder > 0 ? 1 : -1;
+    out[i] += step;
+    remainder -= step;
+  }
+  return out;
+};
+
+/**
+ * The corner breakdown expanded per card: base, each gold card's
+ * added points (Shapley attribution over the gold cards alone, so the
+ * rows sum exactly to goldAdd), the green+gold subtotal, then each
+ * fired purple card's multiplier / flat. Purple factors are
+ * independent per card, so scoring the grid with each card alone
+ * recovers its contribution (their product/sum reproduces the
+ * report's gridMultiplier/gridFlat).
+ */
+export const computeScoreBuild = (
+  grid: Grid,
+  bonusCards: readonly BonusCard[],
+  report: ScoreReport,
+  options: ScoreOptions
+): ScoreBuildData => {
+  const breakdown = computeScoreBreakdown(grid, bonusCards, report, options);
+  const negatesPenalty = bonusCards.some(c => c.negatesIncompletePenalty);
+  const opts: ScoreOptions = {
+    ...options,
+    ignoreIncompletePenalty:
+      (options.ignoreIncompletePenalty ?? false) || negatesPenalty,
+  };
+
+  const goldCards = bonusCards.filter(c => GOLD_CATEGORIES.has(categoryOf(c)));
+  const shapley = bonusShapleyValues(grid, goldCards, opts);
+  const adds = roundPreservingSum(shapley, breakdown.goldAdd);
+  const golds: GoldContribution[] = goldCards.map((card, i) => ({
+    card,
+    add: adds[i],
+  }));
+
+  const purples: PurpleContribution[] = bonusCards
+    .filter(c => {
+      const cat = categoryOf(c);
+      return cat === 'grid' || cat === 'deck-management';
+    })
+    .map(card => {
+      const solo = scoreGrid(grid, [card], opts);
+      return { card, multiplier: solo.gridMultiplier, flat: solo.gridFlat };
+    })
+    .filter(p => p.multiplier !== 1 || p.flat !== 0);
+
+  return {
+    ...breakdown,
+    golds,
+    subtotal: report.subtotal,
+    purples,
+    total: report.total,
   };
 };

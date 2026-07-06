@@ -1,6 +1,6 @@
 .coach {
-  /* Fills the fixed-height coach slot: kicker/title/footer pin in
-     place, only the body scrolls — steps never change the height. */
+  /* Fills the fixed-height coach slot: the header pins in place, only
+     the body scrolls — steps never change the height. */
   box-sizing: border-box;
   height: 100%;
   background: var(--paper-raised, #ffffff);
@@ -10,14 +10,21 @@
   padding: var(--space-sm) var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
+/* One header line: kicker, the step's control (→ your move or the
+   Next/Got it button), Skip. min-height matches the button so
+   button-less action steps don't sit shorter. */
 .kickerRow {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--space-sm);
+  min-height: 32px;
+}
+
+.headSpacer {
+  flex: 1;
 }
 
 .kicker {
@@ -26,6 +33,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
+  white-space: nowrap;
 }
 
 .skip {
@@ -36,18 +44,13 @@
   padding: 0;
   cursor: pointer;
   text-decoration: underline;
+  white-space: nowrap;
 }
 
 @media (hover: hover) {
   .skip:hover {
     color: var(--ink-2);
   }
-}
-
-.title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink);
 }
 
 .body {
@@ -60,37 +63,14 @@
   margin: 0;
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-  margin-top: 2px;
-  /* As tall as the Next button even on button-less steps, so the
-     bottom row never shifts. */
-  min-height: 32px;
+.inlineTitle {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .yourMove {
   font-size: 12px;
   font-weight: 600;
   color: var(--accent);
-  margin-right: auto;
-}
-
-/* Action-step strip: header line + inlined-title instruction only —
-   paired with GameScreen's shorter compact slot so the board gets the
-   difference on exactly the steps where the player works the board. */
-.coachCompact {
-  gap: 2px;
-}
-
-.coachCompact .yourMove {
-  margin-right: 0;
   white-space: nowrap;
-}
-
-.inlineTitle {
-  color: var(--ink);
-  font-weight: 700;
 }

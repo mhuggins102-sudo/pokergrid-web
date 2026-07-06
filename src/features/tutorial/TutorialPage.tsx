@@ -103,11 +103,7 @@ function TutorialRun({ onReplay }: { onReplay: () => void }) {
   return (
     <GameSessionGate gate={gate}>
       <CoachHighlightContext.Provider value={highlight}>
-        <GameScreen
-          onReplay={onReplay}
-          coach={coach}
-          coachCompact={step.kind === 'action' && !coachDismissed}
-        />
+        <GameScreen onReplay={onReplay} coach={coach} />
       </CoachHighlightContext.Provider>
     </GameSessionGate>
   );

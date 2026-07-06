@@ -11,6 +11,16 @@
   background: var(--scrim);
 }
 
+/* When a nested dialog closes, the platform hands focus back to this
+   one — the UA default ring (blue in WebKit) would paint along its
+   edge. The dialog is a container, not an interaction target:
+   suppress its outline entirely; keyboard users keep rings via
+   :focus-visible on the actual controls inside. */
+.dialog:focus,
+.dialog:focus-visible {
+  outline: none;
+}
+
 .header {
   display: flex;
   align-items: center;
