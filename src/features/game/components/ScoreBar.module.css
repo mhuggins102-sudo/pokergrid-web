@@ -55,8 +55,10 @@
   font-variant-numeric: tabular-nums;
   /* Optical: the display numeral's mass rides below its line box's
      geometric center, so mathematically-centered small text reads
-     high beside it — nudge down to the numeral's visual center. */
-  translate: 0 1.5px;
+     high beside it — nudge down to the numeral's visual center.
+     Deeper than the kicker's 1.5px: these 12px lining digits fill
+     more of their line box than the 10px small caps do. */
+  translate: 0 3px;
 }
 
 .kicker {
