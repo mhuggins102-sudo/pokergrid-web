@@ -69,6 +69,16 @@
   flex-shrink: 0;
 }
 
+/* Action steps: the coach is a compact instruction strip (header line
+   + inlined-title body) — the board takes the freed height. Fixed per
+   mode, so consecutive action steps never jump; only info↔action
+   transitions resize (a deliberate mode change). */
+.coachSlotCompact {
+  /* Fits the longest action-step instruction (hop/destroy, 4 lines
+     with the inlined title) without an internal scrollbar. */
+  height: 114px;
+}
+
 /* Spotlight on the move the coach is asking for. */
 .coachPulse {
   animation: coach-pulse 1.4s ease-in-out infinite;
@@ -348,9 +358,12 @@
   /* Desktop: the coach rides the right column, above the bonus cards,
      at the same fixed height. The board has its own column, so no
      width budget changes. */
-  .coachSlot {
+  .coachSlot,
+  .coachSlotCompact {
     grid-column: 3;
     grid-row: 1;
+    /* The coach rides the side column here — a compact slot buys the
+       board nothing, so both modes keep the constant height. */
     height: 190px;
   }
 

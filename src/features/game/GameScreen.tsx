@@ -42,6 +42,9 @@ export interface GameScreenProps {
   /** Tutorial coach panel; when present the board budget shrinks to
    *  make room (the same trick the ♣ panel uses). */
   coach?: ReactNode;
+  /** Action steps render the coach as a compact strip — the slot
+   *  shrinks with it and the board takes the difference. */
+  coachCompact?: boolean;
 }
 
 const lineKeyOf = (kind: 'row' | 'col', index: number) => `${kind}${index}`;
@@ -157,7 +160,7 @@ function MaybeRails({
  * while deciding, instruction + cancel while targeting. Desktop
  * re-seats the same pieces into the three-panel spread.
  */
-export function GameScreen({ onReplay, coach }: GameScreenProps) {
+export function GameScreen({ onReplay, coach, coachCompact }: GameScreenProps) {
   const { state, dispatch } = useGameSession();
   const ui = usePhaseUI();
   const coachHighlight = useCoachHighlight();
@@ -442,7 +445,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           </div>
 
           {coach && !ui.bonusDialog && (
-            <div className={styles.coachSlot}>{coach}</div>
+            <div
+              className={`${styles.coachSlot} ${
+                coachCompact ? styles.coachSlotCompact : ''
+              }`}
+            >
+              {coach}
+            </div>
           )}
 
           <div className={styles.linesSlot}>

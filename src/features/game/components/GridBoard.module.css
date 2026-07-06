@@ -10,12 +10,22 @@
   gap: 6px;
   width: 100%;
   container-type: inline-size;
-  /* Card Room themes set these tokens (felt-tinted table panel behind
-     the cells); Morning Paper leaves them unset → transparent, zero
-     padding, exactly the original board. */
-  background: var(--board-surface, transparent);
-  padding: var(--board-pad, 0);
   border-radius: var(--radius-md);
+}
+
+/* Card Room's felt-tinted table panel, painted BEHIND and slightly
+   BEYOND the cells (negative inset) rather than as padding — so the
+   panel never trades cell size for its border: the grid is exactly
+   the same size in every theme. Morning Paper leaves the tokens unset
+   → fully transparent. Surrounding gaps are ≥ the 6px bleed, so
+   nothing is covered. */
+.board::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--board-pad, 0px));
+  background: var(--board-surface, transparent);
+  border-radius: var(--radius-md);
+  z-index: -1;
 }
 
 .cell {
