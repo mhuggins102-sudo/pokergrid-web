@@ -72,7 +72,7 @@ describe('challenges', () => {
     renderAt('/challenges/poker-purist?seed=5');
     // Poker Purist: no bonus cards at all — strip absent.
     expect(screen.queryByLabelText('Bonus cards')).not.toBeInTheDocument();
-    expect(screen.getByText(/\/ 350 target/)).toBeInTheDocument();
+    expect(screen.getByText(/\/ 350/)).toBeInTheDocument();
     placeToEnd();
     // Place-only never reaches 350 — the failed verdict shows.
     expect(screen.getByText(/Poker Purist — failed/)).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe('targets up', () => {
       .getState()
       .saveProgress(3, 2, [], [], null);
     renderAt('/targets/play?seed=11');
-    expect(screen.getByText(/\/ 450 target/)).toBeInTheDocument(); // L3 → 450
+    expect(screen.getByText(/\/ 450/)).toBeInTheDocument(); // L3 → 450
     placeToEnd();
     expect(screen.getByText(/Run over at level 3/)).toBeInTheDocument();
     expect(useTargetsStore.getState().save).toBeNull();

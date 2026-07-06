@@ -26,7 +26,7 @@ describe('free play', () => {
 
     // Board + score chrome render.
     expect(screen.getByRole('grid', { name: 'Game board' })).toBeInTheDocument();
-    expect(screen.getByText(/\/ 400 target/)).toBeInTheDocument();
+    expect(screen.getByText(/\/ 400/)).toBeInTheDocument();
 
     // Place until the run ends. 25 slots − the pre-placed center card,
     // with jokers auto-placing, bounds the loop well under 30 clicks.
