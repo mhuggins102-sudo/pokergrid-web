@@ -53,6 +53,10 @@
 .target {
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+  /* Optical: the display numeral's mass rides below its line box's
+     geometric center, so mathematically-centered small text reads
+     high beside it — nudge down to the numeral's visual center. */
+  translate: 0 1.5px;
 }
 
 .kicker {
@@ -61,6 +65,7 @@
   font-size: 10px;
   font-weight: 600;
   color: var(--ink-2);
+  translate: 0 1.5px;
 }
 
 /* Score delta — poofs into the slot after the difficulty kicker (the
@@ -74,6 +79,9 @@
   font-variant-numeric: tabular-nums;
   animation: delta-poof 1.8s ease-out both;
   pointer-events: none;
+  /* Rides the same optical baseline as the target/difficulty texts
+     (the poof animates `scale`, so this translate is untouched). */
+  translate: 0 1.5px;
 }
 
 .deltaDown {
