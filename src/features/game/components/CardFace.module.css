@@ -69,7 +69,8 @@
   pointer-events: none;
 }
 
-:global([data-theme='paper']) .watermark {
+:global([data-theme='paper']) .watermark,
+:global([data-theme='paper-dark']) .watermark {
   display: none;
 }
 

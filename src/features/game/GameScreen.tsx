@@ -166,7 +166,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const [linesOpen, setLinesOpen] = useState(false);
   // Rail chip tapped → that line's full scoring breakdown.
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
-  const lineRails = useSettingsStore(s => s.lineRails);
+  // Rails stay off for the whole tutorial regardless of the setting:
+  // the coach panel already squeezes the board, and the guided deal
+  // never references line totals — the extra ~30px goes to the grid.
+  const lineRails = useSettingsStore(s => s.lineRails) && !coach;
 
   const liveReport = useMemo(
     () =>

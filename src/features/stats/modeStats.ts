@@ -32,6 +32,16 @@ export interface RunLite {
   ts: number;
 }
 
+// A dot on the score-over-plays chart. Slimmer than RunLite (the
+// score-history buffer doesn't keep targets).
+export interface HistoryPoint {
+  mode: StatsMode;
+  difficulty: Difficulty;
+  score: number;
+  won: boolean;
+  ts: number;
+}
+
 export interface ModeStatsData {
   // [mode][difficulty] roll-up.
   cells: Record<StatsMode, Record<Difficulty, Cell>>;
@@ -39,6 +49,9 @@ export interface ModeStatsData {
   tiers: Record<StatsMode, Record<Difficulty, Record<Tier, number>>>;
   // Combined recent runs, newest first.
   runs: RunLite[];
+  // Every stored play, OLDEST first — free runs from the score-history
+  // buffer, dailies from the plays map (its full archive).
+  history: HistoryPoint[];
 }
 
 export const emptyCell = (): Cell => ({
@@ -117,6 +130,13 @@ export const buildModeStats = (
   }
 
   const runs: RunLite[] = [];
+  const history: HistoryPoint[] = stats.scoreHistory.map(p => ({
+    mode: 'free' as const,
+    difficulty: p.difficulty,
+    score: p.score,
+    won: p.won,
+    ts: p.ts,
+  }));
 
   for (const r of stats.recent) {
     runs.push({
@@ -142,9 +162,17 @@ export const buildModeStats = (
       won: p.won,
       ts: p.completedAt,
     });
+    history.push({
+      mode: 'daily',
+      difficulty: d,
+      score: p.score,
+      won: p.won,
+      ts: p.completedAt,
+    });
   }
 
   runs.sort((a, b) => b.ts - a.ts);
+  history.sort((a, b) => a.ts - b.ts);
 
-  return { cells, tiers, runs };
+  return { cells, tiers, runs, history };
 };

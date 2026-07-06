@@ -17,6 +17,7 @@ import {
   emptyCell,
   emptyTiers,
 } from './modeStats';
+import { ScoreTrend } from './ScoreTrend';
 import styles from './StatsPage.module.css';
 
 // Tones for the BY MODE rows — distinct from the difficulty palette so
@@ -41,6 +42,8 @@ export function StatsPage() {
   const stats = useStatsStore(s => s.stats);
   const plays = usePlaysStore(s => s.plays);
   const [filter, setFilter] = useState<Filter>(null);
+  // Score distribution panel: tier bars vs the score-over-plays line.
+  const [scoreView, setScoreView] = useState<'tiers' | 'trend'>('tiers');
 
   const data = useMemo(() => buildModeStats(stats, plays), [stats, plays]);
 
@@ -87,6 +90,13 @@ export function StatsPage() {
     r =>
       (filter?.kind !== 'mode' || r.mode === filter.mode) &&
       (filter?.kind !== 'difficulty' || r.difficulty === filter.difficulty)
+  );
+
+  // Chronological score timeline, scoped by the same page filter.
+  const scopedHistory = data.history.filter(
+    p =>
+      (filter?.kind !== 'mode' || p.mode === filter.mode) &&
+      (filter?.kind !== 'difficulty' || p.difficulty === filter.difficulty)
   );
 
   const tierTotals = TIER_ORDER.map(tier => ({ tier, count: scopedTiers[tier] }));
@@ -178,28 +188,79 @@ export function StatsPage() {
       </div>
 
       <div className={styles.panel}>
-        <h2 className="text-section">Score distribution</h2>
-        {scopedGames === 0 ? (
+        <div className={styles.panelHead}>
+          <h2 className="text-section">Score distribution</h2>
+          <div
+            className={styles.chartToggle}
+            role="group"
+            aria-label="Chart type"
+          >
+            <button
+              type="button"
+              className={styles.chartBtn}
+              aria-label="Tier bars"
+              aria-pressed={scoreView === 'tiers'}
+              onClick={() => setScoreView('tiers')}
+            >
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <rect x="1" y="8" width="3.4" height="7" rx="1" />
+                <rect x="6.3" y="4" width="3.4" height="11" rx="1" />
+                <rect x="11.6" y="1" width="3.4" height="14" rx="1" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={styles.chartBtn}
+              aria-label="Score over plays"
+              aria-pressed={scoreView === 'trend'}
+              onClick={() => setScoreView('trend')}
+            >
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <polyline
+                  points="1,12 5.5,7 9,9.5 15,2.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="5.5" cy="7" r="1.7" stroke="none" />
+                <circle cx="9" cy="9.5" r="1.7" stroke="none" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        {scoreView === 'tiers' ? (
+          scopedGames === 0 ? (
+            <span className={styles.empty}>
+              {filterNote
+                ? `No ${filterNote.label} games recorded yet.`
+                : 'Finish a game to see tiers.'}
+            </span>
+          ) : (
+            <div className={styles.tierBars}>
+              {tierTotals.map(({ tier, count }) => (
+                <div key={tier} className={styles.tierBarRow}>
+                  <span className={styles.tierName}>{tier}</span>
+                  <div className={styles.tierTrack}>
+                    <div
+                      className={styles.tierFill}
+                      style={{ width: `${(count / tierMax) * 100}%` }}
+                    />
+                  </div>
+                  <span>{count}</span>
+                </div>
+              ))}
+            </div>
+          )
+        ) : scopedHistory.length === 0 ? (
           <span className={styles.empty}>
             {filterNote
-              ? `No ${filterNote.label} games recorded yet.`
-              : 'Finish a game to see tiers.'}
+              ? `No ${filterNote.label} plays recorded yet.`
+              : 'Finish a game to see your score timeline.'}
           </span>
         ) : (
-          <div className={styles.tierBars}>
-            {tierTotals.map(({ tier, count }) => (
-              <div key={tier} className={styles.tierBarRow}>
-                <span className={styles.tierName}>{tier}</span>
-                <div className={styles.tierTrack}>
-                  <div
-                    className={styles.tierFill}
-                    style={{ width: `${(count / tierMax) * 100}%` }}
-                  />
-                </div>
-                <span>{count}</span>
-              </div>
-            ))}
-          </div>
+          <ScoreTrend points={scopedHistory} />
         )}
       </div>
 

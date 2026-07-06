@@ -85,6 +85,16 @@ export const tierForRun = (run: Pick<RunRecord, 'score' | 'target' | 'won'>): Ti
   return 'D';
 };
 
+// One point in the all-time score timeline — the compact per-run
+// record behind the Stats page's score-over-plays chart. Kept separate
+// from `recent` (which carries full RunRecords but only the last 20).
+export interface ScorePoint {
+  ts: number;
+  difficulty: Difficulty;
+  score: number;
+  won: boolean;
+}
+
 export interface Stats {
   best: Record<Difficulty, number | null>;
   wins: number;
@@ -93,6 +103,9 @@ export interface Stats {
   longestStreak: number;
   // Rolling buffer of the most recent runs (newest first).
   recent: RunRecord[];
+  // Every non-daily run's score, newest first (daily scores already
+  // live per-date in the plays store). Capped — see SCORE_HISTORY_CAP.
+  scoreHistory: ScorePoint[];
   // Per-difficulty roll-up of every completed run.
   byDifficulty: Record<Difficulty, DifficultyStat>;
   // Highest Targets-Up level reached, and completed Challenges.
@@ -107,6 +120,9 @@ export interface Stats {
 }
 
 export const RECENT_RUNS_CAP = 20;
+// ~40 bytes a point — a thousand runs is a few tens of KB, far below
+// any localStorage pressure, and old-tail loss is invisible in a chart.
+export const SCORE_HISTORY_CAP = 1000;
 
 export const EMPTY_STATS: Stats = {
   best: { easy: null, medium: null, hard: null, extreme: null },
@@ -115,6 +131,7 @@ export const EMPTY_STATS: Stats = {
   streak: 0,
   longestStreak: 0,
   recent: [],
+  scoreHistory: [],
   byDifficulty: {
     easy: emptyDifficultyStat(),
     medium: emptyDifficultyStat(),
@@ -168,6 +185,17 @@ export const hydrateStats = (parsed: Partial<Stats> | undefined): Stats => {
     ...EMPTY_STATS,
     ...parsed,
     best: { ...EMPTY_STATS.best, ...parsed.best },
+    // Pre-history saves: seed the timeline from the recent buffer so
+    // long-time players start the chart with their last runs instead
+    // of an empty plot (both are newest-first already).
+    scoreHistory:
+      parsed.scoreHistory ??
+      (parsed.recent ?? []).map(r => ({
+        ts: r.ts,
+        difficulty: r.difficulty,
+        score: r.score,
+        won: r.won,
+      })),
     byDifficulty: {
       easy: { ...emptyDifficultyStat(), ...parsed.byDifficulty?.easy },
       medium: { ...emptyDifficultyStat(), ...parsed.byDifficulty?.medium },
@@ -198,6 +226,10 @@ export const recordRun = (prev: Stats, run: RunRecord): Stats => {
   const streak = run.won ? prev.streak + 1 : 0;
   const longestStreak = Math.max(prev.longestStreak, streak);
   const recent = [run, ...prev.recent].slice(0, RECENT_RUNS_CAP);
+  const scoreHistory: ScorePoint[] = [
+    { ts: run.ts, difficulty: run.difficulty, score: run.score, won: run.won },
+    ...prev.scoreHistory,
+  ].slice(0, SCORE_HISTORY_CAP);
 
   const diffPrev = prev.byDifficulty[run.difficulty];
   const newCurrentStreak = run.won ? diffPrev.currentStreak + 1 : 0;
@@ -241,6 +273,7 @@ export const recordRun = (prev: Stats, run: RunRecord): Stats => {
     streak,
     longestStreak,
     recent,
+    scoreHistory,
     byDifficulty: { ...prev.byDifficulty, [run.difficulty]: diffNext },
     bonusCardStats,
     bonusCardStatsByDifficulty: {

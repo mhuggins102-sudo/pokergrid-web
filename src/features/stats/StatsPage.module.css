@@ -126,6 +126,95 @@
   display: block;
 }
 
+/* Panel title + the bar/line chart toggle riding its right edge. */
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.chartToggle {
+  display: flex;
+  gap: 2px;
+}
+
+.chartBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.chartBtn svg {
+  fill: currentColor;
+}
+
+.chartBtn[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.chartBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Score-over-plays line chart. */
+.trendWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.trendSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.trendGrid {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.trendTick {
+  fill: var(--ink-3);
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+  text-anchor: end;
+}
+
+.trendLine {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+
+.trendLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.trendLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .tierBars {
   display: flex;
   flex-direction: column;
