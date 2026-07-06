@@ -157,11 +157,23 @@
   min-height: 44px;
 }
 
-/* Hand-stack dock: hero card left, importance-stacked actions right. */
+/* Hand-stack dock: hero card left, importance-stacked actions right.
+   Centered cross-axis: the card+meta column runs ~11px shorter than
+   the pinned action stack — centering splits that shortfall so the
+   meta line doesn't leave all its slack at the bottom. */
 .handStack {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-md);
+}
+
+/* Hand-stack only: rebalance the dock's vertical padding (8 top /
+   4 bottom instead of 4/8 — same 12px total, so the pinned height is
+   untouched) to visually center the content between the dock's top
+   rule and the bottom edge. */
+.dockHandPad {
+  padding-top: 8px;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom));
 }
 
 .actionStack {
