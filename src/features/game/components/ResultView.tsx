@@ -94,10 +94,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
   // renders the end state immediately — which also keeps tests
   // reading the true final score.
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
-  const staticTally =
-    reduceMotion ||
-    prefersReducedMotion() ||
-    (!breakdown.hasGold && !breakdown.hasPurple);
+  // Reduced motion only — a game with neither factor still gets the
+  // classic 0 → total count (the corner rows just don't render).
+  const staticTally = reduceMotion || prefersReducedMotion();
   type TallyStage = 'assemble' | 'boosted' | 'final';
   const [stage, setStage] = useState<TallyStage>(
     staticTally ? 'final' : 'assemble'
