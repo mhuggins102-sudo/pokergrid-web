@@ -29,10 +29,6 @@
   display: grid;
   grid-template-rows: repeat(5, 1fr);
   gap: 6px;
-  /* Track the cells, not the board box: Card Room pads the board with
-     a felt panel (--board-pad); inset the rail by the same amount so
-     each chip aligns with its row exactly. Zero under Morning Paper. */
-  padding: var(--board-pad, 0) 0;
 }
 
 .colRail {
@@ -41,7 +37,6 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
-  padding: 0 var(--board-pad, 0);
 }
 
 /* Column chips track their column's width, however small — the 38px

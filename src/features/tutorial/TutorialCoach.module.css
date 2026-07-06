@@ -77,3 +77,20 @@
   color: var(--accent);
   margin-right: auto;
 }
+
+/* Action-step strip: header line + inlined-title instruction only —
+   paired with GameScreen's shorter compact slot so the board gets the
+   difference on exactly the steps where the player works the board. */
+.coachCompact {
+  gap: 2px;
+}
+
+.coachCompact .yourMove {
+  margin-right: 0;
+  white-space: nowrap;
+}
+
+.inlineTitle {
+  color: var(--ink);
+  font-weight: 700;
+}
