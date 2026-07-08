@@ -138,7 +138,8 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
           {play.score}
         </button>
         <span className={`text-body ${styles.targetLine}`}>
-          {play.dateISO} · target {target} · {play.recipe.difficulty}
+          {/* No date — it lives in the leaderboard sheet's title. */}
+          target {target} · {play.recipe.difficulty}
           {twist ? ` · ${twist.name}` : ''} · tier {tier}
         </span>
       </section>

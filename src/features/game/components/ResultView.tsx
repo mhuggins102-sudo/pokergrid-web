@@ -101,9 +101,10 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const [stage, setStage] = useState<TallyStage>(
     staticTally ? 'final' : 'assemble'
   );
-  // True once the hero number has finished counting — the daily rank /
-  // leaderboard corner stays hidden until then, so the standing can't
-  // spoil the final score mid-tally.
+  // True once the hero number has finished counting — the verdict line
+  // and the daily rank / leaderboard corner stay hidden until then, so
+  // neither the win/loss call nor the standing can spoil the final
+  // score mid-tally.
   const [tallyDone, setTallyDone] = useState(staticTally);
   useEffect(() => {
     if (staticTally) return;
@@ -239,9 +240,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
       : mode.kind === 'targets'
         ? `level ${mode.level} · target ${state.target} · ${state.difficulty}`
         : mode.kind === 'daily'
-          ? // The date rides along here — the rank moved into the
-            // hero's corner and no longer carries it.
-            `${mode.dateISO} · target ${state.target} · ${state.difficulty}${
+          ? // No date here — it lives in the leaderboard sheet's title
+            // (behind the corner's podium icon).
+            `target ${state.target} · ${state.difficulty}${
               setup.challenge ? ` · ${setup.challenge.name}` : ''
             }`
           : `target ${state.target} · ${state.difficulty}`;
@@ -365,7 +366,11 @@ export function ResultView({ onReplay }: ResultViewProps) {
             infoBtn
           )}
         </div>
-        <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
+        <span
+          className={`${styles.verdict} ${won ? styles.win : styles.loss} ${
+            tallyDone ? styles.verdictIn : styles.verdictPending
+          }`}
+        >
           {verdict}
         </span>
         <ScoreBreakdown

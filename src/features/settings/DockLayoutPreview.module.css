@@ -109,7 +109,9 @@
 
 .handRow {
   display: flex;
-  align-items: flex-start;
+  /* Mirrors the game's hand-stack dock: the button stack centers on
+     the deck card + count column's midline. */
+  align-items: center;
   gap: var(--space-md);
 }
 
