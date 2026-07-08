@@ -56,11 +56,19 @@ test('seeded easy game plays to completion with Place', async ({ page }) => {
 test('tapping a seated card spotlights its row and column', async ({
   page,
 }) => {
+  // Rails ship OFF by default now — this test covers the rails-on
+  // spotlight (chips light up), so opt in via stored settings.
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'pokergrid:settings:v1',
+      JSON.stringify({ state: { lineRails: true }, version: 1 })
+    );
+  });
   await page.goto('/play?difficulty=easy&seed=42');
   await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
   // The opening card sits at the center (row 3, column 3). With the
-  // line rails showing (default), the spotlight lights the R3 + C3
-  // rail chips instead of floating text tags.
+  // line rails showing, the spotlight lights the R3 + C3 rail chips
+  // instead of floating text tags.
   await page.getByLabel(/^row 3 column 3: (?!empty)/).click();
   await expect(page.getByLabel(/^R3: /)).toHaveAttribute('aria-current', 'true');
   await expect(page.getByLabel(/^C3: /)).toHaveAttribute('aria-current', 'true');

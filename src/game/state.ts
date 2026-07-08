@@ -1686,6 +1686,13 @@ const handleBonusDecline = (s: GameState, rng: () => number): GameState => {
   ) {
     return s;
   }
+  // Short Circuit: a random perk is committed once revealed — a ♣ pick
+  // must be kept, not waved off. The one exception is the easy-mode
+  // cap decline above: at the cap with bonusDeclineAllowed, keeping
+  // the existing hand stays legal.
+  if (s.randomPerks && s.bonusCards.length < BONUS_HAND_LIMIT) {
+    return s;
+  }
   return finishBonusFlow(s, s.phase.drawn, s.bonusCards, rng);
 };
 
@@ -1759,6 +1766,13 @@ const handleCancelAction = (s: GameState): GameState => {
     case 'awaiting-target-destroy':
     case 'bonus-card-resolving':
     case 'awaiting-bonus-slot-choice':
+      // Short Circuit: the random perk is committed the moment it is
+      // revealed — bailing back to awaiting-action (and re-pressing
+      // Perk) would re-roll the pick until a favorite comes up. The
+      // flow must resolve. (Slide's dest→source step-back above stays
+      // legal: it never leaves the perk.)
+      if (s.randomPerks) return s;
+      return { ...s, phase: { kind: s.phase.returnTo } };
     case 'awaiting-special-power-swap-source':
     case 'awaiting-special-doubler':
     case 'awaiting-special-wildcard':

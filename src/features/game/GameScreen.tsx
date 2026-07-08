@@ -39,12 +39,18 @@ import styles from './GameScreen.module.css';
 
 export interface GameScreenProps {
   onReplay: () => void;
-  /** Tutorial coach panel; when present the board budget shrinks to
-   *  make room (the same trick the ♣ panel uses). */
+  /** Tutorial coach panel; floats over the header + score strip on
+   *  phones (rides the right column on desktop) so the board keeps
+   *  its full size. */
   coach?: ReactNode;
 }
 
 const lineKeyOf = (kind: 'row' | 'col', index: number) => `${kind}${index}`;
+
+// Vertical slack (px, each side) reserved around the board frame for
+// Card Room's felt bleed — see the frame-width computation below and
+// the matching -12px in GameScreen.module.css's CSS fallbacks.
+const FELT_BLEED = 6;
 
 // On-device layout forensics: any game URL + `?layoutdebug=1` paints a
 // live readout of every quantity in the board-sizing pipeline — the
@@ -167,8 +173,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Rail chip tapped → that line's full scoring breakdown.
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   // Rails stay off for the whole tutorial regardless of the setting:
-  // the coach panel already squeezes the board, and the guided deal
-  // never references line totals — the extra ~30px goes to the grid.
+  // the guided deal never references line totals, and the plain board
+  // is one less thing to explain — the extra ~30px goes to the grid.
   const lineRails = useSettingsStore(s => s.lineRails) && !coach;
 
   const liveReport = useMemo(
@@ -287,7 +293,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         : railsRef.current
           ? 470
           : 440;
-      frame.style.width = `${Math.min(w, h, cap)}px`;
+      // Card Room's felt panel bleeds --board-pad (6px) past the cells
+      // on every side (GridBoard ::before, negative inset). Reserve that
+      // bleed on the height axis so a height-constrained board never
+      // lets the felt eat the layout gap to the score bar / bonus row.
+      // Constant across themes (not read from the token) so switching
+      // themes never resizes the grid.
+      frame.style.width = `${Math.min(w, h - FELT_BLEED * 2, cap)}px`;
       debugReport(el, frame);
     };
     const remeasure = () => {

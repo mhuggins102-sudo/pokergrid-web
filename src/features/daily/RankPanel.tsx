@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Button, Sheet, useToast } from '../../design/primitives';
 import {
   HandleInvalidError,
@@ -110,6 +110,103 @@ export function RankPanel({ dateISO }: { dateISO: string }) {
         ownScore={rank.data?.score}
       />
     </section>
+  );
+}
+
+/**
+ * Compact leaderboard presence for the result hero's top-right corner:
+ * a podium icon button (opens the day-stats sheet) sitting to the left
+ * of the hero's ⓘ button (passed as children), with the standing on
+ * its own line beneath. Backendless builds render just the children —
+ * there is no leaderboard to link to.
+ */
+export function RankCorner({
+  dateISO,
+  children,
+}: {
+  dateISO: string;
+  /** The hero's own corner controls (the ⓘ details button). */
+  children?: ReactNode;
+}) {
+  const rank = useDailyRank(dateISO);
+  const pending = useQueueStore(s =>
+    s.pending.some(p => p.dateISO === dateISO)
+  );
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  if (!isBackendConfigured()) return <>{children}</>;
+
+  const retry = async () => {
+    setRetrying(true);
+    try {
+      await drainQueue();
+      await rank.refetch();
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  // The queue/error states keep their retry affordance — the status
+  // line itself is the tap target here, the corner has no room for a
+  // separate button.
+  const standing = rank.data ? (
+    <span className={styles.cornerRank}>
+      #{rank.data.rank} <span className={styles.sub}>of {rank.data.total}</span>
+    </span>
+  ) : pending || rank.isError ? (
+    <button
+      type="button"
+      className={`${styles.cornerStatus} ${styles.cornerRetry} ${
+        rank.isError && !pending ? styles.error : ''
+      }`}
+      disabled={retrying}
+      onClick={retry}
+    >
+      {retrying
+        ? 'Retrying…'
+        : pending
+          ? 'Submitting… · retry'
+          : 'No connection · retry'}
+    </button>
+  ) : (
+    <span className={styles.cornerStatus}>
+      {rank.isLoading ? 'Fetching rank…' : 'Rank pending…'}
+    </span>
+  );
+
+  return (
+    <>
+      <span className={styles.cornerIcons}>
+        <button
+          type="button"
+          className={styles.cornerBtn}
+          aria-label="Leaderboard"
+          title="Leaderboard"
+          onClick={() => setStatsOpen(true)}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+          >
+            <rect x="1" y="9" width="4" height="6" />
+            <rect x="6" y="4" width="4" height="11" />
+            <rect x="11" y="11" width="4" height="4" />
+          </svg>
+        </button>
+        {children}
+      </span>
+      {standing}
+
+      <DayStatsSheet
+        dateISO={dateISO}
+        open={statsOpen}
+        onClose={() => setStatsOpen(false)}
+        ownScore={rank.data?.score}
+      />
+    </>
   );
 }
 

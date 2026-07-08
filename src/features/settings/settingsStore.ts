@@ -32,12 +32,14 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  // New players start on the original editorial look, light.
+  // New players start on the original editorial look, dark.
   themeFamily: 'paper',
-  appearance: 'light',
+  appearance: 'dark',
   sounds: true,
   dockLayout: 'hand-stack',
-  lineRails: true,
+  // Rails start off — the plain board reads cleaner for new players;
+  // line totals stay reachable via the Lines sheet and tap-spotlight.
+  lineRails: false,
   reduceMotion: false,
   colorBlindAssist: false,
   // Four-color suits by default — suit identity carries scoring meaning

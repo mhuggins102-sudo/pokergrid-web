@@ -49,26 +49,46 @@
      ResizeObserver in GameScreen — the primary size source, because
      iOS Safari fails to re-resolve cq units on rotation/first layout
      (board stuck mis-sized until an app switch). The cq units remain
-     only as the observer's first-frame fallback. */
-  width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 470px);
+     only as the observer's first-frame fallback.
+     The -12px off the height axis reserves Card Room's felt bleed
+     (--board-pad, 6px per side, painted beyond the cells) so a
+     height-constrained board keeps its full layout gap to the score
+     bar and bonus row — mirrors FELT_BLEED in GameScreen.tsx. */
+  width: min(
+    var(--avail-w, 100cqw),
+    calc(var(--avail-h, 100cqh) - 12px),
+    470px
+  );
 }
 
 /* Line rails disabled (Settings): the plain board at its original cap. */
 .boardFrameBare {
-  width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 440px);
+  width: min(
+    var(--avail-w, 100cqw),
+    calc(var(--avail-h, 100cqh) - 12px),
+    440px
+  );
 }
 
-/* Tutorial coach: a FIXED slice of the vertical budget — every step
-   renders the same panel height (long copy scrolls inside), so the
-   layout never jumps between steps; the board flexes around it. While
-   the ♣ panel has the dock the coach unmounts entirely. */
+/* Tutorial coach: a floating card pinned OVER the app header + score
+   strip — the two elements no tutorial move ever needs — so the board
+   keeps its full, untutored size (it used to shrink to make room).
+   Action steps keep the dock, the bonus row, and every board cell
+   visible and tappable below. Fixed height on every step (long copy
+   scrolls inside) so the card never resizes between steps. While the
+   ♣ panel has the dock the coach unmounts entirely. */
 .coachSlot {
-  /* Every step renders the compact strip (header line + inlined-title
-     body); one fixed height for the whole tutorial, sized so the
-     longest step copy (4 body lines) fits without an internal
-     scrollbar — the board takes everything else. */
+  position: fixed;
+  top: var(--space-xs);
+  left: 50%;
+  transform: translateX(-50%);
+  /* Match the play column's width so the card reads as part of it. */
+  width: min(480px, calc(100vw - 2 * var(--space-sm)));
+  /* Sized so the longest step copy (4 body lines) fits without an
+     internal scrollbar. */
   height: 126px;
-  flex-shrink: 0;
+  /* Above the header/score strip it covers; under toasts (100). */
+  z-index: 50;
 }
 
 /* Spotlight on the move the coach is asking for. */
@@ -185,9 +205,11 @@
   /* Pinned to the tallest phase shape (banner line + action row +
      commit + gaps) so the dock height — which now directly sets the
      flexed board size — never changes as phases swap the stack's
-     contents. Slack collects below the buttons (flex-start), keeping
-     them top-aligned with the deck card. */
+     contents. Slack splits evenly above and below, so the button
+     group rides the vertical center of the deck card + count column
+     (which .handStack centers against this same box). */
   min-height: 124px;
+  justify-content: center;
 }
 
 .actionStack .dockText {
@@ -273,11 +295,19 @@
   }
 
   .boardFrame {
-    width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 550px);
+    width: min(
+      var(--avail-w, 100cqw),
+      calc(var(--avail-h, 100cqh) - 12px),
+      550px
+    );
   }
 
   .boardFrameBare {
-    width: min(var(--avail-w, 100cqw), var(--avail-h, 100cqh), 520px);
+    width: min(
+      var(--avail-w, 100cqw),
+      calc(var(--avail-h, 100cqh) - 12px),
+      520px
+    );
   }
 
   .dockText {
@@ -360,9 +390,13 @@
   }
 
   /* Desktop: the coach rides the right column, above the bonus cards,
-     at the same fixed height. The board has its own column, so no
-     width budget changes. */
+     back in normal flow — the board has its own column, so nothing
+     needs overlaying here. */
   .coachSlot {
+    position: static;
+    transform: none;
+    width: auto;
+    z-index: auto;
     grid-column: 3;
     grid-row: 1;
     /* The coach rides the side column here — the board has its own

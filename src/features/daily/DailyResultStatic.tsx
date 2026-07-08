@@ -13,7 +13,7 @@ import { LinesPanel } from '../game/components/LinesPanel';
 import { LineDetailSheet } from '../game/components/LineDetailSheet';
 import { BonusCardStrip } from '../game/components/BonusCardStrip';
 import { bonusCardLiveContext } from '../game/bonusCardLiveContext';
-import { RankPanel } from './RankPanel';
+import { RankCorner } from './RankPanel';
 import { nextIncompleteDaily } from './dailyDates';
 import { ShareButton } from '../game/components/ShareButton';
 import { ScoreDetailsSheet } from '../game/components/ScoreDetailsSheet';
@@ -107,16 +107,23 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
   );
 
   return (
-    <div className={`${styles.wrap} ${styles.hasRank}`}>
+    <div className={styles.wrap}>
       <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Daily result">
-        <button
-          type="button"
-          className={styles.heroInfo}
-          aria-label="Score details"
-          onClick={() => setDetailsOpen(true)}
-        >
-          ⓘ
-        </button>
+        {/* Same corner as the live result: leaderboard podium +
+            standing beside the ⓘ. A revisit has nothing to spoil, so
+            no reveal gating here. */}
+        <div className={styles.heroCorner}>
+          <RankCorner dateISO={play.dateISO}>
+            <button
+              type="button"
+              className={styles.heroInfo}
+              aria-label="Score details"
+              onClick={() => setDetailsOpen(true)}
+            >
+              ⓘ
+            </button>
+          </RankCorner>
+        </div>
         <ScoreBreakdown breakdown={breakdown} onOpen={() => setBuildOpen(true)} />
         <span className={`${styles.verdict} ${play.won ? styles.win : styles.loss}`}>
           {play.won ? 'Daily solved' : 'Daily missed'}
@@ -131,15 +138,10 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
           {play.score}
         </button>
         <span className={`text-body ${styles.targetLine}`}>
-          {/* The date lives on the rank bar below — no need twice. */}
-          target {target} · {play.recipe.difficulty}
+          {play.dateISO} · target {target} · {play.recipe.difficulty}
           {twist ? ` · ${twist.name}` : ''} · tier {tier}
         </span>
       </section>
-
-      <div className={styles.rankSlot}>
-        <RankPanel dateISO={play.dateISO} />
-      </div>
 
       <div className={styles.boardSlot}>
         <LineRails
