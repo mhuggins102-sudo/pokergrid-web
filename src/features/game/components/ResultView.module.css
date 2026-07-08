@@ -204,14 +204,6 @@
   margin: auto;
 }
 
-/* Daily: the rank bar joins the above-board stack, so cap the board by
-   the viewport too — on wide phones with heavy browser chrome the
-   column-total chips otherwise dip behind the sticky dock. Budget:
-   ~220px of hero+bar above the board, ~100px of dock below. */
-.hasRank .boardSlot {
-  width: min(100%, 440px, calc(100svh - 320px));
-}
-
 .math {
   display: flex;
   flex-direction: column;
@@ -248,13 +240,22 @@
   display: none;
 }
 
-/* "More details" affordance in the hero's top-right corner: opens the
-   score-details sheet (all ten lines, expandable), keeping the phone
-   result scroll-free. */
-.heroInfo {
+/* Hero top-right corner: the ⓘ details button and — on dailies, once
+   the tally lands — the leaderboard podium beside it with the standing
+   beneath (see RankCorner). */
+.heroCorner {
   position: absolute;
   top: var(--space-sm);
   right: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+/* "More details" affordance: opens the score-details sheet (all ten
+   lines, expandable), keeping the phone result scroll-free. */
+.heroInfo {
   width: 32px;
   height: 32px;
   display: flex;
@@ -416,8 +417,7 @@
     grid-row: 1;
   }
 
-  .boardSlot,
-  .hasRank .boardSlot {
+  .boardSlot {
     grid-column: 2;
     grid-row: 2;
     width: clamp(420px, 40vw, 520px);
@@ -437,23 +437,10 @@
     grid-row: 1;
   }
 
+  /* Desktop keeps the persistent score-math panel, so the ⓘ sheet is
+     redundant — but the daily podium + standing beside it stay. */
   .heroInfo {
     display: none;
-  }
-
-  /* Daily: the rank panel takes the right column's top slot and the
-     math/bonus cards shift down one row. */
-  .rankSlot {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .hasRank .mathSlot {
-    grid-row: 2;
-  }
-
-  .hasRank .bonusPanelSlot {
-    grid-row: 3;
   }
 
   .bonusPanelSlot {

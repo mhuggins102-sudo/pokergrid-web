@@ -361,6 +361,66 @@ describe('GameState — Short Circuit challenge', () => {
     expect(after.phase.kind).toBe('bonus-card-resolving');
   });
 
+  test('randomPerks: CANCEL_ACTION cannot bail out of a revealed perk', () => {
+    // Same setup as the routing test above: rng=0 reveals hop. Once
+    // revealed, cancel must NOT return to awaiting-action — that would
+    // let the player re-press Perk and re-roll the pick.
+    const club = { kind: 'standard' as const, rank: '5' as const, suit: 'C' as const };
+    const filler = { kind: 'standard' as const, rank: '3' as const, suit: 'C' as const };
+    const onGridA = { kind: 'standard' as const, rank: 'A' as const, suit: 'C' as const };
+    const onGridB = { kind: 'standard' as const, rank: 'K' as const, suit: 'D' as const };
+    const grid = emptyGrid25();
+    grid[0] = onGridA;
+    grid[3] = onGridB;
+    const state = baseState({
+      deck: [filler],
+      grid,
+      drawn: club,
+      randomPerks: true,
+    });
+    const revealed = step(state, { type: 'BEGIN_SUIT_ACTION' }, rngAlwaysZero);
+    expect(revealed.phase.kind).toBe('awaiting-target-hop');
+    const cancelled = step(revealed, { type: 'CANCEL_ACTION' }, rngAlwaysZero);
+    expect(cancelled.phase.kind).toBe('awaiting-target-hop');
+  });
+
+  test('randomPerks: a revealed ♣ draw cannot be declined below the cap', () => {
+    // Empty grid → only ♣ is available; the draw is revealed.
+    const heart = { kind: 'standard' as const, rank: '5' as const, suit: 'H' as const };
+    const filler = { kind: 'standard' as const, rank: '3' as const, suit: 'C' as const };
+    const state = baseState({ deck: [filler], drawn: heart, randomPerks: true });
+    const revealed = step(state, { type: 'BEGIN_SUIT_ACTION' }, rngAlwaysZero);
+    expect(revealed.phase.kind).toBe('bonus-card-resolving');
+    // Neither decline nor cancel escapes — the pick must be kept.
+    const declined = step(revealed, { type: 'BONUS_DECLINE' }, rngAlwaysZero);
+    expect(declined.phase.kind).toBe('bonus-card-resolving');
+    const cancelled = step(revealed, { type: 'CANCEL_ACTION' }, rngAlwaysZero);
+    expect(cancelled.phase.kind).toBe('bonus-card-resolving');
+  });
+
+  test('randomPerks: the easy-mode cap decline still works', () => {
+    // At the bonus-hand cap with bonusDeclineAllowed (easy), declining
+    // the forced swap remains legal — the one exception to the lock.
+    const heart = { kind: 'standard' as const, rank: '5' as const, suit: 'H' as const };
+    const filler = { kind: 'standard' as const, rank: '3' as const, suit: 'C' as const };
+    const held = BONUS_DECK_POOL.slice(0, BONUS_HAND_LIMIT);
+    const state = baseState({
+      deck: [filler],
+      drawn: heart,
+      bonusCards: held,
+      bonusDeck: BONUS_DECK_POOL.slice(BONUS_HAND_LIMIT),
+      bonusDeclineAllowed: true,
+      randomPerks: true,
+    });
+    const revealed = step(state, { type: 'BEGIN_SUIT_ACTION' }, rngAlwaysZero);
+    expect(revealed.phase.kind).toBe('bonus-card-resolving');
+    const declined = step(revealed, { type: 'BONUS_DECLINE' }, rngAlwaysZero);
+    // Decline resolves the perk: the heart is spent, the hand is kept.
+    expect(declined.phase.kind).toBe('awaiting-action');
+    expect(declined.bonusCards).toEqual(held);
+    expect(declined.perkSpent).toContainEqual(heart);
+  });
+
   test('randomPerks with no available perks is a no-op', () => {
     // Empty grid + empty bonus deck → none of H/S/D/C is legal.
     // BEGIN_SUIT_ACTION returns the state unchanged.

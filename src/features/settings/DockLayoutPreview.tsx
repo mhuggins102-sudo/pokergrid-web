@@ -18,6 +18,15 @@ const meta = (
   </span>
 );
 
+// Classic keeps the game's two-line meta column beside the card (the
+// stacked docks run it under the card as one line).
+const metaCol = (
+  <span className={`${styles.meta} ${styles.metaCol}`}>
+    <span>52 left</span>
+    <span className={styles.peek}>Peek</span>
+  </span>
+);
+
 /**
  * Inert mini-mockup of one in-game dock arrangement — shown in the
  * Settings preview sheet when a layout is picked.
@@ -30,7 +39,7 @@ export function DockLayoutPreview({ layout }: { layout: DockLayout }) {
           <div className={`${styles.card} ${styles.cardSm}`}>
             <CardFace card={DRAWN} />
           </div>
-          {meta}
+          {metaCol}
           <span className={styles.spacer} />
           <Button size="sm" variant="secondary">
             ♥ Swap

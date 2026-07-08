@@ -11,6 +11,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* The card floats over the header/score strip on phones (see
+     GameScreen's .coachSlot) — the shadow sells the elevation. */
+  box-shadow: var(--shadow-md);
 }
 
 /* One header line: kicker, the step's control (→ your move or the

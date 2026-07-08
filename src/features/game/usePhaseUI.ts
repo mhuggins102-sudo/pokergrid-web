@@ -93,6 +93,13 @@ export function usePhaseUI(): PhaseUI {
       onPress: () => dispatch({ type: 'CANCEL_ACTION' }),
     };
 
+    // Short Circuit: a revealed random perk is committed — no Cancel
+    // out of its targeting phases (the reducer rejects CANCEL_ACTION
+    // there too, this just hides the dead button). Cancel that only
+    // steps back WITHIN a flow (slide dest → source) stays.
+    const lockedPerkActions = (actions: PhaseAction[]) =>
+      state.randomPerks ? actions.filter(a => a.id !== 'cancel') : actions;
+
     const base = {
       phaseKind: phase.kind,
       banner: null as string | null,
@@ -266,7 +273,7 @@ export function usePhaseUI(): PhaseUI {
             onCellTap: idx => {
               if (inAnyPair.has(idx)) setHopFirst(idx);
             },
-            actions: [cancelAction],
+            actions: lockedPerkActions([cancelAction]),
           };
         }
         const partners = new Set<number>();
@@ -293,16 +300,18 @@ export function usePhaseUI(): PhaseUI {
             );
             if (pair) dispatch({ type: 'RESOLVE_HOP', i: pair[0], j: pair[1] });
           },
-          actions: [cancelAction],
+          actions: lockedPerkActions([cancelAction]),
         };
       }
 
-      case 'awaiting-target-slide-source':
-        return tapPhase(
+      case 'awaiting-target-slide-source': {
+        const ui = tapPhase(
           '♠ Slide — tap the card (or chain) to move',
           phase.sources,
           idx => dispatch({ type: 'SLIDE_SELECT_SOURCE', slot: idx })
         );
+        return { ...ui, actions: lockedPerkActions(ui.actions) };
+      }
 
       case 'awaiting-target-slide-dest':
         return tapPhase(
@@ -322,12 +331,14 @@ export function usePhaseUI(): PhaseUI {
           new Set([phase.source])
         );
 
-      case 'awaiting-target-destroy':
-        return tapPhase(
+      case 'awaiting-target-destroy': {
+        const ui = tapPhase(
           '♦ Destroy — tap the card to remove',
           phase.targets,
           idx => dispatch({ type: 'RESOLVE_DESTROY', slot: idx })
         );
+        return { ...ui, actions: lockedPerkActions(ui.actions) };
+      }
 
       case 'bonus-card-resolving': {
         const atCap =
@@ -341,10 +352,15 @@ export function usePhaseUI(): PhaseUI {
             mode: 'resolving',
             drawn: phase.drawn,
             atCap,
+            // Short Circuit: a random ♣ is committed — no declining the
+            // draw, EXCEPT the easy-mode cap decline (keep the existing
+            // hand instead of a forced swap). Mirrors the reducer's
+            // handleBonusDecline gates.
             canDecline:
-              !state.randomPerks &&
               phase.targetSlot === undefined &&
-              (!atCap || state.bonusDeclineAllowed),
+              (state.randomPerks
+                ? atCap && state.bonusDeclineAllowed
+                : !atCap || state.bonusDeclineAllowed),
           },
         };
       }
@@ -378,7 +394,7 @@ export function usePhaseUI(): PhaseUI {
           ...fromSets(EMPTY_SET),
           isTappable: () => false,
           bonusSlotPick: true,
-          actions: [cancelAction],
+          actions: lockedPerkActions([cancelAction]),
         };
 
       // ---- Three Tricks special-card flows ----

@@ -1,7 +1,42 @@
 .wrap {
+  position: relative; /* anchors the top-right quick links */
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
+}
+
+/* Rules + Settings shortcuts, pinned to the section's top right —
+   redundant with the top nav by design. */
+.quickLinks {
+  position: absolute;
+  top: var(--space-sm);
+  right: 0;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.quickLink {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (hover: hover) {
+  .quickLink:hover {
+    color: var(--ink);
+    border-color: var(--ink-3);
+  }
+}
+
+.quickLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .hero {

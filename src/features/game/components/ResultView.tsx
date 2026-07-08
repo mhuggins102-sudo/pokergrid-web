@@ -11,7 +11,7 @@ import { useTargetsStore } from '../../targets/targetsStore';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { nextIncompleteDaily } from '../../daily/dailyDates';
 import { usePlaysStore } from '../../daily/sync/playsStore';
-import { RankPanel } from '../../daily/RankPanel';
+import { RankCorner } from '../../daily/RankPanel';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { sfxTallyCount } from '../../../lib/sfx';
 import { prefersReducedMotion, useAnimatedNumber } from '../useAnimatedNumber';
@@ -101,6 +101,10 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const [stage, setStage] = useState<TallyStage>(
     staticTally ? 'final' : 'assemble'
   );
+  // True once the hero number has finished counting — the daily rank /
+  // leaderboard corner stays hidden until then, so the standing can't
+  // spoil the final score mid-tally.
+  const [tallyDone, setTallyDone] = useState(staticTally);
   useEffect(() => {
     if (staticTally) return;
     // Count-up ticks ride the same effect as the stage flips so sound
@@ -113,6 +117,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
     const toFinal = () => {
       setStage('final');
       if (sounds && breakdown.hasPurple) sfxTallyCount(0.8, 'purple');
+      // The final segment counts for 800ms — reveal the rank corner
+      // just after it lands.
+      timers.push(window.setTimeout(() => setTallyDone(true), 850));
     };
     if (breakdown.hasGold) {
       timers.push(
@@ -232,8 +239,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
       : mode.kind === 'targets'
         ? `level ${mode.level} · target ${state.target} · ${state.difficulty}`
         : mode.kind === 'daily'
-          ? // The date lives on the rank bar below — no need twice.
-            `target ${state.target} · ${state.difficulty}${
+          ? // The date rides along here — the rank moved into the
+            // hero's corner and no longer carries it.
+            `${mode.dateISO} · target ${state.target} · ${state.difficulty}${
               setup.challenge ? ` · ${setup.challenge.name}` : ''
             }`
           : `target ${state.target} · ${state.difficulty}`;
@@ -290,8 +298,6 @@ export function ResultView({ onReplay }: ResultViewProps) {
       </Link>
     );
 
-  const isDaily = mode.kind === 'daily';
-
   // Score math + bonus contribution, rendered in the desktop side
   // panel — and, on phones, inside the details sheet behind the thin
   // bar (so the whole result fits one viewport with zero scrolling).
@@ -335,17 +341,30 @@ export function ResultView({ onReplay }: ResultViewProps) {
     </section>
   );
 
+  const infoBtn = (
+    <button
+      type="button"
+      className={styles.heroInfo}
+      aria-label="Score details"
+      onClick={() => setDetailsOpen(true)}
+    >
+      ⓘ
+    </button>
+  );
+
   return (
-    <div className={`${styles.wrap} ${isDaily ? styles.hasRank : ''}`}>
+    <div className={styles.wrap}>
       <section className={`${styles.hero} ${styles.heroSlot}`} aria-label="Final result">
-        <button
-          type="button"
-          className={styles.heroInfo}
-          aria-label="Score details"
-          onClick={() => setDetailsOpen(true)}
-        >
-          ⓘ
-        </button>
+        {/* Top-right corner: the daily leaderboard (podium icon +
+            standing) joins the ⓘ once the tally has landed — never
+            before, so the rank can't spoil the final score. */}
+        <div className={styles.heroCorner}>
+          {mode.kind === 'daily' && tallyDone ? (
+            <RankCorner dateISO={mode.dateISO}>{infoBtn}</RankCorner>
+          ) : (
+            infoBtn
+          )}
+        </div>
         <span className={`${styles.verdict} ${won ? styles.win : styles.loss}`}>
           {verdict}
         </span>
@@ -386,12 +405,6 @@ export function ResultView({ onReplay }: ResultViewProps) {
           </span>
         )}
       </section>
-
-      {isDaily && mode.kind === 'daily' && (
-        <div className={styles.rankSlot}>
-          <RankPanel dateISO={mode.dateISO} />
-        </div>
-      )}
 
       <div className={styles.boardSlot}>
         <LineRails
