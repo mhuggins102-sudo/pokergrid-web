@@ -149,11 +149,17 @@ export function RankCorner({
 
   // The queue/error states keep their retry affordance — the status
   // line itself is the tap target here, the corner has no room for a
-  // separate button.
+  // separate button. The standing itself also opens the leaderboard,
+  // redundant with the podium icon above it.
   const standing = rank.data ? (
-    <span className={styles.cornerRank}>
+    <button
+      type="button"
+      className={styles.cornerRank}
+      aria-label={`Ranked ${rank.data.rank} of ${rank.data.total} — open the leaderboard`}
+      onClick={() => setStatsOpen(true)}
+    >
       #{rank.data.rank} <span className={styles.sub}>of {rank.data.total}</span>
-    </span>
+    </button>
   ) : pending || rank.isError ? (
     <button
       type="button"

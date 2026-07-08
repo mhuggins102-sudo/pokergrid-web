@@ -187,13 +187,14 @@
   gap: var(--space-md);
 }
 
-/* Hand-stack only: rebalance the dock's vertical padding (8 top /
-   4 bottom instead of 4/8 — same 12px total, so the pinned height is
-   untouched) to visually center the content between the dock's top
-   rule and the bottom edge. */
+/* Hand-stack only: pin to the hand-stack's OWN natural height — top
+   rule 1 + padding 12 + the 113px hero-card column — instead of the
+   taller generic 138px pin, which left a dead band under the content.
+   The well renders in every phase, so the height is phase-stable and
+   the shorter ♣ panel (~100px) swaps in without moving the board.
+   Padding keeps the shared 4-top / 8-bottom dock rhythm. */
 .dockHandPad {
-  padding-top: 8px;
-  padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  min-height: calc(126px + env(safe-area-inset-bottom));
 }
 
 .actionStack {
@@ -202,13 +203,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  /* Pinned to the tallest phase shape (banner line + action row +
-     commit + gaps) so the dock height — which now directly sets the
-     flexed board size — never changes as phases swap the stack's
-     contents. Slack splits evenly above and below, so the button
-     group rides the vertical center of the deck card + count column
-     (which .handStack centers against this same box). */
-  min-height: 124px;
+  /* Pinned to the tallest phase shape — the deciding stack (commit
+     48 + gap + action row 44); targeting swaps in the shorter banner
+     + Cancel pair. The hero card column beside this runs taller
+     (~110px), so the dock height itself is well-driven and
+     phase-stable. Slack splits evenly above and below (center), so
+     whichever group is showing rides the vertical center of the deck
+     card + count column. */
+  min-height: 96px;
   justify-content: center;
 }
 
@@ -312,6 +314,12 @@
 
   .dockText {
     font-size: 14px;
+  }
+
+  /* The stacked card grows to 96px here → the well column runs
+     ~118.5px; keep the ♣-panel pin matched to the play height. */
+  .dockHandPad {
+    min-height: calc(131.5px + env(safe-area-inset-bottom));
   }
 }
 

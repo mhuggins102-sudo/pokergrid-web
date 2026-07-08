@@ -31,6 +31,32 @@
   font-weight: 700;
 }
 
+/* The verdict holds its slot (no layout jump) but stays invisible
+   until the tally lands — the win/loss call must not front-run the
+   counting score. Reveals in step with the rank corner. */
+.verdictPending {
+  visibility: hidden;
+}
+
+.verdictIn {
+  animation: verdict-in 0.45s ease-out backwards;
+}
+
+@keyframes verdict-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verdictIn {
+    animation: none;
+  }
+}
+
 .win {
   color: var(--success);
 }
@@ -249,7 +275,9 @@
   right: var(--space-sm);
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  /* The standing centers under the icon pair (not right-aligned to
+     the corner edge). */
+  align-items: center;
   gap: 1px;
 }
 

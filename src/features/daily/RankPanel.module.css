@@ -107,14 +107,32 @@
   outline-offset: 2px;
 }
 
-/* The standing line under the icons. */
+/* The standing line under the icons — a button (opens the same
+   leaderboard sheet as the podium icon), styled as plain text. */
 .cornerRank {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 660;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   animation: corner-reveal 0.45s ease-out backwards;
+}
+
+@media (hover: hover) {
+  .cornerRank:hover {
+    color: var(--accent);
+  }
+}
+
+.cornerRank:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
 .cornerStatus {

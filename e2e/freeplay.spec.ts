@@ -45,7 +45,10 @@ test('seeded easy game plays to completion with Place', async ({ page }) => {
   await expect(finalScore).toBeVisible();
   const score = Number(await finalScore.textContent());
   expect(Number.isFinite(score)).toBe(true);
-  await expect(page.getByText(/target beaten|target missed/i)).toBeVisible();
+  // The verdict reveals only after the ~4s tally lands — wait it out.
+  await expect(page.getByText(/target beaten|target missed/i)).toBeVisible({
+    timeout: 10_000,
+  });
 
   // Replay starts a fresh board.
   await page.getByRole('button', { name: 'Play again' }).click();
