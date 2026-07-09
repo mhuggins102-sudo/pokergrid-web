@@ -88,6 +88,13 @@
   border-bottom: none;
 }
 
+/* Stacked row (screen-name editor): the control renders full-width
+   under the title instead of beside it. */
+.rowStack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 
 .rowText {
   display: flex;

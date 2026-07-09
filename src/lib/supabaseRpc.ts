@@ -184,8 +184,10 @@ export const fetchRank = async (
   };
 };
 
-// Fixed 100-point bands (0-99, 100-199, ...) including interior
-// zero-count bands — see supabase/daily_histogram_bands.sql. Until that
+// Adaptive 8-band distribution: always exactly 8 buckets whose width
+// is the smallest multiple of 50 that spans the day's min→max, with
+// interior zero-count bands included; fewer than two scores returns
+// empty bins — see supabase/daily_histogram_bands.sql. Until that
 // function is applied to the project the RPC errors, and the client
 // simply hides the distribution section.
 export const fetchHistogram = async (

@@ -20,6 +20,8 @@ import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from '../targets/targetsStore';
 import { resetDailyProgress } from '../daily/sync/sync';
 import { clearTwistsSeen } from '../daily/twistSeen';
+import { HandleEditor } from '../daily/RankPanel';
+import { isBackendConfigured } from '../../lib/supabaseRpc';
 import { clearTutorialSeen } from '../tutorial/tutorialSeen';
 import styles from './SettingsPage.module.css';
 
@@ -236,6 +238,17 @@ export function SettingsPage() {
       </Section>
 
       <Section title="More">
+        {/* Set or change the daily-leaderboard name. The stats sheet
+            only offers the editor until a name is first saved — this
+            row is the permanent home. Hidden on backendless builds. */}
+        {isBackendConfigured() && (
+          <div className={`${styles.row} ${styles.rowStack}`}>
+            <div className={styles.rowText}>
+              <span className={styles.rowTitle}>Screen name</span>
+            </div>
+            <HandleEditor heading={null} />
+          </div>
+        )}
         <div className={styles.row}>
           <div className={styles.rowText}>
             <span className={styles.rowTitle}>Replay tutorial</span>

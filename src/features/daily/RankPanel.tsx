@@ -5,12 +5,14 @@ import {
   HandleTakenError,
   isBackendConfigured,
   setHandleRemote,
+  type TopScoreEntry,
 } from '../../lib/supabaseRpc';
 import { getOrCreateDeviceId, KEY_HANDLE } from './sync/deviceId';
 import { usePlaysStore } from './sync/playsStore';
 import { useQueueStore } from './sync/queue';
 import { drainQueue } from './sync/sync';
 import {
+  useArchiveRank,
   useDailyHistogram,
   useDailyRank,
   useDailyStats,
@@ -235,6 +237,32 @@ function DayStatsSheet({
   // The local play is authoritative even while the rank RPC is pending.
   const localScore = usePlaysStore(s => s.plays[dateISO]?.score);
   const own = localScore ?? ownScore;
+  // Own standing (shared cache with the rank corner/bar — no extra
+  // fetch in practice); fills in the player's row when they're outside
+  // the fetched top list entirely.
+  const ownRank = useArchiveRank(dateISO);
+  // The handle editor shows only until a name is saved — changing it
+  // later lives in Settings → More.
+  const [hasHandle, setHasHandle] = useState(
+    () => !!localStorage.getItem(KEY_HANDLE)
+  );
+
+  // Top 5, plus the player's own row when they didn't make the cut:
+  // taken from the fetched list when it reaches that far (real server
+  // display name), otherwise rebuilt from the rank RPC + local handle.
+  const top = stats.data?.topScores ?? [];
+  const top5 = top.slice(0, 5);
+  const ownRow: TopScoreEntry | null = top5.some(t => t.isOwn)
+    ? null
+    : (top.find(t => t.isOwn) ??
+      (ownRank.data
+        ? {
+            rank: ownRank.data.rank,
+            displayName: localStorage.getItem(KEY_HANDLE) ?? 'Anonymous',
+            score: ownRank.data.score,
+            isOwn: true,
+          }
+        : null));
 
   return (
     <Sheet open={open} onClose={onClose} title={`Leaderboard — ${dateISO}`}>
@@ -259,8 +287,11 @@ function DayStatsSheet({
         {histo.data && histo.data.bins.length > 0 && (
           <div>
             <h3 className="text-section">Score distribution</h3>
-            {/* Fixed 100-point bands; interior zero-count bands render
-                as empty slots on the axis so gaps read truthfully. */}
+            {/* Always 8 bands, width adapted to the day's spread (50s,
+                falling back to 100s/150s — daily_histogram_bands.sql);
+                zero-count bands render as empty slots on the axis so
+                gaps read truthfully. Solo days come back binless and
+                the whole section hides. */}
             <div className={styles.histo}>
               {histo.data.bins.map((b, i) => {
                 // "Green = you", matching the own-row highlight in the
@@ -300,10 +331,10 @@ function DayStatsSheet({
           </div>
         )}
 
-        {stats.data && stats.data.topScores.length > 0 && (
+        {top5.length > 0 && (
           <div>
             <h3 className="text-section">Top scores</h3>
-            {stats.data.topScores.map(t => (
+            {top5.map(t => (
               <div
                 key={`${t.rank}-${t.displayName}`}
                 className={`${styles.topRow} ${t.isOwn ? styles.own : ''}`}
@@ -313,6 +344,20 @@ function DayStatsSheet({
                 <span>{t.score}</span>
               </div>
             ))}
+            {ownRow && (
+              <>
+                {ownRow.rank > top5.length + 1 && (
+                  <div className={styles.topGap} aria-hidden="true">
+                    ⋯
+                  </div>
+                )}
+                <div className={`${styles.topRow} ${styles.own}`}>
+                  <span>#{ownRow.rank}</span>
+                  <span>{ownRow.displayName}</span>
+                  <span>{ownRow.score}</span>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -325,13 +370,30 @@ function DayStatsSheet({
           </span>
         )}
 
-        <HandleEditor />
+        {/* First-time naming only — once saved, the box retires from
+            this sheet (rename lives in Settings → More). */}
+        {!hasHandle && (
+          <HandleEditor onSaved={handle => setHasHandle(handle !== null)} />
+        )}
       </div>
     </Sheet>
   );
 }
 
-function HandleEditor() {
+/**
+ * Screen-name editor for the daily leaderboard. Lives in the stats
+ * sheet until a name is first saved; afterwards Settings → More is
+ * the place to change it (heading=null renders it bare for that row).
+ */
+export function HandleEditor({
+  heading = 'Screen name',
+  onSaved,
+}: {
+  /** Section heading; null renders the editor without one. */
+  heading?: string | null;
+  /** Called after a successful save with the new handle (null = cleared). */
+  onSaved?: (handle: string | null) => void;
+} = {}) {
   const { toast } = useToast();
   const [handle, setHandle] = useState(
     () => localStorage.getItem(KEY_HANDLE) ?? ''
@@ -347,7 +409,8 @@ function HandleEditor() {
       await setHandleRemote(getOrCreateDeviceId(), trimmed || null);
       if (trimmed) localStorage.setItem(KEY_HANDLE, trimmed);
       else localStorage.removeItem(KEY_HANDLE);
-      toast('Leaderboard name saved.', 'success');
+      toast('Screen name saved.', 'success');
+      onSaved?.(trimmed || null);
     } catch (e) {
       if (e instanceof HandleTakenError) {
         setError('That name is taken — try another.');
@@ -363,14 +426,14 @@ function HandleEditor() {
 
   return (
     <div>
-      <h3 className="text-section">Leaderboard name</h3>
+      {heading && <h3 className="text-section">{heading}</h3>}
       <div className={styles.handleRow}>
         <input
           className={styles.handleInput}
           value={handle}
           maxLength={20}
           placeholder="Anonymous"
-          aria-label="Leaderboard name"
+          aria-label="Screen name"
           onChange={e => setHandle(e.target.value)}
         />
         <Button size="sm" variant="secondary" disabled={saving} onClick={save}>
