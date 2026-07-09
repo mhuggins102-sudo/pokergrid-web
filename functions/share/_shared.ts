@@ -7,6 +7,9 @@ export type ParsedShare = {
   // Daily shares only: the puzzle's ISO date (validated), so the link
   // can land the recipient on that exact deal. Null otherwise.
   dateISO: string | null;
+  // Free-play shares only: the run's seed (validated digits), so the
+  // splash's play button can re-issue the identical deal.
+  seed: string | null;
   // 25-cell grid. Each cell: null (empty), 'JK' (joker), or a 2-char rank+suit.
   grid: (CellCode | null)[];
 };
@@ -54,14 +57,17 @@ export const parseShare = (url: URL): ParsedShare => {
   const modeRaw = (url.searchParams.get('mode') ?? 'free').toLowerCase();
   const mode = MODE_LABELS[modeRaw] ?? 'Free';
   const difficulty = url.searchParams.get('diff'); // 'easy' | 'medium' | 'hard' | null
-  // Strict shape check — this value gets echoed into a redirect path.
+  // Strict shape checks — these values get echoed into link targets.
   const dateRaw = url.searchParams.get('date');
   const dateISO =
     mode === 'Daily' && dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw)
       ? dateRaw
       : null;
+  const seedRaw = url.searchParams.get('seed');
+  const seed =
+    mode === 'Free' && seedRaw && /^\d{1,10}$/.test(seedRaw) ? seedRaw : null;
   const grid = decodeGrid(url.searchParams.get('grid'));
-  return { score, mode, difficulty, dateISO, grid };
+  return { score, mode, difficulty, dateISO, seed, grid };
 };
 
 export const escapeHtml = (s: string): string =>

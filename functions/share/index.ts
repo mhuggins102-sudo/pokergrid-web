@@ -15,7 +15,7 @@ import { escapeHtml, parseShare, shareTitle } from './_shared';
 
 export const onRequest: PagesFunction = async ({ request }) => {
   const url = new URL(request.url);
-  const { score, mode, difficulty, dateISO } = parseShare(url);
+  const { score, mode, difficulty, dateISO, seed } = parseShare(url);
   const title = shareTitle(score, mode, difficulty, dateISO);
 
   // og:image carries the same query params so the image generator sees the
@@ -24,9 +24,21 @@ export const onRequest: PagesFunction = async ({ request }) => {
   const ogImageUrl = new URL('/share/og.png', url.origin);
   ogImageUrl.search = url.search;
 
-  // Daily: land on that exact puzzle. Everything else: the home page.
-  const playUrl = dateISO ? `${url.origin}/daily/${dateISO}` : url.origin + '/';
-  const playLabel = dateISO ? 'Play this daily' : 'Play PokerGrid';
+  // Daily: land on that exact puzzle. Free with a seed: the splash's
+  // button re-issues the identical deal — the score is a challenge on
+  // this exact shuffle. Everything else: the home page.
+  const seededPlay =
+    seed && difficulty && /^(easy|medium|hard|extreme)$/.test(difficulty)
+      ? `${url.origin}/play?difficulty=${difficulty}&seed=${seed}`
+      : null;
+  const playUrl = dateISO
+    ? `${url.origin}/daily/${dateISO}`
+    : (seededPlay ?? url.origin + '/');
+  const playLabel = dateISO
+    ? 'Play this daily'
+    : seededPlay
+      ? 'Play this deal'
+      : 'Play PokerGrid';
 
   const html = `<!DOCTYPE html>
 <html lang="en">

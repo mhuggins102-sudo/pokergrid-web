@@ -12,6 +12,7 @@ export function ShareButton({
   difficulty,
   grid,
   dateISO,
+  seed,
 }: {
   score: number;
   mode: ShareParams['mode'];
@@ -19,11 +20,13 @@ export function ShareButton({
   grid: Grid;
   /** Daily only: the puzzle's date, so the link opens that deal. */
   dateISO?: string;
+  /** Free play only: the run's seed, so the link re-issues the deal. */
+  seed?: number;
 }) {
   const { toast } = useToast();
 
   const onShare = async () => {
-    const url = buildShareUrl({ score, mode, difficulty, grid, dateISO });
+    const url = buildShareUrl({ score, mode, difficulty, grid, dateISO, seed });
     const result = await shareUrl(url, `PokerGrid — ${score} points`);
     if (result.outcome === 'copied') toast('Link copied.', 'success');
     else if (result.outcome === 'failed') toast('Could not share.', 'danger');
