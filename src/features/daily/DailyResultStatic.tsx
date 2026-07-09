@@ -183,6 +183,7 @@ export function DailyResultStatic({ play }: { play: DailyPlay }) {
             mode="daily"
             difficulty={play.recipe.difficulty}
             grid={state.grid}
+            dateISO={play.dateISO}
           />
           <Link to="/" className={styles.dockLink}>
             Home

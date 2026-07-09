@@ -462,6 +462,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
               }
               difficulty={state.difficulty}
               grid={state.grid}
+              dateISO={mode.kind === 'daily' ? mode.dateISO : undefined}
             />
           )}
           <Link to="/" className={styles.dockLink}>
