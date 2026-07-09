@@ -31,7 +31,7 @@ export const buildShareUrl = (params: ShareParams): string => {
   const origin =
     typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
-      : 'https://pokergrid.pages.dev';
+      : 'https://pokergrid.app';
   const u = new URL('/share', origin);
   u.searchParams.set('score', String(params.score));
   u.searchParams.set('mode', params.mode);
