@@ -11,6 +11,7 @@ import { GameSessionProvider } from '../game/GameSessionProvider';
 import { GameScreen } from '../game/GameScreen';
 import { usePlaysStore } from './sync/playsStore';
 import { DailyResultStatic } from './DailyResultStatic';
+import { formatDailyDate } from './dailyDates';
 import styles from './DailyDay.module.css';
 
 /**
@@ -91,7 +92,7 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
     <section className={styles.intro}>
       <div className={styles.card}>
         <h1 className="text-section">Daily puzzle</h1>
-        <span className={styles.date}>{dateISO}</span>
+        <span className={styles.date}>{formatDailyDate(dateISO)}</span>
         <div className={styles.meta}>
           <span
             className={styles.diffChip}

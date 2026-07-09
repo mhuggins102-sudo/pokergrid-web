@@ -17,6 +17,7 @@ import {
   useDailyRank,
   useDailyStats,
 } from './sync/useDailyRank';
+import { formatDailyDate } from './dailyDates';
 import styles from './RankPanel.module.css';
 
 /**
@@ -40,7 +41,7 @@ export function RankPanel({ dateISO }: { dateISO: string }) {
   if (!isBackendConfigured()) {
     return (
       <section className={styles.panel} aria-label="Daily date">
-        <span className={styles.date}>{dateISO}</span>
+        <span className={styles.date}>{formatDailyDate(dateISO)}</span>
       </section>
     );
   }
@@ -218,7 +219,12 @@ export function RankCorner({
   );
 }
 
-function DayStatsSheet({
+/**
+ * The leaderboard popup for one date — day stats, distribution, top
+ * scores. Owned by the rank bar/corner, and openable directly from an
+ * archive row's score cell.
+ */
+export function DayStatsSheet({
   dateISO,
   open,
   onClose,
@@ -265,7 +271,11 @@ function DayStatsSheet({
         : null));
 
   return (
-    <Sheet open={open} onClose={onClose} title={`Leaderboard — ${dateISO}`}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={`Leaderboard — ${formatDailyDate(dateISO)}`}
+    >
       <div className={styles.statsBody}>
         <div className={styles.statChips}>
           <div className={styles.statChip}>
