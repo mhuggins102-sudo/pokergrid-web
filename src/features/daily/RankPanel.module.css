@@ -182,6 +182,12 @@
   gap: var(--space-lg);
 }
 
+/* Section headings: a small buffer before the data below — the
+   histogram's tallest bar otherwise sits right against the text. */
+.statsBody h3 {
+  margin: 0 0 var(--space-sm);
+}
+
 .statChips {
   display: flex;
   gap: var(--space-sm);
@@ -196,6 +202,9 @@
   border-radius: var(--radius-sm);
   background: var(--paper-sunken);
   font-variant-numeric: tabular-nums;
+  /* Value centered over its label — the chips are the one piece of
+     the sheet that reads better centered. */
+  text-align: center;
 }
 
 .statValue {
@@ -210,15 +219,34 @@
   color: var(--ink-3);
 }
 
+/* Columns hug their content and pack left — rank, name, score sit
+   close together instead of spreading across the sheet's width. The
+   table owns the column tracks; each row joins them via subgrid so
+   the columns stay aligned across rows. */
+.topTable {
+  display: grid;
+  grid-template-columns: max-content max-content max-content;
+  justify-content: start;
+  column-gap: var(--space-md);
+}
+
 .topRow {
   display: grid;
-  grid-template-columns: 34px 1fr auto;
-  gap: var(--space-sm);
+  /* Fallback (no subgrid): per-row content-hugged columns. */
+  grid-template-columns: max-content max-content max-content;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  column-gap: var(--space-md);
   align-items: baseline;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   padding: 3px 0;
   border-bottom: 1px solid var(--hairline);
+}
+
+/* Scores right-align within their shared column. */
+.topRow > :last-child {
+  text-align: right;
 }
 
 .topRow:last-child {
@@ -232,6 +260,7 @@
 
 /* Rank-jump divider between the top 5 and the player's own row. */
 .topGap {
+  grid-column: 1 / -1;
   padding: 1px 0;
   color: var(--ink-3);
   font-size: 12px;
@@ -289,6 +318,10 @@
 .histoTick {
   flex: 1;
   min-height: 1em;
+  /* The label marks the bucket's LOWER bound: its left edge lines up
+     with the bar's left edge, axis-style — never centered under the
+     bar. */
+  text-align: left;
 }
 
 /* ---- handle editor ---- */
