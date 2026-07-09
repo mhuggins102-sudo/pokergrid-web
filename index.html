@@ -85,6 +85,64 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Boot watchdog: if the app hasn't mounted shortly after load, a
+         stale/poisoned cache is almost certainly serving HTML where JS
+         should be (the service worker keeps doing so across refreshes,
+         and the React update banner that would fix it can never
+         render). Escape hatch: unregister every service worker, purge
+         Cache Storage, reload once. Rate-limited so a genuinely broken
+         network can't reload-loop; a healthy boot clears the stamp. -->
+    <script>
+      (function () {
+        var KEY = 'pokergrid:boot-recover-at';
+        window.setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && root.childElementCount > 0) {
+            // Mounted fine — allow future recoveries.
+            try {
+              sessionStorage.removeItem(KEY);
+            } catch (e) {
+              /* storage unavailable */
+            }
+            return;
+          }
+          try {
+            var last = Number(sessionStorage.getItem(KEY) || 0);
+            if (Date.now() - last < 60000) return; // already tried — stay put
+            sessionStorage.setItem(KEY, String(Date.now()));
+          } catch (e) {
+            return; // no storage → can't rate-limit → don't risk a loop
+          }
+          var work = [];
+          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+            work.push(
+              navigator.serviceWorker.getRegistrations().then(function (rs) {
+                return Promise.all(
+                  rs.map(function (r) {
+                    return r.unregister();
+                  })
+                );
+              })
+            );
+          }
+          if (window.caches && window.caches.keys) {
+            work.push(
+              window.caches.keys().then(function (keys) {
+                return Promise.all(
+                  keys.map(function (k) {
+                    return window.caches.delete(k);
+                  })
+                );
+              })
+            );
+          }
+          var reload = function () {
+            window.location.reload();
+          };
+          Promise.all(work).then(reload, reload);
+        }, 6000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
