@@ -23,6 +23,10 @@ export interface ShareParams {
   mode: 'free' | 'targets-up' | 'challenge' | 'daily';
   difficulty?: string;
   grid: Grid;
+  /** Daily shares carry their date (ISO) so the link lands the
+   *  recipient on that exact puzzle — the shared score is a
+   *  challenge, and this is the deal to beat it on. */
+  dateISO?: string;
 }
 
 // Build the absolute /share URL the player will hand off, anchored on the
@@ -36,6 +40,7 @@ export const buildShareUrl = (params: ShareParams): string => {
   u.searchParams.set('score', String(params.score));
   u.searchParams.set('mode', params.mode);
   if (params.difficulty) u.searchParams.set('diff', params.difficulty);
+  if (params.dateISO) u.searchParams.set('date', params.dateISO);
   u.searchParams.set('grid', encodeGrid(params.grid));
   return u.toString();
 };

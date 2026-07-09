@@ -1,19 +1,22 @@
-// GET /share?score=...&mode=...&diff=...&grid=<50-char encoding>
+// GET /share?score=...&mode=...&diff=...&date=...&grid=<50-char encoding>
 //
 // Returns an HTML page whose Open Graph + Twitter Card meta tags point to the
 // /share/og.png image generator. When the URL is dropped into iMessage / Slack /
 // Discord etc., the client fetches THIS page, parses the meta tags, fetches the
 // og:image, and renders the unfurled card.
 //
-// A human who actually clicks the link sees a small fallback page and a button
-// to launch the game.
+// A human who actually clicks the link sees a small fallback page (styled to
+// the site's Morning Paper dark default) and a button to launch the game.
+// Daily shares are a challenge on a specific deal, so human visitors are
+// forwarded straight to /daily/<date> — unfurl crawlers don't execute the
+// script and still read the meta tags.
 
 import { escapeHtml, parseShare, shareTitle } from './_shared';
 
 export const onRequest: PagesFunction = async ({ request }) => {
   const url = new URL(request.url);
-  const { score, mode, difficulty } = parseShare(url);
-  const title = shareTitle(score, mode, difficulty);
+  const { score, mode, difficulty, dateISO } = parseShare(url);
+  const title = shareTitle(score, mode, difficulty, dateISO);
 
   // og:image carries the same query params so the image generator sees the
   // same grid/score/mode. Use the request origin so this works on any domain
@@ -21,7 +24,9 @@ export const onRequest: PagesFunction = async ({ request }) => {
   const ogImageUrl = new URL('/share/og.png', url.origin);
   ogImageUrl.search = url.search;
 
-  const playUrl = url.origin + '/';
+  // Daily: land on that exact puzzle. Everything else: the home page.
+  const playUrl = dateISO ? `${url.origin}/daily/${dateISO}` : url.origin + '/';
+  const playLabel = dateISO ? 'Play this daily' : 'Play PokerGrid';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -42,67 +47,89 @@ export const onRequest: PagesFunction = async ({ request }) => {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:image" content="${escapeHtml(ogImageUrl.href)}" />
-
+${
+  dateISO
+    ? `
+  <script>window.location.replace(${JSON.stringify(playUrl)});</script>`
+    : ''
+}
   <style>
+    /* Morning Paper dark — mirrors [data-theme='paper-dark'] in
+       src/design/tokens.css (the site's default look). */
     html, body {
       margin: 0; padding: 0;
-      background: #06070d;
-      color: #e9ecff;
-      font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+      background: #17150f;
+      color: #efe9d8;
+      font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
       min-height: 100vh;
     }
     main {
-      max-width: 480px;
+      max-width: 420px;
       margin: 0 auto;
-      padding: 48px 24px;
+      padding: 56px 24px;
       text-align: center;
     }
+    .card {
+      background: #211e17;
+      border: 1px solid #3a352a;
+      border-radius: 14px;
+      padding: 32px 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    .wordmark {
+      font-family: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 0 0 20px;
+    }
     h1 {
-      font-size: 22px;
-      letter-spacing: 1.5px;
-      font-weight: 800;
-      line-height: 1.4;
-      margin: 0 0 24px;
-      color: #e9ecff;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin: 0 0 8px;
+      color: #b7ae9b;
     }
     .score {
+      font-family: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
       font-size: 64px;
-      font-weight: 900;
-      color: #6bd6ff;
-      text-shadow: 0 0 18px rgba(107, 214, 255, 0.7);
-      letter-spacing: 2px;
-      margin: 16px 0;
+      font-weight: 700;
+      line-height: 1.05;
+      margin: 8px 0;
+      font-variant-numeric: tabular-nums;
     }
     .mode {
       font-size: 12px;
-      letter-spacing: 3px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #a8b0d6;
-      margin-bottom: 32px;
+      color: #948b77;
+      margin-bottom: 28px;
     }
     a.play {
       display: inline-block;
-      padding: 14px 28px;
-      background: rgba(107, 214, 255, 0.15);
-      border: 1px solid #6bd6ff;
-      border-radius: 6px;
-      color: #6bd6ff;
+      padding: 13px 28px;
+      background: #3a8f68;
+      border-radius: 10px;
+      color: #17150f;
       text-decoration: none;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      font-size: 12px;
-      text-shadow: 0 0 8px rgba(107, 214, 255, 0.9);
-      box-shadow: 0 0 18px rgba(107, 214, 255, 0.3);
+      font-weight: 650;
+      font-size: 15px;
+    }
+    a.play:hover {
+      filter: brightness(1.08);
     }
   </style>
 </head>
 <body>
   <main>
-    <h1>${escapeHtml(title)}</h1>
-    <div class="score">${score}</div>
-    <div class="mode">${escapeHtml(mode)}${difficulty ? ' · ' + escapeHtml(difficulty.toUpperCase()) : ''}</div>
-    <a class="play" href="${escapeHtml(playUrl)}">Play PokerGrid</a>
+    <div class="card">
+      <p class="wordmark">PokerGrid</p>
+      <h1>${escapeHtml(title)}</h1>
+      <div class="score">${score}</div>
+      <div class="mode">${escapeHtml(mode)}${difficulty ? ' · ' + escapeHtml(difficulty) : ''}</div>
+      <a class="play" href="${escapeHtml(playUrl)}">${escapeHtml(playLabel)}</a>
+    </div>
   </main>
 </body>
 </html>`;

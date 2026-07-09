@@ -4,6 +4,9 @@ export type ParsedShare = {
   score: number;
   mode: ModeLabel;
   difficulty: string | null;
+  // Daily shares only: the puzzle's ISO date (validated), so the link
+  // can land the recipient on that exact deal. Null otherwise.
+  dateISO: string | null;
   // 25-cell grid. Each cell: null (empty), 'JK' (joker), or a 2-char rank+suit.
   grid: (CellCode | null)[];
 };
@@ -51,8 +54,14 @@ export const parseShare = (url: URL): ParsedShare => {
   const modeRaw = (url.searchParams.get('mode') ?? 'free').toLowerCase();
   const mode = MODE_LABELS[modeRaw] ?? 'Free';
   const difficulty = url.searchParams.get('diff'); // 'easy' | 'medium' | 'hard' | null
+  // Strict shape check — this value gets echoed into a redirect path.
+  const dateRaw = url.searchParams.get('date');
+  const dateISO =
+    mode === 'Daily' && dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw)
+      ? dateRaw
+      : null;
   const grid = decodeGrid(url.searchParams.get('grid'));
-  return { score, mode, difficulty, grid };
+  return { score, mode, difficulty, dateISO, grid };
 };
 
 export const escapeHtml = (s: string): string =>
@@ -63,9 +72,25 @@ export const escapeHtml = (s: string): string =>
     c === '"' ? '&quot;' : '&#39;'
   ));
 
-export const shareTitle = (score: number, mode: ModeLabel, difficulty: string | null): string => {
-  const label = mode === 'Free' && difficulty
-    ? difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
-    : mode;
+/** M/D/YY, no leading zeros — mirrors the app's formatDailyDate. */
+export const formatShareDate = (iso: string): string => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${m}/${d}/${String(y % 100).padStart(2, '0')}`;
+};
+
+export const shareTitle = (
+  score: number,
+  mode: ModeLabel,
+  difficulty: string | null,
+  dateISO: string | null = null
+): string => {
+  // Daily: name the day — the recipient is being challenged to beat
+  // this score on that exact deal.
+  const label =
+    mode === 'Daily' && dateISO
+      ? `${formatShareDate(dateISO)} Daily`
+      : mode === 'Free' && difficulty
+        ? difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+        : mode;
   return `I scored ${score} on PokerGrid (${label}). Can you beat me?`;
 };
