@@ -42,7 +42,7 @@ export interface ResultViewProps {
  * reward picks and advances (or ends) the ladder.
  */
 export function ResultView({ onReplay }: ResultViewProps) {
-  const { state, mode, setup } = useGameSession();
+  const { state, mode, setup, seed } = useGameSession();
   const targets = useTargetsStore();
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -463,6 +463,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
               difficulty={state.difficulty}
               grid={state.grid}
               dateISO={mode.kind === 'daily' ? mode.dateISO : undefined}
+              seed={mode.kind === 'free' ? seed : undefined}
             />
           )}
           <Link to="/" className={styles.dockLink}>

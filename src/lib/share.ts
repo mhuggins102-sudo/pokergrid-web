@@ -27,6 +27,9 @@ export interface ShareParams {
    *  recipient on that exact puzzle — the shared score is a
    *  challenge, and this is the deal to beat it on. */
   dateISO?: string;
+  /** Free-play shares carry the run's seed for the same reason: the
+   *  splash's play button re-issues the identical deal. */
+  seed?: number;
 }
 
 // Build the absolute /share URL the player will hand off, anchored on the
@@ -41,6 +44,7 @@ export const buildShareUrl = (params: ShareParams): string => {
   u.searchParams.set('mode', params.mode);
   if (params.difficulty) u.searchParams.set('diff', params.difficulty);
   if (params.dateISO) u.searchParams.set('date', params.dateISO);
+  if (params.seed !== undefined) u.searchParams.set('seed', String(params.seed));
   u.searchParams.set('grid', encodeGrid(params.grid));
   return u.toString();
 };

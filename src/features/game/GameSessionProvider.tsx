@@ -20,6 +20,9 @@ export interface GameSession {
   maxUndos: number;
   /** True when UNDO is currently allowed (snapshots exist + under cap). */
   canUndo: boolean;
+  /** The run's deterministic seed, when it has one — free play mints
+   *  one per run so the share link can re-issue the exact deal. */
+  seed?: number;
 }
 
 const GameSessionContext = createContext<GameSession | null>(null);
@@ -71,8 +74,8 @@ export function GameSessionProvider({
   const canUndo = state.past.length > 0 && state.undoCount < maxUndos;
 
   const session = useMemo<GameSession>(
-    () => ({ state, dispatch, mode, setup, maxUndos, canUndo }),
-    [state, dispatch, mode, setup, maxUndos, canUndo]
+    () => ({ state, dispatch, mode, setup, maxUndos, canUndo, seed }),
+    [state, dispatch, mode, setup, maxUndos, canUndo, seed]
   );
 
   return (

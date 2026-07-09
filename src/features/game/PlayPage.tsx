@@ -10,8 +10,10 @@ const isDifficulty = (v: string | null): v is Difficulty =>
 
 /**
  * /play — free play. Without a valid ?difficulty=, shows the picker.
- * With one, runs a game; an optional ?seed= makes the whole run
- * deterministic (used by E2E tests; harmless to share).
+ * With one, runs a game; an optional ?seed= pins the exact deal (share
+ * links and E2E tests use this). Without ?seed= a random one is minted
+ * — every free run is seeded, so a finished game can hand its deal to
+ * a friend via the share link ("beat my score on this exact deal").
  */
 export function PlayPage() {
   const [params] = useSearchParams();
@@ -19,16 +21,18 @@ export function PlayPage() {
   const seedParam = params.get('seed');
   // Bumping runId remounts the provider → fresh shuffle, same settings.
   const [runId, setRunId] = useState(0);
+  // Minted once per visit; "Play again" varies the run via +runId, the
+  // same trick the explicit-seed path uses.
+  const [mintedSeed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
 
   if (!isDifficulty(difficultyParam)) {
     return <DifficultyPicker />;
   }
 
   const seed =
-    seedParam !== null && /^\d+$/.test(seedParam)
-      ? // Successive runs from the same seed stay deterministic but differ.
-        Number(seedParam) + runId
-      : undefined;
+    (seedParam !== null && /^\d+$/.test(seedParam)
+      ? Number(seedParam)
+      : mintedSeed) + runId;
 
   return (
     <GameSessionProvider

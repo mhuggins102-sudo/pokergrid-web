@@ -91,7 +91,9 @@ const gridHtml = (grid: (CellCode | null)[]): string => {
   `;
 };
 
-const buildShareHtml = (
+// Exported for preview/test harnesses; the handler below is the
+// production consumer.
+export const buildShareHtml = (
   score: number,
   mode: ModeLabel,
   difficulty: string | null,
