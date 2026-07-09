@@ -230,6 +230,16 @@
   color: var(--accent);
 }
 
+/* Rank-jump divider between the top 5 and the player's own row. */
+.topGap {
+  padding: 1px 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline);
+}
+
 .histo {
   display: flex;
   align-items: flex-end;

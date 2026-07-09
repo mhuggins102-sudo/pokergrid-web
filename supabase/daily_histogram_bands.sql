@@ -1,20 +1,27 @@
--- Fixed 100-point score bands for the daily leaderboard histogram.
+-- Adaptive 8-band score distribution for the daily leaderboard.
 --
--- Replaces the equal-split-of-range behavior of `daily_histogram`
--- (range/15 bins, empty bins omitted) with bands anchored at multiples
--- of 100 (0-99, 100-199, ...). Every band from the lowest occupied to
--- the highest occupied is returned — interior zero-count bands
--- included — so the client can render true gaps. Same JSON shape the
--- client already parses: { bins: [{lo, hi, count}], median, min, max,
--- total }.
+-- Replaces the fixed 100-point bands: the histogram is now ALWAYS
+-- exactly 8 buckets whose width adapts to the day's score spread. The
+-- width is the smallest multiple of 50 (50, 100, 150, …) such that 8
+-- buckets — anchored at the multiple of that width at-or-below the
+-- minimum score — reach past the maximum score. Typical days land on
+-- 50-point buckets (e.g. 200-249 … 550-599); widely spread days fall
+-- back to 100 or, rarely, 150+. Trailing/interior zero-count buckets
+-- are returned so the client can render true gaps.
+--
+-- Fewer than TWO scores returns an empty bins array — a one-entry
+-- "distribution" is noise, and the client hides the section entirely.
+--
+-- Same JSON shape the client already parses:
+--   { bins: [{lo, hi, count}], median, min, max, total }
 --
 -- `security definer` (+ pinned search_path) is REQUIRED, matching the
 -- other daily_* RPCs: daily_plays has row-level security that blocks
 -- anonymous reads, so a plain function runs as the caller and sees
 -- zero rows. Table confirmed as public.daily_plays(date, score).
 --
--- Run this whole file in the Supabase SQL editor; the old
--- daily_histogram function can stay (harmless) or be dropped.
+-- Run this whole file in the Supabase SQL editor (CREATE OR REPLACE —
+-- it swaps in over the previous fixed-band version).
 
 create or replace function public.daily_histogram_bands(p_date date)
 returns jsonb
@@ -36,37 +43,44 @@ as $$
       percentile_cont(0.5) within group (order by score) as median
     from scores
   ),
-  bands as (
-    -- floor() keeps negative scores sane (a -40 lands in the -100..-1 band).
-    select gs.band
-    from agg,
-      generate_series(
-        floor(agg.min_score / 100.0)::int,
-        floor(agg.max_score / 100.0)::int
-      ) as gs(band)
-    where agg.total > 0
+  -- Smallest 50-multiple width whose 8 min-anchored buckets cover the
+  -- whole min..max span. floor() keeps negative scores sane (a -40
+  -- anchors the first bucket at -50).
+  chosen as (
+    select
+      w.width,
+      floor(agg.min_score::numeric / w.width)::int * w.width as start
+    from agg
+    cross join lateral (
+      select g.k * 50 as width
+      from generate_series(1, 200) as g(k)
+      where agg.total >= 2
+        and floor(agg.min_score::numeric / (g.k * 50))::int * (g.k * 50)
+              + 8 * (g.k * 50) > agg.max_score
+      order by g.k
+      limit 1
+    ) as w
   ),
   counts as (
     select
-      b.band,
+      chosen.start + gs.i * chosen.width as lo,
+      chosen.start + (gs.i + 1) * chosen.width - 1 as hi,
       (
         select count(*)::int
         from scores s
-        where floor(s.score / 100.0)::int = b.band
+        where s.score >= chosen.start + gs.i * chosen.width
+          and s.score < chosen.start + (gs.i + 1) * chosen.width
       ) as n
-    from bands b
+    from chosen,
+      generate_series(0, 7) as gs(i)
   )
   select jsonb_build_object(
     'bins',
     coalesce(
       (
         select jsonb_agg(
-          jsonb_build_object(
-            'lo', band * 100,
-            'hi', band * 100 + 99,
-            'count', n
-          )
-          order by band
+          jsonb_build_object('lo', lo, 'hi', hi, 'count', n)
+          order by lo
         )
         from counts
       ),
