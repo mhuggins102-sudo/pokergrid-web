@@ -15,6 +15,16 @@ export const toUTC = (iso: string): number => {
 export const toISO = (utc: number): string =>
   new Date(utc).toISOString().slice(0, 10);
 
+/**
+ * Display format for daily dates: M/D/YY, no leading zeros on month
+ * or day (2026-03-05 → 3/5/26). ISO stays the storage/URL/seed format
+ * everywhere — this is presentation only.
+ */
+export const formatDailyDate = (iso: string): string => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${m}/${d}/${String(y % 100).padStart(2, '0')}`;
+};
+
 /** Every published date from `todayISO` back to `earliestISO`, newest first. */
 export const datesBack = (todayISO: string, earliestISO: string): string[] => {
   const base = toUTC(todayISO);

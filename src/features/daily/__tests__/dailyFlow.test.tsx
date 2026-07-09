@@ -54,8 +54,9 @@ describe('daily flow', () => {
   it('plays a past date: intro → seeded game → recorded locally + queued', async () => {
     renderAt(`/daily/${DATE}`);
 
-    // Intro card shows the recipe, then starts the seeded game.
-    expect(screen.getByText(DATE)).toBeInTheDocument();
+    // Intro card shows the recipe (date in display format), then
+    // starts the seeded game.
+    expect(screen.getByText('6/1/26')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Play' }));
     expect(screen.getByRole('grid', { name: 'Game board' })).toBeInTheDocument();
 
@@ -123,6 +124,30 @@ describe('daily flow', () => {
     // Every date back to the 2026-03-01 launch, all playable when
     // nothing's been played.
     expect(screen.getAllByText('Play').length).toBeGreaterThanOrEqual(40);
+  });
+
+  it("a played row's score cell opens the day's leaderboard in place", () => {
+    // Store a play by finishing the date, then visit the archive.
+    const view = renderAt(`/daily/${DATE}`);
+    fireEvent.click(view.getByRole('button', { name: 'Play' }));
+    for (let i = 0; i < 30; i++) {
+      const place = view.queryByRole('button', { name: 'Place' });
+      if (!place) break;
+      fireEvent.click(place);
+    }
+    view.unmount();
+
+    renderAt('/daily/archive');
+    // The played row splits: date side is still the result link, the
+    // score cell is a button that opens the leaderboard popup here.
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Leaderboard — 6/1/26' })
+    );
+    // The popup opens right here (title text, not just the button's
+    // label) with the sheet's body (stats/histogram fetches are
+    // network-dependent; the screen-name editor is not).
+    expect(screen.getByText('Leaderboard — 6/1/26')).toBeInTheDocument();
+    expect(screen.getByLabelText('Screen name')).toBeInTheDocument();
   });
 
   it('future dates bounce to today', () => {
