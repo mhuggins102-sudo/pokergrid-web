@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { createBrowserRouter } from 'react-router';
 
 import { AppLayout } from './AppLayout';
+import { RouteError } from './RouteError';
 import { HomePage } from '../features/home/HomePage';
 import { NotFoundPage } from '../features/home/NotFoundPage';
 
@@ -89,6 +90,10 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
+    // Chunk-load failures after a redeploy self-heal here (one auto
+    // reload); everything else gets a friendly reload card instead of
+    // the router's developer error page.
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <HomePage /> },
       { path: 'play', element: page(<PlayPage />) },

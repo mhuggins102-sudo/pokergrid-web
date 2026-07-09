@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="paper">
+<html lang="en" data-theme="paper-dark">
   <head>
     <meta charset="UTF-8" />
     <!-- Pre-paint theme stamp so the first frame doesn't flash the wrong
@@ -24,20 +24,47 @@
                 : 'light';
         }
         if (!fam) {
-          // No stored choice at all — the new-player default.
+          // No stored choice at all — the new-player default
+          // (mirrors DEFAULT_SETTINGS: Morning Paper, dark).
           fam = 'paper';
-          app = 'light';
+          app = 'dark';
         }
         var dark =
           app === 'dark' ||
           (app !== 'light' &&
             matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.dataset.theme =
-          (fam === 'paper' ? 'paper' : 'card-room') + (dark ? '-dark' : '');
+        var theme = (fam === 'paper' ? 'paper' : 'card-room') + (dark ? '-dark' : '');
+        document.documentElement.dataset.theme = theme;
+        // Browser chrome follows the theme's paper surface from the
+        // first frame too (useApplyTheme owns it after boot).
+        var surfaces = {
+          paper: '#faf7f1',
+          'paper-dark': '#17150f',
+          'card-room': '#faf8f2',
+          'card-room-dark': '#131210',
+        };
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta && surfaces[theme]) meta.setAttribute('content', surfaces[theme]);
       } catch (e) {
         /* keep the static fallback */
       }
     </script>
+    <!-- Pre-CSS backgrounds so a slow (or failed) stylesheet never
+         flashes a white page — each theme's --paper surface, inline. -->
+    <style>
+      html {
+        background: #faf7f1;
+      }
+      html[data-theme='paper-dark'] {
+        background: #17150f;
+      }
+      html[data-theme='card-room'] {
+        background: #faf8f2;
+      }
+      html[data-theme='card-room-dark'] {
+        background: #131210;
+      }
+    </style>
     <!-- viewport-fit=cover extends the layout under notch/home-indicator
          areas so env(safe-area-inset-*) resolves to real values — the
          dock and sheets pad with it. Without the flag it's always 0. -->
@@ -49,7 +76,9 @@
       name="description"
       content="PokerGrid — a daily 5×5 poker solitaire puzzle. Place cards, build ten poker hands, beat the target."
     />
-    <meta name="theme-color" content="#faf7f1" />
+    <!-- Static fallback = the paper-dark default; the pre-paint script
+         above and useApplyTheme keep it matched to the live theme. -->
+    <meta name="theme-color" content="#17150f" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
     <title>PokerGrid</title>
