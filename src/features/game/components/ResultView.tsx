@@ -234,10 +234,11 @@ export function ResultView({ onReplay }: ResultViewProps) {
             ? 'Target beaten'
             : 'Target missed';
 
+  // Challenges use the shared default line — "target N · hard", same
+  // wording as every other mode (the verdict already names the
+  // challenge).
   const contextLine =
-    mode.kind === 'challenge'
-      ? `goal ${state.target} · hard ruleset`
-      : mode.kind === 'targets'
+    mode.kind === 'targets'
         ? `level ${mode.level} · target ${state.target} · ${state.difficulty}`
         : mode.kind === 'daily'
           ? // No date here — it lives in the leaderboard sheet's title
