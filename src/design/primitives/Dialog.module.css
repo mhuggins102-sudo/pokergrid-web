@@ -5,6 +5,11 @@
   color: var(--ink);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--hairline);
+  /* Dialogs inherit text-align from wherever they're MOUNTED — a
+     sheet opened from inside the centered result hero came out fully
+     centered. A dialog is its own surface: always start left-set;
+     content that wants centering opts in itself. */
+  text-align: left;
 }
 
 .dialog::backdrop {

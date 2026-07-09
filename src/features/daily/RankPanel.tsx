@@ -334,30 +334,35 @@ function DayStatsSheet({
         {top5.length > 0 && (
           <div>
             <h3 className="text-section">Top scores</h3>
-            {top5.map(t => (
-              <div
-                key={`${t.rank}-${t.displayName}`}
-                className={`${styles.topRow} ${t.isOwn ? styles.own : ''}`}
-              >
-                <span>#{t.rank}</span>
-                <span>{t.displayName}</span>
-                <span>{t.score}</span>
-              </div>
-            ))}
-            {ownRow && (
-              <>
-                {ownRow.rank > top5.length + 1 && (
-                  <div className={styles.topGap} aria-hidden="true">
-                    ⋯
-                  </div>
-                )}
-                <div className={`${styles.topRow} ${styles.own}`}>
-                  <span>#{ownRow.rank}</span>
-                  <span>{ownRow.displayName}</span>
-                  <span>{ownRow.score}</span>
+            {/* One grid for the whole table (rows are subgrids), so
+                the rank/name/score columns align across rows while
+                still hugging their content. */}
+            <div className={styles.topTable}>
+              {top5.map(t => (
+                <div
+                  key={`${t.rank}-${t.displayName}`}
+                  className={`${styles.topRow} ${t.isOwn ? styles.own : ''}`}
+                >
+                  <span>#{t.rank}</span>
+                  <span>{t.displayName}</span>
+                  <span>{t.score}</span>
                 </div>
-              </>
-            )}
+              ))}
+              {ownRow && (
+                <>
+                  {ownRow.rank > top5.length + 1 && (
+                    <div className={styles.topGap} aria-hidden="true">
+                      ⋯
+                    </div>
+                  )}
+                  <div className={`${styles.topRow} ${styles.own}`}>
+                    <span>#{ownRow.rank}</span>
+                    <span>{ownRow.displayName}</span>
+                    <span>{ownRow.score}</span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 
