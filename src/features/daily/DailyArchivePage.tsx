@@ -9,6 +9,8 @@ import { DAILY_LAUNCH_ISO, datesBack, formatDailyDate } from './dailyDates';
 import { DailyPlay, usePlaysStore } from './sync/playsStore';
 import { useArchiveRank } from './sync/useDailyRank';
 import { DayStatsSheet } from './RankPanel';
+import { DailyArchiveDesk } from './DailyArchiveDesk';
+import { useIsDesktop } from '../game/useIsDesktop';
 import styles from './DailyArchivePage.module.css';
 
 /**
@@ -45,6 +47,9 @@ function PlayedCell({
 
 /** /daily/archive — every published daily, play or revisit. */
 export function DailyArchivePage() {
+  // ≥1024px renders the desktop-redesign month list + day detail;
+  // below the breakpoint the phone archive is untouched.
+  const isDesktop = useIsDesktop();
   const plays = usePlaysStore(s => s.plays);
   const today = currentDateISO();
   const dates = datesBack(today, DAILY_LAUNCH_ISO);
@@ -57,6 +62,8 @@ export function DailyArchivePage() {
     date: DAILY_LAUNCH_ISO,
     open: false,
   });
+
+  if (isDesktop) return <DailyArchiveDesk />;
 
   return (
     <section className={styles.wrap}>

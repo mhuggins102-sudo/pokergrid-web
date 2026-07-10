@@ -1,0 +1,296 @@
+/* Desktop (≥1024px) daily intro — the mockup's newspaper masthead
+   article (design-refs/desktop/Daily.dc.html). Rendered only by
+   DailyDay's desktop fork. */
+
+.wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 0 40px;
+}
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+/* ---- Masthead ---- */
+
+.masthead {
+  text-align: center;
+  padding: 30px 36px 22px;
+  border-bottom: 3px double var(--ink);
+}
+
+.issue {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  margin: 5px 0 9px;
+  color: var(--ink);
+}
+
+.dateline {
+  font-size: 12.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-2);
+}
+
+.body {
+  padding: 28px 36px 32px;
+}
+
+/* ---- Briefing row ---- */
+
+.briefing {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.brief {
+  display: block;
+  background: var(--paper-sunken);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.briefLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.briefDiff {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  text-transform: capitalize;
+}
+
+.briefDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.briefValue {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  color: var(--ink);
+}
+
+.briefNote {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* ---- Twist ---- */
+
+.twist {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--warn) 8%, var(--paper-raised));
+  border-radius: 12px;
+}
+
+.twistIcon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--warn);
+  color: var(--on-accent, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+}
+
+.twistHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.twistKicker {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warn);
+}
+
+.twistName {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 680;
+  color: var(--ink);
+}
+
+.twistGoal {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* ---- Streak ---- */
+
+.streak {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 14px 18px;
+  background: var(--paper-sunken);
+  border-radius: 12px;
+}
+
+.streakLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.streakFlame {
+  font-size: 22px;
+}
+
+.streakTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.streakSub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.week {
+  display: flex;
+  gap: 5px;
+}
+
+.weekDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Missed / not-yet days: hollow dot on a rule ring. */
+.weekDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--paper-raised);
+  border: 2px solid var(--rule);
+}
+
+.weekDotPlayed {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Today, still open: transparent with a warn ring. */
+.weekDotToday {
+  background: transparent;
+  border-color: var(--warn);
+}
+
+.weekLabel {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+/* ---- CTA ---- */
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 22px;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  border: none;
+  border-radius: 13px;
+  padding: 17px;
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+@media (hover: hover) {
+  .cta:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.archiveRow {
+  text-align: center;
+  margin-top: 18px;
+}
+
+.archiveLink {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .archiveLink:hover {
+    color: var(--ink);
+  }
+}

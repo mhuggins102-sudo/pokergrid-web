@@ -11,6 +11,8 @@ import { GameSessionProvider } from '../game/GameSessionProvider';
 import { GameScreen } from '../game/GameScreen';
 import { usePlaysStore } from './sync/playsStore';
 import { DailyResultStatic } from './DailyResultStatic';
+import { DailyIntroDesk } from './DailyIntroDesk';
+import { useIsDesktop } from '../game/useIsDesktop';
 import { formatDailyDate } from './dailyDates';
 import styles from './DailyDay.module.css';
 
@@ -20,6 +22,10 @@ import styles from './DailyDay.module.css';
  * seeded game. Every player worldwide gets the same deal for a date.
  */
 export function DailyDay({ dateISO }: { dateISO: string }) {
+  // ≥1024px renders the newspaper-masthead intro from the desktop
+  // redesign instead of the phone intro card; the played result and
+  // the game itself are shared across breakpoints.
+  const isDesktop = useIsDesktop();
   const play = usePlaysStore(s => s.plays[dateISO]);
   // Entry-time snapshot, NOT a live check: finishing the puzzle during
   // this visit saves the play, and swapping to the static view then
@@ -88,6 +94,24 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
     );
   }
 
+  const startPlay = () => {
+    if (twist && !twistSeen(twist.id)) setTwistInfoOpen(true);
+    setStarted(true);
+  };
+
+  if (isDesktop) {
+    return (
+      <DailyIntroDesk
+        dateISO={dateISO}
+        recipe={recipe}
+        twist={twist}
+        twistGoal={twistGoal}
+        target={target}
+        onPlay={startPlay}
+      />
+    );
+  }
+
   return (
     <section className={styles.intro}>
       <div className={styles.card}>
@@ -112,10 +136,7 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
           <Button
             variant="primary"
             size="lg"
-            onClick={() => {
-              if (twist && !twistSeen(twist.id)) setTwistInfoOpen(true);
-              setStarted(true);
-            }}
+            onClick={startPlay}
           >
             Play
           </Button>
