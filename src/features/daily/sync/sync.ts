@@ -34,11 +34,16 @@ const realDeps: DrainDeps = {
     }),
 };
 
-/** Drain the queue; on any confirmed submit, refresh rank queries. */
+/** Drain the queue; on any confirmed submit, refresh every query that
+ *  reflects the field — rank, but also the top-5 list and the histogram
+ *  bands, which otherwise keep showing the pre-submit snapshot (the
+ *  player's own score missing from both). */
 export const drainQueue = () =>
   drainGuarded(realDeps, r => {
     if (r.anySubmitted) {
       void queryClient.invalidateQueries({ queryKey: ['daily-rank'] });
+      void queryClient.invalidateQueries({ queryKey: ['daily-stats'] });
+      void queryClient.invalidateQueries({ queryKey: ['daily-histogram'] });
     }
   });
 
