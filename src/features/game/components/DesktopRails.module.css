@@ -5,6 +5,8 @@
    here needs a media query. */
 
 .panel {
+  /* Positioned: the hand-values / leaderboard fly-outs anchor here. */
+  position: relative;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   border-radius: 14px;
@@ -61,6 +63,96 @@
 }
 
 /* ---------------- SCORING ---------------- */
+
+/* Hand-values reference fly-out: hover/focus on the header's ⓘ opens
+   it beside the panel (same geometry family as the leaderboard pop).
+   The popover is a DOM child of the wrap, so pointing into it (to
+   scroll) keeps it open; absolute position resolves to .panel. */
+.handsWrap {
+  display: inline-flex;
+}
+
+.handsPop {
+  position: absolute;
+  left: calc(100% + 16px);
+  top: 0;
+  width: 280px;
+  max-height: 70vh;
+  overflow: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 15px 16px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-6px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+  z-index: 25;
+}
+
+@media (hover: hover) {
+  .handsWrap:hover .handsPop {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+}
+
+.handsWrap:focus-within .handsPop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.handsTitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-2);
+}
+
+.handsRows {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.handsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.handsRow:last-child {
+  border-bottom: none;
+}
+
+.handsRow b {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.handsBoost {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.handsPenalty,
+.handsPenalty b {
+  color: var(--danger);
+}
 
 .lineRows {
   display: flex;
@@ -289,11 +381,19 @@
   border: 1px solid transparent;
 }
 
-/* Gold multiplier applies. */
+/* Gold multiplier applies to a MADE hand. */
 .pillGold {
   background: var(--warn);
   border-color: var(--warn);
   color: var(--on-accent, #fff);
+}
+
+/* Gold multiplier would boost the FORMING hand — dashed = forming,
+   gold = multiplied (user refinement over the mockup). */
+.pillGoldPotential {
+  background: transparent;
+  border: 1px dashed var(--warn);
+  color: var(--warn);
 }
 
 /* Completed scoring hand, no gold multiplier. */

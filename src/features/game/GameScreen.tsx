@@ -54,6 +54,7 @@ import { InvestWheel } from './components/InvestWheel';
 import { HandValuesDialog } from './components/HandValuesDialog';
 import { ReviveSheet } from './components/ReviveSheet';
 import { ResultView } from './components/ResultView';
+import { BonusDrawModal } from './components/BonusDrawModal';
 import { DesktopResultDialog } from './components/DesktopResultDialog';
 import styles from './GameScreen.module.css';
 
@@ -576,7 +577,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       // alone didn't purge the stale projection). Mid-draw resizes are
       // pure CSS while every layoutId is stripped, so no per-size
       // remount is needed.
-      key={bonusOpen ? 'board-bonus' : 'board-full'}
+      // The remount exists for the MOBILE resize on the club toggle —
+      // the desktop board never changes size for the draw (it's a
+      // modal there), so remounting would only replay entrances.
+      key={!isDesktop && bonusOpen ? 'board-bonus' : 'board-full'}
       grid={state.grid}
       roleOf={boardRole}
       isTappable={idx =>
@@ -744,6 +748,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             )
         : undefined,
       hoverOutline: idx => ui.isTappable(idx) || boardRole(idx) === 'next',
+      // The pulsing next slot names its action (mockup line 746).
+      nextSlotLabel: 'PLACE',
       // The finished board stays explorable: seated cards keep the
       // spotlight tap and (being enabled) their hover affordance.
       ...(finished
@@ -762,7 +768,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <ScoringPanel
                 report={activeReport}
                 onLineTap={setDetailLine}
-                onShowHandValues={() => setHandsOpen(true)}
+                investBoost={state.investHands ? state.handBoost : undefined}
                 bonusCards={state.bonusCards}
                 handBoost={state.handBoost}
                 endgame={endgame}
@@ -803,21 +809,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 <div className={styles.deskCoach}>{coach}</div>
               )}
               <section className={styles.deskDock} aria-label="Deck and actions">
-                {ui.bonusDialog ? (
-                  // ♣ draw takes over the deck panel, board untouched.
-                  <BonusResolvePanel ui={ui.bonusDialog} />
-                ) : finished ? (
+                {finished ? (
                   // Game over, dialog dismissed via View Grid: the dock
-                  // offers the way back in (and the replay).
+                  // offers only the way back in (and the replay).
                   <div className={styles.deskDockStage}>
-                    <NextCardWell
-                      onPeekDeck={() => {}}
-                      instantLayout={instantLayout}
-                      stacked
-                      meta="deck"
-                      peek="hover"
-                      flight={flight}
-                    />
                     <div className={styles.deskActions}>
                       <Button
                         variant="primary"
@@ -910,6 +905,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           </div>
         </LayoutGroup>
         {overlays}
+        {ui.bonusDialog && <BonusDrawModal ui={ui.bonusDialog} />}
         {finished && (
           <DesktopResultDialog
             open={resultOpen}

@@ -62,6 +62,10 @@ export interface GridBoardProps {
    *  cells) get a hover outline (the mockup's .placeable), gated
    *  behind @media (hover: hover) in CSS. */
   hoverOutline?: (idx: number) => boolean;
+  /** Desktop: centered text inside the pulsing next slot (the
+   *  mockup's "PLACE"). Follows the role — a staged flight suppresses
+   *  the 'next' role and this label with it. */
+  nextSlotLabel?: string;
 }
 
 const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
@@ -148,6 +152,7 @@ export function GridBoard({
   hoverState,
   onCellHover,
   hoverOutline,
+  nextSlotLabel,
 }: GridBoardProps) {
   const dealOrder = [...openingDeal];
   const spotRow = spotlight ? Math.floor(spotlight.idx / GRID_SIZE) : -1;
@@ -244,6 +249,11 @@ export function GridBoard({
                   </motion.div>
                 ))}
             </AnimatePresence>
+            {!card && role === 'next' && nextSlotLabel !== undefined && (
+              <span className={styles.nextLabel} aria-hidden="true">
+                {nextSlotLabel}
+              </span>
+            )}
           </button>
         );
       })}

@@ -111,8 +111,58 @@
   border-bottom: 1px solid var(--hairline);
 }
 
-.rowLast {
+/* "Lines subtotal" accordion — the dialog's compact take on
+   ResultView's scoreMath details row. */
+.linesDetails {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.linesSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.linesSummary::-webkit-details-marker {
+  display: none;
+}
+
+.linesSummary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.summaryCaret {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 11px;
+  color: var(--ink-3);
+  transition: transform 140ms ease;
+}
+
+.linesDetails[open] .summaryCaret {
+  transform: rotate(90deg);
+}
+
+.linesBody {
+  padding: 2px 0 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.rowTotal {
   border-bottom: none;
+}
+
+.rowTotal span {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .rowLabel {
@@ -186,14 +236,16 @@
 .primaryBtn,
 .ghostBtn {
   flex: 1;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 11px;
-  padding: 13px;
+  padding: 13px 8px;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   text-decoration: none;
   transition:
@@ -222,30 +274,7 @@
 }
 
 .primaryBtn:focus-visible,
-.ghostBtn:focus-visible,
-.shareLink:focus-visible {
+.ghostBtn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-
-/* Quiet share affordance under the buttons — subordinate by design. */
-.shareRow {
-  margin-top: 14px;
-  text-align: center;
-}
-
-.shareLink {
-  border: none;
-  background: transparent;
-  padding: 2px 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-3);
-  cursor: pointer;
-}
-
-@media (hover: hover) {
-  .shareLink:hover {
-    color: var(--accent);
-  }
 }
