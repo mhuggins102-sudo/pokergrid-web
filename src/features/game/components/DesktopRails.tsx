@@ -375,26 +375,45 @@ export function DailyLeaderboardPanel({
   if (!backend) return null;
 
   const top = stats.data?.topScores ?? [];
-  const top5 = top.slice(0, 5);
-  const bins = histo.data?.bins ?? [];
-  const maxCount = Math.max(1, ...bins.map(b => b.count));
-
   const own = finished ? (rank.data?.score ?? finalScore) : undefined;
-  // The player's own standing row, appended after the top 5 once the
-  // run is finished (mirrors RankPanel's top5 + ownRow pattern).
-  const ownRow = !finished
-    ? null
-    : top5.some(t => t.isOwn)
-      ? null
-      : (top.find(t => t.isOwn) ??
-        (rank.data
-          ? {
-              rank: rank.data.rank,
-              displayName: localStorage.getItem(KEY_HANDLE) ?? 'you',
-              score: rank.data.score,
-              isOwn: true,
-            }
-          : null));
+
+  // The player's own standing once the run is finished. The top-5 list
+  // refetches after the submit lands, but until it does (or if the two
+  // snapshots disagree) the row is synthesized from the rank RPC — and
+  // SEATED AT ITS RANK: a top-5 own score splices into position rather
+  // than dangling under scores it beat; only ranks past #5 append below
+  // (RankPanel's top5 + ownRow pattern).
+  let top5 = top.slice(0, 5);
+  let ownRow: (typeof top)[number] | null = null;
+  if (finished && !top5.some(t => t.isOwn)) {
+    const synthesized = top.find(t => t.isOwn) ??
+      (rank.data
+        ? {
+            rank: rank.data.rank,
+            displayName: localStorage.getItem(KEY_HANDLE) ?? 'you',
+            score: rank.data.score,
+            isOwn: true,
+          }
+        : null);
+    if (synthesized !== null) {
+      if (synthesized.rank <= 5) {
+        top5 = [...top5];
+        top5.splice(synthesized.rank - 1, 0, synthesized);
+        top5 = top5.slice(0, 5);
+      } else {
+        ownRow = synthesized;
+      }
+    }
+  }
+
+  const bins = histo.data?.bins ?? [];
+  // The player's bar must never read as absent: while the histogram
+  // snapshot predates their submit, their bin counts them anyway.
+  const binCount = (b: (typeof bins)[number]): number =>
+    own !== undefined && own >= b.lo && own <= b.hi
+      ? Math.max(b.count, 1)
+      : b.count;
+  const maxCount = Math.max(1, ...bins.map(binCount));
 
   const note =
     finished && rank.data
@@ -458,12 +477,12 @@ export function DailyLeaderboardPanel({
                 <div
                   key={i}
                   className={styles.histSlot}
-                  title={`${b.lo}–${b.hi}: ${b.count}${isOwn ? ' · you' : ''}`}
+                  title={`${b.lo}–${b.hi}: ${binCount(b)}${isOwn ? ' · you' : ''}`}
                 >
                   <div
                     className={`${styles.histBar} ${isOwn ? styles.histBarOwn : ''}`}
                     style={{
-                      height: `${Math.max(6, (b.count / maxCount) * 100)}%`,
+                      height: `${Math.max(6, (binCount(b) / maxCount) * 100)}%`,
                     }}
                   />
                 </div>

@@ -62,12 +62,25 @@ const LINKS = [
   { to: '/settings', label: 'Settings' },
 ];
 
-// "Thu · Jul 10" — the masthead dateline next to the wordmark.
-const dateline = (): string => {
-  const now = new Date();
-  const wk = now.toLocaleDateString('en-US', { weekday: 'short' });
-  const md = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const fmtDateline = (d: Date): string => {
+  const wk = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const md = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   return `${wk} · ${md}`;
+};
+
+// The masthead dateline next to the wordmark ("Thu · Jul 10"): inside
+// an archived daily it names THAT puzzle's date, free play is labeled
+// per the mockup, everywhere else it's today.
+const dateline = (pathname: string): string => {
+  const daily = /^\/daily\/(\d{4})-(\d{2})-(\d{2})$/.exec(pathname);
+  if (daily) {
+    // Construct from parts — new Date('YYYY-MM-DD') parses as UTC
+    // midnight and shifts a day west of Greenwich.
+    const [, y, m, d] = daily;
+    return fmtDateline(new Date(+y, +m - 1, +d));
+  }
+  if (pathname.startsWith('/play')) return 'Free Play';
+  return fmtDateline(new Date());
 };
 
 export function DesktopNav() {
@@ -90,7 +103,7 @@ export function DesktopNav() {
         <NavLink to="/" className={styles.wordmark}>
           PokerGrid
         </NavLink>
-        <span className={styles.dateline}>{dateline()}</span>
+        <span className={styles.dateline}>{dateline(pathname)}</span>
       </div>
       <nav className={styles.center} aria-label="Primary">
         <div className={styles.modesWrap} tabIndex={0}>
