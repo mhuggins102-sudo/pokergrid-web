@@ -1,0 +1,597 @@
+/* Desktop (≥1024px) rail panels + board edge chips, styled per the
+   redesign mockup (design-refs/desktop/Play.dc.html): raised cards
+   with a 14px radius and hairline border; uppercase letterspaced
+   panel headers. Only rendered by the desktop layout fork, so nothing
+   here needs a media query. */
+
+.panel {
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-2);
+}
+
+.headNote {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.headBtn {
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+}
+
+.headBtn:hover {
+  color: var(--ink);
+}
+
+.headBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.emptyNote {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* ---------------- SCORING ---------------- */
+
+.lineRows {
+  display: flex;
+  flex-direction: column;
+  margin: 2px -8px 0;
+}
+
+.lineRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-bottom: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+@media (hover: hover) {
+  .lineRow:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+}
+
+.lineRow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.lineTag {
+  flex: none;
+  width: 24px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.lineStatus {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.lineMuted {
+  color: var(--ink-3);
+}
+
+.lineMult {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.linePts {
+  flex: none;
+  min-width: 30px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.linePtsNeg {
+  color: var(--danger);
+}
+
+.subRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.subPts {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.endgameLabel {
+  color: var(--joker);
+}
+
+.totalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0 2px;
+  margin-top: 6px;
+  border-top: 2px solid var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.totalPts {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.totalPtsPos {
+  color: var(--accent);
+}
+
+/* ---------------- Board edge chips ---------------- */
+
+/* Row chips ride the RIGHT edge, column chips sit BELOW — the mockup's
+   arrangement (mobile LineRails keeps left+bottom). Gaps reuse
+   --board-gap so chips track their lines exactly. minmax(0, 1fr) lets
+   the board column shrink below the chips' min-content sum. */
+.edgeWrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: var(--board-gap);
+  width: 100%;
+}
+
+.edgeBoard {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.edgeRows {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  gap: var(--board-gap);
+  align-items: center;
+}
+
+.edgeCols {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--board-gap);
+  justify-items: center;
+}
+
+.chip {
+  min-width: 36px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+@media (hover: hover) {
+  .chip:hover {
+    background: var(--paper-raised);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.chipPos {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 45%, transparent);
+}
+
+.chipNeg {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+/* Spotlight: the tapped card's row + column chips light up. */
+.chipLit {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  background: var(--paper-raised);
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* ---------------- LEADERBOARD ---------------- */
+
+/* Fixed-footprint body: the top-5 list sizes it; the histogram is an
+   absolutely-stacked layer that crossfades in on panel hover. */
+.lbBody {
+  position: relative;
+  margin-top: 10px;
+  min-height: 148px;
+}
+
+.lbLayer {
+  transition: opacity 180ms ease;
+}
+
+.lbHistLayer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lbFaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lbRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.lbOwn {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.lbOwn .lbName,
+.lbOwn .lbScore {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.lbRank {
+  flex: none;
+  width: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.lbName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.lbScore {
+  flex: none;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.histTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.histBars {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.histSlot {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.histBar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 3px 3px 0 0;
+  background: color-mix(in srgb, var(--ink-3) 32%, var(--paper-sunken));
+}
+
+.histLabels {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.histLabels > span {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+/* ---------------- STATS ---------------- */
+
+.chartToggle {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.chartBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+@media (hover: hover) {
+  .chartBtn:hover {
+    color: var(--ink);
+  }
+}
+
+.chartBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.chartBtnOn {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.statCells {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: 12px;
+}
+
+.statCell {
+  flex: 1;
+  min-width: 0;
+  background: var(--paper-sunken);
+  border-radius: 9px;
+  padding: 9px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.statLabel {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+
+.expand {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.expandTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  margin-bottom: 5px;
+}
+
+.tierRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.tierName {
+  flex: none;
+  width: 26px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tierTrack {
+  flex: 1;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--paper-sunken);
+  overflow: hidden;
+}
+
+.tierFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}
+
+.tierCount {
+  flex: none;
+  width: 20px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+/* ---------------- BONUS CARDS ---------------- */
+
+.bonusList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.bonusEntry {
+  position: relative;
+  border: 1px solid var(--entry-tone, var(--rule));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--entry-tone, var(--rule)) 8%, var(--paper-raised));
+  padding: 10px 13px 11px;
+  transition: box-shadow 140ms ease;
+}
+
+@media (hover: hover) {
+  .bonusEntry:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.bonusDim {
+  opacity: 0.55;
+}
+
+.bonusMain {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bonusMain:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-xs);
+}
+
+.bonusTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--entry-tone, var(--ink));
+}
+
+.bonusMult {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.bonusValue {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.bonusUse {
+  width: 100%;
+  margin-top: 9px;
+}
