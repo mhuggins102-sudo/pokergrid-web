@@ -9,7 +9,7 @@ import { useRecordResult } from '../../progress/useRecordResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { HandleEditor } from '../../daily/RankPanel';
 import { KEY_HANDLE } from '../../daily/sync/deviceId';
-import { HAND_LABEL } from '../handLabels';
+import { LinesPanel } from './LinesPanel';
 import { TIER_RULES } from './TierBreakdownSheet';
 import styles from './DesktopResultDialog.module.css';
 
@@ -81,14 +81,6 @@ export function DesktopResultDialog({
     () => !!localStorage.getItem(KEY_HANDLE)
   );
 
-  const scoredLines = report.lines.filter(
-    l => l.hand && l.hand !== 'HIGH_CARD'
-  ).length;
-  const best = report.lines.reduce(
-    (b, l) => (b === null || l.total > b.total ? l : b),
-    null as (typeof report.lines)[number] | null
-  );
-
   const onShare = async () => {
     const url = buildShareUrl({
       score: report.total,
@@ -127,24 +119,48 @@ export function DesktopResultDialog({
             </span>
             <span className={styles.target}>/ {state.target}</span>
           </div>
+          {/* Score math, mirroring ResultView's summary: the lines
+              subtotal expands into the full 10-line breakdown. */}
           <div className={styles.rows}>
-            <div className={styles.row}>
-              <span className={styles.rowLabel}>Lines scored</span>
-              <span className={styles.rowValue}>{scoredLines} / 10</span>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.rowLabel}>Incomplete-line penalty</span>
-              <span className={`${styles.rowValue} ${styles.rowDanger}`}>
-                {report.incompletePenalty === 0
-                  ? '0'
-                  : String(report.incompletePenalty)}
-              </span>
-            </div>
-            <div className={`${styles.row} ${styles.rowLast}`}>
-              <span className={styles.rowLabel}>Best line</span>
-              <span className={styles.rowValue}>
-                {best?.hand ? HAND_LABEL[best.hand] : '—'}
-              </span>
+            <details className={styles.linesDetails}>
+              <summary className={styles.linesSummary}>
+                <span className={styles.rowLabel}>
+                  <span className={styles.summaryCaret} aria-hidden="true">
+                    ▸
+                  </span>
+                  Lines subtotal
+                </span>
+                <span className={styles.rowValue}>{report.subtotal}</span>
+              </summary>
+              <div className={styles.linesBody}>
+                <LinesPanel report={report} bare />
+              </div>
+            </details>
+            {report.incompletePenalty !== 0 && (
+              <div className={styles.row}>
+                <span className={styles.rowLabel}>Unfinished lines</span>
+                <span className={`${styles.rowValue} ${styles.rowDanger}`}>
+                  {report.incompletePenalty}
+                </span>
+              </div>
+            )}
+            {report.gridMultiplier !== 1 && (
+              <div className={styles.row}>
+                <span className={styles.rowLabel}>Grid multiplier</span>
+                <span className={styles.rowValue}>
+                  ×{report.gridMultiplier.toFixed(2)}
+                </span>
+              </div>
+            )}
+            {report.gridFlat !== 0 && (
+              <div className={styles.row}>
+                <span className={styles.rowLabel}>Grid flat bonus</span>
+                <span className={styles.rowValue}>+{report.gridFlat}</span>
+              </div>
+            )}
+            <div className={`${styles.row} ${styles.rowTotal}`}>
+              <span>Total</span>
+              <span>{report.total}</span>
             </div>
           </div>
           {newAchievements.length > 0 && (
@@ -188,17 +204,15 @@ export function DesktopResultDialog({
                 Play Again
               </button>
             )}
+            <button type="button" className={styles.ghostBtn} onClick={onShare}>
+              Share result
+            </button>
             <button
               type="button"
               className={styles.ghostBtn}
               onClick={onViewGrid}
             >
               View Grid
-            </button>
-          </div>
-          <div className={styles.shareRow}>
-            <button type="button" className={styles.shareLink} onClick={onShare}>
-              Share result
             </button>
           </div>
         </div>

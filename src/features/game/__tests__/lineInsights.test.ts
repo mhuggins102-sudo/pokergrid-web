@@ -47,10 +47,20 @@ describe('cardLineMult / cardFiresOnLine', () => {
     expect(cardFiresOnLine(crossroads, line, lines)).toBe(true);
   });
 
-  test('hand-type card (Pair ×4) does NOT fire on an incomplete pair', () => {
+  test('hand-type card (Pair ×4) fires on a FORMING pair', () => {
     const g = emptyGrid();
     place(g, 0, C('8', 'H'));
     place(g, 1, C('8', 'S'));
+    const pair = findCard('hand-pair-x4');
+    const { line, lines } = lineOf(g, [pair], 'row', 0);
+    expect(cardLineMult(pair, line, lines)).toBe(4);
+    expect(cardFiresOnLine(pair, line, lines)).toBe(true);
+  });
+
+  test('hand-type card stays quiet while the partial makes nothing', () => {
+    const g = emptyGrid();
+    place(g, 0, C('8', 'H'));
+    place(g, 1, C('K', 'S'));
     const pair = findCard('hand-pair-x4');
     const { line, lines } = lineOf(g, [pair], 'row', 0);
     expect(cardLineMult(pair, line, lines)).toBe(1);
@@ -89,7 +99,7 @@ describe('linePotential', () => {
     });
   });
 
-  test('partial pair with gold location multiplier → gold chip, boosted potential', () => {
+  test('partial pair + location multiplier → DASHED gold, boosted potential', () => {
     const g = emptyGrid();
     place(g, 10, C('8', 'H')); // row 3
     place(g, 11, C('8', 'S'));
@@ -97,7 +107,26 @@ describe('linePotential', () => {
     const { line, lines } = lineOf(g, [crossroads], 'row', 2);
     const p = linePotential(line, [crossroads], lines);
     // Pair base 5 × 1.5 = 7.5 → ceil 8, mirroring the mockup's formula.
-    expect(p).toMatchObject({ tone: 'gold', label: '+8', name: 'Pair', mult: 1.5 });
+    expect(p).toMatchObject({
+      tone: 'goldPotential',
+      label: '+8',
+      name: 'Pair',
+      mult: 1.5,
+    });
+  });
+
+  test('forming pair + held Pair ×4 → DASHED gold with the hand-keyed mult', () => {
+    const g = emptyGrid();
+    place(g, 0, C('8', 'H'));
+    place(g, 1, C('8', 'S'));
+    const pair = findCard('hand-pair-x4');
+    const { line, lines } = lineOf(g, [pair], 'row', 0);
+    expect(linePotential(line, [pair], lines)).toMatchObject({
+      tone: 'goldPotential',
+      label: '+20', // ceil(5 × 4)
+      name: 'Pair',
+      mult: 4,
+    });
   });
 
   test('partial pair without multipliers → dashed potential', () => {

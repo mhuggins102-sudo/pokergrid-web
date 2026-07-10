@@ -176,6 +176,17 @@ const TONE_COLOR: Record<CategoryTone, string> = {
   green: 'var(--success)',
 };
 
+// Coarse when-does-it-pay label per tone — the ♣ draw modal's category
+// line (the desktop mockup's catLabel copy).
+const TONE_LABEL: Record<CategoryTone, string> = {
+  gold: 'In-game multiplier',
+  purple: 'End-game multiplier',
+  green: 'One-time action',
+};
+
+export const toneLabelFor = (card: BonusCard): string =>
+  TONE_LABEL[TONE_OF[categoryOf(card)]];
+
 export interface CategoryStyle {
   // Colorblind-assist glyph and its color. Callers should only render the
   // icon when settings.colorBlindAssist is on.

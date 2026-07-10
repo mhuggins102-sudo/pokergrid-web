@@ -22,20 +22,20 @@ import { HAND_LABEL, lineLabel } from './handLabels';
 // Per-card, per-line multiplier — including on INCOMPLETE lines. //
 // -------------------------------------------------------------- //
 
-// The mockup's GOLD registry fires location/card-property multipliers
-// (Crossroads, Royal Touch, suit densities, …) on partially-filled
-// lines, while hand-keyed multipliers (Pair ×4) wait for the made
-// hand. The repo's lineEffects all bail on `hand: null`, so for an
-// incomplete line we probe each effect twice with two synthetic hands:
-// an effect that fires identically under both doesn't depend on the
-// hand — exactly the mockup's split.
-const PROBE_HANDS: readonly [HandRank, HandRank] = ['PAIR', 'STRAIGHT'];
+// For an incomplete line, each effect is probed with the line's
+// PARTIAL hand substituted in (evaluatePartialLine — 'HIGH_CARD' when
+// the placed cards make nothing yet). Hand-independent multipliers
+// (Crossroads, Royal Touch, densities, …) fire as before, and
+// hand-keyed multipliers (Pair ×4) now light up while their hand is
+// FORMING — the user-refined semantics over the mockup's GOLD
+// registry. Effects only read LineContext fields (kind / index /
+// cards / hand), so the synthetic substitution stays pure.
 
 const isScoringCard = (card: BonusCard): boolean =>
   !isPlaceholder(card) && !isSpecialCard(card);
 
-/** Multiplier this card currently applies (or would apply, for an
- *  incomplete line, if the hand doesn't matter to it) on `line`. */
+/** Multiplier this card currently applies on `line` — real effect for
+ *  made lines, partial-hand probe for incomplete ones. */
 export const cardLineMult = (
   card: BonusCard,
   line: ScoredLine,
@@ -45,10 +45,10 @@ export const cardLineMult = (
   if (line.hand) {
     return card.lineEffect(line, card, allLines).multiplier ?? 1;
   }
-  const [a, b] = PROBE_HANDS.map(
-    hand => card.lineEffect!({ ...line, hand }, card, allLines).multiplier ?? 1
+  const partial = evaluatePartialLine(line.cards) ?? 'HIGH_CARD';
+  return (
+    card.lineEffect({ ...line, hand: partial }, card, allLines).multiplier ?? 1
   );
-  return a === b ? a : 1;
 };
 
 /** Product of every held in-game card's multiplier on `line`. */
@@ -70,7 +70,13 @@ export const cardFiresOnLine = (
 // Edge-chip potential (the mockup's perLine, lines 647+). //
 // ------------------------------------------------------ //
 
-export type ChipTone = 'gold' | 'made' | 'potential' | 'wip' | 'none';
+export type ChipTone =
+  | 'gold' // made hand with a gold multiplier — solid warn pill
+  | 'goldPotential' // FORMING hand a gold multiplier would boost — dashed warn
+  | 'made'
+  | 'potential'
+  | 'wip'
+  | 'none';
 
 export interface LinePotential {
   /** Pill styling per the mockup: gold / made / potential / wip / none. */
@@ -108,13 +114,16 @@ export const linePotential = (
     return { tone: 'none', label: '–', name: 'High Card', mult: 1, filled };
   }
   // Incomplete: what the current partial hand would pay if the line
-  // finished as-is, including hand-independent line multipliers.
+  // finished as-is, including every line multiplier the partial hand
+  // already triggers (hand-keyed cards probe against it). A boosted
+  // forming hand renders DASHED gold — dashed = forming, gold =
+  // multiplied.
   const partial = evaluatePartialLine(line.cards);
   const m = lineGoldMult(line, cards, allLines);
   if (partial && partial !== 'HIGH_CARD') {
     const potential = Math.ceil(effectiveHandBase(partial, handBoost) * m);
     return {
-      tone: m > 1 ? 'gold' : 'potential',
+      tone: m > 1 ? 'goldPotential' : 'potential',
       label: potential > 0 ? `+${potential}` : '–',
       name: HAND_LABEL[partial],
       mult: m > 1 ? m : 1,

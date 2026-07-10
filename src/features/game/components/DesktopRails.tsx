@@ -1,5 +1,10 @@
 import { CSSProperties, ReactNode, useMemo, useState } from 'react';
-import { ScoreReport, ScoredLine } from '../../../game/scoring';
+import {
+  HAND_BASE_VALUE,
+  INCOMPLETE_LINE_PENALTY,
+  ScoreReport,
+  ScoredLine,
+} from '../../../game/scoring';
 import { HandRank } from '../../../game/hands';
 import {
   BonusCard,
@@ -55,12 +60,28 @@ export interface LineHoverProps {
 // SCORING — the left rail's ten-line breakdown.                     //
 // ---------------------------------------------------------------- //
 
+// The ⓘ popover's hand order — highest first (HandValuesDialog's).
+const HAND_ORDER: HandRank[] = [
+  'FIVE_OF_A_KIND',
+  'ROYAL_FLUSH',
+  'STRAIGHT_FLUSH',
+  'FOUR_OF_A_KIND',
+  'FULL_HOUSE',
+  'FLUSH',
+  'STRAIGHT',
+  'THREE_OF_A_KIND',
+  'TWO_PAIR',
+  'PAIR',
+  'HIGH_CARD',
+];
+
 export interface ScoringPanelProps {
   report: ScoreReport;
   /** Row tap → that line's full scoring breakdown (LineDetailSheet). */
   onLineTap: (line: ScoredLine) => void;
-  /** The header's ⓘ — opens the hand-values reference. */
-  onShowHandValues?: () => void;
+  /** Bull Market ♣ invests — folded into (and flagged in) the ⓘ
+   *  hand-values popover, mirroring HandValuesDialog. */
+  investBoost?: Partial<Record<HandRank, number>>;
   /** Held cards — the gold mult chip shows on incomplete lines too. */
   bonusCards?: BonusCard[];
   handBoost?: Partial<Record<HandRank, number>>;
@@ -95,7 +116,7 @@ const NO_ROWS: EndgameRow[] = [];
 export function ScoringPanel({
   report,
   onLineTap,
-  onShowHandValues,
+  investBoost,
   bonusCards = [],
   handBoost,
   endgame = NO_ROWS,
@@ -105,16 +126,41 @@ export function ScoringPanel({
     <section className={styles.panel} aria-label="Scoring">
       <header className={styles.head}>
         <h2 className={styles.title}>Scoring</h2>
-        {onShowHandValues && (
+        {/* Hand-values reference: hover/focus fly-out off the panel
+            (the dialog stays mobile-only). The popover is a child of
+            the wrap, so pointing into it keeps it open (scrollable). */}
+        <span className={styles.handsWrap}>
           <button
             type="button"
             className={styles.headBtn}
-            onClick={onShowHandValues}
             aria-label="Hand values"
           >
             ⓘ
           </button>
-        )}
+          <div className={styles.handsPop} role="tooltip">
+            <span className={styles.handsTitle}>Hand values</span>
+            <div className={styles.handsRows}>
+              {HAND_ORDER.map(hand => {
+                const boost = investBoost?.[hand] ?? 0;
+                return (
+                  <div key={hand} className={styles.handsRow}>
+                    <span>{HAND_LABEL[hand]}</span>
+                    <b>
+                      {HAND_BASE_VALUE[hand] + boost}
+                      {boost > 0 && (
+                        <span className={styles.handsBoost}> (+{boost})</span>
+                      )}
+                    </b>
+                  </div>
+                );
+              })}
+              <div className={`${styles.handsRow} ${styles.handsPenalty}`}>
+                <span>Unfinished line at game end</span>
+                <b>{INCOMPLETE_LINE_PENALTY}</b>
+              </div>
+            </div>
+          </div>
+        </span>
       </header>
       <div className={styles.lineRows}>
         {report.lines.map(line => {
@@ -241,6 +287,8 @@ export function EdgeRails({
     switch (tone) {
       case 'gold':
         return styles.pillGold;
+      case 'goldPotential':
+        return styles.pillGoldPotential;
       case 'made':
         return styles.pillMade;
       case 'potential':
