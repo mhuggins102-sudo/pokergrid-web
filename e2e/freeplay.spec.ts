@@ -45,13 +45,17 @@ test('seeded easy game plays to completion with Place', async ({ page }) => {
   await expect(finalScore).toBeVisible();
   const score = Number(await finalScore.textContent());
   expect(Number.isFinite(score)).toBe(true);
-  // The verdict reveals only after the ~4s tally lands — wait it out.
-  await expect(page.getByText(/target beaten|target missed/i)).toBeVisible({
-    timeout: 10_000,
-  });
+  // Mobile keeps ResultView ("Target beaten/missed", revealed after the
+  // ~4s tally); desktop (≥1024px) now overlays the result dialog with
+  // the mockup's verdicts ("Target cleared" / "Just short").
+  await expect(
+    page.getByText(/target beaten|target missed|target cleared|just short/i)
+  ).toBeVisible({ timeout: 10_000 });
 
-  // Replay starts a fresh board.
-  await page.getByRole('button', { name: 'Play again' }).click();
+  // Replay starts a fresh board. (Desktop offers Play Again in both
+  // the result dialog and the dock behind it — the dialog's is the
+  // clickable one while its scrim is up, and it renders last.)
+  await page.getByRole('button', { name: 'Play again' }).last().click();
   await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
   await expect(place).toBeVisible();
 });

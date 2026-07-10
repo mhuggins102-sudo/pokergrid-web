@@ -81,13 +81,19 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 140ms ease;
+  transition:
+    background-color 160ms ease,
+    opacity 160ms ease;
 }
 
-@media (hover: hover) {
-  .lineRow:hover {
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-  }
+/* Shared hover model: the active line's row tints accent; the rest
+   fade back while ANY hover is live (mockup line 698). */
+.lineRowActive {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.lineRowDim {
+  opacity: 0.4;
 }
 
 .lineRow:focus-visible {
@@ -222,31 +228,37 @@
   justify-items: center;
 }
 
+/* Chip = transparent hit target; the toned pill inside carries the
+   look (mockup .r2chip + pill()). The dark hand-name tooltip drops
+   BELOW the chip on hover/focus. */
 .chip {
-  min-width: 36px;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--hairline);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
   background: transparent;
-  color: var(--ink-3);
-  font-size: 12px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-  text-align: center;
   cursor: pointer;
+  opacity: 1;
   transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
-    color 140ms ease;
+    opacity 160ms ease,
+    transform 160ms ease;
 }
 
+/* The lift's transform creates a stacking context, so the raised chip
+   also takes a z-index — otherwise its tooltip paints under the
+   hover-ringed board cells (z-index 2). */
 @media (hover: hover) {
-  .chip:hover {
-    background: var(--paper-raised);
-    border-color: var(--accent);
-    color: var(--accent);
+  .chip:not(.chipOff):hover {
+    transform: translateY(-1px);
+    z-index: 7;
   }
+}
+
+.chip:not(.chipOff):focus-within {
+  transform: translateY(-1px);
+  z-index: 7;
 }
 
 .chip:focus-visible {
@@ -254,49 +266,150 @@
   outline-offset: 1px;
 }
 
-.chipPos {
-  color: var(--success);
-  border-color: color-mix(in srgb, var(--success) 45%, transparent);
+/* Something else is hovered — this chip fades back. */
+.chipDim {
+  opacity: 0.32;
 }
 
-.chipNeg {
-  color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+/* Empty line, or a perk/action is targeting: inert (no tooltip). */
+.chipOff {
+  cursor: default;
+}
+
+.chipPill {
+  flex: none;
+  min-width: 34px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+/* Gold multiplier applies. */
+.pillGold {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: var(--on-accent, #fff);
+}
+
+/* Completed scoring hand, no gold multiplier. */
+.pillMade {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--on-accent, #fff);
+}
+
+/* Incomplete, but the partial evaluator already finds a hand. */
+.pillPotential {
+  background: transparent;
+  border: 1px dashed var(--success);
+  color: var(--success);
+}
+
+/* Cards down, no hand yet. */
+.pillWip {
+  background: transparent;
+  border-color: var(--rule);
+  color: var(--ink-2);
+}
+
+/* Empty (and complete-High-Card) lines. */
+.pillEmpty {
+  background: transparent;
+  border-color: var(--hairline);
+  color: var(--ink-3);
+}
+
+/* The dark hand-name tooltip below the chip. */
+.chipName {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11.5px;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  z-index: 6;
+}
+
+@media (hover: hover) {
+  .chip:not(.chipOff):hover .chipName {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.chip:not(.chipOff):focus-within .chipName {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* Spotlight: the tapped card's row + column chips light up. */
-.chipLit {
+.chipLit .chipPill {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
-  background: var(--paper-raised);
-  color: var(--accent);
-  font-weight: 800;
 }
 
 /* ---------------- LEADERBOARD ---------------- */
 
-/* Fixed-footprint body: the top-5 list sizes it; the histogram is an
-   absolutely-stacked layer that crossfades in on panel hover. */
-.lbBody {
+/* The top-5 list stays put; hovering (or focusing) the panel flies the
+   day's score distribution out to the RIGHT (mockup .lbwrap/.lbpop). */
+.lbWrap {
   position: relative;
-  margin-top: 10px;
-  min-height: 148px;
 }
 
-.lbLayer {
-  transition: opacity 180ms ease;
-}
-
-.lbHistLayer {
+.lbPop {
   position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.lbFaded {
+  left: calc(100% + 16px);
+  top: 0;
+  width: 300px;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 15px 16px;
   opacity: 0;
   pointer-events: none;
+  transform: translateX(-6px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+  z-index: 25;
+}
+
+@media (hover: hover) {
+  .lbWrap:hover .lbPop {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+}
+
+.lbWrap:focus-within .lbPop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.lbList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 11px;
 }
 
 .lbRow {
@@ -346,19 +459,19 @@
 }
 
 .histTitle {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-3);
+  letter-spacing: 0.09em;
+  color: var(--ink-2);
 }
 
 .histBars {
-  flex: 1;
   display: flex;
   align-items: flex-end;
   gap: 5px;
-  margin-top: 10px;
+  height: 128px;
+  margin-top: 13px;
 }
 
 .histSlot {
@@ -370,15 +483,19 @@
 
 .histBar {
   width: 100%;
-  min-height: 4px;
   border-radius: 3px 3px 0 0;
   background: color-mix(in srgb, var(--ink-3) 32%, var(--paper-sunken));
+}
+
+/* The player's band once they've finished. */
+.histBarOwn {
+  background: var(--accent);
 }
 
 .histLabels {
   display: flex;
   gap: 5px;
-  margin-top: 4px;
+  margin-top: 5px;
 }
 
 .histLabels > span {
@@ -387,6 +504,54 @@
   font-size: 9px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.histLegend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+
+.legendYou,
+.legendField {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.legendYou {
+  color: var(--ink);
+}
+
+.legendField {
+  color: var(--ink-3);
+}
+
+.legendSwatch,
+.legendSwatchOwn {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.legendSwatchOwn {
+  background: var(--accent);
+}
+
+.legendSwatch {
+  background: color-mix(in srgb, var(--ink-3) 32%, var(--paper-sunken));
+}
+
+.legendNote {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
   color: var(--ink-3);
 }
 
@@ -536,17 +701,80 @@
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--entry-tone, var(--rule)) 8%, var(--paper-raised));
   padding: 10px 13px 11px;
-  transition: box-shadow 140ms ease;
+  cursor: default;
+  transition:
+    opacity 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
-@media (hover: hover) {
-  .bonusEntry:hover {
-    box-shadow: var(--shadow-md);
-  }
+/* ACTIVE: hovered itself, or an in-game card firing on the hovered
+   line (mockup line 773). The extra half-pixel of border comes from an
+   inset ring so the layout never shifts. */
+.bonusActive {
+  background: color-mix(in srgb, var(--entry-tone, var(--rule)) 18%, var(--paper-raised));
+  box-shadow:
+    inset 0 0 0 0.5px var(--entry-tone, var(--rule)),
+    var(--shadow-md);
+}
+
+/* Another bonus card is hovered — fade back. */
+.bonusFaded {
+  opacity: 0.4;
 }
 
 .bonusDim {
   opacity: 0.55;
+}
+
+/* Hover/focus popover: the card's full description on dark ink, below
+   the card (mockup .bpop). */
+.bonusPop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  box-shadow: var(--shadow-lg);
+  z-index: 8;
+}
+
+@media (hover: hover) {
+  .bonusEntry:hover .bonusPop {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bonusEntry:focus-within .bonusPop {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Purple cards: live progress under a faint divider. */
+.bonusProg {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.bonusProgOk {
+  color: #7cffb0;
 }
 
 .bonusMain {

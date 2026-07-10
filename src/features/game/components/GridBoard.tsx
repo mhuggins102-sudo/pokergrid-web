@@ -50,6 +50,18 @@ export interface GridBoardProps {
    * in line order. The "you finished a poker hand" moment.
    */
   sweepSlots?: ReadonlyMap<number, number>;
+  /**
+   * Desktop hover model (mouse-only; mobile never passes these).
+   * hoverState paints each cell 'lit' (active-line accent ring) or
+   * 'dim' (faded back) while any hover is live; onCellHover reports
+   * enter/leave on SEATED cards (null on leave).
+   */
+  hoverState?: (idx: number) => 'lit' | 'dim' | null;
+  onCellHover?: (idx: number | null) => void;
+  /** Desktop: cells this predicate marks (current placement/targeting
+   *  cells) get a hover outline (the mockup's .placeable), gated
+   *  behind @media (hover: hover) in CSS. */
+  hoverOutline?: (idx: number) => boolean;
 }
 
 const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
@@ -133,6 +145,9 @@ export function GridBoard({
   hiddenSlots = NO_ARRIVALS,
   spotlight = null,
   sweepSlots = NO_SWEEP,
+  hoverState,
+  onCellHover,
+  hoverOutline,
 }: GridBoardProps) {
   const dealOrder = [...openingDeal];
   const spotRow = spotlight ? Math.floor(spotlight.idx / GRID_SIZE) : -1;
@@ -150,6 +165,7 @@ export function GridBoard({
           Math.floor(idx / GRID_SIZE) !== spotRow &&
           idx % GRID_SIZE !== spotCol;
         const sweepIdx = sweepSlots.get(idx);
+        const hover = hoverState?.(idx) ?? null;
         const cls = [
           styles.cell,
           card ? styles.filled : null,
@@ -158,6 +174,9 @@ export function GridBoard({
           role === 'next' ? styles.next : null,
           dimmed ? styles.dimmed : null,
           sweepIdx !== undefined ? styles.sweep : null,
+          hover === 'lit' ? styles.hoverLit : null,
+          hover === 'dim' ? styles.hoverDim : null,
+          tappable && hoverOutline?.(idx) ? styles.hoverable : null,
         ]
           .filter(Boolean)
           .join(' ');
@@ -169,6 +188,12 @@ export function GridBoard({
             disabled={!tappable}
             aria-label={cellLabel(idx, card, role)}
             onClick={tappable ? () => onCellTap?.(idx) : undefined}
+            onMouseEnter={
+              card && onCellHover ? () => onCellHover(idx) : undefined
+            }
+            onMouseLeave={
+              card && onCellHover ? () => onCellHover(null) : undefined
+            }
             style={
               sweepIdx !== undefined
                 ? ({ '--sweep-delay': `${sweepIdx * 60}ms` } as CSSProperties)

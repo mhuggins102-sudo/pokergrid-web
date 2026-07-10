@@ -1,6 +1,6 @@
 import { CSSProperties, ReactNode, useMemo, useState } from 'react';
 import { ScoreReport, ScoredLine } from '../../../game/scoring';
-import { evaluatePartialLine } from '../../../game/hands';
+import { HandRank } from '../../../game/hands';
 import {
   BonusCard,
   isPlaceholder,
@@ -13,8 +13,10 @@ import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { Button } from '../../../design/primitives';
 import { useStatsStore } from '../../progress/statsStore';
 import { usePlaysStore } from '../../daily/sync/playsStore';
+import { KEY_HANDLE } from '../../daily/sync/deviceId';
 import {
   useDailyHistogram,
+  useDailyRank,
   useDailyStats,
 } from '../../daily/sync/useDailyRank';
 import {
@@ -26,6 +28,7 @@ import {
 import { ScoreTrend } from '../../stats/ScoreTrend';
 import { HAND_LABEL, lineLabel } from '../handLabels';
 import { fmtMult } from '../lineBonuses';
+import { EndgameRow, linePotential } from '../lineInsights';
 import { DetailSheet } from './BonusCardStrip';
 import styles from './DesktopRails.module.css';
 
@@ -33,8 +36,20 @@ import styles from './DesktopRails.module.css';
  * The ≥1024px game screen's rail panels + board edge chips, per the
  * desktop-redesign mockup (design-refs/desktop/Play.dc.html). Pure
  * presentation — every number comes from the live ScoreReport /
- * stores GameScreen already owns.
+ * stores GameScreen already owns, and the shared hover model arrives
+ * pre-derived through the hover props.
  */
+
+/** The shared line-hover contract (GameScreen owns the hv state). */
+export interface LineHoverProps {
+  /** True while ANY hover (line / cell / bonus) is live. */
+  any: boolean;
+  /** True while a perk or green action is targeting — chips go inert. */
+  muted: boolean;
+  isActive: (line: ScoredLine) => boolean;
+  onEnter: (line: ScoredLine) => void;
+  onLeave: () => void;
+}
 
 // ---------------------------------------------------------------- //
 // SCORING — the left rail's ten-line breakdown.                     //
@@ -46,36 +61,46 @@ export interface ScoringPanelProps {
   onLineTap: (line: ScoredLine) => void;
   /** The header's ⓘ — opens the hand-values reference. */
   onShowHandValues?: () => void;
+  /** Held cards — the gold mult chip shows on incomplete lines too. */
+  bonusCards?: BonusCard[];
+  handBoost?: Partial<Record<HandRank, number>>;
+  /** One row per end-game card currently firing (purple). */
+  endgame?: EndgameRow[];
+  hover?: LineHoverProps;
 }
 
-// What a line is "doing" right now: Empty, the hand-so-far name from
-// the partial evaluator (In Progress when it makes nothing yet), or
-// the made hand once complete.
+// Status column per the mockup: Empty, In Progress (partial names live
+// on the edge chips, not here), High Card, or the made hand name.
 const lineStatus = (line: ScoredLine): { text: string; muted: boolean } => {
   const filled = line.cards.filter(c => c !== null).length;
   if (filled === 0) return { text: 'Empty', muted: true };
   if (line.hand) {
     return { text: HAND_LABEL[line.hand], muted: line.total <= 0 };
   }
-  const partial = evaluatePartialLine(line.cards);
-  if (partial && partial !== 'HIGH_CARD') {
-    return { text: HAND_LABEL[partial], muted: false };
-  }
   return { text: 'In Progress', muted: true };
 };
 
+// Points column: '–' empty, '+N' made, '0' in-progress during play,
+// the red negative once the final report carries penalties.
 const linePoints = (line: ScoredLine): string => {
   const filled = line.cards.filter(c => c !== null).length;
   if (filled === 0) return '–';
-  return line.total > 0 ? `+${line.total}` : String(line.total);
+  if (line.total > 0) return `+${line.total}`;
+  if (line.total < 0) return String(line.total);
+  return '0';
 };
+
+const NO_ROWS: EndgameRow[] = [];
 
 export function ScoringPanel({
   report,
   onLineTap,
   onShowHandValues,
+  bonusCards = [],
+  handBoost,
+  endgame = NO_ROWS,
+  hover,
 }: ScoringPanelProps) {
-  const endgame = report.gridMultiplier !== 1 || report.gridFlat !== 0;
   return (
     <section className={styles.panel} aria-label="Scoring">
       <header className={styles.head}>
@@ -94,12 +119,22 @@ export function ScoringPanel({
       <div className={styles.lineRows}>
         {report.lines.map(line => {
           const status = lineStatus(line);
+          const p = linePotential(line, bonusCards, report.lines, handBoost);
+          const active = hover?.isActive(line) ?? false;
           return (
             <button
               key={`${line.kind}-${line.index}`}
               type="button"
-              className={styles.lineRow}
+              className={[
+                styles.lineRow,
+                active ? styles.lineRowActive : null,
+                hover?.any && !active ? styles.lineRowDim : null,
+              ]
+                .filter(Boolean)
+                .join(' ')}
               onClick={() => onLineTap(line)}
+              onMouseEnter={hover ? () => hover.onEnter(line) : undefined}
+              onMouseLeave={hover ? hover.onLeave : undefined}
             >
               <span className={styles.lineTag}>
                 {lineLabel(line.kind, line.index)}
@@ -111,10 +146,8 @@ export function ScoringPanel({
               >
                 {status.text}
               </span>
-              {line.hand !== null && line.multiplier !== 1 && (
-                <span className={styles.lineMult}>
-                  {fmtMult(line.multiplier)}
-                </span>
+              {p.mult > 1 && (
+                <span className={styles.lineMult}>{fmtMult(p.mult)}</span>
               )}
               <span
                 className={`${styles.linePts} ${
@@ -131,21 +164,20 @@ export function ScoringPanel({
           );
         })}
       </div>
-      {endgame && (
+      {endgame.length > 0 && (
         <>
           <div className={styles.subRow}>
             <span>Subtotal</span>
             <span className={styles.subPts}>{report.subtotal}</span>
           </div>
-          <div className={styles.subRow}>
-            <span className={styles.endgameLabel}>End-game bonus</span>
-            <span className={`${styles.subPts} ${styles.endgameLabel}`}>
-              {report.gridMultiplier !== 1 ? fmtMult(report.gridMultiplier) : ''}
-              {report.gridFlat !== 0
-                ? `${report.gridMultiplier !== 1 ? ' ' : ''}+${report.gridFlat}`
-                : ''}
-            </span>
-          </div>
+          {endgame.map(row => (
+            <div key={row.name} className={styles.subRow}>
+              <span className={styles.endgameLabel}>{row.name}</span>
+              <span className={`${styles.subPts} ${styles.endgameLabel}`}>
+                {row.value}
+              </span>
+            </div>
+          ))}
         </>
       )}
       <div className={styles.totalRow}>
@@ -163,7 +195,7 @@ export function ScoringPanel({
 }
 
 // ---------------------------------------------------------------- //
-// Board edge chips — row totals on the RIGHT, column totals BELOW.  //
+// Board edge chips — rows on the RIGHT, columns BELOW (mockup).     //
 // ---------------------------------------------------------------- //
 
 export interface EdgeRailsProps {
@@ -171,29 +203,29 @@ export interface EdgeRailsProps {
   onLineTap?: (line: ScoredLine) => void;
   /** Spotlight: light this row + column's chips. */
   highlight?: { row: number; col: number } | null;
+  /** Held cards — potentials include hand-independent multipliers. */
+  bonusCards?: BonusCard[];
+  handBoost?: Partial<Record<HandRank, number>>;
+  hover?: LineHoverProps;
   /** The live board. */
   children: ReactNode;
 }
 
-// Live boards score incomplete lines as 0 (the -25 penalty only exists
-// at game end) — a quiet dot beats a misleading "0" (mirrors
-// LineRails' mobile chips); a fully empty line shows the mockup's "–".
-const chipText = (line: ScoredLine): string => {
-  if (line.cards.every(c => c === null)) return '–';
-  if (line.incomplete && line.total === 0) return '·';
-  return String(line.total);
-};
-
 /**
- * The desktop replacement for LineRails: the same tap-a-total behavior
- * with row chips along the board's right edge and column chips along
- * the bottom, per the mockup. Chip labels/highlighting match LineRails
- * so the spotlight flow reads identically on both breakpoints.
+ * The desktop replacement for LineRails, redesigned per the mockup:
+ * each chip shows the line's POTENTIAL (+N — what its current
+ * made/partial hand would pay if finished as-is, gold multipliers
+ * included), toned by state, with a dark hand-name tooltip below on
+ * hover. Hovering a chip drives the shared line-hover model; clicking
+ * keeps the LineDetailSheet breakdown.
  */
 export function EdgeRails({
   report,
   onLineTap,
   highlight = null,
+  bonusCards = [],
+  handBoost,
+  hover,
   children,
 }: EdgeRailsProps) {
   const rows = report.lines.filter(l => l.kind === 'row');
@@ -205,26 +237,59 @@ export function EdgeRails({
       ? line.index === highlight.row
       : line.index === highlight.col);
 
-  const chip = (line: ScoredLine) => (
-    <button
-      key={`${line.kind}-${line.index}`}
-      type="button"
-      className={`${styles.chip} ${
-        line.total > 0
-          ? styles.chipPos
-          : line.total < 0
-            ? styles.chipNeg
-            : ''
-      } ${isLit(line) ? styles.chipLit : ''}`}
-      onClick={() => onLineTap?.(line)}
-      aria-label={`${lineLabel(line.kind, line.index)}: ${
-        line.hand ? HAND_LABEL[line.hand] : 'no hand'
-      }, ${line.total} points`}
-      aria-current={isLit(line) || undefined}
-    >
-      {chipText(line)}
-    </button>
-  );
+  const toneClass = (tone: string): string => {
+    switch (tone) {
+      case 'gold':
+        return styles.pillGold;
+      case 'made':
+        return styles.pillMade;
+      case 'potential':
+        return styles.pillPotential;
+      case 'wip':
+        return styles.pillWip;
+      default:
+        return styles.pillEmpty;
+    }
+  };
+
+  const chip = (line: ScoredLine) => {
+    const p = linePotential(line, bonusCards, report.lines, handBoost);
+    const off = p.filled === 0 || (hover?.muted ?? false);
+    const active = hover?.isActive(line) ?? false;
+    const dim = (hover?.any ?? false) && !active;
+    return (
+      <button
+        key={`${line.kind}-${line.index}`}
+        type="button"
+        className={[
+          styles.chip,
+          off ? styles.chipOff : null,
+          dim ? styles.chipDim : null,
+          isLit(line) ? styles.chipLit : null,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        onClick={() => onLineTap?.(line)}
+        onMouseEnter={!off && hover ? () => hover.onEnter(line) : undefined}
+        onMouseLeave={!off && hover ? hover.onLeave : undefined}
+        onFocus={!off && hover ? () => hover.onEnter(line) : undefined}
+        onBlur={!off && hover ? hover.onLeave : undefined}
+        aria-label={`${lineLabel(line.kind, line.index)}: ${
+          p.name || 'no hand'
+        }, ${line.total} points`}
+        aria-current={isLit(line) || undefined}
+      >
+        <span className={`${styles.chipPill} ${toneClass(p.tone)}`}>
+          {p.label}
+        </span>
+        {!off && p.name !== '' && (
+          <span className={styles.chipName} aria-hidden="true">
+            {p.name}
+          </span>
+        )}
+      </button>
+    );
+  };
 
   return (
     <div className={styles.edgeWrap}>
@@ -243,53 +308,77 @@ export function EdgeRails({
 // LEADERBOARD — the left rail's second panel on daily runs.         //
 // ---------------------------------------------------------------- //
 
-export function DailyLeaderboardPanel({ dateISO }: { dateISO: string }) {
+export function DailyLeaderboardPanel({
+  dateISO,
+  finished = false,
+  finalScore,
+}: {
+  dateISO: string;
+  /** Game over — the player's bar/row light up in the distribution. */
+  finished?: boolean;
+  /** The finished run's score (fallback while the rank RPC lands). */
+  finalScore?: number;
+}) {
   const backend = isBackendConfigured();
   const stats = useDailyStats(dateISO, backend);
   const histo = useDailyHistogram(dateISO, backend);
-  // Mockup behavior: hovering the panel crossfades the top-5 list into
-  // the day's score distribution.
-  const [hover, setHover] = useState(false);
+  const rank = useDailyRank(dateISO);
 
   if (!backend) return null;
 
-  const top5 = (stats.data?.topScores ?? []).slice(0, 5);
+  const top = stats.data?.topScores ?? [];
+  const top5 = top.slice(0, 5);
   const bins = histo.data?.bins ?? [];
   const maxCount = Math.max(1, ...bins.map(b => b.count));
-  const showHist = hover && bins.length > 0;
+
+  const own = finished ? (rank.data?.score ?? finalScore) : undefined;
+  // The player's own standing row, appended after the top 5 once the
+  // run is finished (mirrors RankPanel's top5 + ownRow pattern).
+  const ownRow = !finished
+    ? null
+    : top5.some(t => t.isOwn)
+      ? null
+      : (top.find(t => t.isOwn) ??
+        (rank.data
+          ? {
+              rank: rank.data.rank,
+              displayName: localStorage.getItem(KEY_HANDLE) ?? 'you',
+              score: rank.data.score,
+              isOwn: true,
+            }
+          : null));
+
+  const note =
+    finished && rank.data
+      ? `#${rank.data.rank} / ${rank.data.total}`
+      : stats.data
+        ? `${stats.data.total} players today`
+        : stats.isLoading
+          ? 'Loading…'
+          : '';
 
   return (
     <section
-      className={styles.panel}
+      className={`${styles.panel} ${styles.lbWrap}`}
       aria-label="Leaderboard"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      tabIndex={0}
     >
       <header className={styles.head}>
         <h2 className={styles.title}>Leaderboard</h2>
-        <span className={styles.headNote}>
-          {stats.data
-            ? `${stats.data.total} players today`
-            : stats.isLoading
-              ? 'Loading…'
-              : ''}
-        </span>
+        <span className={styles.headNote}>{note}</span>
       </header>
-      <div className={styles.lbBody}>
-        <div
-          className={`${styles.lbLayer} ${showHist ? styles.lbFaded : ''}`}
-          aria-hidden={showHist}
-        >
-          {top5.length === 0 ? (
-            <span className={styles.emptyNote}>
-              {stats.isLoading
-                ? ''
-                : stats.isError
-                  ? 'Leaderboard unavailable right now.'
-                  : 'No scores posted yet — go first.'}
-            </span>
-          ) : (
-            top5.map(t => (
+      <div className={styles.lbList}>
+        {top5.length === 0 ? (
+          <span className={styles.emptyNote}>
+            {stats.isLoading
+              ? ''
+              : stats.isError
+                ? 'Leaderboard unavailable right now.'
+                : 'No scores posted yet — go first.'}
+          </span>
+        ) : (
+          <>
+            {top5.map(t => (
               <div
                 key={`${t.rank}-${t.displayName}`}
                 className={`${styles.lbRow} ${t.isOwn ? styles.lbOwn : ''}`}
@@ -298,41 +387,65 @@ export function DailyLeaderboardPanel({ dateISO }: { dateISO: string }) {
                 <span className={styles.lbName}>{t.displayName}</span>
                 <span className={styles.lbScore}>{t.score}</span>
               </div>
-            ))
-          )}
-        </div>
-        <div
-          className={`${styles.lbLayer} ${styles.lbHistLayer} ${
-            showHist ? '' : styles.lbFaded
-          }`}
-          aria-hidden={!showHist}
-        >
+            ))}
+            {ownRow && (
+              <div className={`${styles.lbRow} ${styles.lbOwn}`}>
+                <span className={styles.lbRank}>#{ownRow.rank}</span>
+                <span className={styles.lbName}>{ownRow.displayName}</span>
+                <span className={styles.lbScore}>{ownRow.score}</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      {/* Side fly-out: the day's score distribution, revealed on
+          hover/focus (mockup .lbpop) — the top-5 list stays put. */}
+      {bins.length > 0 && (
+        <div className={styles.lbPop}>
           <span className={styles.histTitle}>Score distribution</span>
           <div className={styles.histBars}>
-            {bins.map((b, i) => (
-              <div
-                key={i}
-                className={styles.histSlot}
-                title={`${b.lo}–${b.hi}: ${b.count}`}
-              >
-                {b.count > 0 && (
+            {bins.map((b, i) => {
+              const isOwn = own !== undefined && own >= b.lo && own <= b.hi;
+              return (
+                <div
+                  key={i}
+                  className={styles.histSlot}
+                  title={`${b.lo}–${b.hi}: ${b.count}${isOwn ? ' · you' : ''}`}
+                >
                   <div
-                    className={styles.histBar}
-                    style={{ height: `${(b.count / maxCount) * 100}%` }}
+                    className={`${styles.histBar} ${isOwn ? styles.histBarOwn : ''}`}
+                    style={{
+                      height: `${Math.max(6, (b.count / maxCount) * 100)}%`,
+                    }}
                   />
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
           <div className={styles.histLabels}>
             {bins.map((b, i) => (
-              <span key={i}>
-                {bins.length <= 6 || i % 2 === 0 ? b.lo : ''}
-              </span>
+              <span key={i}>{b.lo}</span>
             ))}
           </div>
+          <div className={styles.histLegend}>
+            {finished && own !== undefined && (
+              <span className={styles.legendYou}>
+                <span className={styles.legendSwatchOwn} aria-hidden="true" />
+                You · {own}
+              </span>
+            )}
+            <span className={styles.legendField}>
+              <span className={styles.legendSwatch} aria-hidden="true" />
+              Field
+            </span>
+            {!finished && (
+              <span className={styles.legendNote}>
+                Your bar highlights once you finish
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }
@@ -456,6 +569,18 @@ export function DeskStatsPanel({ difficulty }: { difficulty: Difficulty }) {
 // BONUS CARDS — the right rail's held-cards panel.                  //
 // ---------------------------------------------------------------- //
 
+/** GameScreen-derived bonus-hover contract (mockup .bcard/.bpop). */
+export interface BonusHoverProps {
+  /** Hovered itself, or an in-game card firing on the hovered line. */
+  isActive: (idx: number) => boolean;
+  /** Another bonus card is hovered. */
+  isDim: (idx: number) => boolean;
+  onEnter: (idx: number) => void;
+  onLeave: () => void;
+  /** End-game (purple) cards: popover progress line + met flag. */
+  progress: (idx: number) => { label: string; ok: boolean } | null;
+}
+
 export interface DesktopBonusPanelProps {
   cards: BonusCard[];
   /** Shapley contributions aligned with `cards` (positive only). */
@@ -465,6 +590,7 @@ export interface DesktopBonusPanelProps {
   /** awaiting-action + Three Tricks: activate the special at index. */
   onUse?: (index: number) => void;
   liveContext?: (card: BonusCard) => string[];
+  hover?: BonusHoverProps;
 }
 
 export function DesktopBonusPanel({
@@ -473,6 +599,7 @@ export function DesktopBonusPanel({
   onSlotTap,
   onUse,
   liveContext,
+  hover,
 }: DesktopBonusPanelProps) {
   const [detail, setDetail] = useState<{
     card: BonusCard;
@@ -498,11 +625,26 @@ export function DesktopBonusPanel({
             isSpecialCard(card) &&
             !card.used &&
             !isPlaceholder(card);
+          const active = !dimmed && (hover?.isActive(i) ?? false);
+          const hoverDim = hover?.isDim(i) ?? false;
+          const prog = dimmed ? null : (hover?.progress(i) ?? null);
           return (
             <div
               key={`${card.id}-${i}`}
-              className={`${styles.bonusEntry} ${dimmed ? styles.bonusDim : ''}`}
+              tabIndex={dimmed ? undefined : 0}
+              className={[
+                styles.bonusEntry,
+                dimmed ? styles.bonusDim : null,
+                active ? styles.bonusActive : null,
+                hoverDim ? styles.bonusFaded : null,
+              ]
+                .filter(Boolean)
+                .join(' ')}
               style={{ '--entry-tone': cat.borderColor } as CSSProperties}
+              onMouseEnter={
+                hover && !dimmed ? () => hover.onEnter(i) : undefined
+              }
+              onMouseLeave={hover && !dimmed ? hover.onLeave : undefined}
             >
               <button
                 type="button"
@@ -538,6 +680,22 @@ export function DesktopBonusPanel({
                 >
                   Use
                 </Button>
+              )}
+              {/* Hover/focus popover: full description (+ purple
+                  progress). Never renders for used/placeholder cards. */}
+              {!dimmed && (
+                <div className={styles.bonusPop} role="tooltip">
+                  {card.description}
+                  {prog && (
+                    <div
+                      className={`${styles.bonusProg} ${
+                        prog.ok ? styles.bonusProgOk : ''
+                      }`}
+                    >
+                      {prog.label}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           );

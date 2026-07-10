@@ -377,6 +377,120 @@
   white-space: nowrap;
 }
 
+/* Pill cluster: optional ✦ twist pill + the difficulty/score pill,
+   each with a hover/focus dropdown (mockup .diffwrap/.diffmenu). Only
+   rendered inside the ≥1024px nav, so no width media query needed —
+   hover affordances are still hover-media-gated for touch desktops. */
+.navPillGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navMenuWrap {
+  position: relative;
+  display: inline-flex;
+  cursor: default;
+}
+
+.twistPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 12%, var(--paper-raised));
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.twistStar {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.navMenu {
+  position: absolute;
+  top: calc(100% + 9px);
+  right: 0;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  padding: 11px 13px;
+  width: 232px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  z-index: 45;
+}
+
+.navMenuWide {
+  width: 252px;
+}
+
+@media (hover: hover) {
+  .navMenuWrap:hover .navMenu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+.navMenuWrap:focus-within .navMenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.navMenuHead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 7px;
+}
+
+.navMenuHeadAccent {
+  color: var(--accent);
+}
+
+.navMenuRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.navMenuRow + .navMenuRow {
+  border-top: 1px solid var(--hairline);
+}
+
+.navMenuRow b {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.navMenuGoal {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 /* ===== Desktop (≥1024px): the three-column redesign. GameScreen
    renders this tree INSTEAD of the mobile flex column (JSX fork on
    the same 1024px matchMedia breakpoint), so nothing below 1024px is
@@ -503,6 +617,30 @@
     padding-left: var(--space-sm);
     padding-right: var(--space-sm);
     white-space: nowrap;
+  }
+
+  /* The mockup's .gbtn hover: game action buttons lift with a soft
+     shadow. Desktop-only block, hover-media-gated for touch. */
+  @media (hover: hover) {
+    .deskActions button {
+      transition:
+        transform 120ms ease,
+        box-shadow 120ms ease;
+    }
+
+    .deskActions button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* ♣ draw option cards in the dock get the .drawcard lift. */
+    .deskDock [class*='chipWrap']:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      transition:
+        transform 120ms ease,
+        box-shadow 120ms ease;
+    }
   }
 
   /* Tutorial coach rides the top of the right rail. */
