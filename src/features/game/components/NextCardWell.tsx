@@ -12,6 +12,9 @@ export interface NextCardWellProps {
   instantLayout?: boolean;
   /** Hand-stack dock: hero-size card with the meta line beneath. */
   stacked?: boolean;
+  /** Deck-count caption: 'left' ("12 left", the mobile docks) or
+   *  'deck' ("Deck · 12", the desktop rail panel per the mockup). */
+  meta?: 'left' | 'deck';
   /**
    * Auto-place staging (useAutoPlaceFlights): while set, this card
    * poses here INSTEAD of the drawn card; on release the grid cell
@@ -30,6 +33,7 @@ export function NextCardWell({
   onPeekDeck,
   instantLayout = false,
   stacked = false,
+  meta = 'left',
   flight = null,
 }: NextCardWellProps) {
   const { state } = useGameSession();
@@ -94,7 +98,11 @@ export function NextCardWell({
         </AnimatePresence>
       </SlotTag>
       <div className={styles.meta}>
-        <span className={styles.deckCount}>{state.deck.length} left</span>
+        <span className={styles.deckCount}>
+          {meta === 'deck'
+            ? `Deck · ${state.deck.length}`
+            : `${state.deck.length} left`}
+        </span>
         {canPeek && (
           <button type="button" className={styles.peek} onClick={onPeekDeck}>
             Peek

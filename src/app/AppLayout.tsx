@@ -6,6 +6,7 @@ import { bootDailySync, queryClient } from '../features/daily/sync/sync';
 import { useSyncDailyAchievements } from '../features/progress/useSyncDailyAchievements';
 import { useApplyTheme } from '../features/settings/useTheme';
 import { UpdatePrompt } from './UpdatePrompt';
+import { DesktopNav, NavExtrasProvider } from './DesktopNav';
 import styles from './AppLayout.module.css';
 
 const NAV_ITEMS = [
@@ -36,8 +37,14 @@ export function AppLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
+      <NavExtrasProvider>
       <div className={styles.shell}>
         <UpdatePrompt />
+        {/* Desktop-redesign header; AppLayout.module.css shows exactly
+            one of the two headers per breakpoint. */}
+        <div className={styles.desktopHeader}>
+          <DesktopNav />
+        </div>
         <header className={styles.header}>
           <div className={styles.headerInner}>
             <NavLink to="/" className={styles.wordmark}>
@@ -68,6 +75,7 @@ export function AppLayout() {
           back/forward) — without this, deep pages like the bonus card
           reference open mid-scroll. */}
       <ScrollRestoration />
+      </NavExtrasProvider>
       </ToastProvider>
     </QueryClientProvider>
   );

@@ -1,4 +1,5 @@
 import {
+  CSSProperties,
   ReactNode,
   useCallback,
   useEffect,
@@ -14,7 +15,10 @@ import {
   scoreGrid,
 } from '../../game/scoring';
 import { Button, Sheet, useToast } from '../../design/primitives';
+import { difficultyColors } from '../../design/tokens';
+import { useNavExtras } from '../../app/DesktopNav';
 import { useGameSession } from './GameSessionProvider';
+import { useIsDesktop } from './useIsDesktop';
 import { useCoachHighlight } from './coach';
 import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
@@ -31,6 +35,13 @@ import { LinesPanel } from './components/LinesPanel';
 import { BonusCardStrip } from './components/BonusCardStrip';
 import { DeckPreviewDialog } from './components/DeckPreviewDialog';
 import { BonusResolvePanel } from './components/BonusResolveDialog';
+import {
+  DailyLeaderboardPanel,
+  DeskStatsPanel,
+  DesktopBonusPanel,
+  EdgeRails,
+  ScoringPanel,
+} from './components/DesktopRails';
 import { InvestWheel } from './components/InvestWheel';
 import { HandValuesDialog } from './components/HandValuesDialog';
 import { ReviveSheet } from './components/ReviveSheet';
@@ -164,8 +175,9 @@ function MaybeRails({
  * re-seats the same pieces into the three-panel spread.
  */
 export function GameScreen({ onReplay, coach }: GameScreenProps) {
-  const { state, dispatch } = useGameSession();
+  const { state, dispatch, mode, canUndo, maxUndos } = useGameSession();
   const ui = usePhaseUI();
+  const isDesktop = useIsDesktop();
   const coachHighlight = useCoachHighlight();
   const [peekOpen, setPeekOpen] = useState(false);
   const [handsOpen, setHandsOpen] = useState(false);
@@ -188,6 +200,35 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       }),
     [state]
   );
+
+  // Desktop nav score pill: difficulty dot + name + live "score/target"
+  // in the header's extras slot (per the redesign mockup). Memoized so
+  // the nav only re-renders when a value actually changes; the hook
+  // clears the slot when the game unmounts. Mobile passes null — the
+  // desktop header isn't shown there, and a live node would re-render
+  // the app shell on every move for nothing.
+  const navPill = useMemo(
+    () => (
+      <span
+        className={styles.navPill}
+        style={
+          { '--pill-tone': difficultyColors[state.difficulty] } as CSSProperties
+        }
+      >
+        <span className={styles.navPillDot} aria-hidden="true" />
+        <span className={styles.navPillDiff}>{state.difficulty}</span>
+        <span
+          className={styles.navPillScore}
+          aria-label={`Score ${liveReport.total} of ${state.target}`}
+        >
+          {liveReport.total}
+          <span className={styles.navPillTarget}>/ {state.target}</span>
+        </span>
+      </span>
+    ),
+    [state.difficulty, liveReport.total, state.target]
+  );
+  useNavExtras(isDesktop ? navPill : null);
 
   // Live per-card Shapley contribution, shown as a corner badge on each
   // held bonus card so the points it's adding are visible without opening
@@ -346,12 +387,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     if (!line || line.incomplete) return `${label} · open`;
     return `${label} · ${line.total}`;
   };
-  // With the rails showing, the spotlight lights the rail chips instead
+  // Desktop always shows the board edge chips (the mockup's line
+  // totals), except during the tutorial — the guided deal never
+  // references line totals, matching the mobile rails-off rationale.
+  const chipsShown = isDesktop && !coach;
+  // With chips/rails showing, the spotlight lights those chips instead
   // of floating text tags — the values are already on screen. Rails
   // off restores the tags (they're the only per-line readout then).
   const spotlightProp =
     spotlight !== null
-      ? lineRails
+      ? chipsShown || lineRails
         ? { idx: spotlight }
         : {
             idx: spotlight,
@@ -360,7 +405,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           }
       : null;
   const railHighlight =
-    lineRails && spotlight !== null
+    (chipsShown || lineRails) && spotlight !== null
       ? { row: Math.floor(spotlight / 5), col: spotlight % 5 }
       : null;
 
@@ -429,6 +474,207 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     </span>
   );
 
+  // The interactive board, shared verbatim by both layout forks.
+  const boardEl = (
+    <GridBoard
+      // Remount on the ♣ open/close toggle: a fresh mount renders
+      // seated cards exactly where CSS puts them, so motion's
+      // LayoutGroup never pins them to stale geometry (the "board slid
+      // right until I left and came back" bug — stripping layoutIds
+      // alone didn't purge the stale projection). Mid-draw resizes are
+      // pure CSS while every layoutId is stripped, so no per-size
+      // remount is needed.
+      key={bonusOpen ? 'board-bonus' : 'board-full'}
+      grid={state.grid}
+      roleOf={boardRole}
+      isTappable={idx =>
+        ui.isTappable(idx) ||
+        (spotlightEnabled && state.grid[idx] !== null) ||
+        // Normal play: every empty cell responds — the pulsing
+        // next slot places, the rest nudge toward it.
+        (spotlightEnabled && placeArmed && state.grid[idx] === null)
+      }
+      onCellTap={idx => {
+        if (spotlightEnabled && state.grid[idx] !== null) {
+          setSpotlight(s => (s === idx ? null : idx));
+          return;
+        }
+        if (spotlightEnabled && placeArmed && state.grid[idx] === null) {
+          // Same dispatch path as the dock's Place button, so
+          // tutorial gating and sfx behave identically.
+          if (boardRole(idx) === 'next') placeAction?.onPress();
+          else nudgePlacement();
+          return;
+        }
+        ui.onCellTap(idx);
+      }}
+      instantLayout={instantLayout}
+      jokerArrivals={jokerArrivals}
+      openingDeal={cssDeal}
+      hiddenSlots={hiddenSlots}
+      spotlight={spotlightProp}
+      sweepSlots={sweepSlots}
+    />
+  );
+
+  // Sheets/dialogs shared by both forks.
+  const overlays = (
+    <>
+      <Sheet open={linesOpen} onClose={() => setLinesOpen(false)} title="Lines">
+        <LinesPanel report={liveReport} />
+      </Sheet>
+      <LineDetailSheet
+        line={detailLine}
+        bonusCards={state.bonusCards}
+        allLines={liveReport.lines}
+        gridBonusesApplied={
+          liveReport.gridMultiplier !== 1 || liveReport.gridFlat !== 0
+        }
+        onClose={() => setDetailLine(null)}
+      />
+      <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
+      <HandValuesDialog
+        open={handsOpen}
+        onClose={() => setHandsOpen(false)}
+        handBoost={state.investHands ? state.handBoost : undefined}
+      />
+      <ReviveSheet open={ui.reviveOpen} />
+      {ui.clubInvest && (
+        <InvestWheel hand={ui.clubInvest.hand} amount={ui.clubInvest.amount} />
+      )}
+    </>
+  );
+
+  // ---- Desktop (≥1024px): the three-column redesign ----
+  // Left rail = SCORING + leaderboard/stats; center = board with edge
+  // chips; right rail = deck/actions + bonus cards. Same engine, same
+  // phase UI — only the seating changes.
+  if (isDesktop) {
+    const discardAction = ui.actions.find(a => a.id === 'discard');
+    const stackActions = ui.actions.filter(a => a.id !== 'discard');
+    const deskBanner = ui.banner && (
+      <span className={styles.deskBanner} role="status" aria-live="polite">
+        {ui.banner}
+      </span>
+    );
+    return (
+      <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
+        <LayoutGroup>
+          <div className={styles.desk}>
+            <div className={styles.deskRail}>
+              <ScoringPanel
+                report={liveReport}
+                onLineTap={setDetailLine}
+                onShowHandValues={() => setHandsOpen(true)}
+              />
+              {mode.kind === 'daily' ? (
+                <DailyLeaderboardPanel dateISO={mode.dateISO} />
+              ) : (
+                <DeskStatsPanel difficulty={state.difficulty} />
+              )}
+            </div>
+
+            <div className={styles.deskCenter}>
+              <div className={styles.deskBoard}>
+                {chipsShown ? (
+                  <EdgeRails
+                    report={liveReport}
+                    onLineTap={setDetailLine}
+                    highlight={railHighlight}
+                  >
+                    {boardEl}
+                  </EdgeRails>
+                ) : (
+                  boardEl
+                )}
+              </div>
+            </div>
+
+            <div className={styles.deskRail}>
+              {coach && !ui.bonusDialog && (
+                <div className={styles.deskCoach}>{coach}</div>
+              )}
+              <section className={styles.deskDock} aria-label="Deck and actions">
+                {ui.bonusDialog ? (
+                  // ♣ draw takes over the deck panel, board untouched.
+                  <BonusResolvePanel ui={ui.bonusDialog} />
+                ) : (
+                  <div
+                    className={
+                      // 'center-stage' = the mockup's hero arrangement;
+                      // 'hand-stack' and 'classic' both map to the
+                      // compact card-beside-buttons variant.
+                      dockLayout === 'center-stage'
+                        ? styles.deskDockStage
+                        : styles.deskDockCompact
+                    }
+                  >
+                    <NextCardWell
+                      onPeekDeck={() => setPeekOpen(true)}
+                      instantLayout={instantLayout}
+                      stacked
+                      meta="deck"
+                      flight={flight}
+                    />
+                    <div className={styles.deskActions}>
+                      {deskBanner}
+                      {stackActions.map(a =>
+                        actionBtn(
+                          a,
+                          a.id === 'perk'
+                            ? `${styles.deskStackBtn} ${styles.deskPerkBtn}`
+                            : styles.deskStackBtn
+                        )
+                      )}
+                      <div className={styles.deskBtnRow}>
+                        {discardAction ? (
+                          actionBtn(discardAction)
+                        ) : (
+                          <Button variant="secondary" disabled>
+                            Discard
+                          </Button>
+                        )}
+                        <Button
+                          variant="secondary"
+                          disabled={!canUndo || flight !== null}
+                          onClick={() => dispatch({ type: 'UNDO' })}
+                          aria-label={`Undo (${Math.max(
+                            0,
+                            maxUndos - state.undoCount
+                          )} left)`}
+                        >
+                          ↺ Undo
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+              {(state.bonusCards.length > 0 || !state.noBonusCards) && (
+                <DesktopBonusPanel
+                  cards={state.bonusCards}
+                  values={liveShapley}
+                  onSlotTap={
+                    ui.bonusSlotPick
+                      ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
+                      : undefined
+                  }
+                  onUse={
+                    ui.canActivateSpecials
+                      ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
+                      : undefined
+                  }
+                  liveContext={card => bonusCardLiveContext(card, state)}
+                />
+              )}
+            </div>
+          </div>
+        </LayoutGroup>
+        {overlays}
+      </MotionConfig>
+    );
+  }
+
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <LayoutGroup>
@@ -479,45 +725,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 onLineTap={setDetailLine}
                 highlight={railHighlight}
               >
-              <GridBoard
-                // Remount on the ♣ open/close toggle: a fresh mount
-                // renders seated cards exactly where CSS puts them, so
-                // motion's LayoutGroup never pins them to stale geometry
-                // (the "board slid right until I left and came back"
-                // bug — stripping layoutIds alone didn't purge the stale
-                // projection). Mid-draw resizes are pure CSS while every
-                // layoutId is stripped, so no per-size remount is needed.
-                key={bonusOpen ? 'board-bonus' : 'board-full'}
-                grid={state.grid}
-                roleOf={boardRole}
-                isTappable={idx =>
-                  ui.isTappable(idx) ||
-                  (spotlightEnabled && state.grid[idx] !== null) ||
-                  // Normal play: every empty cell responds — the pulsing
-                  // next slot places, the rest nudge toward it.
-                  (spotlightEnabled && placeArmed && state.grid[idx] === null)
-                }
-                onCellTap={idx => {
-                  if (spotlightEnabled && state.grid[idx] !== null) {
-                    setSpotlight(s => (s === idx ? null : idx));
-                    return;
-                  }
-                  if (spotlightEnabled && placeArmed && state.grid[idx] === null) {
-                    // Same dispatch path as the dock's Place button, so
-                    // tutorial gating and sfx behave identically.
-                    if (boardRole(idx) === 'next') placeAction?.onPress();
-                    else nudgePlacement();
-                    return;
-                  }
-                  ui.onCellTap(idx);
-                }}
-                instantLayout={instantLayout}
-                jokerArrivals={jokerArrivals}
-                openingDeal={cssDeal}
-                hiddenSlots={hiddenSlots}
-                spotlight={spotlightProp}
-                sweepSlots={sweepSlots}
-              />
+                {boardEl}
               </MaybeRails>
             </div>
           </div>
@@ -656,32 +864,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           )}
         </div>
       </LayoutGroup>
-
-      <Sheet open={linesOpen} onClose={() => setLinesOpen(false)} title="Lines">
-        <LinesPanel report={liveReport} />
-      </Sheet>
-      <LineDetailSheet
-        line={detailLine}
-        bonusCards={state.bonusCards}
-        allLines={liveReport.lines}
-        gridBonusesApplied={
-          liveReport.gridMultiplier !== 1 || liveReport.gridFlat !== 0
-        }
-        onClose={() => setDetailLine(null)}
-      />
-      <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
-      <HandValuesDialog
-        open={handsOpen}
-        onClose={() => setHandsOpen(false)}
-        handBoost={state.investHands ? state.handBoost : undefined}
-      />
-      <ReviveSheet open={ui.reviveOpen} />
-      {ui.clubInvest && (
-        <InvestWheel
-          hand={ui.clubInvest.hand}
-          amount={ui.clubInvest.amount}
-        />
-      )}
+      {overlays}
     </MotionConfig>
   );
 }

@@ -40,7 +40,7 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: capitalize;
-  color: var(--paper-raised);
+  color: var(--on-accent);
   background: var(--difficulty-tone);
 }
 

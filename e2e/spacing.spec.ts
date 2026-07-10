@@ -153,4 +153,17 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
       expect(Math.abs(g - m.linesPanel.rowGap)).toBeLessThanOrEqual(1);
     }
   }
+
+  // 5. Desktop redesign (phase 2): at ≥1024px GameScreen renders the
+  //    three-column desk fork INSTEAD of the mobile flex column, so the
+  //    mobile-only measurements above are expected to come back null —
+  //    assert the swap actually happened (desk panels present, mobile
+  //    column absent) so this run still guards the breakpoint.
+  if (m.viewport.w >= 1024) {
+    expect(m.layout).toBeNull();
+    await expect(
+      page.getByRole('region', { name: 'Deck and actions' })
+    ).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Scoring' })).toBeVisible();
+  }
 });

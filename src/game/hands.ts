@@ -132,3 +132,41 @@ export const evaluateLine = (line: (Card | null)[]): HandRank | null => {
   const standards = cards.filter(c => !isJoker(c)) as StandardCard[];
   return evalWithJokers(standards, jokers);
 };
+
+/**
+ * Partial-line "hand so far": evaluate only the cards placed (1–4 of
+ * them), returning the best COUNT-BASED made hand so far (pairs /
+ * trips / full house / quads / five of a kind). Straights and flushes
+ * need all five cards, so they are never reported until the line is
+ * complete — a fully-filled line delegates to evaluateLine. Jokers
+ * always extend the largest rank group. Returns null for an empty
+ * line, 'HIGH_CARD' when the placed cards make nothing yet.
+ *
+ * Semantics ported verbatim from the desktop-redesign mockup's
+ * pgEngine.js `evaluatePartialLine` (design-refs/desktop/pgEngine.js);
+ * the desktop SCORING panel uses it to name each line's hand-so-far.
+ */
+export const evaluatePartialLine = (line: (Card | null)[]): HandRank | null => {
+  const cards = line.filter((c): c is Card => c !== null && c !== undefined);
+  if (cards.length === 0) return null;
+  if (cards.length === 5) return evaluateLine(line);
+  const jokers = cards.filter(isJoker).length;
+  const counts = new Map<number, number>();
+  for (const c of cards) {
+    if (isJoker(c)) continue;
+    const r = rankIndex(c.rank);
+    counts.set(r, (counts.get(r) ?? 0) + 1);
+  }
+  const multiset = [...counts.values()].sort((a, b) => b - a);
+  if (multiset.length === 0) multiset.push(0);
+  multiset[0] += jokers; // jokers always extend the largest group
+  const top = multiset[0];
+  const second = multiset[1] ?? 0;
+  if (top >= 5) return 'FIVE_OF_A_KIND';
+  if (top === 4) return 'FOUR_OF_A_KIND';
+  if (top === 3 && second >= 2) return 'FULL_HOUSE';
+  if (top === 3) return 'THREE_OF_A_KIND';
+  if (top === 2 && second === 2) return 'TWO_PAIR';
+  if (top === 2) return 'PAIR';
+  return 'HIGH_CARD';
+};

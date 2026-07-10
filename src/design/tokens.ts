@@ -34,6 +34,8 @@ export const colors = {
 
   // Signals
   accent: '#1f5d43',
+  // Text/glyphs on an accent/danger fill — white in every theme.
+  onAccent: '#ffffff',
   warn: '#b07d2e',
   danger: '#9a2433',
   success: '#2f7d4f',
