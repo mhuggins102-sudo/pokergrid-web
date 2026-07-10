@@ -54,8 +54,8 @@
 
 /* Low-opacity center pip — glanceable suit reading at a distance
    without competing with the rank or the corner pip. Inherits the
-   face's suit color. Part of the Card Room face treatment; Morning
-   Paper keeps its original clean face below. */
+   face's suit color. Strength is the per-theme --wm-opacity token
+   (0 in Morning Paper — clean face — 0.1 in Card Room). */
 .watermark {
   position: absolute;
   inset: 0;
@@ -65,13 +65,8 @@
   font-size: 58cqh;
   line-height: 1;
   font-family: var(--font-body);
-  opacity: 0.1;
+  opacity: var(--wm-opacity, 0.1);
   pointer-events: none;
-}
-
-:global([data-theme='paper']) .watermark,
-:global([data-theme='paper-dark']) .watermark {
-  display: none;
 }
 
 .jokerStar {
@@ -148,7 +143,7 @@
   line-height: 1;
   padding: 3cqh 5cqw;
   border-radius: var(--radius-xs);
-  color: var(--paper-raised);
+  color: var(--on-accent);
 }
 
 .chargeWild {

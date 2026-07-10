@@ -51,6 +51,10 @@
 
   /* ---- Signals ---- */
   --accent: #1f5d43;
+  /* Text/glyphs sitting ON an accent/danger fill — white in every
+     theme (desktop-redesign decision; was --paper-raised, which went
+     dark in dark themes). */
+  --on-accent: #ffffff;
   --warn: #b07d2e;
   --danger: #9a2433;
   --success: #2f7d4f;
@@ -88,6 +92,11 @@
   --shadow-sm: 0 1px 2px rgba(26, 26, 26, 0.08);
   --shadow-md: 0 2px 8px rgba(26, 26, 26, 0.1);
   --shadow-lg: 0 8px 24px rgba(26, 26, 26, 0.14);
+
+  /* Card-face watermark pip strength — 0 hides it (Morning Paper),
+     Card Room overrides to 0.1. Tokenized per the desktop redesign so
+     any theme can tune it without per-theme component CSS. */
+  --wm-opacity: 0;
 
   /* ---- Type families ---- */
   --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
@@ -130,6 +139,21 @@
   --warn: #a87b1f;
   --danger: #9a2433;
   --success: #2e7d4f;
+
+  /* Difficulty scale, re-tuned in the desktop redesign: easy/medium
+     align with success/warn; hard warms up; extreme gets its own red
+     instead of sharing --danger's maroon. */
+  --difficulty-easy: #2e7d4f;
+  --difficulty-medium: #a87b1f;
+  --difficulty-hard: #b2582f;
+  --difficulty-extreme: #b23b3b;
+
+  /* Warmer, slightly stronger ink shadows (desktop redesign). */
+  --shadow-sm: 0 1px 2px rgba(25, 23, 18, 0.1);
+  --shadow-md: 0 2px 8px rgba(25, 23, 18, 0.1);
+  --shadow-lg: 0 8px 24px rgba(25, 23, 18, 0.14);
+
+  --wm-opacity: 0.1;
 
   /* Card Room extras (unset in Morning Paper, so its board/faces stay
      exactly as they were): a faint felt-tinted panel behind the board
@@ -248,6 +272,8 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --wm-opacity: 0.1;
 
   /* Card Room extras — felt reads stronger against the dark ground. */
   --board-surface: color-mix(in srgb, var(--felt) 16%, var(--paper-sunken));

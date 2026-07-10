@@ -4,9 +4,26 @@
   flex-direction: column;
 }
 
+/* Two headers, one visible per breakpoint: the classic scrolling nav
+   below 1024px, the desktop-redesign nav (DesktopNav) at and above. */
+.desktopHeader {
+  display: none;
+  background: var(--paper);
+}
+
 .header {
   border-bottom: 1px solid var(--rule);
   background: var(--paper);
+}
+
+@media (min-width: 1024px) {
+  .desktopHeader {
+    display: block;
+  }
+
+  .header {
+    display: none;
+  }
 }
 
 .headerInner {
