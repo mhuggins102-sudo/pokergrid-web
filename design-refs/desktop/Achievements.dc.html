@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,680&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="pgData.js"></script>
+<style>
+:root,[data-theme='paper']{--paper:#faf7f1;--paper-raised:#fff;--paper-sunken:#f2ecdf;--felt:#1f5d43;--ink:#1a1a1a;--ink-2:#5f5a51;--ink-3:#736c5c;--hairline:rgba(26,26,26,.14);--rule:#d9d1c0;--card-face:#fffdf8;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--joker:#6d4fa3;--accent:#1f5d43;--warn:#b07d2e;--danger:#9a2433;--success:#2f7d4f;--difficulty-easy:#2f7d4f;--difficulty-medium:#b07d2e;--difficulty-hard:#c2542e;--difficulty-extreme:#9a2433;--shadow-sm:0 1px 2px rgba(26,26,26,.08);--shadow-md:0 2px 8px rgba(26,26,26,.1);--shadow-lg:0 8px 24px rgba(26,26,26,.14);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='paper-dark']{--paper:#17150f;--paper-raised:#211e17;--paper-sunken:#100e09;--felt:#3a8f68;--ink:#efe9d8;--ink-2:#b7ae9b;--ink-3:#948b77;--hairline:rgba(239,233,216,.14);--rule:#3a352a;--card-face:#f6f1e4;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#3a8f68;--warn:#c99b3f;--danger:#c4586a;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room']{--paper:#faf8f2;--paper-raised:#fff;--paper-sunken:#f1ebdd;--felt:#175a3d;--ink:#191712;--ink-2:#575144;--ink-3:#736c5c;--hairline:rgba(25,23,18,.14);--rule:#e2daca;--card-face:#fffdf8;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--joker:#7a5bc0;--accent:#175a3d;--warn:#a87b1f;--danger:#9a2433;--success:#2e7d4f;--difficulty-easy:#2e7d4f;--difficulty-medium:#a87b1f;--difficulty-hard:#b2582f;--difficulty-extreme:#b23b3b;--shadow-sm:0 1px 2px rgba(25,23,18,.1);--shadow-md:0 2px 8px rgba(25,23,18,.1);--shadow-lg:0 8px 24px rgba(25,23,18,.14);--board-surface:color-mix(in srgb,var(--felt) 6%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(25,23,18,.14),0 3px 8px rgba(25,23,18,.07);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room-dark']{--paper:#131210;--paper-raised:#1d1b17;--paper-sunken:#0e0d0b;--felt:#2e8b5e;--ink:#f0ebdf;--ink-2:#b5ac99;--ink-3:#9a937f;--hairline:rgba(240,235,223,.14);--rule:#33302a;--card-face:#f5f0e4;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#2e8b5e;--warn:#d9a93e;--danger:#d45a68;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--board-surface:color-mix(in srgb,var(--felt) 16%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.35);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}
+a{color:var(--accent);text-decoration:none}
+.navlink{font:600 14px var(--font-body);color:var(--ink-2);text-decoration:none;cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.navlink:hover,.navlink.on{color:var(--ink)}
+.gmwrap{position:relative}
+.gmtrigger{display:inline-flex;align-items:center;gap:4px;font:600 14px var(--font-body);color:var(--ink-2);cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.gmwrap:hover .gmtrigger,.gmwrap:focus-within .gmtrigger{color:var(--ink)}
+.gmmenu{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;z-index:40}
+.gmwrap:hover .gmmenu,.gmwrap:focus-within .gmmenu{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.gmitem{display:block;padding:8px 12px;border-radius:7px;font:600 13px var(--font-body);color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer}
+.gmitem:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.ach{transition:transform .14s ease,box-shadow .14s ease}
+.ach:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+</style>
+<script>(function(){function a(){try{var b=(localStorage.getItem('pg-theme')||'morning-paper')==='card-room'?'card-room':'paper';var d=(localStorage.getItem('pg-dark')||'1')!=='0';var r=document.querySelector('[data-theme]');if(r)r.setAttribute('data-theme',b+(d?'-dark':''));}catch(e){}}window.__pgTheme=a;a();document.addEventListener('DOMContentLoaded',a);setTimeout(a,0);setTimeout(a,120);setTimeout(a,400);}());</script>
+</helmet>
+
+<div data-theme="paper-dark" data-screen-label="Achievements" style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body)">
+
+<header style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:28px;padding:18px 40px;border-bottom:1px solid var(--rule);max-width:1200px;margin:0 auto">
+<a href="Home.dc.html" style="font-family:var(--font-display);font-size:24px;font-weight:680;letter-spacing:-.01em;color:var(--ink);justify-self:start">PokerGrid</a>
+<nav style="display:flex;align-items:center;gap:24px;justify-self:center">
+<div class="gmwrap" tabindex="0"><span class="gmtrigger">Game Modes<span style="font-size:9px;opacity:.55">▼</span></span><div class="gmmenu"><a class="gmitem" href="Daily.dc.html">Daily</a><a class="gmitem" href="Free Play.dc.html">Free Play</a><a class="gmitem" href="Challenges.dc.html">Challenges</a><a class="gmitem" href="Targets Up.dc.html">Targets Up</a></div></div>
+<a class="navlink" href="Stats.dc.html">Stats</a>
+<a class="navlink on" href="Achievements.dc.html">Achievements</a>
+<a class="navlink" href="Rules.dc.html">Rules</a>
+<a class="navlink" href="Settings.dc.html">Settings</a>
+</nav>
+<button onClick="{{ toggleTheme }}" title="Toggle theme" style="justify-self:end;width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:15px">◐</button>
+</header>
+
+<main style="max-width:1080px;margin:0 auto;padding:40px 40px 64px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px">
+<div>
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.14em;color:var(--ink-3)">Achievements</div>
+<h1 style="font-family:var(--font-display);font-size:44px;font-weight:680;letter-spacing:-.02em;margin:6px 0 0">The trophy case</h1>
+</div>
+<div style="display:flex;align-items:center;gap:20px">
+<div style="text-align:right"><div style="font-family:var(--font-display);font-size:32px;font-weight:680;color:var(--accent);font-variant-numeric:tabular-nums">{{ doneCount }}<span style="color:var(--ink-3);font-size:20px"> / {{ totalCount }}</span></div><div style="font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)">earned</div></div>
+<div style="width:56px;height:56px;position:relative"><svg viewBox="0 0 36 36" style="width:100%;height:100%;transform:rotate(-90deg)"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--paper-sunken)" stroke-width="4"></circle><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="{{ ringDash }}"></circle></svg></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:32px;margin-top:34px">
+<sc-for list="{{ tiers }}" as="t" hint-placeholder-count="4">
+<section>
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--rule)">
+<h2 style="font-family:var(--font-display);font-size:22px;font-weight:680;margin:0">{{ t.label }}</h2>
+<span style="font:500 13px var(--font-body);color:var(--ink-3)">{{ t.note }}</span>
+<span style="margin-left:auto;font:600 13px var(--font-body);color:var(--ink-2)">{{ t.progress }}</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+<sc-for list="{{ t.items }}" as="a" hint-placeholder-count="6"><div class="ach" style="{{ a.wrap }}"><div style="display:flex;align-items:flex-start;gap:12px"><span style="{{ a.medal }}">{{ a.icon }}</span><div style="min-width:0"><div style="font:700 15px var(--font-body);color:{{ a.titleColor }}">{{ a.name }}</div><div style="font:400 12.5px/1.45 var(--font-body);color:var(--ink-2);margin-top:3px">{{ a.description }}</div></div></div></div></sc-for>
+</div>
+</section>
+</sc-for>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const PG = window.PG_DATA || {};
+    const ACH = PG.ACHIEVEMENTS || [];
+    const TIER_META = PG.TIER_META || {};
+    // Demo earned set.
+    const earned = new Set(['easy-overshot', 'easy-soloist', 'dynamite', 'jokerless', 'no-swap', 'daily-first', 'daily-streak-3', 'wins-25', 'win-every-difficulty']);
+    const order = ['easy', 'hard-extreme', 'daily', 'milestone'];
+    const total = ACH.length;
+    const doneCount = ACH.filter((a) => earned.has(a.id)).length;
+
+    const tiers = order.map((key) => {
+      const items = ACH.filter((a) => a.tier === key).map((a) => {
+        const on = earned.has(a.id);
+        return {
+          name: a.name, description: a.description,
+          icon: on ? '★' : '○',
+          titleColor: on ? 'var(--ink)' : 'var(--ink-3)',
+          medal: `flex:none;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:${on ? '17' : '15'}px;background:${on ? 'color-mix(in srgb,var(--warn) 20%,var(--paper-raised))' : 'var(--paper-sunken)'};color:${on ? 'var(--warn)' : 'var(--ink-3)'}`,
+          wrap: `background:var(--paper-raised);border:1px solid ${on ? 'color-mix(in srgb,var(--warn) 35%,var(--hairline))' : 'var(--hairline)'};border-radius:12px;padding:14px 15px;box-shadow:var(--shadow-sm);${on ? '' : 'opacity:.72'}`,
+        };
+      });
+      const got = ACH.filter((a) => a.tier === key && earned.has(a.id)).length;
+      const meta = TIER_META[key] || {};
+      return { label: meta.label || key, note: meta.note || '', items, progress: `${got} / ${items.length}` };
+    });
+
+    const pct = total ? doneCount / total : 0;
+    return {
+      tiers, doneCount, totalCount: total,
+      ringDash: `${(pct * 97.4).toFixed(1)} 97.4`,
+      toggleTheme: () => { try { var d = localStorage.getItem('pg-dark') !== '0'; localStorage.setItem('pg-dark', d ? '0' : '1'); } catch (er) {} if (window.__pgTheme) window.__pgTheme(); },
+    };
+  }
+}
+</script>
+</body>
+</html>

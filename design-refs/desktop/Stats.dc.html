@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,680&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="pgData.js"></script>
+<style>
+:root,[data-theme='paper']{--paper:#faf7f1;--paper-raised:#fff;--paper-sunken:#f2ecdf;--felt:#1f5d43;--ink:#1a1a1a;--ink-2:#5f5a51;--ink-3:#736c5c;--hairline:rgba(26,26,26,.14);--rule:#d9d1c0;--card-face:#fffdf8;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--joker:#6d4fa3;--accent:#1f5d43;--warn:#b07d2e;--danger:#9a2433;--success:#2f7d4f;--difficulty-easy:#2f7d4f;--difficulty-medium:#b07d2e;--difficulty-hard:#c2542e;--difficulty-extreme:#9a2433;--shadow-sm:0 1px 2px rgba(26,26,26,.08);--shadow-md:0 2px 8px rgba(26,26,26,.1);--shadow-lg:0 8px 24px rgba(26,26,26,.14);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='paper-dark']{--paper:#17150f;--paper-raised:#211e17;--paper-sunken:#100e09;--felt:#3a8f68;--ink:#efe9d8;--ink-2:#b7ae9b;--ink-3:#948b77;--hairline:rgba(239,233,216,.14);--rule:#3a352a;--card-face:#f6f1e4;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#3a8f68;--warn:#c99b3f;--danger:#c4586a;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room']{--paper:#faf8f2;--paper-raised:#fff;--paper-sunken:#f1ebdd;--felt:#175a3d;--ink:#191712;--ink-2:#575144;--ink-3:#736c5c;--hairline:rgba(25,23,18,.14);--rule:#e2daca;--card-face:#fffdf8;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--joker:#7a5bc0;--accent:#175a3d;--warn:#a87b1f;--danger:#9a2433;--success:#2e7d4f;--difficulty-easy:#2e7d4f;--difficulty-medium:#a87b1f;--difficulty-hard:#b2582f;--difficulty-extreme:#b23b3b;--shadow-sm:0 1px 2px rgba(25,23,18,.1);--shadow-md:0 2px 8px rgba(25,23,18,.1);--shadow-lg:0 8px 24px rgba(25,23,18,.14);--board-surface:color-mix(in srgb,var(--felt) 6%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(25,23,18,.14),0 3px 8px rgba(25,23,18,.07);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room-dark']{--paper:#131210;--paper-raised:#1d1b17;--paper-sunken:#0e0d0b;--felt:#2e8b5e;--ink:#f0ebdf;--ink-2:#b5ac99;--ink-3:#9a937f;--hairline:rgba(240,235,223,.14);--rule:#33302a;--card-face:#f5f0e4;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#2e8b5e;--warn:#d9a93e;--danger:#d45a68;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--board-surface:color-mix(in srgb,var(--felt) 16%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.35);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}
+a{color:var(--accent);text-decoration:none}
+.navlink{font:600 14px var(--font-body);color:var(--ink-2);text-decoration:none;cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.navlink:hover,.navlink.on{color:var(--ink)}
+.gmwrap{position:relative}
+.gmtrigger{display:inline-flex;align-items:center;gap:4px;font:600 14px var(--font-body);color:var(--ink-2);cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.gmwrap:hover .gmtrigger,.gmwrap:focus-within .gmtrigger{color:var(--ink)}
+.gmmenu{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;z-index:40}
+.gmwrap:hover .gmmenu,.gmwrap:focus-within .gmmenu{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.gmitem{display:block;padding:8px 12px;border-radius:7px;font:600 13px var(--font-body);color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer}
+.gmitem:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.dtab{padding:13px 22px;border-radius:12px;font:600 14px var(--font-body);cursor:pointer;border:1px solid var(--hairline);background:var(--paper-raised);color:var(--ink);transition:all .14s ease}
+.filtrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:center;max-width:560px}
+.filtlabel{font:700 10px var(--font-body);text-transform:uppercase;letter-spacing:.09em;color:var(--ink-3);width:44px;flex:none}
+</style>
+<script>(function(){function a(){try{var b=(localStorage.getItem('pg-theme')||'morning-paper')==='card-room'?'card-room':'paper';var d=(localStorage.getItem('pg-dark')||'1')!=='0';var r=document.querySelector('[data-theme]');if(r)r.setAttribute('data-theme',b+(d?'-dark':''));}catch(e){}}window.__pgTheme=a;a();document.addEventListener('DOMContentLoaded',a);setTimeout(a,0);setTimeout(a,120);setTimeout(a,400);}());</script>
+</helmet>
+
+<div data-theme="paper-dark" data-screen-label="Stats" style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body)">
+
+<header style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:28px;padding:18px 40px;border-bottom:1px solid var(--rule);max-width:1200px;margin:0 auto">
+<a href="Home.dc.html" style="font-family:var(--font-display);font-size:24px;font-weight:680;letter-spacing:-.01em;color:var(--ink);justify-self:start">PokerGrid</a>
+<nav style="display:flex;align-items:center;gap:24px;justify-self:center">
+<div class="gmwrap" tabindex="0"><span class="gmtrigger">Game Modes<span style="font-size:9px;opacity:.55">▼</span></span><div class="gmmenu"><a class="gmitem" href="Daily.dc.html">Daily</a><a class="gmitem" href="Free Play.dc.html">Free Play</a><a class="gmitem" href="Challenges.dc.html">Challenges</a><a class="gmitem" href="Targets Up.dc.html">Targets Up</a></div></div>
+<a class="navlink on" href="Stats.dc.html">Stats</a>
+<a class="navlink" href="Achievements.dc.html">Achievements</a>
+<a class="navlink" href="Rules.dc.html">Rules</a>
+<a class="navlink" href="Settings.dc.html">Settings</a>
+</nav>
+<button onClick="{{ toggleTheme }}" title="Toggle theme" style="justify-self:end;width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:15px">◐</button>
+</header>
+
+<main style="max-width:1080px;margin:0 auto;padding:40px 40px 64px">
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.14em;color:var(--ink-3)">Stats</div>
+<h1 style="font-family:var(--font-display);font-size:44px;font-weight:680;letter-spacing:-.02em;margin:6px 0 22px">Your record</h1>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div class="filtrow"><sc-for list="{{ modetabs }}" as="m" hint-placeholder-count="2"><button class="dtab" onClick="{{ m.select }}" style="{{ m.style }}">{{ m.name }}</button></sc-for></div>
+<div class="filtrow"><sc-for list="{{ difftabs }}" as="d" hint-placeholder-count="4"><button class="dtab" onClick="{{ d.select }}" style="{{ d.style }}">{{ d.name }}</button></sc-for></div>
+</div>
+
+<!-- Headline stats -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:24px">
+<sc-for list="{{ headline }}" as="h" hint-placeholder-count="4"><div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:18px 20px"><div style="font-family:var(--font-display);font-size:34px;font-weight:680;color:{{ h.color }};font-variant-numeric:tabular-nums">{{ h.value }}</div><div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-top:4px">{{ h.label }}</div></div></sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;align-items:stretch">
+<!-- Tier breakdown -->
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:20px 22px">
+<h2 style="font-family:var(--font-display);font-size:19px;font-weight:680;margin:0 0 4px">Rating breakdown</h2>
+<p style="font:400 12.5px var(--font-body);color:var(--ink-3);margin:0 0 15px">How your {{ selName }} finishes graded out.</p>
+<div style="display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ tiers }}" as="t" hint-placeholder-count="6"><div style="display:flex;align-items:center;gap:12px"><span style="flex:none;width:26px;font-family:var(--font-display);font-size:16px;font-weight:680;color:{{ t.color }}">{{ t.key }}</span><div style="flex:1;height:16px;border-radius:6px;background:var(--paper-sunken);overflow:hidden"><div style="{{ t.fillStyle }}"></div></div><span style="flex:none;width:44px;text-align:right;font:700 13px var(--font-body);font-variant-numeric:tabular-nums;color:var(--ink-2)">{{ t.count }}</span></div></sc-for>
+</div>
+</div>
+
+<!-- Recent games scatter -->
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:20px 22px">
+<div style="display:flex;align-items:baseline;justify-content:space-between"><h2 style="font-family:var(--font-display);font-size:19px;font-weight:680;margin:0">Recent scores</h2><span style="font:500 12.5px var(--font-body);color:var(--ink-3)">last {{ scatterN }} games</span></div>
+<div style="position:relative;height:190px;margin-top:16px;border-left:1px solid var(--rule);border-bottom:1px solid var(--rule)">
+<div style="{{ targetLineStyle }}"></div>
+<span style="{{ targetLabelStyle }}">TARGET {{ selTarget }}</span>
+<sc-for list="{{ scatter }}" as="s" hint-placeholder-count="14"><div style="{{ s.dotStyle }}"></div></sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;font:500 11px var(--font-body);color:var(--ink-3);margin-top:6px"><span>Older</span><span>Recent</span></div>
+</div>
+</div>
+
+<!-- Recent runs table -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;align-items:start">
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:20px 22px">
+<h2 style="font-family:var(--font-display);font-size:19px;font-weight:680;margin:0 0 12px">Recent runs</h2>
+<div style="display:grid;grid-template-columns:auto 1fr 56px 56px 52px;gap:2px 16px;font:600 10.5px var(--font-body);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);padding-bottom:9px;border-bottom:1px solid var(--hairline)"><span>Date</span><span></span><span style="text-align:center">Score</span><span style="text-align:center">Target</span><span style="text-align:center">Rating</span></div>
+<sc-for list="{{ runs }}" as="r" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:auto 1fr 56px 56px 52px;gap:2px 16px;align-items:center;padding:10px 0;border-bottom:1px solid var(--hairline)"><span style="font:500 13.5px var(--font-body);color:var(--ink-2)">{{ r.date }}</span><span style="{{ r.variantStyle }}">{{ r.variantLabel }}</span><span style="text-align:center;font:700 14px var(--font-body);font-variant-numeric:tabular-nums;color:var(--ink)">{{ r.score }}</span><span style="text-align:center;font:500 13px var(--font-body);font-variant-numeric:tabular-nums;color:var(--ink-3)">{{ r.target }}</span><span style="justify-self:center;{{ r.badgeStyle }}">{{ r.rating }}</span></div></sc-for>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { diff: 'all', mode: 'all' };
+  renderVals() {
+    const PG = window.PG_DATA || {};
+    const DIFFS = PG.DIFFICULTIES || [];
+    const RATINGS = PG.RATINGS || [];
+    const diff = this.state.diff || 'all';
+    const mode = this.state.mode || 'all';
+    const sel = diff;
+    const selD = DIFFS.find((d) => d.id === sel) || { target: 450, name: sel === 'all' ? 'All levels' : 'Medium' };
+    const toneOf = (id) => (id === 'all' ? 'var(--accent)' : `var(--difficulty-${id})`);
+
+    // Deterministic pseudo-random so the demo data is stable.
+    const seedFor = { easy: 3, medium: 7, hard: 5, extreme: 2, all: 4 }[sel] || 4;
+    let s = (seedFor + (mode === 'daily' ? 11 : mode === 'freeplay' ? 23 : 0)) * 99991;
+    const rand = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+
+    // Row 1 — mode; Row 2 — difficulty. Each row filters on one selection; default All / All.
+    // No "All" button — nothing selected on a row means all. Clicking the active one clears it.
+    const modetabs = [{ id: 'daily', name: 'Daily' }, { id: 'freeplay', name: 'Free Play' }].map((m) => ({
+      name: m.name, select: () => this.setState({ mode: mode === m.id ? 'all' : m.id }),
+      style: m.id === mode ? 'border-color:var(--accent);background:var(--accent);color:#fff' : '',
+    }));
+    const difftabs = DIFFS.map((d) => ({
+      name: d.name, select: () => this.setState({ diff: sel === d.id ? 'all' : d.id }),
+      style: d.id === sel ? `border-color:${toneOf(d.id)};background:${toneOf(d.id)};color:#fff` : '',
+    }));
+
+    // Per-difficulty headline demo values.
+    const stat0 = {
+      easy: { best: 1043, avg: 612, winPct: 92, played: 64 },
+      medium: { best: 631, avg: 468, winPct: 74, played: 128 },
+      hard: { best: 583, avg: 431, winPct: 51, played: 96 },
+      extreme: { best: 512, avg: 388, winPct: 33, played: 41 },
+      all: { best: 1043, avg: 498, winPct: 67, played: 329 },
+    }[sel] || { best: 0, avg: 0, winPct: 0, played: 0 };
+    // Mode filter nudges the demo numbers (Daily is a smaller, slightly tougher slice).
+    const modeF = { all: { p: 1, w: 0 }, daily: { p: 0.4, w: -3 }, freeplay: { p: 0.6, w: 2 } }[mode] || { p: 1, w: 0 };
+    const stat = { best: stat0.best, avg: stat0.avg, winPct: Math.max(0, Math.min(100, stat0.winPct + modeF.w)), played: Math.round(stat0.played * modeF.p) };
+
+    const headline = [
+      { value: stat.best, label: 'Best score', color: 'var(--accent)' },
+      { value: stat.avg, label: 'Avg score', color: 'var(--ink)' },
+      { value: stat.winPct + '%', label: 'Win rate', color: 'var(--ink)' },
+      { value: stat.played, label: 'Games played', color: 'var(--ink)' },
+    ];
+
+    // Rating breakdown counts (shape by win rate).
+    const tierRaw = {
+      easy: [14, 20, 16, 9, 3, 2],
+      medium: [8, 18, 26, 34, 24, 18],
+      hard: [3, 7, 14, 25, 27, 20],
+      extreme: [1, 2, 5, 6, 11, 16],
+      all: [26, 47, 61, 74, 65, 56],
+    }[sel] || [2, 4, 6, 8, 6, 4];
+    const tierMax = Math.max(...tierRaw, 1);
+    const tierColor = { SS: 'var(--accent)', S: 'var(--success)', A: 'var(--warn)', B: 'var(--ink-2)', C: 'var(--ink-3)', D: 'var(--danger)' };
+    const tiers = RATINGS.map((r, i) => ({
+      key: r.key, count: tierRaw[i] ?? 0, color: tierColor[r.key] || 'var(--ink-2)',
+      fillStyle: `width:${Math.round(((tierRaw[i] ?? 0) / tierMax) * 100)}%;height:100%;border-radius:6px;background:${tierColor[r.key] || 'var(--ink-2)'}`,
+    }));
+
+    // Scatter — recent scores.
+    const N = 14;
+    const target = selD.target;
+    const spread = { easy: 500, medium: 240, hard: 200, extreme: 170, all: 320 }[sel] || 240;
+    const centerRatio = { easy: 1.35, medium: 1.03, hard: 0.9, extreme: 0.82, all: 1.05 }[sel] || 1;
+    const scores = Array.from({ length: N }, () => Math.round(target * centerRatio + (rand() - 0.5) * spread));
+    const lo = Math.min(...scores, target) * 0.9;
+    const hi = Math.max(...scores, target) * 1.05;
+    const yFor = (v) => 100 - ((v - lo) / (hi - lo)) * 100;
+    const scatter = scores.map((v, i) => {
+      const win = v >= target;
+      return { dotStyle: `position:absolute;left:${(i / (N - 1)) * 96 + 2}%;top:${yFor(v)}%;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);background:${win ? 'var(--accent)' : 'color-mix(in srgb,var(--ink-3) 55%,var(--paper-sunken))'};box-shadow:0 0 0 3px ${win ? 'color-mix(in srgb,var(--accent) 16%,transparent)' : 'transparent'}` };
+    });
+    const targetY = yFor(target);
+
+    // Recent runs table.
+    const ratingFor = (v) => {
+      const pct = v / target;
+      if (pct >= 1.5) return 'SS'; if (pct >= 1.25) return 'S'; if (pct >= 1.1) return 'A';
+      if (pct >= 1.0) return 'B'; if (pct >= 0.85) return 'C'; return 'D';
+    };
+    const days = ['Jul 8', 'Jul 7', 'Jul 5', 'Jul 4', 'Jul 2', 'Jun 30'];
+    // Some runs carried a twist (only meaningful for Daily/challenge plays).
+    const runVariants = mode === 'freeplay' ? [null, null, null, null, null, null] : ['No Discards', null, 'Short Deck', null, 'Scatter', null];
+    const runs = scores.slice(0, 6).map((v, i) => {
+      const rt = ratingFor(v);
+      const variant = runVariants[i] || '';
+      return {
+        date: days[i], score: v, target,
+        rating: rt, variantLabel: variant ? '✦ ' + variant : '',
+        variantStyle: variant ? 'justify-self:start;display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font:700 10.5px var(--font-body);white-space:nowrap' : '',
+        badgeStyle: `min-width:30px;text-align:center;font:700 12px var(--font-body);padding:3px 9px;border-radius:7px;background:color-mix(in srgb,${tierColor[rt]} 16%,transparent);color:${tierColor[rt]}`,
+      };
+    });
+
+    return {
+      difftabs, modetabs, headline, tiers, scatter, runs,
+      selName: selD.name, selTarget: target, scatterN: N,
+      targetLineStyle: sel === 'all' ? 'display:none' : `position:absolute;left:0;right:0;top:${targetY}%;border-top:1px dashed var(--warn)`,
+      targetLabelStyle: sel === 'all' ? 'display:none' : `position:absolute;right:2px;top:${targetY}%;transform:translateY(-50%);font:700 8.5px var(--font-body);color:var(--warn);background:var(--paper-raised);padding:0 3px`,
+      toggleTheme: () => { try { var d = localStorage.getItem('pg-dark') !== '0'; localStorage.setItem('pg-dark', d ? '0' : '1'); } catch (er) {} if (window.__pgTheme) window.__pgTheme(); },
+    };
+  }
+}
+</script>
+</body>
+</html>

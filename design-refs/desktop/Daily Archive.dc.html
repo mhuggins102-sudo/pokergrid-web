@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,680&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="pgData.js"></script>
+<style>
+:root,[data-theme='paper']{--paper:#faf7f1;--paper-raised:#fff;--paper-sunken:#f2ecdf;--felt:#1f5d43;--ink:#1a1a1a;--ink-2:#5f5a51;--ink-3:#736c5c;--hairline:rgba(26,26,26,.14);--rule:#d9d1c0;--card-face:#fffdf8;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--joker:#6d4fa3;--accent:#1f5d43;--warn:#b07d2e;--danger:#9a2433;--success:#2f7d4f;--difficulty-easy:#2f7d4f;--difficulty-medium:#b07d2e;--difficulty-hard:#c2542e;--difficulty-extreme:#9a2433;--shadow-sm:0 1px 2px rgba(26,26,26,.08);--shadow-md:0 2px 8px rgba(26,26,26,.1);--shadow-lg:0 8px 24px rgba(26,26,26,.14);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='paper-dark']{--paper:#17150f;--paper-raised:#211e17;--paper-sunken:#100e09;--felt:#3a8f68;--ink:#efe9d8;--ink-2:#b7ae9b;--ink-3:#948b77;--hairline:rgba(239,233,216,.14);--rule:#3a352a;--card-face:#f6f1e4;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#3a8f68;--warn:#c99b3f;--danger:#c4586a;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room']{--paper:#faf8f2;--paper-raised:#fff;--paper-sunken:#f1ebdd;--felt:#175a3d;--ink:#191712;--ink-2:#575144;--ink-3:#736c5c;--hairline:rgba(25,23,18,.14);--rule:#e2daca;--card-face:#fffdf8;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--joker:#7a5bc0;--accent:#175a3d;--warn:#a87b1f;--danger:#9a2433;--success:#2e7d4f;--difficulty-easy:#2e7d4f;--difficulty-medium:#a87b1f;--difficulty-hard:#b2582f;--difficulty-extreme:#b23b3b;--shadow-sm:0 1px 2px rgba(25,23,18,.1);--shadow-md:0 2px 8px rgba(25,23,18,.1);--shadow-lg:0 8px 24px rgba(25,23,18,.14);--board-surface:color-mix(in srgb,var(--felt) 6%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(25,23,18,.14),0 3px 8px rgba(25,23,18,.07);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room-dark']{--paper:#131210;--paper-raised:#1d1b17;--paper-sunken:#0e0d0b;--felt:#2e8b5e;--ink:#f0ebdf;--ink-2:#b5ac99;--ink-3:#9a937f;--hairline:rgba(240,235,223,.14);--rule:#33302a;--card-face:#f5f0e4;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#2e8b5e;--warn:#d9a93e;--danger:#d45a68;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--board-surface:color-mix(in srgb,var(--felt) 16%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.35);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}
+a{color:var(--accent);text-decoration:none}
+.navlink{font:600 14px var(--font-body);color:var(--ink-2);text-decoration:none;cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.navlink:hover,.navlink.on{color:var(--ink)}
+.gmwrap{position:relative}
+.gmtrigger{display:inline-flex;align-items:center;gap:4px;font:600 14px var(--font-body);color:var(--ink-2);cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.gmwrap:hover .gmtrigger,.gmwrap:focus-within .gmtrigger{color:var(--ink)}
+.gmmenu{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;z-index:40}
+.gmwrap:hover .gmmenu,.gmwrap:focus-within .gmmenu{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.gmitem{display:block;padding:8px 12px;border-radius:7px;font:600 13px var(--font-body);color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer}
+.gmitem:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.gmitem.on{color:var(--accent)}
+.arow{cursor:pointer;transition:background .13s ease}
+.arow:hover{background:var(--paper-sunken)}
+.monthmenu{position:absolute;top:calc(100% - 4px);left:14px;right:14px;background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--shadow-lg);padding:5px;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .16s ease,transform .16s ease;z-index:30}
+.monthwrap:hover .monthmenu,.monthwrap:focus-within .monthmenu{opacity:1;pointer-events:auto;transform:translateY(0)}
+.monthitem{display:block;padding:8px 11px;border-radius:7px;font:600 13px var(--font-body);color:var(--ink);cursor:pointer}
+.monthitem:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+</style>
+<script>(function(){function a(){try{var b=(localStorage.getItem('pg-theme')||'morning-paper')==='card-room'?'card-room':'paper';var d=(localStorage.getItem('pg-dark')||'1')!=='0';var r=document.querySelector('[data-theme]');if(r)r.setAttribute('data-theme',b+(d?'-dark':''));}catch(e){}}window.__pgTheme=a;a();document.addEventListener('DOMContentLoaded',a);setTimeout(a,0);setTimeout(a,120);setTimeout(a,400);}());</script>
+<script>(function(){function sync(){try{var det=document.getElementById('pg-detail'),sc=document.getElementById('pg-datescroll');if(!det||!sc)return;var top=sc.getBoundingClientRect().top,bot=det.getBoundingClientRect().bottom;var h=Math.max(120,Math.floor(bot-top));sc.style.maxHeight=h+'px';}catch(e){}}window.__pgSync=sync;function loop(){sync();}document.addEventListener('DOMContentLoaded',loop);window.addEventListener('resize',loop);[80,250,500,900].forEach(function(t){setTimeout(loop,t);});}());</script>
+</helmet>
+
+<div data-theme="paper-dark" data-screen-label="Daily — archive/result" style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body)">
+
+<header style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:28px;padding:18px 40px;border-bottom:1px solid var(--rule);max-width:1200px;margin:0 auto">
+<a href="Home.dc.html" style="font-family:var(--font-display);font-size:24px;font-weight:680;letter-spacing:-.01em;color:var(--ink);justify-self:start">PokerGrid</a>
+<nav style="display:flex;align-items:center;gap:24px;justify-self:center">
+<div class="gmwrap" tabindex="0"><span class="gmtrigger on">Game Modes<span style="font-size:9px;opacity:.55">▼</span></span><div class="gmmenu"><a class="gmitem on" href="Daily.dc.html">Daily</a><a class="gmitem" href="Free Play.dc.html">Free Play</a><a class="gmitem" href="Challenges.dc.html">Challenges</a><a class="gmitem" href="Targets Up.dc.html">Targets Up</a></div></div>
+<a class="navlink" href="Stats.dc.html">Stats</a>
+<a class="navlink" href="Achievements.dc.html">Achievements</a>
+<a class="navlink" href="Rules.dc.html">Rules</a>
+<a class="navlink" href="Settings.dc.html">Settings</a>
+</nav>
+<button onClick="{{ toggleTheme }}" title="Toggle theme" style="justify-self:end;width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:15px">◐</button>
+</header>
+
+<main style="max-width:1080px;margin:0 auto;padding:36px 40px 64px">
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.14em;color:var(--ink-3)">Daily · Archive</div>
+<h1 style="font-family:var(--font-display);font-size:40px;font-weight:680;letter-spacing:-.02em;margin:6px 0 24px">Past puzzles</h1>
+
+<div style="display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start">
+<!-- Archive list -->
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden">
+<div class="monthwrap" tabindex="0" style="position:relative;padding:14px 18px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+<span style="font-family:var(--font-display);font-size:18px;font-weight:680;letter-spacing:-.01em;color:var(--ink)">{{ monthLabel }}</span>
+<span style="font-size:10px;color:var(--ink-3)">▾</span>
+<div class="monthmenu"><sc-for list="{{ months }}" as="mo" hint-placeholder-count="6"><a class="monthitem" onClick="{{ mo.select }}" style="{{ mo.style }}">{{ mo.label }}</a></sc-for></div>
+</div>
+<div id="pg-datescroll" style="max-height:560px;overflow-y:auto">
+<sc-for list="{{ archive }}" as="a" hint-placeholder-count="8">
+<div class="arow" onClick="{{ a.select }}" style="{{ a.rowStyle }}">
+<div style="display:flex;align-items:center;gap:12px">
+<span style="{{ a.dateStyle }}">{{ a.day }}</span>
+<div><div style="font:600 13.5px var(--font-body);color:var(--ink)">{{ a.weekday }}</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span style="{{ a.diffStyle }}">{{ a.diffName }}</span><span style="{{ a.sepStyle }}">·</span><span style="{{ a.twistStyle }}">✦ {{ a.twistLabel }}</span></div></div>
+</div>
+<div style="text-align:right"><div style="{{ a.scoreStyle }}">{{ a.scoreLabel }}</div><span style="{{ a.badgeStyle }}">{{ a.badge }}</span></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<!-- Selected day result -->
+<div id="pg-detail" style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:24px 26px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<div>
+<div style="font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3)">{{ selWeekday }}, {{ selDateLabel }}</div>
+<div style="{{ selResultStyle }}"><span style="font-family:var(--font-display);font-size:40px;font-weight:680;color:var(--accent);font-variant-numeric:tabular-nums">{{ selScore }}</span><span style="font:600 14px var(--font-body);color:var(--ink-3)">/ {{ selTarget }}</span><span style="{{ selBadgeStyle }}">{{ selRating }}</span></div>
+<div style="{{ selUnplayedStyle }}"><span style="font-family:var(--font-display);font-size:26px;font-weight:680;color:var(--ink-2)">Not played</span><a href="Play.dc.html?diff=hard&mode=daily" style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:9px;padding:9px 18px;font:700 13px var(--font-body)">Start ▸</a></div>
+</div>
+</div>
+
+<!-- Rank strip -->
+<div style="{{ rankStripStyle }}">
+<div style="{{ rankCardStyle }}"><div style="font-family:var(--font-display);font-size:24px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums">#{{ selRank }}</div><div style="font:600 10.5px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin-top:3px">Your rank</div></div>
+<div style="background:var(--paper-sunken);border-radius:11px;padding:13px 15px;text-align:center"><div style="font-family:var(--font-display);font-size:24px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums">{{ selPct }}</div><div style="font:600 10.5px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin-top:3px">Beat target</div></div>
+<div style="background:var(--paper-sunken);border-radius:11px;padding:13px 15px;text-align:center"><div style="font-family:var(--font-display);font-size:24px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums">{{ selField }}</div><div style="font:600 10.5px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin-top:3px">Players</div></div>
+</div>
+
+<!-- Histogram -->
+<div style="margin-top:22px">
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:12px">Score distribution</div>
+<div style="display:flex;align-items:flex-end;gap:6px;height:120px">
+<sc-for list="{{ hist }}" as="h" hint-placeholder-count="8"><div style="{{ h.barStyle }}"></div></sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:6px"><sc-for list="{{ histEdges }}" as="e" hint-placeholder-count="9"><span style="font:600 9px var(--font-body);color:var(--ink-3);font-variant-numeric:tabular-nums">{{ e }}</span></sc-for></div>
+<div style="display:flex;align-items:center;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline)">
+<span style="{{ youLegendStyle }}"><span style="width:10px;height:10px;border-radius:2px;background:var(--accent)"></span>You · {{ selScore }}</span>
+<span style="display:inline-flex;align-items:center;gap:6px;font:600 12px var(--font-body);color:var(--ink-3)"><span style="width:10px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--ink-3) 32%,var(--paper-sunken))"></span>Field</span>
+</div>
+</div>
+
+<!-- Top players -->
+<div style="margin-top:22px">
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px">Top of the board</div>
+<sc-for list="{{ leaders }}" as="l" hint-placeholder-count="5"><div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:{{ l.rowBg }}"><span style="font:{{ l.nameFont }};color:{{ l.nameColor }}">{{ l.name }}</span><span style="font:700 14px var(--font-body);font-variant-numeric:tabular-nums;color:{{ l.scoreColor }}">{{ l.score }}</span></div></sc-for>
+</div>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sel: 10, month: 6 };
+  renderVals() {
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const curMonth = this.state.month == null ? 6 : this.state.month;
+    const WK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const TWISTS = ['No Discards', 'Short Deck', 'Scatter', 'Poker Purist', 'Bull Market', 'Short Circuit', 'Gridlock', 'Three Tricks'];
+    const DIFF = ['Easy', 'Medium', 'Hard', 'Extreme'];
+    const diffToneMap = { Easy: 'var(--difficulty-easy)', Medium: 'var(--difficulty-medium)', Hard: 'var(--difficulty-hard)', Extreme: 'var(--difficulty-extreme)' };
+    const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+    // A puzzle every day: past months run 1..last day; the current month runs 1..today.
+    const DIM = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const TODAY = 10; const CURRENT = 6;
+    const lastDay = curMonth === CURRENT ? TODAY : (curMonth > CURRENT ? 0 : DIM[curMonth]);
+    const days = []; for (let d = lastDay; d >= 1; d--) days.push(d);
+    const byDay = {};
+    days.forEach((d) => {
+      const r = rng((curMonth + 1) * 1009 + d * 31);
+      const diffName = DIFF[Math.floor(r() * 4)];
+      const target = diffName === 'Easy' ? 400 : diffName === 'Medium' ? 450 : diffName === 'Hard' ? 500 : 450;
+      const score = Math.round(target * (0.8 + r() * 0.62));
+      const twist = r() > 0.5 ? TWISTS[Math.floor(r() * TWISTS.length)] : '';
+      const field = 2300 + Math.floor(r() * 420);
+      const rank = 1 + Math.floor(r() * field);
+      const played = r() > 0.16;
+      byDay[d] = { diffName, target, score, twist, field, rank, played, weekday: WK[((curMonth + 1) * 31 + d) % 7] };
+    });
+    let sel = this.state.sel; if (!byDay[sel]) sel = days[0];
+    const ratingOf = (d) => {
+      const p = byDay[d].score / byDay[d].target;
+      if (p >= 1.25) return 'S'; if (p >= 1.1) return 'A'; if (p >= 1.0) return 'B'; if (p >= 0.85) return 'C'; return 'D';
+    };
+    const ratingColor = { S: 'var(--success)', A: 'var(--warn)', B: 'var(--ink-2)', C: 'var(--ink-3)', D: 'var(--danger)' };
+
+    const archive = days.map((d) => {
+      const on = d === sel;
+      const played = byDay[d].played;
+      const rt = ratingOf(d);
+      const diffName = byDay[d].diffName;
+      const hasTwist = played && !!byDay[d].twist;
+      return {
+        diffName, diffStyle: `font:700 11.5px var(--font-body);color:${diffToneMap[diffName]}`,
+        twistLabel: hasTwist ? byDay[d].twist : '', twistStyle: hasTwist ? 'font:700 11.5px var(--font-body);color:var(--accent)' : 'display:none',
+        sepStyle: hasTwist ? 'color:var(--ink-3)' : 'display:none',
+        day: String(d), weekday: byDay[d].weekday,
+        select: () => { this.setState({ sel: d }); setTimeout(() => { if (window.__pgSync) window.__pgSync(); }, 0); },
+        rowStyle: `display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--hairline);${on ? 'background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:inset 3px 0 0 var(--accent)' : ''}`,
+        dateStyle: `flex:none;width:38px;height:38px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${on ? 'var(--accent)' : (played ? 'var(--paper-sunken)' : 'color-mix(in srgb,var(--warn) 24%,var(--paper-sunken))')};color:${on ? '#fff' : 'var(--ink-2)'};font-family:var(--font-display);font-weight:680;font-size:16px;line-height:1`,
+        scoreLabel: played ? String(byDay[d].score) : '',
+        scoreStyle: played ? 'font:700 15px var(--font-body);font-variant-numeric:tabular-nums;color:var(--ink)' : 'display:none',
+        badge: played ? rt : 'Start ▸',
+        badgeStyle: played ? `display:inline-block;margin-top:3px;font:700 10px var(--font-body);padding:2px 7px;border-radius:6px;background:color-mix(in srgb,${ratingColor[rt]} 16%,transparent);color:${ratingColor[rt]}` : 'display:inline-block;font:700 11px var(--font-body);padding:6px 12px;border-radius:8px;background:var(--accent);color:#fff',
+      };
+    });
+
+    // Selected result detail.
+    const selScore = byDay[sel].score, selTarget = byDay[sel].target;
+    const rt = ratingOf(sel);
+    const selRank = byDay[sel].rank, selField = byDay[sel].field;
+    const pct = Math.max(1, Math.round((1 - selRank / selField) * 100));
+
+    // Histogram — 8 bars, your bucket in accent.
+    const hlabels = [380, 420, 450, 480, 510, 540, 580, 620];
+    const hcounts = [90, 180, 320, 460, 520, 380, 210, 96];
+    const selPlayed = byDay[sel].played;
+    let youBucket = -1; if (selPlayed) { youBucket = 0; for (let i = 0; i < hlabels.length; i++) { if (selScore >= hlabels[i]) youBucket = i; } }
+    const hMax = Math.max(...hcounts);
+    const hist = hcounts.map((n, i) => ({
+      label: hlabels[i],
+      barStyle: `flex:1;align-self:flex-end;border-radius:3px 3px 0 0;height:${Math.max(6, Math.round((n / hMax) * 100))}%;background:${i === youBucket ? 'var(--accent)' : 'color-mix(in srgb,var(--ink-3) 32%,var(--paper-sunken))'}`,
+    }));
+
+    const L = (rank, handle, score, me) => ({
+      name: rank + '   ' + handle, score,
+      rowBg: me ? 'color-mix(in srgb,var(--accent) 12%,transparent)' : 'transparent',
+      nameFont: (me ? '700' : '600') + ' 13px var(--font-body)',
+      nameColor: me ? 'var(--accent)' : 'var(--ink)',
+      scoreColor: me ? 'var(--accent)' : 'var(--ink-2)',
+    });
+    const leaders = [L('1', 'bluff_oracle', 712), L('2', 'gridlock_gwen', 688), L('3', 'nine_high', 664), L('4', 'paperjack', 651), L('5', 'mimosa', 640)];
+    if (selPlayed) leaders.push(L('#' + selRank, 'you', selScore, true));
+
+    const months = [2, 3, 4, 5, 6].map((mi) => ({
+      label: MONTHS[mi] + ' 2026', select: () => { this.setState({ month: mi, sel: [mi === CURRENT ? TODAY : DIM[mi]][0] }); setTimeout(() => { try { var w = document.querySelector('.monthwrap'); if (w) { w.blur(); var m = w.querySelector('.monthmenu'); if (m) { m.style.display = 'none'; setTimeout(function () { m.style.display = ''; }, 500); } } if (window.__pgSync) window.__pgSync(); } catch (e) {} }, 0); },
+      style: mi === curMonth ? 'color:var(--accent)' : '',
+    }));
+    return {
+      archive,
+      monthLabel: MONTHS[curMonth] + ' 2026', months,
+      selWeekday: byDay[sel].weekday, selDateLabel: MONTHS[curMonth] + ' ' + sel + ', 2026',
+      selScore, selTarget, selRank, selField, selPct: pct + '%',
+      selPlayed, selResultStyle: selPlayed ? 'display:flex;align-items:baseline;gap:10px;margin-top:6px' : 'display:none', selUnplayedStyle: selPlayed ? 'display:none' : 'display:flex;align-items:center;gap:12px;margin-top:6px', rankStripStyle: `display:grid;grid-template-columns:${selPlayed ? '1fr 1fr 1fr' : '1fr 1fr'};gap:12px;margin-top:20px`, rankCardStyle: selPlayed ? 'background:var(--paper-sunken);border-radius:11px;padding:13px 15px;text-align:center' : 'display:none', youLegendStyle: selPlayed ? 'display:inline-flex;align-items:center;gap:6px;font:600 12px var(--font-body);color:var(--ink)' : 'display:none',
+      selRating: rt, selBadgeStyle: `font:700 17px var(--font-body);padding:4px 13px;border-radius:8px;background:color-mix(in srgb,${ratingColor[rt]} 18%,transparent);color:${ratingColor[rt]}`,
+      hist, leaders, histEdges: [...hlabels, 660],
+      toggleTheme: () => { try { var d = localStorage.getItem('pg-dark') !== '0'; localStorage.setItem('pg-dark', d ? '0' : '1'); } catch (er) {} if (window.__pgTheme) window.__pgTheme(); },
+    };
+  }
+}
+</script>
+</body>
+</html>

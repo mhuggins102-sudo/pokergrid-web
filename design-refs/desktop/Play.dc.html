@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,680&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="pgData.js"></script>
+<script src="pgEngine.js"></script>
+<style>
+:root,[data-theme='paper']{--paper:#faf7f1;--paper-raised:#fff;--paper-sunken:#f2ecdf;--felt:#1f5d43;--ink:#1a1a1a;--ink-2:#5f5a51;--ink-3:#736c5c;--hairline:rgba(26,26,26,.14);--rule:#d9d1c0;--card-face:#fffdf8;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--joker:#6d4fa3;--accent:#1f5d43;--warn:#b07d2e;--danger:#9a2433;--success:#2f7d4f;--difficulty-easy:#2f7d4f;--difficulty-medium:#b07d2e;--difficulty-hard:#c2542e;--difficulty-extreme:#9a2433;--shadow-sm:0 1px 2px rgba(26,26,26,.08);--shadow-md:0 2px 8px rgba(26,26,26,.1);--shadow-lg:0 8px 24px rgba(26,26,26,.14);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='paper-dark']{--paper:#17150f;--paper-raised:#211e17;--paper-sunken:#100e09;--felt:#3a8f68;--ink:#efe9d8;--ink-2:#b7ae9b;--ink-3:#948b77;--hairline:rgba(239,233,216,.14);--rule:#3a352a;--card-face:#f6f1e4;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#3a8f68;--warn:#c99b3f;--danger:#c4586a;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room']{--paper:#faf8f2;--paper-raised:#fff;--paper-sunken:#f1ebdd;--felt:#175a3d;--ink:#191712;--ink-2:#575144;--ink-3:#736c5c;--hairline:rgba(25,23,18,.14);--rule:#e2daca;--card-face:#fffdf8;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--joker:#7a5bc0;--accent:#175a3d;--warn:#a87b1f;--danger:#9a2433;--success:#2e7d4f;--difficulty-easy:#2e7d4f;--difficulty-medium:#a87b1f;--difficulty-hard:#b2582f;--difficulty-extreme:#b23b3b;--shadow-sm:0 1px 2px rgba(25,23,18,.1);--shadow-md:0 2px 8px rgba(25,23,18,.1);--shadow-lg:0 8px 24px rgba(25,23,18,.14);--board-surface:color-mix(in srgb,var(--felt) 6%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(25,23,18,.14),0 3px 8px rgba(25,23,18,.07);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room-dark']{--paper:#131210;--paper-raised:#1d1b17;--paper-sunken:#0e0d0b;--felt:#2e8b5e;--ink:#f0ebdf;--ink-2:#b5ac99;--ink-3:#9a937f;--hairline:rgba(240,235,223,.14);--rule:#33302a;--card-face:#f5f0e4;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#2e8b5e;--warn:#d9a93e;--danger:#d45a68;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--board-surface:color-mix(in srgb,var(--felt) 16%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.35);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='paper'],[data-theme='paper-dark']{--wm-opacity:0}
+[data-theme='card-room'],[data-theme='card-room-dark']{--wm-opacity:.1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}
+a{color:var(--accent);text-decoration:none}
+.navlink{font:600 14px var(--font-body);color:var(--ink-2);text-decoration:none;cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.navlink:hover{color:var(--ink)}
+.gmwrap{position:relative}
+.gmtrigger{display:inline-flex;align-items:center;gap:4px;font:600 14px var(--font-body);color:var(--ink-2);cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.gmwrap:hover .gmtrigger,.gmwrap:focus-within .gmtrigger{color:var(--ink)}
+.gmmenu{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;z-index:20}
+.gmwrap:hover .gmmenu,.gmwrap:focus-within .gmmenu{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.gmitem{display:block;padding:8px 12px;border-radius:7px;font:600 13px var(--font-body);color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer}
+.gmitem:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.diffwrap{position:relative;display:inline-flex}
+.diffmenu{position:absolute;top:calc(100% + 9px);right:0;background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--shadow-lg);padding:11px 13px;width:232px;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .16s ease,transform .16s ease;z-index:20}
+.diffwrap:hover .diffmenu,.diffwrap:focus-within .diffmenu{opacity:1;pointer-events:auto;transform:translateY(0)}
+.diffhd{font:700 11px var(--font-body);text-transform:uppercase;letter-spacing:.09em;color:var(--difficulty-medium);margin-bottom:7px}
+.diffrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;font:500 12.5px var(--font-body);color:var(--ink-2)}
+.diffrow + .diffrow{border-top:1px solid var(--hairline)}
+.diffrow b{font-weight:700;color:var(--ink)}
+.lbwrap{position:relative}
+.lbpop{position:absolute;left:calc(100% + 16px);top:0;width:300px;background:var(--paper-raised);border:1px solid var(--hairline);border-radius:12px;box-shadow:var(--shadow-lg);padding:15px 16px;opacity:0;pointer-events:none;transform:translateX(-6px);transition:opacity .18s ease,transform .18s ease;z-index:25}
+.lbwrap:hover .lbpop,.lbwrap:focus-within .lbpop{opacity:1;pointer-events:auto;transform:translateX(0)}
+.r2chip{transition:transform .16s ease}
+.r2chip:hover,.r2chip:focus-within{transform:translateY(-1px)}
+.r2chip .r2name{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%) translateY(-4px);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;padding:3px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 11.5px var(--font-body);box-shadow:var(--shadow-md);z-index:6}
+.r2chip:hover .r2name,.r2chip:focus-within .r2name{opacity:1;transform:translateX(-50%) translateY(0)}
+.r2chip.r2empty:hover .r2name,.r2chip.r2empty:focus-within .r2name{opacity:0}
+.bcard{cursor:default}
+.bcard:hover,.bcard:focus-within{box-shadow:var(--shadow-md)}
+.bcard .bpop{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--ink);color:var(--paper);padding:9px 11px;border-radius:8px;font:500 12px/1.45 var(--font-body);opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .16s ease,transform .16s ease;box-shadow:var(--shadow-lg);z-index:8}
+.bcard:hover .bpop,.bcard:focus-within .bpop{opacity:1;transform:translateY(0)}
+.placeable{cursor:pointer}
+.placeable:hover{outline:2px solid var(--accent);outline-offset:1px}
+.peekwrap{position:relative}
+.peekpop{position:absolute;right:calc(100% + 14px);top:-6px;width:236px;max-height:280px;overflow:auto;background:var(--paper-raised);border:1px solid var(--hairline);border-radius:12px;box-shadow:var(--shadow-lg);padding:13px 14px;opacity:0;pointer-events:none;transform:translateX(6px);transition:opacity .18s ease,transform .18s ease;z-index:30}
+.peekwrap:hover .peekpop,.peekwrap:focus-within .peekpop{opacity:1;pointer-events:auto;transform:translateX(0)}
+.gbtn{transition:transform .12s ease,box-shadow .12s ease}
+.gbtn:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+@keyframes nextpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 42%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 10%,transparent)}}
+@keyframes cardpop{0%{transform:scale(.6);opacity:.2}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes cardfly{0%{transform:translate(115px,-95px) scale(.5) rotate(7deg);opacity:0}70%{opacity:1}85%{transform:translate(0,0) scale(1.06) rotate(0deg)}100%{transform:translate(0,0) scale(1) rotate(0deg);opacity:1}}
+@keyframes drawin{0%{transform:translateY(14px) scale(.94);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.drawcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+</style>
+<script>(function(){function a(){try{var b=(localStorage.getItem('pg-theme')||'morning-paper')==='card-room'?'card-room':'paper';var d=(localStorage.getItem('pg-dark')||'1')!=='0';var r=document.querySelector('[data-theme]');if(r)r.setAttribute('data-theme',b+(d?'-dark':''));}catch(e){}}window.__pgTheme=a;a();document.addEventListener('DOMContentLoaded',a);setTimeout(a,0);setTimeout(a,120);setTimeout(a,400);}());</script>
+</helmet>
+
+<div data-theme="paper-dark" data-screen-label="Play" style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body)">
+<div style="max-width:1320px;margin:0 auto;padding:0 30px 40px">
+
+<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;padding:20px 0;border-bottom:1px solid var(--rule)">
+<div style="display:flex;align-items:baseline;gap:12px;justify-self:start"><a href="Home.dc.html" style="font-family:var(--font-display);font-size:24px;font-weight:680;letter-spacing:-.01em;color:var(--ink);white-space:nowrap">PokerGrid</a><span style="font:500 14px var(--font-body);color:var(--ink-3);white-space:nowrap">{{ headerLabel }}</span></div>
+<nav style="display:flex;align-items:center;gap:20px;justify-self:center">
+<div class="gmwrap" tabindex="0"><span class="gmtrigger">Game Modes<span style="font-size:9px;opacity:.55">▼</span></span><div class="gmmenu"><a class="gmitem" style="{{ dailyItemStyle }}" onClick="{{ setDaily }}">Daily</a><a class="gmitem" style="{{ freeplayItemStyle }}" onClick="{{ setFreePlay }}">Free Play</a><a class="gmitem" href="Challenges.dc.html">Challenges</a><a class="gmitem" href="Targets Up.dc.html">Targets Up</a></div></div>
+<a class="navlink" href="Stats.dc.html">Stats</a><a class="navlink" href="Achievements.dc.html">Achievements</a><a class="navlink" href="Rules.dc.html">Rules</a><a class="navlink" href="Settings.dc.html">Settings</a>
+</nav>
+<div style="justify-self:end;display:flex;align-items:center;gap:12px">
+<span style="{{ variantWrapStyle }}" tabindex="0" class="diffwrap">
+<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--accent) 12%,var(--paper-raised));color:var(--accent);font:700 12px var(--font-body);text-transform:uppercase;letter-spacing:.07em;cursor:default"><span style="font-size:11px;line-height:1">✦</span>{{ variantName }}</span>
+<div class="diffmenu" style="width:252px"><div class="diffhd" style="color:var(--accent)">Twist · {{ variantSynopsis }}</div><div style="font:500 12.5px/1.5 var(--font-body);color:var(--ink-2)">{{ variantGoal }}</div></div>
+</span>
+<span class="diffwrap" tabindex="0">
+<span style="display:flex;align-items:center;gap:10px;padding:5px 6px 5px 13px;border-radius:999px;background:var(--paper-raised);border:1px solid var(--hairline);box-shadow:var(--shadow-sm);cursor:default"><span style="{{ diffDotStyle }}"></span><span style="{{ diffLabelStyle }}">{{ diffName }}</span><span style="display:flex;align-items:baseline;gap:4px;padding:3px 10px;border-radius:999px;background:color-mix(in srgb,var(--accent) 12%,transparent)"><span style="font-family:var(--font-display);font-size:19px;font-weight:680;color:var(--accent);font-variant-numeric:tabular-nums">{{ finalTotal }}</span><span style="font:600 12px var(--font-body);color:var(--accent);opacity:.7">/{{ target }}</span></span></span>
+<div class="diffmenu"><div class="diffhd" style="{{ diffHdStyle }}">{{ diffName }} · rules</div><sc-for list="{{ diffRules }}" as="dr" hint-placeholder-count="5"><div class="diffrow"><span>{{ dr.k }}</span><b>{{ dr.v }}</b></div></sc-for></div>
+</span>
+<button onClick="{{ toggleTheme }}" title="Toggle theme" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:15px">◐</button>
+</div>
+</div>
+
+<div style="display:flex;gap:24px;margin-top:24px;align-items:flex-start">
+<!-- LEFT -->
+<div style="width:284px;flex:none;display:flex;flex-direction:column;gap:16px">
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:14px 16px 8px">
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.09em;color:var(--ink-2);margin-bottom:4px">Scoring</div>
+<sc-for list="{{ lines }}" as="ln" hint-placeholder-count="10"><div style="{{ ln.rowStyle }}" onMouseEnter="{{ ln.onEnter }}" onMouseLeave="{{ ln.onLeave }}"><span style="flex:none;width:24px;font:700 13px var(--font-body);color:var(--ink-2)">{{ ln.tag }}</span><span style="{{ ln.nameStyle }}">{{ ln.name }}</span><span style="{{ ln.multStyle }}">{{ ln.multLabel }}</span><span style="{{ ln.scoreStyle }}">{{ ln.score }}</span></div></sc-for>
+<div style="{{ subtotalRowStyle }}"><span style="font:600 13px var(--font-body);color:var(--ink-2)">Subtotal</span><span style="font:700 15px var(--font-body);font-variant-numeric:tabular-nums;color:var(--ink)">{{ subtotal }}</span></div>
+<sc-for list="{{ endgameRows }}" as="eg" hint-placeholder-count="1"><div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0"><span style="font:600 13px var(--font-body);color:var(--joker)">{{ eg.name }}</span><span style="font:700 14px var(--font-body);font-variant-numeric:tabular-nums;color:var(--joker)">{{ eg.mult }}</span></div></sc-for>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0 3px;border-top:2px solid var(--ink);margin-top:5px"><span style="font:700 15px var(--font-body);color:var(--ink)">Total</span><span style="font:700 18px var(--font-body);font-variant-numeric:tabular-nums;color:var(--accent)">{{ finalTotal }}</span></div>
+</div>
+<sc-if value="{{ isDaily }}" hint-placeholder-val="{{ true }}">
+<div class="lbwrap" tabindex="0" style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:15px 16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.09em;color:var(--ink-2)">Leaderboard</span><span style="font:600 12px var(--font-body);color:var(--ink-3)">{{ lbNote }}</span></div>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:11px">
+<sc-for list="{{ top5 }}" as="t5" hint-placeholder-count="5"><div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;background:{{ t5.rowBg }}"><span style="font:{{ t5.nameFont }};color:{{ t5.nameColor }}">{{ t5.name }}</span><span style="font:700 14px var(--font-body);font-variant-numeric:tabular-nums;color:{{ t5.scoreColor }}">{{ t5.score }}</span></div></sc-for>
+</div>
+<div class="lbpop">
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.09em;color:var(--ink-2)">Score distribution</div>
+<div style="display:flex;align-items:flex-end;gap:5px;height:128px;margin-top:13px"><sc-for list="{{ hist }}" as="hb" hint-placeholder-count="8"><div style="{{ hb.barStyle }}"></div></sc-for></div>
+<div style="display:flex;gap:5px;margin-top:5px"><sc-for list="{{ hist }}" as="hb2" hint-placeholder-count="8"><span style="flex:1;text-align:center;font:600 9px var(--font-body);color:var(--ink-3);font-variant-numeric:tabular-nums">{{ hb2.label }}</span></sc-for></div>
+<div style="display:flex;align-items:center;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline)">
+<sc-if value="{{ hFinished }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:6px;font:600 12px var(--font-body);color:var(--ink)"><span style="width:10px;height:10px;border-radius:2px;background:var(--accent)"></span>You · {{ finalTotal }}</span></sc-if>
+<span style="display:inline-flex;align-items:center;gap:6px;font:600 12px var(--font-body);color:var(--ink-3)"><span style="width:10px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--ink-3) 32%,var(--paper-sunken))"></span>Field</span>
+<sc-if value="{{ hPlaying }}" hint-placeholder-val="{{ true }}"><span style="font:500 11.5px/1.35 var(--font-body);color:var(--ink-3)">Your bar highlights once you finish</span></sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isFreePlay }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:15px 16px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+<span style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.09em;color:var(--ink-2)">Stats · Medium</span>
+<div style="display:inline-flex;gap:5px">
+<button onClick="{{ setBars }}" style="{{ barsBtn }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="20" x2="6" y2="11"></line><line x1="12" y1="20" x2="12" y2="5"></line><line x1="18" y1="20" x2="18" y2="14"></line></svg></button>
+<button onClick="{{ setScatter }}" style="{{ scatterBtn }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 6"></polyline></svg></button>
+</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:13px"><sc-for list="{{ statCells }}" as="st" hint-placeholder-count="3"><div style="flex:1;background:var(--paper-sunken);border-radius:9px;padding:9px 8px;text-align:center"><div style="font-family:var(--font-display);font-size:22px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums">{{ st.value }}</div><div style="font:600 9.5px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin-top:3px">{{ st.label }}</div></div></sc-for></div>
+<sc-if value="{{ isBars }}" hint-placeholder-val="{{ true }}"><div style="margin-top:15px">
+<div style="font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:9px">Tier breakdown</div>
+<sc-for list="{{ tiers }}" as="tr" hint-placeholder-count="6"><div style="display:flex;align-items:center;gap:12px;padding:4px 0"><span style="width:26px;font:700 13px var(--font-body);color:var(--ink)">{{ tr.name }}</span><div style="flex:1;height:12px;border-radius:999px;background:var(--paper-sunken);overflow:hidden"><div style="{{ tr.fillStyle }}"></div></div><span style="width:20px;text-align:right;font:700 13px var(--font-body);font-variant-numeric:tabular-nums;color:var(--ink-2)">{{ tr.count }}</span></div></sc-for>
+</div></sc-if>
+<sc-if value="{{ isScatter }}" hint-placeholder-val="{{ true }}"><div style="margin-top:15px">
+<div style="font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:12px">Recent scores</div>
+<div style="position:relative;height:142px;border-left:1px solid var(--rule);border-bottom:1px solid var(--rule)"><div style="position:absolute;left:0;right:0;bottom:30%;border-top:1px dashed var(--warn)"></div><span style="position:absolute;right:1px;bottom:30%;transform:translateY(-50%);font:700 8.5px var(--font-body);color:var(--warn);background:var(--paper-raised);padding:0 3px">TARGET</span><sc-for list="{{ scatter }}" as="sd" hint-placeholder-count="12"><div style="{{ sd.dotStyle }}"></div></sc-for></div>
+<div style="display:flex;justify-content:space-between;font:500 9.5px var(--font-body);color:var(--ink-3);margin-top:5px"><span>Older</span><span>Recent</span></div>
+</div></sc-if>
+</div>
+</sc-if>
+</div>
+
+<!-- CENTER -->
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;gap:6px;align-items:stretch">
+<div style="width:480px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:var(--board-surface,transparent);padding:var(--board-pad,0);border-radius:10px">
+<sc-for list="{{ grid2 }}" as="g" hint-placeholder-count="25"><div class="{{ g.cls }}" onClick="{{ g.tap }}" style="{{ g.wrap }}" onMouseEnter="{{ g.onEnter }}" onMouseLeave="{{ g.onLeave }}"><span style="{{ g.wmStyle }}">{{ g.wm }}</span><span style="{{ g.rankStyle }}">{{ g.rank }}</span><span style="{{ g.pipStyle }}">{{ g.glyph }}</span><span style="{{ g.labelStyle }}">{{ g.label }}</span></div></sc-for>
+</div>
+<div style="{{ railRowWrapStyle }}">
+<sc-for list="{{ rows }}" as="r5" hint-placeholder-count="5"><div class="r2chip {{ r5.cls }}" tabindex="0" style="position:relative;display:flex;align-items:center;justify-content:center;background:transparent;border:none;opacity:{{ r5.chipOp }};transition:opacity .16s ease" onMouseEnter="{{ r5.onEnter }}" onMouseLeave="{{ r5.onLeave }}"><span style="{{ r5.pillStyle }}">{{ r5.ptsLabel }}</span><span class="r2name">{{ r5.name }}</span></div></sc-for>
+</div>
+</div>
+<div style="{{ railColWrapStyle }}">
+<sc-for list="{{ cols }}" as="c6" hint-placeholder-count="5"><div class="r2chip {{ c6.cls }}" tabindex="0" style="position:relative;display:flex;align-items:center;justify-content:center;padding:4px 2px;background:transparent;border:none;opacity:{{ c6.chipOp }};transition:opacity .16s ease" onMouseEnter="{{ c6.onEnter }}" onMouseLeave="{{ c6.onLeave }}"><span style="{{ c6.pillStyle }}">{{ c6.ptsLabel }}</span><span class="r2name">{{ c6.name }}</span></div></sc-for>
+</div>
+</div>
+</div>
+
+<!-- RIGHT -->
+<div style="width:300px;flex:none;display:flex;flex-direction:column;gap:16px">
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:16px">
+<div style="{{ dockInnerStyle }}">
+<div class="peekwrap" tabindex="0" style="{{ dockWellStyle }}">
+<div style="{{ wellWrap }}"><span style="{{ wellWm }}">{{ wellGlyph }}</span><span style="{{ wellRankStyle }}">{{ wellRank }}</span><span style="{{ wellPipStyle }}">{{ wellGlyph2 }}</span><span style="{{ wellEmptyStyle }}">{{ wellEmptyText }}</span></div>
+<span style="font:600 12px var(--font-body);color:var(--ink-3)">Deck · {{ deckLeft }}</span>
+<sc-if value="{{ peekAvailable }}" hint-placeholder-val="{{ true }}"><div class="peekpop">
+<div style="font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2)">Deck peek · {{ deckLeft }} left</div>
+<div style="display:flex;flex-wrap:wrap;gap:5px 9px;margin-top:10px"><sc-for list="{{ peekCards }}" as="pk" hint-placeholder-count="12"><span style="font:700 11.5px var(--font-body);font-variant-numeric:tabular-nums;color:{{ pk.color }}">{{ pk.label }}</span></sc-for></div>
+</div></sc-if>
+</div>
+<div style="{{ dockActionsStyle }}">
+<sc-if value="{{ showPlace }}" hint-placeholder-val="{{ true }}"><button class="gbtn" onClick="{{ place }}" style="{{ placeBtnStyle }}">Place</button></sc-if>
+<sc-if value="{{ hasPerk }}" hint-placeholder-val="{{ false }}"><button class="gbtn" onClick="{{ usePerk }}" style="{{ perkBtnStyle }}">{{ perkLabel }}</button></sc-if>
+<sc-if value="{{ currentIsClub }}" hint-placeholder-val="{{ false }}"><button class="gbtn" onClick="{{ openDraw }}" style="{{ clubBtnStyle }}">♣ Draw</button></sc-if>
+<sc-if value="{{ currentIsInvest }}" hint-placeholder-val="{{ false }}"><button class="gbtn" onClick="{{ investClub }}" style="{{ clubBtnStyle }}">♣ Invest</button></sc-if>
+<sc-if value="{{ perkActive }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:6px"><div style="font:600 12.5px var(--font-body);color:var(--warn);text-align:center">{{ perkPrompt }}</div><button class="gbtn" onClick="{{ cancelPerk }}" style="border:1px solid var(--rule);border-radius:8px;background:var(--paper-raised);color:var(--ink-2);font:600 13px var(--font-body);min-height:34px;cursor:pointer">Cancel perk</button></div></sc-if>
+<sc-if value="{{ actionActive }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:7px;padding:11px;border-radius:10px;background:color-mix(in srgb,var(--accent) 10%,var(--paper-raised));border:1px solid color-mix(in srgb,var(--accent) 32%,var(--hairline))"><div style="font:700 12px var(--font-body);color:var(--accent);text-transform:uppercase;letter-spacing:.06em">{{ actionName }}</div><div style="font:600 12.5px/1.4 var(--font-body);color:var(--ink-2)">{{ actionPrompt }}</div>
+<sc-if value="{{ actShowPlusMinus }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px"><button class="gbtn" onClick="{{ minusRank }}" style="flex:1;border:1px solid var(--rule);border-radius:8px;background:var(--paper-raised);color:var(--ink);font:700 16px var(--font-body);min-height:38px;cursor:pointer">−1</button><button class="gbtn" onClick="{{ plusRank }}" style="flex:1;border:1px solid var(--rule);border-radius:8px;background:var(--paper-raised);color:var(--ink);font:700 16px var(--font-body);min-height:38px;cursor:pointer">+1</button></div></sc-if>
+<sc-if value="{{ actShowMega }}" hint-placeholder-val="{{ false }}"><button class="gbtn" onClick="{{ confirmMega }}" style="border:none;border-radius:8px;background:var(--danger);color:#fff;font:600 13px var(--font-body);min-height:36px;cursor:pointer">Destroy {{ actPickCount }}</button></sc-if>
+<sc-if value="{{ actShowShuffle }}" hint-placeholder-val="{{ false }}"><button class="gbtn" onClick="{{ confirmShuffle }}" style="border:none;border-radius:8px;background:var(--accent);color:#fff;font:600 13px var(--font-body);min-height:36px;cursor:pointer">Shuffle {{ actPickCount }}</button></sc-if>
+<sc-if value="{{ actShowRewind }}" hint-placeholder-val="{{ false }}"><button class="gbtn" onClick="{{ confirmRewind }}" style="border:none;border-radius:8px;background:var(--accent);color:#fff;font:600 13px var(--font-body);min-height:36px;cursor:pointer">Rewind {{ actPickCount }}</button></sc-if>
+<sc-if value="{{ actShowRevive }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ reviveList }}" as="rv" hint-placeholder-count="4"><button class="gbtn" onClick="{{ rv.pick }}" style="border:1px solid var(--rule);border-radius:7px;background:var(--card-face);color:{{ rv.color }};font:700 13px var(--font-body);min-width:38px;min-height:34px;cursor:pointer">{{ rv.label }}</button></sc-for></div></sc-if>
+<button class="gbtn" onClick="{{ cancelAction }}" style="border:1px solid var(--rule);border-radius:8px;background:var(--paper-raised);color:var(--ink-2);font:600 12.5px var(--font-body);min-height:32px;cursor:pointer">Cancel</button></div></sc-if>
+<div style="display:flex;gap:8px">
+<button class="gbtn" onClick="{{ discard }}" style="{{ discardBtnStyle }}">Discard</button>
+<button class="gbtn" onClick="{{ undo }}" style="{{ undoBtnStyle }}">↺ Undo</button>
+</div>
+</div>
+</div>
+</div>
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:15px 16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.09em;color:var(--ink-2)">Bonus Cards</span><span style="font:600 12px var(--font-body);color:var(--ink-3)">{{ bonusCount }} / 3</span></div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+<sc-for list="{{ bonusCards }}" as="bc" hint-placeholder-count="3"><div class="bcard" tabindex="0" style="{{ bc.box }}" onClick="{{ bc.onClick }}" onMouseEnter="{{ bc.onEnter }}" onMouseLeave="{{ bc.onLeave }}"><div style="font:700 14px var(--font-body);color:{{ bc.nameColor }}">{{ bc.name }}</div><div style="font:600 12.5px var(--font-body);color:var(--ink-2);margin-top:2px">{{ bc.effect }}</div><div class="bpop">{{ bc.detail }}<div style="{{ bc.progStyle }}">{{ bc.progLabel }}</div></div><sc-if value="{{ bc.isGreen }}" hint-placeholder-val="{{ false }}"><button class="gbtn" onClick="{{ bc.use }}" style="{{ bc.useStyle }}">Use</button></sc-if></div></sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- BONUS DRAW -->
+<sc-if value="{{ drawing }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 55%,transparent);display:flex;align-items:center;justify-content:center;z-index:90;padding:24px;animation:fadein .16s ease">
+<div style="width:520px;max-width:100%;background:var(--paper-raised);border-radius:18px;box-shadow:var(--shadow-lg);padding:24px 26px 26px;animation:drawin .22s ease">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+<div style="font-family:var(--font-display);font-size:24px;font-weight:680">Draw a bonus card</div>
+<span style="font:600 12px var(--font-body);color:var(--difficulty-medium)">♣ spent</span>
+</div>
+<sc-if value="{{ drawPick }}" hint-placeholder-val="{{ true }}">
+<div style="font:400 13px/1.5 var(--font-body);color:var(--ink-2);margin-top:4px">Pick one to add to your hand.</div>
+<div style="display:flex;gap:14px;margin-top:16px">
+<sc-for list="{{ drawView.options }}" as="o" hint-placeholder-count="2"><div class="drawcard" onClick="{{ o.take }}" style="{{ o.cardStyle }}"><div style="{{ o.catStyle }}">{{ o.catLabel }}</div><div style="{{ o.nameStyle }};margin-top:5px">{{ o.title }}</div><div style="font:700 13px var(--font-body);color:var(--ink);margin-top:3px">{{ o.mult }}</div><div style="font:400 12.5px/1.45 var(--font-body);color:var(--ink-2);margin-top:8px">{{ o.desc }}</div></div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ drawReplace }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:8px;font:600 13px var(--font-body);color:var(--danger)">Hand full — tap a card below to replace it:</div>
+<div style="display:flex;gap:10px;margin-top:12px">
+<sc-for list="{{ bonusCards }}" as="rc" hint-placeholder-count="3"><div class="drawcard" onClick="{{ rc.onClick }}" style="flex:1;cursor:pointer;border:1.5px dashed var(--danger);border-radius:12px;padding:14px 14px 16px;background:var(--paper-raised);transition:transform .12s ease,box-shadow .12s ease"><div style="font:700 15px var(--font-body);color:{{ rc.nameColor }}">{{ rc.name }}</div><div style="font:600 12px var(--font-body);color:var(--ink-2);margin-top:3px">{{ rc.effect }}</div></div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ canDecline }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;margin-top:16px"><span onClick="{{ declineDraw }}" style="font:600 13px var(--font-body);color:var(--ink-3);cursor:pointer">Decline — discard the ♣ (hand full)</span></div></sc-if>
+</div>
+</div>
+</sc-if>
+
+<!-- RESULT -->
+<sc-if value="{{ showResult }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 55%,transparent);display:flex;align-items:center;justify-content:center;z-index:100;padding:24px">
+<div style="width:420px;max-width:100%;background:var(--paper-raised);border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden">
+<div style="{{ resultHeadStyle }}">
+<div style="font:700 12px var(--font-body);text-transform:uppercase;letter-spacing:.14em;opacity:.85">{{ resultVerdict }}</div>
+<div style="font-family:var(--font-display);font-size:64px;font-weight:680;line-height:1;margin-top:8px">{{ resultRating }}</div>
+<div style="font:600 15px var(--font-body);margin-top:6px;opacity:.9">{{ resultLabel }}</div>
+</div>
+<div style="padding:22px 26px 26px">
+<div style="display:flex;align-items:baseline;justify-content:center;gap:10px"><span style="font-family:var(--font-display);font-size:44px;font-weight:680;color:var(--accent);font-variant-numeric:tabular-nums">{{ finalTotal }}</span><span style="font:600 16px var(--font-body);color:var(--ink-3)">/ {{ target }}</span></div>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:16px">
+<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--hairline)"><span style="font:500 13px var(--font-body);color:var(--ink-2)">Lines scored</span><span style="font:700 13px var(--font-body);font-variant-numeric:tabular-nums">{{ scoredLines }} / 10</span></div>
+<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--hairline)"><span style="font:500 13px var(--font-body);color:var(--ink-2)">Incomplete-line penalty</span><span style="font:700 13px var(--font-body);font-variant-numeric:tabular-nums;color:var(--danger)">{{ penalty }}</span></div>
+<div style="display:flex;justify-content:space-between;padding:7px 0"><span style="font:500 13px var(--font-body);color:var(--ink-2)">Best line</span><span style="font:700 13px var(--font-body)">{{ bestLine }}</span></div>
+</div>
+<sc-if value="{{ needHandle }}" hint-placeholder-val="{{ false }}"><div style="margin-top:18px;padding:15px 16px;border-radius:12px;background:color-mix(in srgb,var(--accent) 8%,var(--paper-sunken));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--hairline))">
+<div style="font:700 13px var(--font-body);color:var(--ink)">Claim your spot on the leaderboard</div>
+<div style="font:400 12.5px/1.5 var(--font-body);color:var(--ink-2);margin-top:3px">Pick a handle to post this score and track your daily streak.</div>
+<div style="display:flex;gap:8px;margin-top:11px">
+<input id="pg-handle-input" type="text" maxlength="16" placeholder="your handle" value="{{ handleDraft }}" onInput="{{ onHandleInput }}" style="flex:1;min-width:0;padding:10px 12px;border:1px solid var(--rule);border-radius:9px;background:var(--paper-raised);color:var(--ink);font:600 14px var(--font-body)" />
+<button class="gbtn" onClick="{{ saveHandle }}" style="{{ saveHandleStyle }}">Save</button>
+</div>
+</div></sc-if>
+<sc-if value="{{ haveHandle }}" hint-placeholder-val="{{ false }}"><div style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;font:600 13px var(--font-body);color:var(--accent)"><span>✓</span>Posted as {{ handleName }}</div></sc-if>
+<div style="display:flex;gap:10px;margin-top:20px">
+<button class="gbtn" onClick="{{ playAgain }}" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:11px;padding:13px;font:600 15px var(--font-body);cursor:pointer">Play Again</button>
+<button class="gbtn" onClick="{{ viewGrid }}" style="flex:1;background:var(--paper-raised);color:var(--ink);border:1px solid var(--rule);border-radius:11px;padding:13px;font:600 15px var(--font-body);cursor:pointer">View Grid</button>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const params = (() => { try { return new URLSearchParams(window.location.search); } catch (e) { return new URLSearchParams(''); } })();
+    const diffId = params.get('diff') || 'medium';
+    const mode = params.get('mode') || 'daily';
+    const variant = params.get('variant') || null;
+    const handle = (() => { try { return localStorage.getItem('pg-handle') || ''; } catch (e) { return ''; } })();
+    this.state = { ...this.freshGame(1, diffId, variant), mode, statsView: null, hv: null, handle, handleDraft: '' };
+  }
+  variantCfg(id) {
+    if (!id) return null;
+    const C = (window.PG_DATA && window.PG_DATA.CHALLENGES) || [];
+    const meta = C.find((c) => c.id === id);
+    if (!meta) return null;
+    // Which twists this prototype's engine actually enforces vs. shows as rules-only.
+    const enforced = { 'short-deck': true, 'poker-purist': true, 'no-discards': true, 'gridlock': true, 'scatter': true, 'three-tricks': true, 'short-circuit': true, 'bull-market': true };
+    return { id, name: meta.name, synopsis: meta.synopsis, goal: meta.goal, target: meta.target, enforced: !!enforced[id] };
+  }
+  diffCfg(id) {
+    return ((window.PG_DATA && window.PG_DATA.DIFFICULTIES) || []).find((d) => d.id === id) || { id: 'medium', name: 'Medium', target: 450, jokers: 1, undos: 1, starterBonus: 1, canPreviewDeck: true, noDiscards: false };
+  }
+  freshGame(seed, diffId, variantId) {
+    const E = window.PG_ENGINE;
+    diffId = diffId || (this.state && this.state.diffId) || 'medium';
+    if (variantId === undefined) variantId = this.state && this.state.variantId;
+    const D = this.diffCfg(diffId);
+    const V = this.variantCfg(variantId);
+    let deck = E ? E.shuffle(E.freshDeck(D.jokers, E.seededRng(seed * 7919 + 13))) : [];
+    // Short Deck — 8 cards removed at random before the start.
+    if (V && V.id === 'short-deck' && V.enforced) deck = deck.slice(0, deck.length - 8);
+    const pool = this.poolTitles();
+    // Poker Purist — no bonus cards at all (no starter, no ♣ draw).
+    const purist = V && V.id === 'poker-purist' && V.enforced;
+    const threeTricks = V && V.id === 'three-tricks' && V.enforced;
+    let bonuses;
+    if (threeTricks) {
+      const greens = ['Power Swap', 'Jump, Jump', 'Plus/Minus', 'Mega Destroy', 'Wildcard', 'Shuffle', 'Slip & Slide', 'Revive', 'Rewind'];
+      bonuses = (E ? E.shuffle(greens, E.seededRng(seed * 104729 + 71)) : greens).slice(0, 3);
+    } else {
+      const starterN = purist ? 0 : (D.starterBonus || 0);
+      bonuses = (E ? E.shuffle(pool, E.seededRng(seed * 104729 + 71)) : pool).slice(0, starterN);
+    }
+    this._endSfx = false;
+    let grid = Array(25).fill(null), usedPos = 0, undoStack = [], lastPlaced = -1, seeded = false;
+    // Gridlock — first 15 cards pre-placed at random empty positions.
+    if (V && V.id === 'gridlock' && V.enforced) {
+      const order = E ? E.shuffle(E.spiralOrder.slice(), E.seededRng(seed * 6151 + 5)) : E.spiralOrder.slice();
+      for (let k = 0; k < 15 && deck[usedPos]; k++) { grid[order[k]] = deck[usedPos]; undoStack.push({ slot: order[k], auto: true }); lastPlaced = order[k]; usedPos++; }
+      seeded = true;
+    }
+    if (V && V.id === 'bull-market' && V.enforced) bonuses = [];
+    const r = this.autoFill(grid, deck, usedPos, undoStack, lastPlaced, seeded);
+    return { grid: r.grid, deck, pos: r.pos, undoStack: r.undoStack, discards: 0, undosUsed: 0, over: false, seed, diffId, variantId: variantId || null, bonuses, draw: null, lastPlaced: r.lastPlaced, seeded: r.seeded, discardPile: [], handBoosts: {} };
+  }
+  autoFill(g, deck, pos, undoStack, lastPlaced, seeded) {
+    const E = window.PG_ENGINE; let grid = g.slice();
+    const nextE = () => { for (const idx of E.spiralOrder) if (grid[idx] === null) return idx; return -1; };
+    // The very first drawn card of the game is auto-placed no matter what (it seeds
+    // the board — once per game, tracked by `seeded`). After that, only jokers
+    // auto-place; every other suit (incl. clubs) becomes the current card.
+    while (deck[pos] && grid.some((c) => c === null)) {
+      if (seeded && !E.isJoker(deck[pos])) break;
+      const slot = nextE(); if (slot < 0) break;
+      grid[slot] = deck[pos]; undoStack = [...undoStack, { slot, auto: true }]; lastPlaced = slot; pos++; seeded = true;
+    }
+    return { grid, pos, undoStack, lastPlaced, seeded };
+  }
+  poolTitles() {
+    return ['Crossroads', 'Royal Touch', 'Outer Edge', 'Rainbow', 'Highball', 'Joker Line', 'Pair', 'Two Pair', 'Three of a Kind', 'Flush', 'Full House', '\u2665 Density', '\u2660 Density', '\u2666 Density', '\u2663 Density', 'Row 3', 'Col 3', 'Balance', 'Diversity', 'No Flushes', 'Speedrun', 'Power Swap', 'Jump, Jump', 'Plus/Minus', 'Mega Destroy', 'Wildcard', 'Shuffle', 'Slip & Slide', 'Revive', 'Rewind'];
+  }
+  bonusMeta(title) {
+    const C = (window.PG_DATA && window.PG_DATA.BONUS_CARDS) || [];
+    return C.find((c) => c.title === title) || { title, category: 'in-game', mult: '', description: '' };
+  }
+  isClub(card) { return card && !window.PG_ENGINE.isJoker(card) && card.suit === 'C'; }
+  slideStep(dir) { return { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] }[dir]; }
+  slideChain(grid, slot, dir) {
+    if (grid[slot] === null) return [];
+    const [dr, dc] = this.slideStep(dir); const out = [slot];
+    let r = Math.floor(slot / 5), c = slot % 5;
+    while (true) { r += dr; c += dc; if (r < 0 || r > 4 || c < 0 || c > 4) break; const idx = r * 5 + c; if (grid[idx] === null) break; out.push(idx); }
+    return out;
+  }
+  slideMax(grid, slot, dir) {
+    const chain = this.slideChain(grid, slot, dir); if (!chain.length) return 0;
+    const [dr, dc] = this.slideStep(dir); const lead = chain[chain.length - 1];
+    let r = Math.floor(lead / 5), c = lead % 5, dist = 0;
+    while (true) { r += dr; c += dc; if (r < 0 || r > 4 || c < 0 || c > 4) break; if (grid[r * 5 + c] !== null) break; dist++; }
+    return dist;
+  }
+  // Map every reachable leading-edge destination slot → {dir, dist} for a source.
+  slideTargetMap(grid, from) {
+    const map = {};
+    for (const dir of ['up', 'down', 'left', 'right']) {
+      const max = this.slideMax(grid, from, dir); if (!max) continue;
+      const chain = this.slideChain(grid, from, dir); const [dr, dc] = this.slideStep(dir);
+      const lead = chain[chain.length - 1]; let r = Math.floor(lead / 5), c = lead % 5;
+      for (let d = 1; d <= max; d++) { r += dr; c += dc; map[r * 5 + c] = { dir, dist: d }; }
+    }
+    return map;
+  }
+  doSlide(grid, from, dir, dist) {
+    const g = grid.slice(); const chain = this.slideChain(grid, from, dir); const [dr, dc] = this.slideStep(dir);
+    // Clear the chain, then re-place each card shifted by dist.
+    chain.forEach((idx) => { g[idx] = null; });
+    chain.forEach((idx) => { const nr = Math.floor(idx / 5) + dr * dist, nc = (idx % 5) + dc * dist; g[nr * 5 + nc] = grid[idx]; });
+    return g;
+  }
+  nextSpiral(grid) { for (const idx of window.PG_ENGINE.spiralOrder) if (grid[idx] === null) return idx; return -1; }
+  advance(extra) {
+    const wasOver = this.state.over;
+    const posBefore = this.state.pos;
+    this.setState((s) => {
+      const ns = { ...s, ...extra }; ns.pos = s.pos + 1;
+      const posAfterMove = ns.pos;
+      const r = this.autoFill(ns.grid, ns.deck, ns.pos, ns.undoStack, ns.lastPlaced, ns.seeded);
+      ns.grid = r.grid; ns.pos = r.pos; ns.undoStack = r.undoStack; ns.lastPlaced = r.lastPlaced; ns.seeded = r.seeded;
+      // A joker was auto-seated if any card consumed by autoFill (beyond the move) was a joker.
+      ns._jokerJustPlaced = false;
+      for (let k = posAfterMove; k < r.pos; k++) { if (window.PG_ENGINE.isJoker(ns.deck[k])) { ns._jokerJustPlaced = true; break; } }
+      if (ns.grid.every((c) => c !== null) || ns.pos >= ns.deck.length) ns.over = true;
+      return ns;
+    }, () => {
+      if (this.state._jokerJustPlaced) this.sfx('joker');
+      if (this.state.over && !wasOver && !this._endSfx) { this._endSfx = true; this.sfx(this._lastWin ? 'win' : 'lose'); }
+    });
+  }
+  placeAt(slot) {
+    const s = this.state; const card = s.deck[s.pos];
+    if (s.over || slot < 0 || !card || s.grid[slot] !== null) return;
+    const grid = [...s.grid]; grid[slot] = card;
+    this.sfx('place');
+    this.advance({ grid, undoStack: [...s.undoStack, { slot }], hv: null, lastPlaced: slot });
+  }
+  usePerk(suit) { if (this.state.over) return; const s = this.state; const V = this.variantCfg(s.variantId); if (V && V.id === 'short-circuit' && V.enforced) { const opts = ['H', 'S', 'D', 'C']; suit = opts[Math.floor((window.PG_ENGINE ? window.PG_ENGINE.seededRng((s.pos + 5) * 17 + s.seed)() : Math.random()) * opts.length)]; if (suit === 'C') { this.openDraw(); return; } } this.setState({ perk: { suit, from: -1 }, hv: null }); }
+  cancelPerk() { this.setState({ perk: null }); }
+  perkTap(slot) {
+    const s = this.state; const p = s.perk; if (!p) return;
+    if (p.suit === 'D') {
+      if (s.grid[slot] === null) return;
+      const grid = [...s.grid]; const dead = grid[slot]; grid[slot] = null; this.sfx('destroy');
+      this.setState({ perk: null }); this.advance({ grid, undoStack: [...s.undoStack, { perk: true }], discardPile: [...(s.discardPile || []), dead] });
+    } else if (p.suit === 'H') { // swap two cards that share a row or column
+      if (s.grid[slot] === null) return;
+      if (p.from < 0) { this.setState({ perk: { ...p, from: slot } }); return; }
+      if (slot === p.from) { this.setState({ perk: { ...p, from: -1 } }); return; }
+      const sameLine = Math.floor(p.from / 5) === Math.floor(slot / 5) || (p.from % 5) === (slot % 5);
+      if (!sameLine) return;
+      const grid = [...s.grid]; const t = grid[slot]; grid[slot] = grid[p.from]; grid[p.from] = t;
+      this.sfx('swap'); this.setState({ perk: null }); this.advance({ grid, undoStack: [...s.undoStack, { perk: true }], lastPlaced: slot });
+    } else { // ♠ slide: the picked card + contiguous cards in front slide as a unit
+      if (p.from < 0) { if (s.grid[slot] === null) return; if (Object.keys(this.slideTargetMap(s.grid, slot)).length === 0) return; this.setState({ perk: { ...p, from: slot } }); }
+      else { const map = this.slideTargetMap(s.grid, p.from); const mv = map[slot]; if (!mv) { if (slot === p.from) this.setState({ perk: { ...p, from: -1 } }); return; } const grid = this.doSlide(s.grid, p.from, mv.dir, mv.dist); this.sfx('slide'); this.setState({ perk: null }); this.advance({ grid, undoStack: [...s.undoStack, { perk: true }], lastPlaced: slot }); }
+    }
+  }
+  declineDraw() { this.setState({ draw: null }); this.advance({ undoStack: [...this.state.undoStack, { drew: true }] }); }
+  investClub() {
+    const s = this.state; const E = window.PG_ENGINE; const card = s.deck[s.pos]; if (s.over || !card) return;
+    const bj = E.isJoker(card) ? 0 : (card.rank === 'A' ? 11 : (card.rank === 'K' || card.rank === 'Q' || card.rank === 'J' || card.rank === '10') ? 10 : +card.rank);
+    const HK = ['PAIR', 'TWO_PAIR', 'THREE_OF_A_KIND', 'STRAIGHT', 'FLUSH', 'FULL_HOUSE', 'FOUR_OF_A_KIND', 'STRAIGHT_FLUSH', 'ROYAL_FLUSH', 'FIVE_OF_A_KIND'];
+    const hand = HK[Math.floor(E.seededRng((s.pos + 9) * 23 + s.seed)() * HK.length)];
+    const boosts = { ...(s.handBoosts || {}) }; boosts[hand] = (boosts[hand] || 0) + bj * 2;
+    this.sfx('enchant'); this.advance({ undoStack: [...s.undoStack, { drew: true }], handBoosts: boosts });
+  }
+  saveHandle() { const h = (this.state.handleDraft || '').trim(); if (!h) return; try { localStorage.setItem('pg-handle', h); } catch (e) {} this.sfx('chime'); this.setState({ handle: h }); }
+  greenKind(title) { return { 'Power Swap': 'swap2', 'Wildcard': 'wild', 'Mega Destroy': 'megadestroy', 'Slip & Slide': 'slipslide', 'Jump, Jump': 'jump', 'Shuffle': 'shuffle', 'Plus/Minus': 'plusminus', 'Revive': 'revive', 'Rewind': 'rewind' }[title] || null; }
+  useGreen(title) { if (this.state.over) return; const k = this.greenKind(title); if (!k) return; this.setState({ action: { title, kind: k, picks: [], from: -1 }, perk: null, hv: null }); }
+  cancelAction() { this.setState({ action: null }); }
+  finishGreen(grid, lastPlaced, extra) { const s = this.state; const bonuses = (s.bonuses || []).filter((t) => t !== s.action.title); this.setState({ grid, bonuses, action: null, lastPlaced: lastPlaced == null ? -1 : lastPlaced, ...(extra || {}) }); }
+  actionIsTarget(i, hasCard) {
+    const a = this.state.action; if (!a) return false; const g = this.state.grid; const E = window.PG_ENGINE; const k = a.kind;
+    if (k === 'swap2' || k === 'megadestroy' || k === 'shuffle' || k === 'rewind') return hasCard;
+    if (k === 'revive') return false;
+    if (k === 'wild') return hasCard && !E.isJoker(g[i]);
+    if (k === 'plusminus') return a.from < 0 ? (hasCard && !E.isJoker(g[i])) : false;
+    if (k === 'jump') return a.from < 0 ? hasCard : !hasCard;
+    if (k === 'slipslide') return a.from < 0 ? (hasCard && Object.keys(this.slideTargetMap(g, i)).length > 0) : !!this.slideTargetMap(g, a.from)[i];
+    return false;
+  }
+  actionTap(i) {
+    const s = this.state; const a = s.action; if (!a) return; const grid = s.grid; const E = window.PG_ENGINE; const k = a.kind;
+    const toggle = (arr, x, max) => arr.includes(x) ? arr.filter((y) => y !== x) : (arr.length < max ? [...arr, x] : arr);
+    if (k === 'swap2') { if (grid[i] === null) return; if (a.picks.length === 0) { this.setState({ action: { ...a, picks: [i] } }); return; } if (a.picks[0] === i) { this.setState({ action: { ...a, picks: [] } }); return; } const g = grid.slice(); const t = g[i]; g[i] = g[a.picks[0]]; g[a.picks[0]] = t; this.sfx('swap'); this.finishGreen(g, i); }
+    else if (k === 'wild') { if (grid[i] === null || E.isJoker(grid[i])) return; const g = grid.slice(); g[i] = { kind: 'joker', id: 'wild' + i }; this.sfx('enchant'); this.finishGreen(g, i); }
+    else if (k === 'jump') { if (a.from < 0) { if (grid[i] === null) return; this.setState({ action: { ...a, from: i } }); } else { if (grid[i] !== null) return; const g = grid.slice(); g[i] = g[a.from]; g[a.from] = null; this.sfx('swap'); this.finishGreen(g, i); } }
+    else if (k === 'plusminus') { if (grid[i] === null || E.isJoker(grid[i])) return; this.setState({ action: { ...a, from: i } }); }
+    else if (k === 'megadestroy' || k === 'shuffle' || k === 'rewind') { if (grid[i] === null) return; this.setState({ action: { ...a, picks: toggle(a.picks, i, 5) } }); }
+    else if (k === 'slipslide') { if (a.from < 0) { if (grid[i] === null || Object.keys(this.slideTargetMap(grid, i)).length === 0) return; this.setState({ action: { ...a, from: i } }); } else { const mv = this.slideTargetMap(grid, a.from)[i]; if (!mv) { if (i === a.from) this.setState({ action: { ...a, from: -1 } }); return; } const g = this.doSlide(grid, a.from, mv.dir, mv.dist); this.sfx('slide'); this.finishGreen(g, i); } }
+  }
+  applyPlusMinus(delta) { const s = this.state; const a = s.action; if (!a || a.from < 0) return; const R = window.PG_ENGINE.RANKS; const g = s.grid.slice(); const c = g[a.from]; const idx = R.indexOf(c.rank); const ni = (idx + delta + R.length) % R.length; g[a.from] = { kind: 'standard', rank: R[ni], suit: c.suit }; this.sfx('enchant'); this.finishGreen(g, a.from); }
+  confirmMega() { const s = this.state; const a = s.action; if (!a || !a.picks.length) return; const g = s.grid.slice(); const dead = a.picks.map((i) => s.grid[i]); a.picks.forEach((i) => { g[i] = null; }); this.sfx('destroy'); this.finishGreen(g, -1, { discardPile: [...(s.discardPile || []), ...dead] }); }
+  reviveCard(di) { const s = this.state; const a = s.action; if (!a) return; const card = (s.discardPile || [])[di]; if (!card) return; const slot = this.nextSpiral(s.grid); if (slot < 0) return; const g = s.grid.slice(); g[slot] = card; const dp = (s.discardPile || []).slice(); dp.splice(di, 1); this.sfx('revive'); this.finishGreen(g, slot, { discardPile: dp }); }
+  confirmRewind() { const s = this.state; const a = s.action; if (!a || a.picks.length < 2) return; const E = window.PG_ENGINE; const taken = a.picks.map((i) => s.grid[i]); const g = s.grid.slice(); a.picks.forEach((i) => { g[i] = null; }); const rest = s.deck.slice(s.pos + 1); const merged = E.shuffle([...rest, ...taken]); const deck = [...s.deck.slice(0, s.pos + 1), ...merged]; this.sfx('riffle'); this.finishGreen(g, -1, { deck }); }
+  confirmShuffle() { const s = this.state; const a = s.action; if (!a || a.picks.length < 2) return; const cards = window.PG_ENGINE.shuffle(a.picks.map((i) => s.grid[i])); const g = s.grid.slice(); a.picks.forEach((i, k) => { g[i] = cards[k]; }); this.sfx('riffle'); this.finishGreen(g); }
+  targetSlot(grid, pos) { const s = this.state; const V = this.variantCfg(s.variantId); if (V && V.id === 'scatter' && V.enforced) return this.scatterSlot(grid, pos, s.seed); return this.nextSpiral(grid); }
+  place() { this.placeAt(this.targetSlot(this.state.grid, this.state.pos)); }
+  openDraw() {
+    const s = this.state; if (s.over) return;
+    const E = window.PG_ENGINE;
+    const pool = this.poolTitles().filter((t) => !(s.bonuses || []).includes(t));
+    const opts = (E ? E.shuffle(pool, E.seededRng((s.pos + 3) * 31 + s.seed)) : pool).slice(0, 2);
+    this.sfx('chime');
+    this.setState({ draw: { options: opts, replace: false, pending: null }, hv: null });
+  }
+  cancelDraw() { this.setState({ draw: null }); }
+  takeBonus(title) {
+    const s = this.state;
+    if ((s.bonuses || []).length < 3) {
+      this.sfx('chime');
+      this.setState({ bonuses: [...s.bonuses, title], draw: null });
+      this.advance({ undoStack: [...s.undoStack, { drew: true }] });
+    } else {
+      this.setState({ draw: { ...s.draw, replace: true, pending: title } });
+    }
+  }
+  replaceBonus(idx) {
+    const s = this.state; if (!s.draw || !s.draw.pending) return;
+    const bonuses = [...s.bonuses]; bonuses[idx] = s.draw.pending;
+    this.sfx('chime');
+    this.setState({ bonuses, draw: null });
+    this.advance({ undoStack: [...s.undoStack, { drew: true }] });
+  }
+  sfx(kind) {
+    try { if (localStorage.getItem('pg-sound') === '0') return; } catch (e) {}
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      this._ac = this._ac || new AC(); const ac = this._ac; if (ac.state === 'suspended') ac.resume();
+      // Faithful port of pokergrid-web/src/lib/sfx.ts — soft, papery WebAudio synth.
+      const tone = (freq, startIn, dur, peak, type, glideTo) => {
+        const t0 = ac.currentTime + startIn;
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = type || 'sine';
+        o.frequency.setValueAtTime(freq, t0);
+        if (glideTo !== undefined) o.frequency.linearRampToValueAtTime(glideTo, t0 + dur);
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(peak, t0 + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+      };
+      const V = {
+        place: () => { tone(660, 0, 0.07, 0.08, 'triangle'); tone(330, 0, 0.09, 0.05, 'sine'); },
+        chime: () => { tone(523.25, 0, 0.12, 0.06); tone(783.99, 0.07, 0.16, 0.05); },
+        swap: () => { tone(440, 0, 0.09, 0.06, 'triangle', 587.33); tone(587.33, 0.07, 0.1, 0.06, 'triangle', 440); },
+        slide: () => { tone(220, 0, 0.18, 0.06, 'sine', 392); tone(440, 0.04, 0.14, 0.03, 'triangle', 660); },
+        destroy: () => { tone(180, 0, 0.12, 0.09, 'square', 70); tone(90, 0.02, 0.16, 0.06, 'sine', 50); },
+        joker: () => { tone(330, 0.4, 0.16, 0.07, 'triangle', 660); tone(880, 0.52, 0.1, 0.05); tone(1108.73, 0.58, 0.14, 0.045); },
+        win: () => { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * 0.09, 0.22, 0.07)); },
+        lose: () => { tone(392, 0, 0.2, 0.06); tone(311.13, 0.12, 0.28, 0.05); },
+      };
+      (V[kind] || (() => {}))();
+    } catch (e) {}
+  }
+  discard() { const s = this.state; const V = this.variantCfg(s.variantId); const noDisc = this.diffCfg(s.diffId).noDiscards || (V && V.id === 'no-discards' && V.enforced); if (s.over || noDisc || !s.deck[s.pos]) return; this.advance({ discards: s.discards + 1, undoStack: [...s.undoStack, { discard: true }], discardPile: [...(s.discardPile || []), s.deck[s.pos]] }); }
+  scatterSlot(grid, pos, seed) {
+    const E = window.PG_ENGINE;
+    const empty = []; for (let i = 0; i < 25; i++) if (grid[i] === null) empty.push(i);
+    if (!empty.length) return -1;
+    const r = E ? E.seededRng((pos + 1) * 2749 + seed * 13)() : Math.random();
+    return empty[Math.floor(r * empty.length)];
+  }
+  undo() {
+    this.setState((s) => {
+      if (!s.undoStack.length) return s;
+      if ((s.undosUsed || 0) >= this.diffCfg(s.diffId).undos) return s;
+      const last = s.undoStack[s.undoStack.length - 1]; const grid = [...s.grid];
+      if (last.slot !== undefined) grid[last.slot] = null;
+      return { ...s, grid, pos: Math.max(0, s.pos - 1), over: false, undoStack: s.undoStack.slice(0, -1), discards: last.discard ? s.discards - 1 : s.discards, undosUsed: (s.undosUsed || 0) + 1 };
+    });
+  }
+  setting(key, def) { try { const v = localStorage.getItem(key); return v === null ? def : v; } catch (e) { return def; } }
+  suitColor(suit) {
+    // Two-color deck: red for ♥♦, black for ♠♣. Four-color otherwise.
+    if (this.setting('pg-twocolor', '0') === '1') return (suit === 'H' || suit === 'D') ? 'var(--face-suit-h)' : 'var(--face-suit-s)';
+    return window.PG_ENGINE.SUIT_VAR[suit];
+  }
+  cardFace(card) {
+    const E = window.PG_ENGINE;
+    if (E.isJoker(card)) return { color: 'var(--joker)', wm: '★', rank: 'JOKER', glyph: '', joker: true };
+    return { color: this.suitColor(card.suit), wm: E.SUIT_GLYPH[card.suit], rank: card.rank, glyph: E.SUIT_GLYPH[card.suit], joker: false };
+  }
+  renderVals() {
+    const E = window.PG_ENGINE, PG = window.PG_DATA || {};
+    const s = this.state;
+    const D = this.diffCfg(s.diffId);
+    const V = this.variantCfg(s.variantId);
+    const target = (V && V.enforced) ? V.target : D.target;
+    const diffName = D.name;
+    const diffTone = `var(--difficulty-${D.id})`;
+    const peekAvailable = !!D.canPreviewDeck;
+    const purist = V && V.id === 'poker-purist' && V.enforced;
+    const noDiscVariant = V && V.id === 'no-discards' && V.enforced;
+    const discardEnabled = !D.noDiscards && !noDiscVariant;
+    const undoEnabled = (s.undosUsed || 0) < D.undos && s.undoStack.length > 0;
+    const playing = !s.over;
+    const current = s.deck[s.pos];
+    const nextSlot = playing ? this.targetSlot(s.grid, s.pos) : -1;
+
+    const cardsOfLine = (tag) => { const idx = +tag.slice(1) - 1; return [0, 1, 2, 3, 4].map((k) => (tag[0] === 'R' ? s.grid[idx * 5 + k] : s.grid[k * 5 + idx])); };
+
+    // Base scoring (hand per line).
+    const raw = E.scoreGrid(s.grid, { ignoreIncompletePenalty: playing });
+    const byKey = {}; raw.lines.forEach((l) => { byKey[l.kind + l.index] = l; });
+    const fmtMult = (m) => (Number.isInteger(m) ? String(m) : (+m.toFixed(2)).toString());
+
+    // Per-line context used by bonus-effect formulas.
+    const suitCount = (cards, suit) => cards.filter((c) => c && !E.isJoker(c) && c.suit === suit).length;
+    const cardVal = (c, aceHigh) => (E.isJoker(c) ? 0 : c.rank === 'A' ? (aceHigh ? 11 : 1) : (c.rank === 'K' || c.rank === 'Q' || c.rank === 'J' || c.rank === '10') ? 10 : +c.rank);
+    const tagsAll = ['R1', 'R2', 'R3', 'R4', 'R5', 'C1', 'C2', 'C3', 'C4', 'C5'];
+    const ctxByTag = {};
+    tagsAll.forEach((tag) => {
+      const kind = tag[0] === 'R' ? 'row' : 'col'; const idx = +tag.slice(1) - 1;
+      const cards = cardsOfLine(tag); const filled = cards.filter((c) => c !== null);
+      ctxByTag[tag] = {
+        tag, cards, hand: byKey[kind + idx].hand,
+        hasAce: filled.some((c) => !E.isJoker(c) && c.rank === 'A'),
+        hasJoker: filled.some((c) => E.isJoker(c)),
+        distinct: new Set(filled.filter((c) => !E.isJoker(c)).map((c) => c.suit)).size,
+        totalHigh: filled.reduce((a, c) => a + cardVal(c, true), 0),
+      };
+    });
+
+    // Real bonus-effect registries (computable subset of the 48-card catalog).
+    const GOLD = {
+      'Pair': (c) => c.hand === 'PAIR' ? 4 : 1,
+      'Two Pair': (c) => c.hand === 'TWO_PAIR' ? 3 : 1,
+      'Three of a Kind': (c) => c.hand === 'THREE_OF_A_KIND' ? 3 : 1,
+      'Straight': (c) => c.hand === 'STRAIGHT' ? 2 : 1,
+      'Flush': (c) => c.hand === 'FLUSH' ? 1.5 : 1,
+      'Full House': (c) => c.hand === 'FULL_HOUSE' ? 1.5 : 1,
+      'Four of a Kind': (c) => c.hand === 'FOUR_OF_A_KIND' ? 1.5 : 1,
+      'Crossroads': (c) => (c.tag === 'R3' || c.tag === 'C3') ? 1.5 : 1,
+      'Outer Edge': (c) => ['R1', 'R5', 'C1', 'C5'].includes(c.tag) ? 1.25 : 1,
+      'Royal Touch': (c) => c.hasAce ? 1.5 : 1,
+      'Joker Line': (c) => c.hasJoker ? 1.25 : 1,
+      'Rainbow': (c) => c.distinct >= 4 ? 1.25 : 1,
+      'Highball': (c) => c.totalHigh >= 45 ? 1.5 : 1,
+      '\u2665 Density': (c) => Math.pow(1.1, suitCount(c.cards, 'H')),
+      '\u2660 Density': (c) => Math.pow(1.1, suitCount(c.cards, 'S')),
+      '\u2666 Density': (c) => Math.pow(1.1, suitCount(c.cards, 'D')),
+      '\u2663 Density': (c) => Math.pow(1.1, suitCount(c.cards, 'C')),
+      'Row 3': (c) => c.tag === 'R3' ? 2 : 1,
+      'Col 3': (c) => c.tag === 'C3' ? 2 : 1,
+    };
+    const PURPLE = {
+      'Balance': (lines) => lines.every((l) => l.hand && l.hand !== 'HIGH_CARD') ? 1.25 : 1,
+      'Diversity': (lines) => new Set(lines.filter((l) => l.hand && l.hand !== 'HIGH_CARD').map((l) => l.hand)).size >= 6 ? 1.25 : 1,
+      'No Flushes': (lines) => lines.every((l) => !['FLUSH', 'STRAIGHT_FLUSH', 'ROYAL_FLUSH'].includes(l.hand)) ? 1.25 : 1,
+      'Speedrun': () => Math.pow(1.04, Math.max(0, s.deck.length - s.pos)),
+    };
+
+    // Held cards → structured entries backed by the real catalog.
+    const held = (s.bonuses || []).map((title) => {
+      const m = this.bonusMeta(title);
+      const cat = m.category === 'end-game' ? 'end-game' : (m.category === 'special' ? 'special' : 'in-game');
+      return { name: title, cat, mult: m.mult, detail: m.description, effect: m.mult, affects: (tag) => cat === 'in-game' && GOLD[title] ? GOLD[title](ctxByTag[tag]) > 1 : false };
+    });
+    const lineMultOf = (tag) => held.reduce((mm, b) => (b.cat === 'in-game' && GOLD[b.name] ? mm * GOLD[b.name](ctxByTag[tag]) : mm), 1);
+
+    // Hover state (line, cell, or bonus-card hover).
+    const hv = s.hv;
+    const anyHover = !!hv;
+    const lineTag = (l) => (l.kind === 'row' ? 'R' : 'C') + (l.index + 1);
+    const purpleProgress = (name) => {
+      const scored = raw.lines.filter((l) => l.hand && l.hand !== 'HIGH_CARD');
+      if (name === 'Balance') { const met = raw.lines.filter((l) => l.hand && l.hand !== 'HIGH_CARD'); return { tags: new Set(met.map(lineTag)), label: met.length + ' / 10 lines Pair or better', ok: met.length === 10 }; }
+      if (name === 'Diversity') { const seen = new Map(); scored.forEach((l) => { if (!seen.has(l.hand)) seen.set(l.hand, lineTag(l)); }); return { tags: new Set([...seen.values()]), label: seen.size + ' / 6 distinct hand types', ok: seen.size >= 6 }; }
+      if (name === 'No Flushes') { const fl = raw.lines.filter((l) => ['FLUSH', 'STRAIGHT_FLUSH', 'ROYAL_FLUSH'].includes(l.hand)); return { tags: new Set(fl.map(lineTag)), label: fl.length === 0 ? 'No flushes yet — on track' : fl.length + ' flush line(s) — would break it', ok: fl.length === 0 }; }
+      if (name === 'Speedrun') { return { tags: new Set(), label: Math.max(0, s.deck.length - s.pos) + ' cards left in deck', ok: true }; }
+      return { tags: new Set(), label: '', ok: false };
+    };
+    const lineActive = (tag) => {
+      if (!hv) return false;
+      if (hv.type === 'line') return hv.tag === tag;
+      if (hv.type === 'bonus') { const b = held.find((x) => x.name === hv.name); if (!b) return false; return b.cat === 'end-game' ? purpleProgress(b.name).tags.has(tag) : b.affects(tag); }
+      const k = +tag.slice(1) - 1; return tag[0] === 'R' ? hv.r === k : hv.c === k;
+    };
+    const hEnter = (t) => () => this.setState({ hv: { type: 'line', tag: t } });
+    const hLeave = () => this.setState({ hv: null });
+    const hEnterBonus = (name) => () => this.setState({ hv: { type: 'bonus', name } });
+    const cellEnter = (r, c) => () => this.setState({ hv: { type: 'cell', r, c } });
+    const perLine = (tag) => {
+      const kind = tag[0] === 'R' ? 'row' : 'col'; const idx = +tag.slice(1) - 1;
+      const l = byKey[kind + idx];
+      const cards = cardsOfLine(tag);
+      const filled = cards.filter((c) => c !== null).length;
+      const m = lineMultOf(tag);
+      // pts = actual current contribution (0 for incomplete during play).
+      // potential = what the line's current made hand would score if it finished as-is, including line multipliers.
+      let pts = 0, potential = 0, mult = null, tone = 'none', name, railName = '';
+      if (l.hand && l.hand !== 'HIGH_CARD') {
+        pts = Math.ceil((l.base + ((s.handBoosts || {})[l.hand] || 0)) * m); potential = pts;
+        if (m > 1) mult = fmtMult(m);
+        tone = m > 1 ? 'gold' : 'made';
+        name = E.HAND_NAME[l.hand]; railName = name;
+      } else if (l.hand === 'HIGH_CARD') {
+        name = 'High Card'; railName = 'High Card';
+      } else if (filled > 0) {
+        name = 'In Progress';
+        const ph = E.evaluatePartialLine(cards);
+        if (ph && ph !== 'HIGH_CARD') {
+          potential = Math.ceil((E.HAND_BASE_VALUE[ph] + ((s.handBoosts || {})[ph] || 0)) * m);
+          railName = E.HAND_NAME[ph];
+          tone = m > 1 ? 'gold' : 'potential';
+          if (m > 1) mult = fmtMult(m);
+        } else { tone = 'wip'; railName = 'In Progress'; }
+        pts = playing ? 0 : -25;
+      } else { name = 'Empty'; railName = ''; }
+      return { pts, potential, mult, tone, name, railName, filled, incomplete: l.hand === null };
+    };
+    const pill = (tone) => {
+      const base = 'flex:none;min-width:34px;text-align:center;font:700 13px var(--font-body);font-variant-numeric:tabular-nums;padding:3px 8px;border-radius:6px;';
+      if (tone === 'gold') return base + 'background:var(--warn);color:#fff';
+      if (tone === 'made') return base + 'background:var(--success);color:#fff';
+      if (tone === 'potential') return base + 'background:transparent;color:var(--success);border:1px dashed var(--success)';
+      if (tone === 'wip') return base + 'background:transparent;color:var(--ink-2);border:1px solid var(--rule)';
+      return base + 'background:transparent;color:var(--ink-3);border:1px solid var(--hairline)';
+    };
+    const ptsLabel = (pts) => (pts > 0 ? '+' + pts : pts < 0 ? String(pts) : '–');
+    const railLabel = (i) => (i.potential > 0 ? '+' + i.potential : '–');
+    const containerLabel = (i) => (i.filled === 0 ? '–' : i.pts > 0 ? '+' + i.pts : i.pts < 0 ? String(i.pts) : '0');
+
+    const tags = ['R1', 'R2', 'R3', 'R4', 'R5', 'C1', 'C2', 'C3', 'C4', 'C5'];
+    const info = {}; tags.forEach((t) => { info[t] = perLine(t); });
+
+    const railMute = !!(s.perk || s.action);
+    const rowRail = ['R1', 'R2', 'R3', 'R4', 'R5'].map((t) => { const i = info[t]; const off = i.filled === 0 || railMute; return { ptsLabel: railLabel(i), name: i.railName, cls: off ? 'r2empty' : '', pillStyle: pill(i.tone), chipOp: anyHover && !lineActive(t) ? '.32' : '1', onEnter: off ? () => {} : hEnter(t), onLeave: off ? () => {} : hLeave }; });
+    const colRail = ['C1', 'C2', 'C3', 'C4', 'C5'].map((t) => { const i = info[t]; const off = i.filled === 0 || railMute; return { ptsLabel: railLabel(i), name: i.railName, cls: off ? 'r2empty' : '', pillStyle: pill(i.tone), chipOp: anyHover && !lineActive(t) ? '.32' : '1', onEnter: off ? () => {} : hEnter(t), onLeave: off ? () => {} : hLeave }; });
+
+    const lines = tags.map((t) => {
+      const i = info[t]; const act = lineActive(t);
+      const scored = i.pts > 0;
+      const rowStyle = 'transition:opacity .16s ease,background .16s ease;display:flex;align-items:center;gap:10px;padding:8px;margin:0 -8px;border-bottom:1px solid var(--hairline);cursor:default;' + (act ? 'background:color-mix(in srgb,var(--accent) 10%,transparent);' : '') + (anyHover && !act ? 'opacity:.4;' : 'opacity:1;');
+      return { tag: t, name: i.name, score: containerLabel(i), multLabel: i.mult ? '×' + i.mult : '', multStyle: i.mult ? 'flex:none;font:700 10px var(--font-body);color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent);padding:2px 5px;border-radius:4px' : 'display:none', nameStyle: 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 13px var(--font-body);color:' + (scored ? 'var(--ink)' : 'var(--ink-3)'), scoreStyle: 'flex:none;font:700 14px var(--font-body);font-variant-numeric:tabular-nums;color:' + (i.pts < 0 ? 'var(--danger)' : scored ? 'var(--ink)' : 'var(--ink-3)'), rowStyle, onEnter: hEnter(t), onLeave: hLeave };
+    });
+    const subtotal = tags.reduce((a, t) => a + info[t].pts, 0);
+    const gridMultVal = held.reduce((a, b) => (b.cat === 'end-game' && PURPLE[b.name] ? a * PURPLE[b.name](raw.lines) : a), 1);
+    const finalTotal = Math.max(0, Math.round(subtotal * gridMultVal));
+    this._lastWin = finalTotal >= target;
+
+    // Board cells.
+    const perk = s.perk;
+    // Which cells are valid perk targets: destroy → filled; move → filled (pick source) then empty (pick dest).
+    const perkTargets = (i, hasCard) => {
+      if (!perk) return false;
+      if (perk.suit === 'D') return hasCard;
+      if (perk.suit === 'H') {
+        if (perk.from < 0) return hasCard;
+        if (i === perk.from) return false;
+        const sameLine = Math.floor(perk.from / 5) === Math.floor(i / 5) || (perk.from % 5) === (i % 5);
+        return hasCard && sameLine;
+      }
+      if (perk.suit === 'S') {
+        if (perk.from < 0) return hasCard && Object.keys(this.slideTargetMap(s.grid, i)).length > 0;
+        return !!this.slideTargetMap(s.grid, perk.from)[i];
+      }
+      return perk.from < 0 ? hasCard : !hasCard;
+    };
+    const grid2 = s.grid.map((card, i) => {
+      const r = Math.floor(i / 5), c = i % 5;
+      const inLine = anyHover && (hv.type === 'cell' ? (hv.r === r || hv.c === c) : (lineActive('R' + (r + 1)) || lineActive('C' + (c + 1))));
+      const pop = i === s.lastPlaced ? 'animation:cardfly .34s cubic-bezier(.2,.7,.2,1);z-index:4;' : '';
+      const act = s.action;
+      const actSel = !!(act && (act.from === i || (act.picks && act.picks.includes(i))));
+      const actTgt = !!(act && this.actionIsTarget(i, !!card));
+      const isSource = (perk && perk.from === i) || actSel;
+      const isTarget = (!perk ? false : perkTargets(i, !!card)) || (actTgt && !actSel);
+      const perkRing = isSource ? 'outline:3px solid var(--accent);outline-offset:1px;z-index:3;cursor:pointer;' : (isTarget ? 'outline:2.5px solid var(--warn);outline-offset:1px;z-index:2;cursor:pointer;' : '');
+      const fx = 'transition:opacity .16s ease,outline-color .16s ease;' + (anyHover && !inLine ? 'opacity:.26;' : 'opacity:1;') + (inLine ? 'outline:2.5px solid var(--accent);outline-offset:1px;z-index:2;' : '') + perkRing + pop;
+      const perkTap = (perk && (perkTargets(i, !!card) || perk.from === i)) ? () => this.perkTap(i) : ((act && (actTgt || actSel)) ? () => this.actionTap(i) : null);
+      const cardEnter = (perk || act) ? (() => {}) : cellEnter(r, c);
+      const cardLeave = (perk || act) ? (() => {}) : hLeave;
+      if (card) { const f = this.cardFace(card);
+        if (f.joker) return { cls: perkTap ? 'placeable' : '', tap: perkTap || (() => {}), onEnter: cardEnter, onLeave: cardLeave, wrap: fx + 'position:relative;aspect-ratio:1/1;border-radius:6px;background:var(--card-face);box-shadow:var(--card-shadow,var(--shadow-sm));container-type:size;color:var(--joker)', wm: '★', wmStyle: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56cqh;opacity:var(--wm-opacity,.12);pointer-events:none', rank: 'JOKER', rankStyle: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 15cqh var(--font-body);letter-spacing:.04em', glyph: '', pipStyle: 'display:none', label: '', labelStyle: 'display:none' };
+        return { cls: perkTap ? 'placeable' : '', tap: perkTap || (() => {}), onEnter: cardEnter, onLeave: cardLeave, wrap: fx + `position:relative;aspect-ratio:1/1;border-radius:6px;background:var(--card-face);box-shadow:var(--card-shadow,var(--shadow-sm));container-type:size;color:${f.color}`, wm: f.wm, wmStyle: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:58cqh;opacity:var(--wm-opacity,.1);pointer-events:none', rank: f.rank, rankStyle: 'position:absolute;top:6cqh;left:9cqw;font-family:var(--font-body);font-weight:700;font-size:42cqh;line-height:1.1;letter-spacing:-.02em', glyph: f.glyph, pipStyle: 'position:absolute;bottom:5cqh;right:8cqw;font-size:38cqh;line-height:1', label: '', labelStyle: 'display:none' };
+      }
+      const isNext = !perk && !s.action && i === nextSlot && playing && !!current;
+      const canPlace = isNext;
+      const base = isNext ? 'position:relative;aspect-ratio:1/1;border-radius:6px;background:color-mix(in srgb,var(--accent) 9%,var(--paper-sunken));border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;animation:nextpulse 2s ease-in-out infinite' : 'aspect-ratio:1/1;border-radius:6px;background:var(--paper-sunken);border:1px dashed var(--rule)';
+      const emptyTap = perkTap || (canPlace ? () => this.placeAt(i) : null);
+      return { cls: (canPlace || perkTap) ? 'placeable' : '', tap: emptyTap || (() => {}), onEnter: () => {}, onLeave: () => {}, wrap: fx + base, wm: '', wmStyle: 'display:none', rank: '', rankStyle: 'display:none', glyph: '', pipStyle: 'display:none', label: isNext ? 'PLACE' : '', labelStyle: isNext ? 'font:700 11px var(--font-body);letter-spacing:.1em;color:var(--accent)' : 'display:none' };
+    });
+
+    // Current-card well.
+    const dock = this.setting('pg-dock', 'center-stage');
+    const dockCenter = dock === 'center' || dock === 'center-stage';
+    const wellW = dockCenter ? 108 : 82;
+    let well;
+    if (current) { const f = this.cardFace(current);
+      if (f.joker) well = { wellWrap: `position:relative;width:${wellW}px;aspect-ratio:1/1;border-radius:6px;background:var(--card-face);box-shadow:var(--card-shadow,var(--shadow-sm));container-type:size;color:var(--joker)`, wellWm: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56cqh;opacity:var(--wm-opacity,.12);pointer-events:none', wellGlyph: '★', wellRankStyle: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 15cqh var(--font-body);letter-spacing:.04em', wellRank: 'JOKER', wellPipStyle: 'display:none', wellGlyph2: '', wellEmptyStyle: 'display:none', wellEmptyText: '' };
+      else well = { wellWrap: `position:relative;width:${wellW}px;aspect-ratio:1/1;border-radius:6px;background:var(--card-face);box-shadow:var(--card-shadow,var(--shadow-sm));container-type:size;color:${f.color}`, wellWm: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:58cqh;opacity:var(--wm-opacity,.1);pointer-events:none', wellGlyph: f.wm, wellRankStyle: 'position:absolute;top:6cqh;left:9cqw;font-family:var(--font-body);font-weight:700;font-size:42cqh;line-height:1.1;letter-spacing:-.02em', wellRank: f.rank, wellPipStyle: 'position:absolute;bottom:5cqh;right:8cqw;font-size:38cqh;line-height:1', wellGlyph2: f.glyph, wellEmptyStyle: 'display:none', wellEmptyText: '' };
+    } else well = { wellWrap: `width:${wellW}px;aspect-ratio:1/1;border-radius:6px;background:var(--paper-sunken);border:1px dashed var(--rule);display:flex;align-items:center;justify-content:center`, wellWm: 'display:none', wellGlyph: '', wellRankStyle: 'display:none', wellRank: '', wellPipStyle: 'display:none', wellGlyph2: '', wellEmptyStyle: 'font:600 11px var(--font-body);color:var(--ink-3)', wellEmptyText: 'Empty' };
+    const suitOrder = { H: 0, S: 1, D: 2, C: 3 };
+    const peekCards = s.deck.slice(s.pos + 1).slice().sort((a, b) => {
+      const aj = E.isJoker(a), bj = E.isJoker(b);
+      if (aj || bj) return aj === bj ? 0 : (aj ? 1 : -1);
+      if (suitOrder[a.suit] !== suitOrder[b.suit]) return suitOrder[a.suit] - suitOrder[b.suit];
+      return E.rankIndex(b.rank) - E.rankIndex(a.rank);
+    }).map((c) => E.isJoker(c) ? { label: '★', color: 'var(--joker)' } : { label: c.rank + E.SUIT_GLYPH[c.suit], color: this.suitColor(c.suit) });
+
+    // Bonus tray — held cards; hover highlights every line each one fires on.
+    const lineHovered = hv && hv.type === 'line' ? hv.tag : null;
+    const replacing = !!(s.draw && s.draw.replace);
+    const bonusCards = held.map((b, bi) => {
+      const col = b.cat === 'end-game' ? 'var(--joker)' : (b.cat === 'special' ? 'var(--accent)' : 'var(--warn)');
+      const active = (hv && hv.type === 'bonus' && hv.name === b.name) || (lineHovered && b.cat === 'in-game' && b.affects(lineHovered));
+      const dim = hv && hv.type === 'bonus' && hv.name !== b.name;
+      const box = 'position:relative;transition:opacity .16s ease,border-color .16s ease,box-shadow .16s ease;border-radius:10px;padding:11px 13px;' + (active ? `border:1.5px solid ${col};background:color-mix(in srgb,${col} 18%,var(--paper-raised));box-shadow:var(--shadow-md);` : `border:1px solid ${col};background:color-mix(in srgb,${col} 8%,var(--paper-raised));`) + (dim ? 'opacity:.4;' : 'opacity:1;');
+      const rbox = replacing ? box + 'cursor:pointer;border:1.5px dashed var(--danger);' : box;
+      const prog = b.cat === 'end-game' ? purpleProgress(b.name) : null;
+      const progLabel = prog ? prog.label : '';
+      const progStyle = prog ? `margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.18);font:700 11px var(--font-body);color:${prog.ok ? '#7CFFB0' : 'rgba(255,255,255,.82)'}` : 'display:none';
+      const isGreen = b.cat === 'special' && !!this.greenKind(b.name);
+      return { name: b.name, effect: b.effect, detail: b.detail, nameColor: col, box: rbox, onClick: replacing ? () => this.replaceBonus(bi) : null, onEnter: hEnterBonus(b.name), onLeave: hLeave, progLabel, progStyle, hasProg: !!prog, isGreen, useStyle: 'margin-top:9px;width:100%;border:none;border-radius:8px;background:var(--accent);color:#fff;font:600 12.5px var(--font-body);min-height:32px;cursor:pointer', use: () => this.useGreen(b.name) };
+    });
+    const act = s.action;
+    const actKindLabels = { swap2: 'Power Swap', wild: 'Wildcard', jump: 'Jump, Jump', plusminus: 'Plus/Minus', megadestroy: 'Mega Destroy', shuffle: 'Shuffle', slipslide: 'Slip & Slide', revive: 'Revive', rewind: 'Rewind' };
+    const actPrompts = {
+      swap2: act && act.picks.length ? 'Tap a second card to swap with' : 'Tap the first card to swap',
+      wild: 'Tap a card to turn wild (plays as any suit)',
+      jump: act && act.from >= 0 ? 'Tap any empty cell to jump to' : 'Tap a card to move',
+      plusminus: act && act.from >= 0 ? 'Bump its rank up or down' : 'Tap a card to adjust',
+      megadestroy: 'Tap up to 5 cards, then Destroy',
+      shuffle: 'Tap 3–5 cards, then Shuffle',
+      slipslide: act && act.from >= 0 ? 'Tap a highlighted cell to slide to' : 'Tap a card to start the slide',
+      revive: 'Pick a card from the discard pile',
+      rewind: 'Tap 3–5 cards to shuffle back into the deck',
+    };
+    const actionActive = !!act;
+    const actionName = act ? actKindLabels[act.kind] : '';
+    const actionPrompt = act ? actPrompts[act.kind] : '';
+    const actShowPlusMinus = !!(act && act.kind === 'plusminus' && act.from >= 0);
+    const actShowMega = !!(act && act.kind === 'megadestroy' && act.picks.length > 0);
+    const actShowShuffle = !!(act && act.kind === 'shuffle' && act.picks.length >= 2);
+    const actShowRewind = !!(act && act.kind === 'rewind' && act.picks.length >= 2);
+    const actShowRevive = !!(act && act.kind === 'revive');
+    const reviveList = actShowRevive ? (s.discardPile || []).map((c, di) => ({ label: E.isJoker(c) ? '★' : c.rank + E.SUIT_GLYPH[c.suit], color: E.isJoker(c) ? 'var(--joker)' : this.suitColor(c.suit), pick: () => this.reviveCard(di) })) : [];
+    const actPickCount = act && act.picks ? act.picks.length : 0;
+    const endgameRows = held.filter((b) => b.cat === 'end-game').map((b) => { const v = PURPLE[b.name] ? PURPLE[b.name](raw.lines) : 1; return { name: b.name, mult: '×' + fmtMult(v), active: v > 1 }; }).filter((r) => r.active);
+
+    // Leaderboard (Daily) + stats (Free Play).
+    const mode = s.mode; const isDaily = mode === 'daily'; const isFreePlay = mode === 'freeplay';
+    const gmAct = 'background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)';
+    const L = (rank, handle, score, me) => ({ name: rank + '   ' + handle, score: typeof score === 'number' ? score.toLocaleString() : score, rowBg: me ? 'color-mix(in srgb,var(--accent) 12%,transparent)' : 'transparent', nameFont: (me ? '700' : '600') + ' 13px var(--font-body)', nameColor: me ? 'var(--accent)' : 'var(--ink)', scoreColor: me ? 'var(--accent)' : 'var(--ink-2)' });
+    const hcounts = [8, 22, 55, 120, 190, 140, 74, 30]; const hlabels = [80, 110, 135, 155, 170, 185, 205, 225];
+    const hFinished = s.over; const hMax = Math.max(...hcounts);
+    let youBucket = 0; for (let i = 0; i < hlabels.length; i++) if (finalTotal >= hlabels[i]) youBucket = i;
+    const totalField = hcounts.reduce((a, b) => a + b, 0);
+    const aboveYou = hcounts.slice(youBucket + 1).reduce((a, b) => a + b, 0) + Math.round(hcounts[youBucket] / 2);
+    const yourRank = Math.max(1, Math.round(aboveYou / totalField * 2481));
+    const realTop5 = [L('1', 'bluff_oracle', 212), L('2', 'riverqueen', 198), L('3', 'stonecold', 176), L('4', 'mimosa', 164), L('5', 'paperjack', 158)];
+    const top5 = s.over ? [...realTop5, L('#' + yourRank, 'you', finalTotal, true)] : realTop5;
+    const hist = hcounts.map((n, i) => ({ label: hlabels[i], barStyle: `flex:1;align-self:flex-end;border-radius:3px 3px 0 0;height:${Math.max(6, Math.round(n / hMax * 100))}%;background:${hFinished && i === youBucket ? 'var(--accent)' : 'color-mix(in srgb,var(--ink-3) 32%,var(--paper-sunken))'}` }));
+
+    const statCells = [{ label: 'Best score', value: '214' }, { label: 'Avg score', value: '168' }, { label: 'Win %', value: '62%' }];
+    const tierDefs = [['SS', 2], ['S', 5], ['A', 11], ['B', 9], ['C', 4], ['D', 1]]; const tierMax = Math.max(...tierDefs.map((t) => t[1]));
+    const tiers = tierDefs.map(([name, n]) => ({ name, count: n, fillStyle: `height:100%;width:${Math.max(4, Math.round(n / tierMax * 100))}%;border-radius:999px;background:var(--accent)` }));
+    const statsView = s.statsView; const isBars = statsView === 'bars'; const isScatter = statsView === 'scatter';
+    const showRails = this.setting('pg-rails', '1') !== '0';
+    const tglBase = 'display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;border-radius:7px;cursor:pointer;transition:all .14s ease;';
+    const barsBtn = tglBase + (isBars ? 'background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid var(--accent);color:var(--accent)' : 'background:transparent;border:1px solid var(--rule);color:var(--ink-3)');
+    const scatterBtn = tglBase + (isScatter ? 'background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid var(--accent);color:var(--accent)' : 'background:transparent;border:1px solid var(--rule);color:var(--ink-3)');
+    const sScores = [132, 158, 171, 149, 183, 166, 205, 142, 178, 160, 214, 151]; const sMin = 120, sMax = 220;
+    const scatter = sScores.map((v, i) => ({ dotStyle: `position:absolute;left:${Math.round(i / (sScores.length - 1) * 100)}%;bottom:${Math.round((v - sMin) / (sMax - sMin) * 100)}%;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--paper-raised);transform:translate(-50%,50%)` }));
+
+    // Result.
+    let result = {};
+    if (s.over) {
+      const fin = E.scoreGrid(s.grid, { ignoreIncompletePenalty: false });
+      const finTotal = finalTotal;
+      const scoredLines = fin.lines.filter((l) => l.hand && l.hand !== 'HIGH_CARD').length;
+      const penalty = fin.lines.filter((l) => l.incomplete).reduce((a, l) => a + l.total, 0);
+      const best = fin.lines.reduce((b, l) => (l.total > (b ? b.total : -Infinity) ? l : b), null);
+      const rating = E.ratingFor(finTotal, target); const win = finTotal >= target;
+      result = { scoredLines, penalty: penalty === 0 ? '0' : String(penalty), bestLine: best && best.hand ? E.HAND_NAME[best.hand] : '—', resultRating: rating.key, resultLabel: rating.label, resultVerdict: win ? 'Target cleared' : 'Just short', resultHeadStyle: `background:${win ? 'linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#000))' : 'linear-gradient(135deg,var(--ink-2),var(--ink))'};color:#fff;text-align:center;padding:26px 26px 24px` };
+    }
+
+    const diffRules = [
+      { k: 'Jokers in deck', v: String(D.jokers) },
+      { k: 'Deck peek', v: D.canPreviewDeck ? 'Available' : '—' },
+      { k: 'Undo', v: D.undos ? D.undos + ' per game' : '—' },
+      { k: 'Discards', v: D.noDiscards ? 'Off' : 'On' },
+      { k: 'Target score', v: String(target) },
+    ];
+    const drawView = s.draw ? {
+      replace: s.draw.replace,
+      options: s.draw.options.map((t) => {
+        const m = this.bonusMeta(t);
+        const cat = m.category === 'end-game' ? 'end-game' : (m.category === 'special' ? 'special' : 'in-game');
+        const col = cat === 'end-game' ? 'var(--joker)' : (cat === 'special' ? 'var(--accent)' : 'var(--warn)');
+        return { title: t, mult: m.mult, desc: m.description, catLabel: cat === 'end-game' ? 'End-game multiplier' : (cat === 'special' ? 'One-time action' : 'In-game multiplier'), col, nameStyle: `font-family:var(--font-display);font-size:19px;font-weight:680;color:${col}`, catStyle: `font:700 10px var(--font-body);text-transform:uppercase;letter-spacing:.08em;color:${col}`, cardStyle: `flex:1;cursor:pointer;border:1.5px solid ${col};border-radius:12px;padding:16px 16px 18px;background:color-mix(in srgb,${col} 8%,var(--paper-raised));transition:transform .12s ease,box-shadow .12s ease`, take: () => this.takeBonus(t) };
+      }),
+    } : null;
+    const threeTricks = V && V.id === 'three-tricks' && V.enforced;
+    const shortCircuit = V && V.id === 'short-circuit' && V.enforced;
+    const bullMarket = V && V.id === 'bull-market' && V.enforced;
+    const currentIsClub = playing && this.isClub(current) && !purist && !threeTricks && !bullMarket && !shortCircuit;
+    const currentIsInvest = playing && this.isClub(current) && bullMarket;
+    const curSuit = (playing && current && !E.isJoker(current)) ? current.suit : null;
+    const perkLabels = shortCircuit ? { H: '\u26a1 Random perk', S: '\u26a1 Random perk', D: '\u26a1 Random perk', C: '\u26a1 Random perk' } : { H: '\u2665 Swap', S: '\u2660 Slide', D: '\u2666 Destroy' };
+    const cardsOnGrid = s.grid.filter((c) => c !== null).length;
+    const perkDisabled = shortCircuit ? false : ((curSuit === 'H' && cardsOnGrid < 2) || ((curSuit === 'S' || curSuit === 'D') && cardsOnGrid < 1));
+    const perkBtn = (curSuit && perkLabels[curSuit] && !perkDisabled) ? { label: perkLabels[curSuit], use: () => this.usePerk(curSuit) } : null;
+    const perkActive = !!perk;
+    const perkPrompt = perk ? (perk.suit === 'D' ? 'Tap a card to destroy it' : perk.suit === 'H' ? (perk.from < 0 ? 'Tap the first card to swap' : 'Tap a card in the same row or column') : (perk.from < 0 ? 'Tap a card to push' : 'Tap a highlighted cell — it slides with the cards ahead of it')) : '';
+    const canDecline = (s.bonuses || []).length >= 3 && D.declineAtCap;
+    return {
+      grid2, rows: rowRail, cols: colRail, lines, subtotal, endgameRows, finalTotal, target,
+      subtotalRowStyle: endgameRows.length ? 'display:flex;align-items:center;justify-content:space-between;padding:10px 0 6px' : 'display:none',
+      actionActive, actionName, actionPrompt, actShowPlusMinus, actShowMega, actShowShuffle, actShowRewind, actShowRevive, reviveList, actPickCount,
+      cancelAction: () => this.cancelAction(), plusRank: () => this.applyPlusMinus(1), minusRank: () => this.applyPlusMinus(-1), confirmMega: () => this.confirmMega(), confirmShuffle: () => this.confirmShuffle(), confirmRewind: () => this.confirmRewind(),
+      hasVariant: !!V, variantWrapStyle: V ? 'position:relative;display:inline-flex' : 'display:none', variantName: V ? V.name : '', variantSynopsis: V ? V.synopsis : '', variantGoal: V ? (V.goal + (V.enforced ? '' : '  (Rules shown — full mechanic coming soon.)')) : '',
+      drawing: !!s.draw, drawView, drawReplace: replacing, drawPick: !!s.draw && !replacing, currentIsClub,
+      currentIsInvest, investClub: () => this.investClub(),
+      showPlace: !perkActive,
+      hasPerk: !!perkBtn && !perkActive, perkLabel: perkBtn ? perkBtn.label : '', usePerk: perkBtn ? perkBtn.use : () => {},
+      perkActive, perkPrompt, cancelPerk: () => this.cancelPerk(),
+      perkBtnStyle: 'border:1px solid var(--rule);border-radius:10px;background:var(--paper-raised);color:var(--ink);font:600 14px var(--font-body);min-height:40px;cursor:pointer;width:100%',
+      canDecline, declineDraw: () => this.declineDraw(),
+      openDraw: () => this.openDraw(), cancelDraw: () => this.cancelDraw(),
+      clubBtnStyle: `border:none;border-radius:10px;background:var(--difficulty-medium);color:#fff;font:600 14px var(--font-body);min-height:40px;cursor:pointer;box-shadow:var(--shadow-sm);width:100%`,
+      diffName, diffRules,
+      diffDotStyle: `width:8px;height:8px;border-radius:50%;background:${diffTone}`,
+      diffLabelStyle: `font:700 12px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:${diffTone}`,
+      diffHdStyle: `color:${diffTone}`,
+      ...well, deckLeft: Math.max(0, s.deck.length - s.pos), peekAvailable, peekCards, bonusCards, bonusCount: bonusCards.length,
+      dockInnerStyle: dockCenter ? 'display:flex;flex-direction:column;align-items:center;gap:12px' : 'display:flex;align-items:center;gap:15px',
+      dockWellStyle: dockCenter ? 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:help' : 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:help',
+      dockActionsStyle: dockCenter ? 'width:100%;display:flex;flex-direction:column;gap:8px' : 'flex:1;display:flex;flex-direction:column;gap:8px',
+      placeBtnStyle: `border:none;border-radius:10px;background:${current && !s.over ? 'var(--accent)' : 'var(--ink-3)'};color:#fff;font:600 15px var(--font-body);min-height:40px;cursor:${current && !s.over ? 'pointer' : 'default'};box-shadow:var(--shadow-sm);width:100%;opacity:${current && !s.over ? '1' : '.5'}`,
+      discardBtnStyle: `flex:1;background:var(--paper-raised);color:var(--ink);border:1px solid var(--rule);border-radius:8px;font:600 13px var(--font-body);min-height:36px;cursor:${discardEnabled ? 'pointer' : 'default'};opacity:${discardEnabled ? '1' : '.4'}`,
+      undoBtnStyle: `flex:1;background:var(--paper-raised);color:var(--ink);border:1px solid var(--rule);border-radius:8px;font:600 13px var(--font-body);min-height:36px;cursor:${undoEnabled ? 'pointer' : 'default'};opacity:${undoEnabled ? '1' : '.4'}`,
+      needHandle: s.over && !s.handle, haveHandle: s.over && !!s.handle, handleName: s.handle, handleDraft: s.handleDraft,
+      onHandleInput: (e) => this.setState({ handleDraft: e.target.value }),
+      saveHandle: () => this.saveHandle(),
+      saveHandleStyle: `flex:none;border:none;border-radius:9px;padding:0 16px;background:${(s.handleDraft || '').trim() ? 'var(--accent)' : 'var(--ink-3)'};color:#fff;font:600 14px var(--font-body);cursor:${(s.handleDraft || '').trim() ? 'pointer' : 'default'}`,
+      place: () => this.place(), discard: () => this.discard(), undo: () => this.undo(), restart: () => this.setState({ ...this.freshGame(s.seed + 1), mode: s.mode, statsView: s.statsView, hv: null, handle: s.handle, handleDraft: '', viewGrid: false }),
+      over: s.over,
+      isDaily, isFreePlay, headerLabel: isDaily ? 'Thu · Jul 9' : 'Free Play', setDaily: () => this.setState({ mode: 'daily' }), setFreePlay: () => this.setState({ mode: 'freeplay' }),
+      dailyItemStyle: isDaily ? gmAct : '', freeplayItemStyle: isFreePlay ? gmAct : '',
+      lbNote: s.over ? '#' + yourRank + ' / 2,481' : '2,481 players today', top5, hist, hFinished, hPlaying: !s.over,
+      showResult: s.over && !s.viewGrid,
+      viewGrid: () => this.setState({ viewGrid: true }),
+      playAgain: () => { if (isDaily) { try { window.location.href = 'Daily Archive.dc.html'; } catch (e) {} } else { this.setState({ ...this.freshGame(s.seed + 1), mode: s.mode, statsView: s.statsView, hv: null, handle: s.handle, handleDraft: '', viewGrid: false }); } },
+      statCells, tiers, isBars, isScatter, showRails,
+      railRowWrapStyle: showRails ? 'width:52px;display:grid;grid-template-rows:repeat(5,1fr);gap:6px' : 'display:none',
+      railColWrapStyle: showRails ? 'width:480px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px' : 'display:none',
+      setBars: () => this.setState((st) => ({ statsView: st.statsView === 'bars' ? null : 'bars' })), setScatter: () => this.setState((st) => ({ statsView: st.statsView === 'scatter' ? null : 'scatter' })), barsBtn, scatterBtn, scatter,
+      toggleTheme: (e) => { try { var d = localStorage.getItem('pg-dark') !== '0'; localStorage.setItem('pg-dark', d ? '0' : '1'); } catch (er) {} if (window.__pgTheme) window.__pgTheme(); },
+      ...result,
+    };
+  }
+}
+</script>
+</body>
+</html>

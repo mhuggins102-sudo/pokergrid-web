@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,680&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="pgData.js"></script>
+<style>
+:root,[data-theme='paper']{--paper:#faf7f1;--paper-raised:#fff;--paper-sunken:#f2ecdf;--felt:#1f5d43;--ink:#1a1a1a;--ink-2:#5f5a51;--ink-3:#736c5c;--hairline:rgba(26,26,26,.14);--rule:#d9d1c0;--card-face:#fffdf8;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--joker:#6d4fa3;--accent:#1f5d43;--warn:#b07d2e;--danger:#9a2433;--success:#2f7d4f;--difficulty-easy:#2f7d4f;--difficulty-medium:#b07d2e;--difficulty-hard:#c2542e;--difficulty-extreme:#9a2433;--shadow-sm:0 1px 2px rgba(26,26,26,.08);--shadow-md:0 2px 8px rgba(26,26,26,.1);--shadow-lg:0 8px 24px rgba(26,26,26,.14);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='paper-dark']{--paper:#17150f;--paper-raised:#211e17;--paper-sunken:#100e09;--felt:#3a8f68;--ink:#efe9d8;--ink-2:#b7ae9b;--ink-3:#948b77;--hairline:rgba(239,233,216,.14);--rule:#3a352a;--card-face:#f6f1e4;--card-red:#b3262e;--card-black:#1f1f1f;--face-suit-h:#b3262e;--face-suit-d:#1d5fa0;--face-suit-c:#2f7d4f;--face-suit-s:#1f2937;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#3a8f68;--warn:#c99b3f;--danger:#c4586a;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room']{--paper:#faf8f2;--paper-raised:#fff;--paper-sunken:#f1ebdd;--felt:#175a3d;--ink:#191712;--ink-2:#575144;--ink-3:#736c5c;--hairline:rgba(25,23,18,.14);--rule:#e2daca;--card-face:#fffdf8;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--joker:#7a5bc0;--accent:#175a3d;--warn:#a87b1f;--danger:#9a2433;--success:#2e7d4f;--difficulty-easy:#2e7d4f;--difficulty-medium:#a87b1f;--difficulty-hard:#b2582f;--difficulty-extreme:#b23b3b;--shadow-sm:0 1px 2px rgba(25,23,18,.1);--shadow-md:0 2px 8px rgba(25,23,18,.1);--shadow-lg:0 8px 24px rgba(25,23,18,.14);--board-surface:color-mix(in srgb,var(--felt) 6%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(25,23,18,.14),0 3px 8px rgba(25,23,18,.07);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+[data-theme='card-room-dark']{--paper:#131210;--paper-raised:#1d1b17;--paper-sunken:#0e0d0b;--felt:#2e8b5e;--ink:#f0ebdf;--ink-2:#b5ac99;--ink-3:#9a937f;--hairline:rgba(240,235,223,.14);--rule:#33302a;--card-face:#f5f0e4;--card-red:#c22f3a;--card-black:#23272e;--face-suit-h:#c22f3a;--face-suit-d:#2465b3;--face-suit-c:#2e7d4f;--face-suit-s:#23272e;--suit-h:#e0636c;--suit-d:#5b94db;--suit-c:#57a97c;--suit-s:#9aa5b1;--joker:#a78bdb;--accent:#2e8b5e;--warn:#d9a93e;--danger:#d45a68;--success:#4caf7d;--difficulty-easy:#4caf7d;--difficulty-medium:#d9a93e;--difficulty-hard:#e07a50;--difficulty-extreme:#d45a68;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 2px 8px rgba(0,0,0,.4);--shadow-lg:0 8px 24px rgba(0,0,0,.5);--board-surface:color-mix(in srgb,var(--felt) 16%,var(--paper-sunken));--board-pad:6px;--card-shadow:0 1px 2px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.35);--card-rank-size:46cqh;--font-display:'Fraunces',Georgia,serif;--font-body:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);font-family:var(--font-body);color:var(--ink)}
+a{color:var(--accent);text-decoration:none}
+.navlink{font:600 14px var(--font-body);color:var(--ink-2);text-decoration:none;cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.navlink:hover,.navlink.on{color:var(--ink)}
+.gmwrap{position:relative}
+.gmtrigger{display:inline-flex;align-items:center;gap:4px;font:600 14px var(--font-body);color:var(--ink-2);cursor:pointer;transition:color .14s ease;white-space:nowrap}
+.gmwrap:hover .gmtrigger,.gmwrap:focus-within .gmtrigger{color:var(--ink)}
+.gmmenu{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(-4px);background:var(--paper-raised);border:1px solid var(--hairline);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease;z-index:40}
+.gmwrap:hover .gmmenu,.gmwrap:focus-within .gmmenu{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.gmitem{display:block;padding:8px 12px;border-radius:7px;font:600 13px var(--font-body);color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer}
+.gmitem:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.tab{padding:8px 16px;border-radius:999px;font:600 13px var(--font-body);cursor:pointer;border:1px solid var(--hairline);background:var(--paper-raised);color:var(--ink-2);transition:all .14s ease}
+.tab:hover{color:var(--ink)}
+.bref{transition:transform .14s ease,box-shadow .14s ease}
+.bref:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+</style>
+<script>(function(){function a(){try{var b=(localStorage.getItem('pg-theme')||'morning-paper')==='card-room'?'card-room':'paper';var d=(localStorage.getItem('pg-dark')||'1')!=='0';var r=document.querySelector('[data-theme]');if(r)r.setAttribute('data-theme',b+(d?'-dark':''));}catch(e){}}window.__pgTheme=a;a();document.addEventListener('DOMContentLoaded',a);setTimeout(a,0);setTimeout(a,120);setTimeout(a,400);}());</script>
+</helmet>
+
+<div data-theme="paper-dark" data-screen-label="Rules" style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body)">
+
+<header style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:28px;padding:18px 40px;border-bottom:1px solid var(--rule);max-width:1200px;margin:0 auto">
+<a href="Home.dc.html" style="font-family:var(--font-display);font-size:24px;font-weight:680;letter-spacing:-.01em;color:var(--ink);justify-self:start">PokerGrid</a>
+<nav style="display:flex;align-items:center;gap:24px;justify-self:center">
+<div class="gmwrap" tabindex="0"><span class="gmtrigger">Game Modes<span style="font-size:9px;opacity:.55">▼</span></span><div class="gmmenu"><a class="gmitem" href="Daily.dc.html">Daily</a><a class="gmitem" href="Free Play.dc.html">Free Play</a><a class="gmitem" href="Challenges.dc.html">Challenges</a><a class="gmitem" href="Targets Up.dc.html">Targets Up</a></div></div>
+<a class="navlink" href="Stats.dc.html">Stats</a>
+<a class="navlink" href="Achievements.dc.html">Achievements</a>
+<a class="navlink on" href="Rules.dc.html">Rules</a>
+<a class="navlink" href="Settings.dc.html">Settings</a>
+</nav>
+<button onClick="{{ toggleTheme }}" title="Toggle theme" style="justify-self:end;width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:15px">◐</button>
+</header>
+
+<main style="max-width:1080px;margin:0 auto;padding:40px 40px 64px">
+<!-- How to play -->
+<section style="display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:start">
+<div>
+<div style="font:600 12px var(--font-body);text-transform:uppercase;letter-spacing:.14em;color:var(--ink-3)">Rules</div>
+<h1 style="font-family:var(--font-display);font-size:44px;font-weight:680;letter-spacing:-.02em;margin:6px 0 28px">How PokerGrid works</h1>
+<div style="display:flex;flex-direction:column;gap:16px">
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="4"><div style="display:flex;gap:14px"><span style="flex:none;width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:680;font-size:15px">{{ s.n }}</span><div><div style="font:700 15px var(--font-body);color:var(--ink)">{{ s.title }}</div><div style="font:400 13.5px/1.55 var(--font-body);color:var(--ink-2);margin-top:2px">{{ s.body }}</div></div></div></sc-for>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+<div style="flex:1;min-width:130px;background:var(--paper-raised);border:1px solid var(--hairline);border-radius:12px;padding:13px 15px"><div style="font:700 22px var(--font-display);color:var(--danger)">−25</div><div style="font:500 12.5px/1.4 var(--font-body);color:var(--ink-2);margin-top:2px">per incomplete row or column at game end</div></div>
+<div style="flex:1;min-width:130px;background:var(--paper-raised);border:1px solid var(--hairline);border-radius:12px;padding:13px 15px"><div style="font:700 22px var(--font-display);color:var(--accent)">10</div><div style="font:500 12.5px/1.4 var(--font-body);color:var(--ink-2);margin-top:2px">scoring lines — 5 rows + 5 columns</div></div>
+</div>
+</div>
+<div style="background:var(--paper-raised);border:1px solid var(--hairline);border-radius:14px;box-shadow:var(--shadow-sm);padding:20px 22px">
+<h2 style="font-family:var(--font-display);font-size:20px;font-weight:680;margin:0 0 12px">Hand values</h2>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ hands }}" as="h" hint-placeholder-count="11"><div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--hairline)"><span style="font:{{ h.nameFont }};color:var(--ink)">{{ h.name }}</span><span style="font:700 15px var(--font-body);font-variant-numeric:tabular-nums;color:{{ h.ptColor }}">{{ h.base }}</span></div></sc-for>
+</div>
+<p style="font:400 12px/1.5 var(--font-body);color:var(--ink-3);margin:12px 0 0">Base points per line, before any bonus-card multipliers. A line's multipliers compose, then round up; grid-wide bonuses multiply the final total.</p>
+</div>
+</section>
+
+<!-- Bonus card reference -->
+<section style="margin-top:48px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<h2 style="font-family:var(--font-display);font-size:30px;font-weight:680;letter-spacing:-.01em;margin:0">Bonus card reference</h2>
+</div>
+<div style="display:flex;gap:9px;margin-top:18px;flex-wrap:wrap">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4"><button class="tab" onClick="{{ t.select }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:30px;margin-top:26px">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div>
+<div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+<span style="width:13px;height:13px;border-radius:4px;background:{{ g.tone }}"></span>
+<h3 style="font-family:var(--font-display);font-size:20px;font-weight:680;margin:0">{{ g.label }}</h3>
+<span style="font:500 13px var(--font-body);color:var(--ink-3)">{{ g.note }}</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+<sc-for list="{{ g.cards }}" as="c" hint-placeholder-count="12"><div class="bref" style="background:var(--paper-raised);border:1px solid var(--hairline);border-left:3px solid {{ g.tone }};border-radius:10px;padding:12px 14px"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font:700 14px var(--font-body);color:var(--ink)">{{ c.title }}</span><span style="font:700 12.5px var(--font-body);font-variant-numeric:tabular-nums;color:{{ g.tone }};white-space:nowrap">{{ c.mult }}</span></div><div style="font:400 12px/1.45 var(--font-body);color:var(--ink-2);margin-top:5px">{{ c.description }}</div></div></sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { filter: 'all' };
+  renderVals() {
+    const PG = window.PG_DATA || {};
+    const HANDS = PG.HANDS || [];
+    const CARDS = PG.BONUS_CARDS || [];
+    const META = PG.CATEGORY_META || {};
+
+    const steps = [
+      { n: '1', title: 'Place 25 cards', body: 'Draw a card from the deck and drop it onto the 5×5 grid — normally along a spiral. Fill every cell.' },
+      { n: '2', title: 'Build 10 poker hands', body: 'Each of the 5 rows and 5 columns scores as its own 5-card poker hand. Ten lines, ten scores.' },
+      { n: '3', title: 'Spend suit perks', body: 'Instead of placing, spend the drawn card on its suit: ♥ swap, ♠ slide, ♦ destroy, ♣ draw a bonus card.' },
+      { n: '4', title: 'Beat the target', body: 'Bonus cards multiply lines and the whole grid. Clear the difficulty target — mind the −25 per unfinished line.' },
+    ];
+
+    const maxBase = Math.max(...HANDS.map((h) => h.base), 1);
+    const hands = HANDS.map((h) => ({
+      name: h.name, base: h.base,
+      nameFont: h.base === 0 ? '500 14px var(--font-body)' : '600 14px var(--font-body)',
+      ptColor: h.base === 0 ? 'var(--ink-3)' : `color-mix(in srgb, var(--accent) ${Math.round(40 + (h.base / maxBase) * 60)}%, var(--ink))`,
+    }));
+
+    const order = ['in-game', 'end-game', 'special'];
+    const filter = this.state.filter;
+    const groups = order
+      .filter((k) => filter === 'all' || filter === k)
+      .map((k) => ({
+        key: k, tone: META[k] ? META[k].tone : 'var(--ink-3)',
+        label: META[k] ? META[k].label : k, note: META[k] ? META[k].note : '',
+        cards: CARDS.filter((c) => c.category === k),
+      }));
+
+    const tabDefs = [{ key: 'all', label: 'All cards' }, { key: 'in-game', label: 'In-game' }, { key: 'end-game', label: 'End-game' }, { key: 'special', label: 'One-time' }];
+    const tabs = tabDefs.map((t) => {
+      const on = filter === t.key;
+      return {
+        key: t.key, label: t.label,
+        select: () => this.setState({ filter: t.key }),
+        style: on ? 'border-color:var(--accent);background:var(--accent);color:#fff' : '',
+      };
+    });
+
+    return {
+      steps, hands, groups, tabs, cardCount: CARDS.length,
+      toggleTheme: () => { try { var d = localStorage.getItem('pg-dark') !== '0'; localStorage.setItem('pg-dark', d ? '0' : '1'); } catch (er) {} if (window.__pgTheme) window.__pgTheme(); },
+    };
+  }
+}
+</script>
+</body>
+</html>
