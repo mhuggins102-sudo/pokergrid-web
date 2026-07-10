@@ -137,6 +137,37 @@
   transition: opacity 150ms ease;
 }
 
+/* ---- Desktop hover model (mockup lines 726/734): cells on the
+   hover-active line ring accent; the rest fade back hard. Mouse-only —
+   the props driving these classes are never passed on mobile, and the
+   .hoverable outline is additionally hover-media-gated. ---- */
+.hoverLit,
+.hoverDim {
+  transition:
+    opacity 160ms ease,
+    outline-color 160ms ease;
+}
+
+.hoverLit {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 1px;
+  z-index: 2;
+}
+
+.hoverDim {
+  opacity: 0.26;
+}
+
+/* Placement / targeting cells ring accent under the pointer (the
+   mockup's .placeable:hover). */
+@media (hover: hover) {
+  .hoverable:not(:disabled):hover {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    z-index: 2;
+  }
+}
+
 .lineTag {
   position: absolute;
   z-index: 3;

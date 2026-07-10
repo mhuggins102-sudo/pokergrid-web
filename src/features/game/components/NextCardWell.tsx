@@ -1,9 +1,55 @@
+import { useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Card } from '../../../game/cards';
+import { Card, Rank, Suit, isJoker, rankIndex } from '../../../game/cards';
 import { canPreviewDeck } from '../../../game/state';
 import { useGameSession } from '../GameSessionProvider';
 import { CardFace, cardAriaLabel, cardLayoutId } from './CardFace';
 import styles from './NextCardWell.module.css';
+
+// UI suit tones (theme-aware), matching DeckPreviewDialog's palette.
+const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
+const SUIT_TONE: Record<Suit, string> = {
+  H: 'var(--suit-h)',
+  S: 'var(--suit-s)',
+  D: 'var(--suit-d)',
+  C: 'var(--suit-c)',
+};
+// Mockup sort: hearts, spades, diamonds, clubs; rank DESC within a
+// suit; jokers last — a fixed order, so the peek never leaks the
+// actual deck sequence (same contract as DeckPreviewDialog).
+const SUIT_ORDER: Record<Suit, number> = { H: 0, S: 1, D: 2, C: 3 };
+
+interface PeekEntry {
+  label: string;
+  color: string;
+}
+
+const peekEntries = (deck: readonly Card[]): PeekEntry[] => {
+  const standard: { rank: Rank; suit: Suit }[] = [];
+  let jokers = 0;
+  for (const c of deck) {
+    if (isJoker(c)) {
+      jokers += 1;
+      continue;
+    }
+    standard.push({ rank: c.rank, suit: c.suit });
+    // Double Duty: both halves of a two-way card are still available.
+    if (c.dual) standard.push({ rank: c.dual.rank, suit: c.dual.suit });
+  }
+  standard.sort((a, b) =>
+    SUIT_ORDER[a.suit] !== SUIT_ORDER[b.suit]
+      ? SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit]
+      : rankIndex(b.rank) - rankIndex(a.rank)
+  );
+  const out: PeekEntry[] = standard.map(c => ({
+    label: `${c.rank}${SUIT_GLYPH[c.suit]}`,
+    color: SUIT_TONE[c.suit],
+  }));
+  for (let i = 0; i < jokers; i++) {
+    out.push({ label: '★', color: 'var(--joker)' });
+  }
+  return out;
+};
 
 export interface NextCardWellProps {
   onPeekDeck: () => void;
@@ -15,6 +61,15 @@ export interface NextCardWellProps {
   /** Deck-count caption: 'left' ("12 left", the mobile docks) or
    *  'deck' ("Deck · 12", the desktop rail panel per the mockup). */
   meta?: 'left' | 'deck';
+  /**
+   * How the deck peek surfaces. 'dialog' (default — mobile behavior,
+   * unchanged): tapping the card / Peek link calls onPeekDeck to open
+   * DeckPreviewDialog. 'hover' (desktop): no dialog — hovering or
+   * focusing the well shows the mockup's side popover listing every
+   * remaining card. Nothing renders when the difficulty forbids
+   * deck preview.
+   */
+  peek?: 'dialog' | 'hover';
   /**
    * Auto-place staging (useAutoPlaceFlights): while set, this card
    * poses here INSTEAD of the drawn card; on release the grid cell
@@ -34,11 +89,13 @@ export function NextCardWell({
   instantLayout = false,
   stacked = false,
   meta = 'left',
+  peek = 'dialog',
   flight = null,
 }: NextCardWellProps) {
   const { state } = useGameSession();
   const drawn = state.drawn;
   const canPeek = canPreviewDeck(state.difficulty);
+  const hoverPeek = peek === 'hover' && canPeek;
 
   const shown = flight ? flight.card : drawn;
   const shownLayoutId = flight
@@ -60,17 +117,36 @@ export function NextCardWell({
       ? `Drawn card: ${cardAriaLabel(drawn)}`
       : 'No card drawn';
 
-  // On Easy/Medium the deck is peekable — tapping the card/deck area is
-  // the natural gesture for it, with the Peek link as the discoverable
-  // affordance.
-  const SlotTag = canPeek ? 'button' : 'div';
+  // Hover-peek: the remaining deck as sorted "rank+glyph" chips in the
+  // side popover. Only computed when that popover can actually show.
+  const entries = useMemo(
+    () => (hoverPeek ? peekEntries(state.deck) : []),
+    [hoverPeek, state.deck]
+  );
+
+  // On Easy/Medium the deck is peekable — on mobile, tapping the
+  // card/deck area opens the dialog (the Peek link is the discoverable
+  // affordance); on desktop the hover popover replaces both.
+  const dialogPeek = canPeek && peek === 'dialog';
+  const SlotTag = dialogPeek ? 'button' : 'div';
 
   return (
-    <div className={`${styles.well}${stacked ? ` ${styles.stacked}` : ''}`}>
+    <div
+      className={[
+        styles.well,
+        stacked ? styles.stacked : null,
+        hoverPeek ? styles.peekWrap : null,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      {...(hoverPeek ? { tabIndex: 0 } : {})}
+    >
       <SlotTag
-        {...(canPeek ? { type: 'button' as const, onClick: onPeekDeck } : {})}
+        {...(dialogPeek ? { type: 'button' as const, onClick: onPeekDeck } : {})}
         className={styles.cardSlot}
-        aria-label={canPeek ? `${cardLabel}. Peek at the remaining deck` : cardLabel}
+        aria-label={
+          dialogPeek ? `${cardLabel}. Peek at the remaining deck` : cardLabel
+        }
       >
         <AnimatePresence>
           {shown && (
@@ -103,12 +179,26 @@ export function NextCardWell({
             ? `Deck · ${state.deck.length}`
             : `${state.deck.length} left`}
         </span>
-        {canPeek && (
+        {dialogPeek && (
           <button type="button" className={styles.peek} onClick={onPeekDeck}>
             Peek
           </button>
         )}
       </div>
+      {hoverPeek && (
+        <div className={styles.peekPop} role="tooltip">
+          <span className={styles.peekHead}>
+            Deck peek · {state.deck.length} left
+          </span>
+          <div className={styles.peekCards}>
+            {entries.map((e, i) => (
+              <span key={i} style={{ color: e.color }}>
+                {e.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

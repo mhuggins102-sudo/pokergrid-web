@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useNavigate } from 'react-router';
 import { LayoutGroup, MotionConfig } from 'motion/react';
 import {
   ScoredLine,
@@ -14,6 +15,8 @@ import {
   bonusShapleyValues,
   scoreGrid,
 } from '../../game/scoring';
+import { JOKERS_BY_DIFFICULTY } from '../../game/rules';
+import { canPreviewDeck } from '../../game/state';
 import { Button, Sheet, useToast } from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
 import { useNavExtras } from '../../app/DesktopNav';
@@ -25,6 +28,11 @@ import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { lineLabel } from './handLabels';
+import {
+  cardFiresOnLine,
+  endgameRows as computeEndgameRows,
+  purpleProgress,
+} from './lineInsights';
 import { GridBoard, useJokerArrivals } from './components/GridBoard';
 import { LineRails } from './components/LineRails';
 import { LineDetailSheet } from './components/LineDetailSheet';
@@ -46,6 +54,7 @@ import { InvestWheel } from './components/InvestWheel';
 import { HandValuesDialog } from './components/HandValuesDialog';
 import { ReviveSheet } from './components/ReviveSheet';
 import { ResultView } from './components/ResultView';
+import { DesktopResultDialog } from './components/DesktopResultDialog';
 import styles from './GameScreen.module.css';
 
 export interface GameScreenProps {
@@ -57,6 +66,16 @@ export interface GameScreenProps {
 }
 
 const lineKeyOf = (kind: 'row' | 'col', index: number) => `${kind}${index}`;
+
+// Desktop hover model (the mockup's `hv`, lines 625–646): what the
+// pointer is on — a line (edge chip / SCORING row), a seated card's
+// cell, or a held bonus card. null = nothing hovered.
+type HoverTarget =
+  | { type: 'line'; tag: string }
+  | { type: 'cell'; r: number; c: number }
+  | { type: 'bonus'; idx: number };
+
+const NO_TAGS: ReadonlySet<string> = new Set();
 
 // Vertical slack (px, each side) reserved around the board frame for
 // Card Room's felt bleed — see the frame-width computation below and
@@ -175,15 +194,21 @@ function MaybeRails({
  * re-seats the same pieces into the three-panel spread.
  */
 export function GameScreen({ onReplay, coach }: GameScreenProps) {
-  const { state, dispatch, mode, canUndo, maxUndos } = useGameSession();
+  const { state, dispatch, mode, setup, canUndo, maxUndos } = useGameSession();
   const ui = usePhaseUI();
   const isDesktop = useIsDesktop();
+  const navigate = useNavigate();
   const coachHighlight = useCoachHighlight();
   const [peekOpen, setPeekOpen] = useState(false);
   const [handsOpen, setHandsOpen] = useState(false);
   const [linesOpen, setLinesOpen] = useState(false);
   // Rail chip tapped → that line's full scoring breakdown.
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
+  // Desktop hover model — line / cell / bonus-card hover (mockup hv).
+  const [hover, setHover] = useState<HoverTarget | null>(null);
+  // Desktop result dialog visibility (View Grid closes; the dock's
+  // Show result reopens — the agreed reopen path the mockup lacks).
+  const [resultOpen, setResultOpen] = useState(true);
   // Rails stay off for the whole tutorial regardless of the setting:
   // the guided deal never references line totals, and the plain board
   // is one less thing to explain — the extra ~30px goes to the grid.
@@ -201,33 +226,90 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     [state]
   );
 
-  // Desktop nav score pill: difficulty dot + name + live "score/target"
-  // in the header's extras slot (per the redesign mockup). Memoized so
-  // the nav only re-renders when a value actually changes; the hook
-  // clears the slot when the game unmounts. Mobile passes null — the
-  // desktop header isn't shown there, and a live node would re-render
-  // the app shell on every move for nothing.
-  const navPill = useMemo(
-    () => (
-      <span
-        className={styles.navPill}
-        style={
-          { '--pill-tone': difficultyColors[state.difficulty] } as CSSProperties
-        }
-      >
-        <span className={styles.navPillDot} aria-hidden="true" />
-        <span className={styles.navPillDiff}>{state.difficulty}</span>
-        <span
-          className={styles.navPillScore}
-          aria-label={`Score ${liveReport.total} of ${state.target}`}
-        >
-          {liveReport.total}
-          <span className={styles.navPillTarget}>/ {state.target}</span>
+  // Desktop keeps rendering the three-column view once the game ends
+  // (the result arrives as an overlay dialog instead of a screen swap)
+  // — the panels then show the FINAL math, incomplete-line penalties
+  // included, so the frozen board reconciles with the verdict.
+  const finished = ui.isGameOver;
+  const finalReport = useMemo(
+    () =>
+      finished
+        ? scoreGrid(state.grid, state.bonusCards, {
+            deckRemaining: state.deck.length,
+            discards: state.discards,
+            perkSpent: state.perkSpent,
+            handBoost: state.handBoost,
+          })
+        : null,
+    [finished, state]
+  );
+  const activeReport = finalReport ?? liveReport;
+
+  // Desktop nav pill cluster (per the mockup's header, lines 80–90):
+  // an optional ✦ twist pill (challenge runs / twisted dailies) and
+  // the difficulty/score pill, each with a hover/focus rules menu.
+  // Memoized so the nav only re-renders when a value actually changes;
+  // the hook clears the slot when the game unmounts. Mobile passes
+  // null — the desktop header isn't shown there.
+  const twist = setup.challenge;
+  const navScore = activeReport.total;
+  const navPill = useMemo(() => {
+    const tone = difficultyColors[state.difficulty];
+    const rules: [string, string][] = [
+      ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
+      ['Deck peek', canPreviewDeck(state.difficulty) ? 'Available' : '—'],
+      ['Undo', maxUndos > 0 ? `${maxUndos} per game` : '—'],
+      ['Discards', state.noDiscards ? 'Off' : 'On'],
+      ['Target score', String(state.target)],
+    ];
+    return (
+      <span className={styles.navPillGroup}>
+        {twist && (
+          <span className={styles.navMenuWrap} tabIndex={0}>
+            <span className={styles.twistPill}>
+              <span className={styles.twistStar} aria-hidden="true">
+                ✦
+              </span>
+              {twist.name}
+            </span>
+            <div className={`${styles.navMenu} ${styles.navMenuWide}`}>
+              <div className={`${styles.navMenuHead} ${styles.navMenuHeadAccent}`}>
+                Twist · {twist.synopsis.replace(/^Twist:\s*/i, '')}
+              </div>
+              <div className={styles.navMenuGoal}>{twist.goal}</div>
+            </div>
+          </span>
+        )}
+        <span className={styles.navMenuWrap} tabIndex={0}>
+          <span
+            className={styles.navPill}
+            style={{ '--pill-tone': tone } as CSSProperties}
+          >
+            <span className={styles.navPillDot} aria-hidden="true" />
+            <span className={styles.navPillDiff}>{state.difficulty}</span>
+            <span
+              className={styles.navPillScore}
+              aria-label={`Score ${navScore} of ${state.target}`}
+            >
+              {navScore}
+              <span className={styles.navPillTarget}>/ {state.target}</span>
+            </span>
+          </span>
+          <div className={styles.navMenu}>
+            <div className={styles.navMenuHead} style={{ color: tone }}>
+              {state.difficulty} · rules
+            </div>
+            {rules.map(([k, v]) => (
+              <div key={k} className={styles.navMenuRow}>
+                <span>{k}</span>
+                <b>{v}</b>
+              </div>
+            ))}
+          </div>
         </span>
       </span>
-    ),
-    [state.difficulty, liveReport.total, state.target]
-  );
+    );
+  }, [state.difficulty, navScore, state.target, state.noDiscards, maxUndos, twist]);
   useNavExtras(isDesktop ? navPill : null);
 
   // Live per-card Shapley contribution, shown as a corner badge on each
@@ -284,8 +366,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const [spotlight, setSpotlight] = useState<number | null>(null);
   useEffect(() => {
     setSpotlight(null);
-    // A commit can change any line's math — close a stale detail sheet.
+    // A commit can change any line's math — close a stale detail sheet
+    // and drop any live hover (the mockup clears hv on every move).
     setDetailLine(null);
+    setHover(null);
   }, [state]);
   useEffect(() => {
     if (spotlight === null) return;
@@ -409,7 +493,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       ? { row: Math.floor(spotlight / 5), col: spotlight % 5 }
       : null;
 
-  if (ui.isGameOver) {
+  // Game over: desktop free-play / daily runs stay on the three-column
+  // view with the result dialog overlaid (mockup lines 228–260); every
+  // other surface — mobile, and the modes with bespoke end-of-run
+  // flows (tutorial, challenges, Targets-Up rewards) — keeps the full
+  // ResultView exactly as before.
+  const deskResult =
+    isDesktop && (mode.kind === 'free' || mode.kind === 'daily');
+  if (ui.isGameOver && !deskResult) {
     return <ResultView onReplay={onReplay} />;
   }
 
@@ -474,8 +565,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     </span>
   );
 
-  // The interactive board, shared verbatim by both layout forks.
-  const boardEl = (
+  // The interactive board, shared by both layout forks; the desktop
+  // fork layers its hover-model props on top via `extra`.
+  const board = (extra?: Partial<Parameters<typeof GridBoard>[0]>) => (
     <GridBoard
       // Remount on the ♣ open/close toggle: a fresh mount renders
       // seated cards exactly where CSS puts them, so motion's
@@ -514,6 +606,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       hiddenSlots={hiddenSlots}
       spotlight={spotlightProp}
       sweepSlots={sweepSlots}
+      {...extra}
     />
   );
 
@@ -557,18 +650,130 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         {ui.banner}
       </span>
     );
+
+    // ---- Shared hover model (mockup lines 625–693) ----
+    // Everything derives from `hover`: the set of line tags currently
+    // "active". A line hover is itself; a cell hover is its row+column;
+    // a bonus hover is every line that card fires on (in-game) or its
+    // purple progress tags (end-game). Touch-primary devices at this
+    // width (iPad landscape) never get the JS handlers — taps must not
+    // strand a phantom hover.
+    const hoverCapable =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(hover: hover)').matches;
+    const lines = activeReport.lines;
+    const purpleInputs = {
+      grid: state.grid,
+      lines,
+      deckRemaining: state.deck.length,
+      discards: state.discards,
+      perkSpent: state.perkSpent,
+    };
+    const activeTags: ReadonlySet<string> = (() => {
+      if (!hover) return NO_TAGS;
+      if (hover.type === 'line') return new Set([hover.tag]);
+      if (hover.type === 'cell') {
+        return new Set([`R${hover.r + 1}`, `C${hover.c + 1}`]);
+      }
+      const card = state.bonusCards[hover.idx];
+      if (!card) return NO_TAGS;
+      if (card.lineEffect) {
+        return new Set(
+          lines
+            .filter(l => cardFiresOnLine(card, l, lines))
+            .map(l => lineLabel(l.kind, l.index))
+        );
+      }
+      return purpleProgress(card, purpleInputs)?.tags ?? NO_TAGS;
+    })();
+    const anyHover = hover !== null;
+    // Cell hover is disabled while a perk / green action is targeting
+    // (mockup lines 736–737); edge chips mute then too (railMute).
+    const hoverEnabled = ui.phaseKind === 'awaiting-action' || finished;
+    const lineIsActive = (line: ScoredLine) =>
+      activeTags.has(lineLabel(line.kind, line.index));
+    const lineHover = {
+      any: anyHover,
+      muted: !hoverEnabled,
+      isActive: lineIsActive,
+      onEnter: (line: ScoredLine) =>
+        setHover({ type: 'line', tag: lineLabel(line.kind, line.index) }),
+      onLeave: () => setHover(null),
+    };
+    const lineHovered =
+      hover?.type === 'line'
+        ? lines.find(l => lineLabel(l.kind, l.index) === hover.tag)
+        : undefined;
+    const bonusHover = {
+      isActive: (i: number) => {
+        if (hover?.type === 'bonus') return hover.idx === i;
+        const card = state.bonusCards[i];
+        return (
+          !!lineHovered &&
+          !!card?.lineEffect &&
+          cardFiresOnLine(card, lineHovered, lines)
+        );
+      },
+      isDim: (i: number) => hover?.type === 'bonus' && hover.idx !== i,
+      onEnter: (i: number) => setHover({ type: 'bonus', idx: i }),
+      onLeave: () => setHover(null),
+      progress: (i: number) => {
+        const card = state.bonusCards[i];
+        return card ? purpleProgress(card, purpleInputs) : null;
+      },
+    };
+    const cellHoverState = (idx: number): 'lit' | 'dim' | null => {
+      if (!anyHover) return null;
+      const r = Math.floor(idx / 5);
+      const c = idx % 5;
+      return activeTags.has(`R${r + 1}`) || activeTags.has(`C${c + 1}`)
+        ? 'lit'
+        : 'dim';
+    };
+    const endgame = computeEndgameRows(state.bonusCards, purpleInputs);
+    const playAgain = () =>
+      mode.kind === 'daily' ? navigate('/daily/archive') : onReplay();
+    const deskBoard = board({
+      hoverState: hoverCapable ? cellHoverState : undefined,
+      onCellHover: hoverCapable && hoverEnabled
+        ? idx =>
+            setHover(
+              idx === null
+                ? null
+                : { type: 'cell', r: Math.floor(idx / 5), c: idx % 5 }
+            )
+        : undefined,
+      hoverOutline: idx => ui.isTappable(idx) || boardRole(idx) === 'next',
+      // The finished board stays explorable: seated cards keep the
+      // spotlight tap and (being enabled) their hover affordance.
+      ...(finished
+        ? {
+            isTappable: idx => state.grid[idx] !== null,
+            onCellTap: idx => setSpotlight(s => (s === idx ? null : idx)),
+          }
+        : {}),
+    });
+
     return (
       <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
         <LayoutGroup>
           <div className={styles.desk}>
             <div className={styles.deskRail}>
               <ScoringPanel
-                report={liveReport}
+                report={activeReport}
                 onLineTap={setDetailLine}
                 onShowHandValues={() => setHandsOpen(true)}
+                bonusCards={state.bonusCards}
+                handBoost={state.handBoost}
+                endgame={endgame}
+                hover={hoverCapable ? lineHover : undefined}
               />
               {mode.kind === 'daily' ? (
-                <DailyLeaderboardPanel dateISO={mode.dateISO} />
+                <DailyLeaderboardPanel
+                  dateISO={mode.dateISO}
+                  finished={finished}
+                  finalScore={activeReport.total}
+                />
               ) : (
                 <DeskStatsPanel difficulty={state.difficulty} />
               )}
@@ -578,14 +783,17 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <div className={styles.deskBoard}>
                 {chipsShown ? (
                   <EdgeRails
-                    report={liveReport}
+                    report={activeReport}
                     onLineTap={setDetailLine}
                     highlight={railHighlight}
+                    bonusCards={state.bonusCards}
+                    handBoost={state.handBoost}
+                    hover={hoverCapable ? lineHover : undefined}
                   >
-                    {boardEl}
+                    {deskBoard}
                   </EdgeRails>
                 ) : (
-                  boardEl
+                  deskBoard
                 )}
               </div>
             </div>
@@ -598,6 +806,35 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 {ui.bonusDialog ? (
                   // ♣ draw takes over the deck panel, board untouched.
                   <BonusResolvePanel ui={ui.bonusDialog} />
+                ) : finished ? (
+                  // Game over, dialog dismissed via View Grid: the dock
+                  // offers the way back in (and the replay).
+                  <div className={styles.deskDockStage}>
+                    <NextCardWell
+                      onPeekDeck={() => {}}
+                      instantLayout={instantLayout}
+                      stacked
+                      meta="deck"
+                      peek="hover"
+                      flight={flight}
+                    />
+                    <div className={styles.deskActions}>
+                      <Button
+                        variant="primary"
+                        className={styles.deskStackBtn}
+                        onClick={() => setResultOpen(true)}
+                      >
+                        Show result
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className={styles.deskStackBtn}
+                        onClick={playAgain}
+                      >
+                        Play Again
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
                   <div
                     className={
@@ -610,10 +847,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     }
                   >
                     <NextCardWell
-                      onPeekDeck={() => setPeekOpen(true)}
+                      onPeekDeck={() => {}}
                       instantLayout={instantLayout}
                       stacked
                       meta="deck"
+                      peek="hover"
                       flight={flight}
                     />
                     <div className={styles.deskActions}>
@@ -665,12 +903,20 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       : undefined
                   }
                   liveContext={card => bonusCardLiveContext(card, state)}
+                  hover={hoverCapable ? bonusHover : undefined}
                 />
               )}
             </div>
           </div>
         </LayoutGroup>
         {overlays}
+        {finished && (
+          <DesktopResultDialog
+            open={resultOpen}
+            onViewGrid={() => setResultOpen(false)}
+            onReplay={onReplay}
+          />
+        )}
       </MotionConfig>
     );
   }
@@ -725,7 +971,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 onLineTap={setDetailLine}
                 highlight={railHighlight}
               >
-                {boardEl}
+                {board()}
               </MaybeRails>
             </div>
           </div>

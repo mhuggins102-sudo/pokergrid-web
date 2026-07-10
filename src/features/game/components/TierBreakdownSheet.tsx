@@ -5,8 +5,9 @@ import styles from './TierBreakdownSheet.module.css';
 
 // Tier rules — mirrors tierForRun() in lib/stats.ts: win bands use
 // score / target ratio, loss bands compare to the same target. Port of
-// the original TierBreakdownModal.
-const TIER_RULES: ReadonlyArray<{
+// the original TierBreakdownModal. Exported so the desktop result
+// dialog can print the tier's label under its big letter.
+export const TIER_RULES: ReadonlyArray<{
   tier: Tier;
   label: string;
   ratio: number;

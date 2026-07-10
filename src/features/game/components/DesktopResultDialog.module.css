@@ -1,0 +1,251 @@
+/* Desktop game-over overlay, per the mockup's RESULT block (lines
+   228–260 of design-refs/desktop/Play.dc.html). Desktop-only — the
+   component is rendered exclusively by GameScreen's ≥1024px fork. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.card {
+  width: 420px;
+  max-width: 100%;
+  background: var(--paper-raised);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.head {
+  color: var(--on-accent);
+  text-align: center;
+  padding: 26px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.headWin {
+  background: linear-gradient(
+    135deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 70%, #000)
+  );
+}
+
+.headLoss {
+  background: linear-gradient(135deg, var(--ink-2), var(--ink));
+  /* The gradient is built from ink tones, so it's dark on light themes
+     and LIGHT on dark themes — paper is the one token that contrasts
+     with ink in every theme. A fixed #fff goes invisible on paper-dark. */
+  color: var(--paper);
+}
+
+.verdict {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.85;
+}
+
+.tier {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 680;
+  line-height: 1;
+  margin-top: 8px;
+}
+
+.tierLabel {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 6px;
+  opacity: 0.9;
+}
+
+.body {
+  padding: 22px 26px 26px;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+}
+
+.score {
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 680;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.target {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 16px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.rowLast {
+  border-bottom: none;
+}
+
+.rowLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.rowValue {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.rowDanger {
+  color: var(--danger);
+}
+
+.achievements {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* Daily handle claim (mockup lines 244–251). */
+.claim {
+  margin-top: 18px;
+  padding: 15px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--paper-sunken));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--hairline));
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.claimTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.claimSub {
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
+
+.posted {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.primaryBtn,
+.ghostBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  padding: 13px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.primaryBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.ghostBtn {
+  background: var(--paper-raised);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+
+@media (hover: hover) {
+  .primaryBtn:hover,
+  .ghostBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.primaryBtn:focus-visible,
+.ghostBtn:focus-visible,
+.shareLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Quiet share affordance under the buttons — subordinate by design. */
+.shareRow {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.shareLink {
+  border: none;
+  background: transparent;
+  padding: 2px 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .shareLink:hover {
+    color: var(--accent);
+  }
+}
