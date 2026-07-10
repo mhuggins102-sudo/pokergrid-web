@@ -9,10 +9,14 @@ test('token gallery renders the design system', async ({ page }) => {
 
 test('achievements are reachable from the home tile', async ({ page }) => {
   await page.goto('/');
-  await page
-    .locator('main')
-    .getByRole('link', { name: /Achievements/ })
-    .click();
+  // Mobile home carries an Achievements tile in main; the desktop
+  // redesign's landing page reaches it through the header nav instead.
+  const tile = page.locator('main').getByRole('link', { name: /Achievements/ });
+  if (await tile.count()) {
+    await tile.click();
+  } else {
+    await page.getByRole('link', { name: 'Achievements' }).click();
+  }
   await expect(
     page.getByRole('heading', { name: 'Achievements' })
   ).toBeVisible();
