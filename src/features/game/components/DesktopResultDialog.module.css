@@ -25,7 +25,7 @@
 }
 
 .head {
-  color: #fff;
+  color: var(--on-accent);
   text-align: center;
   padding: 26px 26px 24px;
   display: flex;
@@ -43,6 +43,10 @@
 
 .headLoss {
   background: linear-gradient(135deg, var(--ink-2), var(--ink));
+  /* The gradient is built from ink tones, so it's dark on light themes
+     and LIGHT on dark themes — paper is the one token that contrasts
+     with ink in every theme. A fixed #fff goes invisible on paper-dark. */
+  color: var(--paper);
 }
 
 .verdict {

@@ -24,6 +24,13 @@ export interface RecordedResult {
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
 
+// Guards recording across COMPONENTS, not just re-renders: mobile's
+// ResultView and desktop's result dialog both call this hook, and a
+// viewport resize across the 1024px fork right after a game ends
+// mounts the other one — the final GameState object is referentially
+// stable by then, so it identifies the run.
+const recordedStates = new WeakSet<object>();
+
 /**
  * One-shot, mode-aware result recording — the web port of the original
  * ResultScreen's recording effect. Free play records a full RunRecord
@@ -43,8 +50,9 @@ export function useRecordResult(
   const ranRef = useRef(false);
 
   useEffect(() => {
-    if (ranRef.current) return;
+    if (ranRef.current || recordedStates.has(state)) return;
     ranRef.current = true;
+    recordedStates.add(state);
     // The tutorial's rigged deal must not touch stats or achievements.
     if (mode.kind === 'tutorial') return;
 
