@@ -255,7 +255,7 @@
 
 .primaryBtn {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 
