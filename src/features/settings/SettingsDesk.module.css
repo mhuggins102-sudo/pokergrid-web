@@ -1,0 +1,211 @@
+/* Desktop (≥1024px) settings page, per
+   design-refs/desktop/Settings.dc.html. Rendered only by SettingsPage's
+   desktop fork. */
+
+.wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 6px 0 28px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* ---- Sections ---- */
+
+.section {
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.section + .section {
+  margin-top: 18px;
+}
+
+.sectionHead {
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 22px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--hairline);
+}
+
+.rowTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.rowHint {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+/* ---- Segmented picker ---- */
+
+.seg {
+  display: inline-flex;
+  background: var(--paper-sunken);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+  flex: none;
+}
+
+.segBtn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.13s ease;
+  white-space: nowrap;
+}
+
+.segOn {
+  background: var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Pill toggle ---- */
+
+.toggle {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: var(--rule);
+  position: relative;
+  transition: background 0.16s ease;
+  cursor: pointer;
+}
+
+.toggleOn {
+  background: var(--accent);
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.16s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.toggleOn .knob {
+  left: 21px;
+}
+
+/* ---- Identity rows ---- */
+
+.handleBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper-sunken);
+  border-radius: 9px;
+  padding: 8px 14px;
+}
+
+.handleName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.handleEditor {
+  flex: 1;
+  max-width: 300px;
+}
+
+.quietAction {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.quietAction:hover {
+  text-decoration: underline;
+}
+
+.resetBtn {
+  flex: none;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 9px;
+  padding: 9px 18px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .resetBtn:hover {
+    background: color-mix(in srgb, var(--danger) 8%, transparent);
+  }
+}
+
+.buildId {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

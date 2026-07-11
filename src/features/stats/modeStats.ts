@@ -1,3 +1,4 @@
+import type { ChallengeId } from '../../game/challenges';
 import type { Difficulty } from '../../game/rules';
 import { Tier, TIER_ORDER, tierForRun } from '../../lib/stats';
 import type { Stats } from '../../lib/stats';
@@ -30,6 +31,10 @@ export interface RunLite {
   target: number;
   won: boolean;
   ts: number;
+  // Daily runs only: the twist (challenge modifier) the recipe rolled,
+  // if any. Display-only — the desktop Recent-runs table shows it as a
+  // ✦ pill.
+  twist?: ChallengeId;
 }
 
 // A dot on the score-over-plays chart. Slimmer than RunLite (the
@@ -161,6 +166,7 @@ export const buildModeStats = (
       target,
       won: p.won,
       ts: p.completedAt,
+      twist: p.recipe.twist,
     });
     history.push({
       mode: 'daily',

@@ -4,6 +4,8 @@ import { TARGET_BY_DIFFICULTY } from '../../game/rules';
 import { HAND_BASE_VALUE, INCOMPLETE_LINE_PENALTY } from '../../game/scoring';
 import { HAND_LABEL } from '../game/handLabels';
 import { HandRank } from '../../game/hands';
+import { useIsDesktop } from '../game/useIsDesktop';
+import { RulesDesk } from './RulesDesk';
 import styles from './RulesPage.module.css';
 
 const HAND_ORDER: HandRank[] = [
@@ -21,6 +23,12 @@ const HAND_ORDER: HandRank[] = [
 ];
 
 export function RulesPage() {
+  // ≥1024px renders the desktop-redesign rules spread (with the inline
+  // bonus-card reference) INSTEAD of the phone article — below the
+  // breakpoint nothing changes.
+  const isDesktop = useIsDesktop();
+  if (isDesktop) return <RulesDesk />;
+
   return (
     <section className={styles.wrap}>
       <header className={styles.header}>
