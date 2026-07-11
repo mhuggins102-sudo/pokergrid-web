@@ -197,11 +197,6 @@ export function RulesDesk() {
       <section className={styles.refSection}>
         <div className={styles.refHead}>
           <h2 className={styles.refTitle}>Bonus card reference</h2>
-          {/* Not in the mockup — keeps the phone-era grouped catalog
-              reachable on desktop. */}
-          <Link to="/rules/cards" className={styles.refLink}>
-            Detailed catalog by category →
-          </Link>
         </div>
         <div className={styles.tabs}>
           {TABS.map(t => (

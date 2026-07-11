@@ -284,6 +284,12 @@ export const slotPlaceholder = (kind: SlotKind): BonusCard => ({
 export const isPlaceholder = (c: BonusCard): boolean =>
   c.placeholderKind !== undefined;
 
+// A categorized (Mixed Bag) slot whose one-time action has been used
+// is spent for the rest of the game: the used card stays put as a
+// visual reminder and the slot can never be drawn for again.
+export const isSpentSlot = (c: BonusCard | undefined): boolean =>
+  !!c && isSpecialCard(c) && c.used === true;
+
 // Helpers
 const standardCards = (line: LineContext) =>
   line.cards.filter((c): c is Exclude<Card, { kind: 'joker' }> => c !== null && !isJoker(c));

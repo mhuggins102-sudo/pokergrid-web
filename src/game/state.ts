@@ -24,6 +24,7 @@ import {
   BONUS_HAND_LIMIT,
   cardMatchesSlot,
   isPlaceholder,
+  isSpentSlot,
   isSpecialCard,
   SlotKind,
   slotPlaceholder,
@@ -873,10 +874,14 @@ const handleBeginSuitAction = (
       // Mixed Bag: ♣ first asks which slot to draw for. The deck is
       // filtered to that slot's category once the player picks (see
       // handleBonusPickSlot). Skip this branch if no slot category
-      // has any drawable cards left.
+      // has any drawable cards left. A slot whose one-time action has
+      // been used is spent for the whole game — it can't be drawn for
+      // again, so it doesn't count as drawable here.
       if (s.slotCategories) {
-        const anySlotDrawable = s.slotCategories.some(kind =>
-          s.bonusDeck.some(c => cardMatchesSlot(c, kind))
+        const anySlotDrawable = s.slotCategories.some(
+          (kind, i) =>
+            !isSpentSlot(s.bonusCards[i]) &&
+            s.bonusDeck.some(c => cardMatchesSlot(c, kind))
         );
         if (!anySlotDrawable) return s;
         return {
@@ -1608,6 +1613,10 @@ const handleBonusPickSlot = (s: GameState, slot: number): GameState => {
   if (s.phase.kind !== 'awaiting-bonus-slot-choice') return s;
   if (!s.slotCategories) return s;
   if (slot < 0 || slot >= s.slotCategories.length) return s;
+  // A used one-time action spends its slot for the rest of the game —
+  // it is not a valid replacement target on later ♣ draws (the spent
+  // card stays visible in the slot as a reminder).
+  if (isSpentSlot(s.bonusCards[slot])) return s;
   const kind = s.slotCategories[slot];
   // Filter the deck to cards that fit this slot's category. Draw up
   // to 2 from the top of the filtered subset; the remaining (in

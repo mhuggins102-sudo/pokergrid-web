@@ -94,6 +94,17 @@ button.cardSlot:focus-visible {
   position: relative;
 }
 
+/* Hover bridge across the 14px well→popover gap (popover flies out to
+   the LEFT of the dock, top-aligned at -6px). */
+.peekWrap::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: -6px;
+  width: 14px;
+  height: calc(100% + 6px);
+}
+
 .peekWrap .cardSlot {
   cursor: help;
 }

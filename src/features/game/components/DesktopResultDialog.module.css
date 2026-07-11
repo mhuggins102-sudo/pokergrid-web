@@ -182,12 +182,67 @@
   color: var(--danger);
 }
 
+/* Header context line — challenge runs name the challenge under the
+   tier, matching the ✦ twist-pill vocabulary. */
+.headContext {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+/* Just-earned achievements — mobile ResultView's 🏆 callout at dialog
+   weight: a warm tinted box in the dialog's panel language, each name
+   a tappable dotted-underline button opening its explainer sheet. */
 .achievements {
-  margin: 12px 0 0;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--warn) 10%, var(--paper-sunken));
+  border: 1px solid color-mix(in srgb, var(--warn) 34%, var(--hairline));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   text-align: center;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+}
+
+.achievementsLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warn);
+}
+
+.achievementsList {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--warn);
+}
+
+.achievementBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+.achievementBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* Daily handle claim (mockup lines 244–251). */
@@ -277,4 +332,36 @@
 .ghostBtn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Quiet below-footer links (All challenges / Targets Up home / the
+   targets Share) — visually subordinate to the button row. */
+.quietRow {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.quietLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.quietLink:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.quietLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

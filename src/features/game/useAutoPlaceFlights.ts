@@ -55,7 +55,12 @@ const EMPTY: ReadonlySet<number> = new Set();
  * play (or UNDO) during a flight is safe — stale slots are pruned
  * against the real grid every render.
  */
-export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
+export function useAutoPlaceFlights(
+  state: GameState,
+  /** True disables all staging — a re-hydrated finished board (the
+   *  archive's view-only session) must render seated, not re-deal. */
+  disable = false
+): AutoPlaceFlights {
   const queueRef = useRef<number[]>([]);
 
   // Flights are pure presentation; under reduced motion (also how the
@@ -63,8 +68,9 @@ export function useAutoPlaceFlights(state: GameState): AutoPlaceFlights {
   const skipRef = useRef<boolean | null>(null);
   if (skipRef.current === null) {
     skipRef.current =
-      typeof window !== 'undefined' &&
-      !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      disable ||
+      (typeof window !== 'undefined' &&
+        !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   }
   const skip = skipRef.current;
 

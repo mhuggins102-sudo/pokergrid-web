@@ -127,18 +127,30 @@
 }
 
 .row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border-bottom: 1px solid var(--hairline);
+  background: transparent;
+  transition: background-color 130ms ease;
+}
+
+/* The select action fills the row; the Start shortcut (unplayed rows)
+   overlays the right edge so it can be a real link. */
+.rowMain {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 12px 18px;
   border: none;
-  border-bottom: 1px solid var(--hairline);
   background: transparent;
   font: inherit;
   text-align: left;
+  color: inherit;
   cursor: pointer;
-  transition: background-color 130ms ease;
 }
 
 @media (hover: hover) {
@@ -147,7 +159,7 @@
   }
 }
 
-.row:focus-visible {
+.rowMain:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
@@ -258,14 +270,56 @@
   color: var(--tier-tone, var(--ink-2));
 }
 
-.startBadge {
+/* Unplayed rows: a muted dash where the score would sit… */
+.rowDash {
   display: inline-block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-3);
+  transition: opacity 130ms ease;
+}
+
+/* …swapped for a small Start link while the row is hovered/focused. */
+.rowStart {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
   font-size: 11px;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 5px 11px;
   border-radius: 8px;
   background: var(--accent);
   color: var(--on-accent, #fff);
+  text-decoration: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 130ms ease;
+}
+
+.row:focus-within .rowStart {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.row:focus-within .rowDash {
+  opacity: 0;
+}
+
+@media (hover: hover) {
+  .row:hover .rowStart {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .row:hover .rowDash {
+    opacity: 0;
+  }
+}
+
+.rowStart:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ---- Selected day result ---- */

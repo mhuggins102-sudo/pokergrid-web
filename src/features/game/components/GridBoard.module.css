@@ -13,19 +13,19 @@
   border-radius: var(--radius-md);
 }
 
-/* Card Room's felt-tinted table panel, painted BEHIND and slightly
-   BEYOND the cells (negative inset) rather than as padding — so the
-   panel never trades cell size for its border: the grid is exactly
-   the same size in every theme. Morning Paper leaves the tokens unset
-   → fully transparent. Surrounding gaps are ≥ the 6px bleed, so
-   nothing is covered. */
-.board::before {
-  content: '';
-  position: absolute;
-  inset: calc(-1 * var(--board-pad, 0px));
+/* Card Room's felt-tinted table panel: the board's own background
+   shows through the cell gaps, and a spread-only box-shadow bleeds the
+   same tint --board-pad (6px) BEYOND the cells — so the panel never
+   trades cell size for its border: the grid is exactly the same size
+   in every theme. Morning Paper leaves the tokens unset → fully
+   transparent. Surrounding gaps are ≥ the 6px bleed, so nothing is
+   covered. (History: this was a ::before with z-index:-1, which never
+   painted anywhere — with no intermediate stacking context the pseudo
+   fell BEHIND the app shell's opaque --paper background, because
+   in-flow backgrounds paint after negative-z positioned descendants.) */
+.board {
   background: var(--board-surface, transparent);
-  border-radius: var(--radius-md);
-  z-index: -1;
+  box-shadow: 0 0 0 var(--board-pad, 0px) var(--board-surface, transparent);
 }
 
 .cell {

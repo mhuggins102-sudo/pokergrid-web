@@ -12,6 +12,19 @@
   z-index: 90;
   padding: 24px;
   animation: draw-fadein 160ms ease;
+  transition: opacity 200ms ease;
+}
+
+/* Board-peek dim: while the pointer is on the overlay but NOT on the
+   dialog card (and no keyboard focus is inside), the whole overlay —
+   card and scrim — fades way down so the board underneath is fully
+   readable. Moving back over the card restores it (the card keeps its
+   pointer-events while dimmed). Hover-gated: touch devices and
+   keyboard (focus-within) users always get the full-opacity modal. */
+@media (hover: hover) {
+  .scrim:hover:not(:focus-within):not(:has(.card:hover)) {
+    opacity: 0.15;
+  }
 }
 
 @keyframes draw-fadein {

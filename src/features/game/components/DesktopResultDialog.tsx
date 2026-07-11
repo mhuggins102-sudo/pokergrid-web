@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { bonusShapleyValues, scoreGrid } from '../../../game/scoring';
-import { useToast } from '../../../design/primitives';
+import type { Achievement } from '../../../game/achievements';
+import { Sheet, useToast } from '../../../design/primitives';
 import { buildShareUrl, shareUrl } from '../../../lib/share';
 import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
+import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { HandleEditor } from '../../daily/RankPanel';
 import { KEY_HANDLE } from '../../daily/sync/deviceId';
@@ -19,7 +21,9 @@ export interface DesktopResultDialogProps {
   open: boolean;
   /** "View Grid" — close the dialog, revealing the finished board. */
   onViewGrid: () => void;
-  /** Free play: start a fresh run (daily routes to the archive). */
+  /** Free play / challenge: restart this run. Targets Up: remount the
+   *  run page, which re-reads the (advanced or cleared) ladder save.
+   *  Daily routes to the archive instead. */
   onReplay: () => void;
 }
 
@@ -30,17 +34,18 @@ const tierLabel = (tier: string): string =>
  * The ≥1024px game-over overlay (mockup lines 228–260): the finished
  * three-column view stays behind an ink scrim while a compact verdict
  * card takes the middle — gradient header with the tier letter, the
- * score against its target, three stat rows, the daily handle claim,
- * and Play Again / View Grid. Owns the SAME result-recording side
+ * score against its target, the score math, the daily handle claim,
+ * and the mode's continue actions. Owns the SAME result-recording side
  * effects ResultView runs on mobile (stats, achievements, the daily
- * submit) — it is the desktop result surface, not just a skin.
+ * submit, the Targets-Up ladder advance) — it is the desktop result
+ * surface, not just a skin.
  */
 export function DesktopResultDialog({
   open,
   onViewGrid,
   onReplay,
 }: DesktopResultDialogProps) {
-  const { state, mode, seed } = useGameSession();
+  const { state, mode, setup, seed, viewOnly } = useGameSession();
   const { toast } = useToast();
 
   const { report, shapley } = useMemo(() => {
@@ -57,14 +62,21 @@ export function DesktopResultDialog({
   }, [state]);
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
+  // Targets-Up ladder lifecycle — the hook shared with mobile's
+  // ResultView; its module-level guard keeps the advance/clear commit
+  // single-owner even if both surfaces mount across a resize.
+  const targetsFlow = useTargetsResult(won, tier);
+  // Tapped just-earned achievement → explainer sheet (mobile parity).
+  const [achInfo, setAchInfo] = useState<Achievement | null>(null);
 
   // Daily: save locally, then queue-first submit (mirrors ResultView).
+  // Never for a re-hydrated archive view — that play is already saved.
   const dailyRecordedRef = useRef(false);
   useEffect(() => {
-    if (mode.kind !== 'daily' || dailyRecordedRef.current) return;
+    if (mode.kind !== 'daily' || dailyRecordedRef.current || viewOnly) return;
     dailyRecordedRef.current = true;
     recordDailyCompletion(mode.dateISO, mode.recipe, state, report.total, won);
-  }, [mode, state, report.total, won]);
+  }, [mode, state, report.total, won, viewOnly]);
 
   // Esc = View Grid (the dialog's only dismissal).
   useEffect(() => {
@@ -77,25 +89,68 @@ export function DesktopResultDialog({
   }, [open, onViewGrid]);
 
   const isDaily = mode.kind === 'daily';
+  const isChallenge = mode.kind === 'challenge';
+  const isTargets = mode.kind === 'targets';
   const [hasHandle, setHasHandle] = useState(
     () => !!localStorage.getItem(KEY_HANDLE)
   );
 
+  const verdict = isChallenge
+    ? won
+      ? 'Challenge beaten'
+      : 'Challenge missed'
+    : isTargets
+      ? won
+        ? `Level ${mode.level} cleared`
+        : `Run ended — level ${mode.level}`
+      : won
+        ? 'Target cleared'
+        : 'Just short';
+
   const onShare = async () => {
     const url = buildShareUrl({
       score: report.total,
-      mode: isDaily ? 'daily' : 'free',
+      mode: isTargets
+        ? 'targets-up'
+        : isChallenge
+          ? 'challenge'
+          : isDaily
+            ? 'daily'
+            : 'free',
       difficulty: state.difficulty,
       grid: state.grid,
       dateISO: isDaily && mode.kind === 'daily' ? mode.dateISO : undefined,
-      seed: !isDaily ? seed : undefined,
+      seed: mode.kind === 'free' ? seed : undefined,
     });
     const result = await shareUrl(url, `PokerGrid — ${report.total} points`);
     if (result.outcome === 'copied') toast('Link copied.', 'success');
     else if (result.outcome === 'failed') toast('Could not share.', 'danger');
   };
 
-  if (!open) return null;
+  // Targets Up: exactly ONE contextual primary next to View Grid —
+  // Choose Reward(s) (S/SS win, picks pending) → the shared
+  // RewardsSheet; Next Round (won, picks done or none earned); Play
+  // Again (lost — the save is already cleared, so the remount starts
+  // the run over at level 1).
+  const targetsPrimary = targetsFlow.rewardsPending ? (
+    <button
+      type="button"
+      className={styles.primaryBtn}
+      onClick={targetsFlow.openRewards}
+    >
+      {targetsFlow.rewardCount === 2 ? 'Choose Rewards' : 'Choose Reward'}
+    </button>
+  ) : (
+    <button type="button" className={styles.primaryBtn} onClick={onReplay}>
+      {won ? 'Next Round' : 'Play Again'}
+    </button>
+  );
+
+  if (!open) {
+    // Keep the RewardsSheet reachable even while the player inspects
+    // the grid — it is a top-layer <dialog>, independent of the scrim.
+    return <>{targetsFlow.rewardsSheet}</>;
+  }
 
   return (
     <div className={styles.scrim}>
@@ -106,11 +161,14 @@ export function DesktopResultDialog({
         aria-label="Game result"
       >
         <div className={`${styles.head} ${won ? styles.headWin : styles.headLoss}`}>
-          <span className={styles.verdict}>
-            {won ? 'Target cleared' : 'Just short'}
-          </span>
+          <span className={styles.verdict}>{verdict}</span>
           <span className={styles.tier}>{tier}</span>
           <span className={styles.tierLabel}>{tierLabel(tier)}</span>
+          {isChallenge && setup.challenge && (
+            <span className={styles.headContext}>
+              <span aria-hidden="true">✦</span> {setup.challenge.name}
+            </span>
+          )}
         </div>
         <div className={styles.body}>
           <div className={styles.scoreRow}>
@@ -163,10 +221,30 @@ export function DesktopResultDialog({
               <span>{report.total}</span>
             </div>
           </div>
+          {/* Just-earned achievements — mobile's 🏆 callout at dialog
+              weight: a warm callout box, each name tappable for its
+              explainer. */}
           {newAchievements.length > 0 && (
-            <p className={styles.achievements} role="status">
-              🏆 {newAchievements.map(a => a.name).join(' · ')}
-            </p>
+            <div className={styles.achievements} role="status">
+              <span className={styles.achievementsLabel}>
+                <span aria-hidden="true">🏆</span>{' '}
+                {newAchievements.length > 1
+                  ? 'Achievements unlocked'
+                  : 'Achievement unlocked'}
+              </span>
+              <span className={styles.achievementsList}>
+                {newAchievements.map(a => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    className={styles.achievementBtn}
+                    onClick={() => setAchInfo(a)}
+                  >
+                    {a.name}
+                  </button>
+                ))}
+              </span>
+            </div>
           )}
           {isDaily &&
             isBackendConfigured() &&
@@ -195,18 +273,26 @@ export function DesktopResultDialog({
               <Link to="/daily/archive" className={styles.primaryBtn}>
                 Play Again
               </Link>
+            ) : isTargets ? (
+              targetsPrimary
             ) : (
               <button
                 type="button"
                 className={styles.primaryBtn}
                 onClick={onReplay}
               >
-                Play Again
+                {isChallenge && !won ? 'Retry challenge' : 'Play Again'}
               </button>
             )}
-            <button type="button" className={styles.ghostBtn} onClick={onShare}>
-              Share result
-            </button>
+            {!isTargets && (
+              <button
+                type="button"
+                className={styles.ghostBtn}
+                onClick={onShare}
+              >
+                Share result
+              </button>
+            )}
             <button
               type="button"
               className={styles.ghostBtn}
@@ -215,8 +301,38 @@ export function DesktopResultDialog({
               View Grid
             </button>
           </div>
+          {(isChallenge || isTargets) && (
+            <div className={styles.quietRow}>
+              {isChallenge ? (
+                <Link to="/challenges" className={styles.quietLink}>
+                  All challenges
+                </Link>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.quietLink}
+                    onClick={onShare}
+                  >
+                    Share result
+                  </button>
+                  <Link to="/targets" className={styles.quietLink}>
+                    Targets Up home
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
+      <Sheet
+        open={achInfo !== null}
+        onClose={() => setAchInfo(null)}
+        title={achInfo ? `🏆 ${achInfo.name}` : ''}
+      >
+        {achInfo && <p className="text-body">{achInfo.description}</p>}
+      </Sheet>
+      {targetsFlow.rewardsSheet}
     </div>
   );
 }

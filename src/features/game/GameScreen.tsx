@@ -36,6 +36,10 @@ import {
   purpleProgress,
 } from './lineInsights';
 import { GridBoard, useJokerArrivals } from './components/GridBoard';
+import {
+  TIER_RULES,
+  requirementFor,
+} from './components/TierBreakdownSheet';
 import { LineRails } from './components/LineRails';
 import { LineDetailSheet } from './components/LineDetailSheet';
 import { useAutoPlaceFlights } from './useAutoPlaceFlights';
@@ -53,7 +57,10 @@ import {
   ScoringPanel,
 } from './components/DesktopRails';
 import { InvestWheel } from './components/InvestWheel';
-import { HandValuesDialog } from './components/HandValuesDialog';
+import {
+  DeskHandValuesPanel,
+  HandValuesDialog,
+} from './components/HandValuesDialog';
 import { ReviveSheet } from './components/ReviveSheet';
 import { ResultView } from './components/ResultView';
 import { BonusDrawModal } from './components/BonusDrawModal';
@@ -197,7 +204,8 @@ function MaybeRails({
  * re-seats the same pieces into the three-panel spread.
  */
 export function GameScreen({ onReplay, coach }: GameScreenProps) {
-  const { state, dispatch, mode, setup, canUndo, maxUndos } = useGameSession();
+  const { state, dispatch, mode, setup, canUndo, maxUndos, viewOnly } =
+    useGameSession();
   const ui = usePhaseUI();
   const isDesktop = useIsDesktop();
   const navigate = useNavigate();
@@ -211,11 +219,17 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const [hover, setHover] = useState<HoverTarget | null>(null);
   // Desktop result dialog visibility (View Grid closes; the dock's
   // Show result reopens — the agreed reopen path the mockup lacks).
-  const [resultOpen, setResultOpen] = useState(true);
+  // A re-hydrated archive view opens in the post-View-Grid state: the
+  // finished board first, the dialog one click away.
+  const [resultOpen, setResultOpen] = useState(!viewOnly);
   // Rails stay off for the whole tutorial regardless of the setting:
   // the guided deal never references line totals, and the plain board
   // is one less thing to explain — the extra ~30px goes to the grid.
   const lineRails = useSettingsStore(s => s.lineRails) && !coach;
+  // Desktop edge chips ride their own persisted key (default ON, the
+  // mockup's pg-rails default) so the phone rails choice stays
+  // independent — see settingsStore.deskLineChips.
+  const deskLineChips = useSettingsStore(s => s.deskLineChips);
 
   const liveReport = useMemo(
     () =>
@@ -326,13 +340,30 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           </span>
         )}
-        <span className={styles.navMenuWrap} tabIndex={0}>
-          <span
-            className={styles.navPill}
-            style={{ '--pill-tone': tone } as CSSProperties}
-          >
+        {/* One pill, two hover zones: the difficulty segment keeps the
+            rules menu, the score segment opens the tier thresholds for
+            this run's target. The zones are position: static, so both
+            menus anchor to the pill itself (its right edge). */}
+        <span
+          className={`${styles.navPill} ${styles.navPillSplit}`}
+          style={{ '--pill-tone': tone } as CSSProperties}
+        >
+          <span className={styles.navPillSeg} tabIndex={0}>
             <span className={styles.navPillDot} aria-hidden="true" />
             <span className={styles.navPillDiff}>{state.difficulty}</span>
+            <div className={styles.navMenu}>
+              <div className={styles.navMenuHead} style={{ color: tone }}>
+                {state.difficulty} · rules
+              </div>
+              {rules.map(([k, v]) => (
+                <div key={k} className={styles.navMenuRow}>
+                  <span>{k}</span>
+                  <b>{v}</b>
+                </div>
+              ))}
+            </div>
+          </span>
+          <span className={styles.navPillSeg} tabIndex={0}>
             <span
               className={styles.navPillScore}
               aria-label={`Score ${navScore} of ${state.target}`}
@@ -340,18 +371,20 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               {navScore}
               <span className={styles.navPillTarget}>/ {state.target}</span>
             </span>
-          </span>
-          <div className={styles.navMenu}>
-            <div className={styles.navMenuHead} style={{ color: tone }}>
-              {state.difficulty} · rules
-            </div>
-            {rules.map(([k, v]) => (
-              <div key={k} className={styles.navMenuRow}>
-                <span>{k}</span>
-                <b>{v}</b>
+            <div className={styles.navMenu}>
+              <div className={styles.navMenuHead}>
+                Score tiers · target {state.target}
               </div>
-            ))}
-          </div>
+              {TIER_RULES.map(rule => (
+                <div key={rule.tier} className={styles.navMenuRow}>
+                  <span>
+                    {rule.tier} · {rule.label}
+                  </span>
+                  <b>{requirementFor(rule, state.target)}</b>
+                </div>
+              ))}
+            </div>
+          </span>
         </span>
       </span>
     );
@@ -402,7 +435,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const jokerArrivals = useJokerArrivals(state.grid);
   // Engine-placed cards (opening deal, auto-placed jokers) pose in the
   // well, then fly to their cell via the same FLIP a manual Place gets.
-  const { flight, hiddenSlots, cssDeal } = useAutoPlaceFlights(state);
+  // A re-hydrated archive view renders its finished board seated.
+  const { flight, hiddenSlots, cssDeal } = useAutoPlaceFlights(
+    state,
+    viewOnly
+  );
   // Cells of a line that just completed with a scoring hand — flashed
   // as a staggered sweep on the board.
   const sweepSlots = useLineCompletions(liveReport);
@@ -526,10 +563,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     if (!line || line.incomplete) return `${label} · open`;
     return `${label} · ${line.total}`;
   };
-  // Desktop always shows the board edge chips (the mockup's line
-  // totals), except during the tutorial — the guided deal never
-  // references line totals, matching the mobile rails-off rationale.
-  const chipsShown = isDesktop && !coach;
+  // Desktop shows the board edge chips (the mockup's line totals)
+  // unless the Line Rails setting turns them off — and never during
+  // the tutorial: the guided deal never references line totals,
+  // matching the mobile rails-off rationale.
+  const chipsShown = isDesktop && !coach && deskLineChips;
   // With chips/rails showing, the spotlight lights those chips instead
   // of floating text tags — the values are already on screen. Rails
   // off restores the tags (they're the only per-line readout then).
@@ -548,19 +586,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       ? { row: Math.floor(spotlight / 5), col: spotlight % 5 }
       : null;
 
-  // Game over: desktop free-play / daily runs stay on the three-column
-  // view with the result dialog overlaid (mockup lines 228–260); every
-  // other surface — mobile, and the modes with bespoke end-of-run
-  // flows (tutorial, challenges, Targets-Up) — keeps the full
-  // ResultView exactly as before. Targets-Up in particular is a
-  // DELIBERATE keep, not a gap: ResultView owns the ladder lifecycle
-  // (record → save advance/clear → the S/SS RewardsSheet picks → the
-  // "Next level" commit), a stateful multi-step flow that must have
-  // exactly one owner — mirroring it into DesktopResultDialog would
-  // risk double-committing the save. Challenges resolve the same way,
-  // so the two bespoke modes stay consistent with each other.
-  const deskResult =
-    isDesktop && (mode.kind === 'free' || mode.kind === 'daily');
+  // Game over: every desktop run except the tutorial stays on the
+  // three-column view with the result dialog overlaid (mockup lines
+  // 228–260) — free, daily, challenges, and Targets-Up alike. The
+  // Targets-Up ladder lifecycle (record → save advance/clear → the
+  // S/SS RewardsSheet picks) lives in useTargetsResult, shared with
+  // mobile's ResultView and guarded so the commit has exactly one
+  // owner. Mobile (and the tutorial's bespoke wrap-up) keeps the full
+  // ResultView exactly as before.
+  const deskResult = isDesktop && mode.kind !== 'tutorial';
   if (ui.isGameOver && !deskResult) {
     return <ResultView onReplay={onReplay} />;
   }
@@ -882,6 +916,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 {finished ? (
                   // Game over, dialog dismissed via View Grid: the dock
                   // offers only the way back in (and the replay).
+                  // Targets-Up gets no dock replay — its continue
+                  // actions (Choose Reward(s) / Next Round / Play
+                  // Again) live in the dialog, where the ladder commit
+                  // can gate them.
                   <div className={styles.deskDockStage}>
                     <div className={styles.deskActions}>
                       <Button
@@ -891,13 +929,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       >
                         Show result
                       </Button>
-                      <Button
-                        variant="secondary"
-                        className={styles.deskStackBtn}
-                        onClick={playAgain}
-                      >
-                        Play Again
-                      </Button>
+                      {mode.kind !== 'targets' && (
+                        <Button
+                          variant="secondary"
+                          className={styles.deskStackBtn}
+                          onClick={playAgain}
+                        >
+                          Play Again
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -953,7 +993,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </div>
                 )}
               </section>
-              {(state.bonusCards.length > 0 || !state.noBonusCards) && (
+              {state.bonusCards.length > 0 || !state.noBonusCards ? (
                 <DesktopBonusPanel
                   cards={state.bonusCards}
                   values={liveShapley}
@@ -970,7 +1010,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   liveContext={card => bonusCardLiveContext(card, state)}
                   hover={hoverCapable ? bonusHover : undefined}
                 />
-              )}
+              ) : state.investHands ? (
+                // Bull Market: no bonus cards exist (♣ invests into
+                // hand values instead), so the panel slot shows the
+                // live hand-value table the twist is mutating. Bonus
+                // cards would take precedence if a mode ever combined
+                // them (none does — investHands pairs noBonusCards).
+                <DeskHandValuesPanel handBoost={state.handBoost} />
+              ) : null}
             </div>
           </div>
         </LayoutGroup>

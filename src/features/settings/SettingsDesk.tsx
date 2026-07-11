@@ -154,12 +154,15 @@ export function SettingsDesk() {
         </Row>
         <Row
           title="Line rails"
-          hint="Show each row and column's running total along the board edge."
+          hint="Show the row and column total chips along the board edge. Off hides them."
         >
+          {/* Desktop-only key (deskLineChips): the desktop chips default
+              ON per the mockup while the phone rails default off — the
+              same per-breakpoint divergence as the dock options. */}
           <Toggle
             label="Line rails"
-            value={settings.lineRails}
-            onChange={v => patch({ lineRails: v })}
+            value={settings.deskLineChips}
+            onChange={v => patch({ deskLineChips: v })}
           />
         </Row>
         {/* Not in the mockup — keeps the guided tutorial reachable on

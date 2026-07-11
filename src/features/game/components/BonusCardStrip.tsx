@@ -1,5 +1,10 @@
 import { CSSProperties, useState } from 'react';
-import { BonusCard, isPlaceholder, isSpecialCard } from '../../../game/bonusCards';
+import {
+  BonusCard,
+  isPlaceholder,
+  isSpecialCard,
+  isSpentSlot,
+} from '../../../game/bonusCards';
 import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
 import { Button, Sheet } from '../../../design/primitives';
 import { useSettingsStore } from '../../settings/settingsStore';
@@ -123,7 +128,10 @@ export function BonusCardStrip({
   );
 
   const tapChip = (card: BonusCard, index: number) => {
-    if (onSlotTap) onSlotTap(index);
+    // A used one-time slot is spent for the game — during the Mixed Bag
+    // slot pick it is not a valid target, so fall through to the detail
+    // sheet (which explains the card is already used).
+    if (onSlotTap && !isSpentSlot(card)) onSlotTap(index);
     else setDetail({ card, index });
   };
 
