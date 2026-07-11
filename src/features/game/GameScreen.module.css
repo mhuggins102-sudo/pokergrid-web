@@ -643,8 +643,11 @@
     }
   }
 
-  /* Tutorial coach rides the top of the right rail. */
+  /* Tutorial coach rides the top of the right rail. Fixed height so
+     steps never resize the rail beneath it (the panel body scrolls
+     internally instead) — sized to the script's longest step at the
+     rail's 300px width. */
   .deskCoach {
-    height: 190px;
+    height: 218px;
   }
 }

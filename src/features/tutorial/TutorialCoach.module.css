@@ -77,3 +77,113 @@
   color: var(--accent);
   white-space: nowrap;
 }
+
+/* ===== Desktop (≥1024px) coach panel — rendered only by the
+   TutorialCoach desktop fork inside GameScreen's right-rail coach
+   slot, so no media query is needed. Chrome and typography follow the
+   desktop rail panels (DesktopRails .panel/.title/.headNote); the
+   progress track is the Challenges sweep bar at 4px. The slot pins
+   the height (GameScreen .deskCoach) so steps never resize the rail —
+   the body scrolls internally if copy ever runs long. ===== */
+
+.deskCoach {
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+}
+
+.deskHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.deskTitle {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent);
+}
+
+.deskCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.deskTrack {
+  flex: none;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--paper-sunken);
+  overflow: hidden;
+  margin-top: 9px;
+}
+
+.deskFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 200ms ease;
+}
+
+.deskBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.deskStepTitle {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.deskFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: 10px;
+  min-height: 32px;
+}
+
+.deskYourMove {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.deskFootSpacer {
+  flex: 1;
+}
+
+.deskSkip {
+  font-size: 12px;
+  color: var(--ink-3);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .deskSkip:hover {
+    color: var(--ink-2);
+  }
+}
