@@ -17,10 +17,12 @@ test('achievements are reachable from the home tile', async ({ page }) => {
   } else {
     await page.getByRole('link', { name: 'Achievements' }).click();
   }
+  // Mobile keeps the "Achievements" heading + "0 of N earned" note; the
+  // desktop redesign titles it "The trophy case" with a "0 / N" tally.
   await expect(
-    page.getByRole('heading', { name: 'Achievements' })
+    page.getByRole('heading', { name: /Achievements|The trophy case/ })
   ).toBeVisible();
-  await expect(page.getByText(/0 of \d+ earned/)).toBeVisible();
+  await expect(page.getByText(/0 (of \d+ earned|\/ \d+)/).first()).toBeVisible();
   await expect(page.getByText('Milestones')).toBeVisible();
 });
 

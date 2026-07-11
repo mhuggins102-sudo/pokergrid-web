@@ -23,6 +23,8 @@ import { clearTwistsSeen } from '../daily/twistSeen';
 import { HandleEditor } from '../daily/RankPanel';
 import { isBackendConfigured } from '../../lib/supabaseRpc';
 import { clearTutorialSeen } from '../tutorial/tutorialSeen';
+import { useIsDesktop } from '../game/useIsDesktop';
+import { SettingsDesk } from './SettingsDesk';
 import styles from './SettingsPage.module.css';
 
 // Small ⓘ next to a row title — same glyph treatment as the result
@@ -151,6 +153,11 @@ export function SettingsPage() {
   const [info, setInfo] = useState<{ title: string; body: string } | null>(
     null
   );
+  // ≥1024px renders the desktop-redesign preferences page INSTEAD of
+  // the phone accordions — below the breakpoint nothing changes. After
+  // every hook so the hook count stays stable on breakpoint flips.
+  const isDesktop = useIsDesktop();
+  if (isDesktop) return <SettingsDesk />;
 
   const patch = (p: Partial<Settings>) => settings.set(p);
 
