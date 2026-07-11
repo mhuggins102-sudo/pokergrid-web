@@ -1,0 +1,298 @@
+/* Desktop (≥1024px) Free Play entry, per
+   design-refs/desktop/Free Play.dc.html. Rendered only by
+   DifficultyPicker's desktop fork, so no media queries beyond the
+   hover gates. */
+
+.wrap {
+  width: 100%;
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+
+/* ---- Page head ---- */
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.lede {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 360px;
+  margin: 0;
+}
+
+/* ---- Difficulty cards ---- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.card {
+  display: block;
+  text-align: left;
+  background: var(--paper-raised);
+  border: 2px solid var(--hairline);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cardSel {
+  border-color: var(--tone);
+  box-shadow: var(--shadow-md);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  color: var(--tone);
+}
+
+.cardDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 20%, transparent);
+}
+
+.cardTarget {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.targetNum {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 680;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.targetLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.blurb {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 8px 0 14px;
+  min-height: 56px;
+}
+
+.axes {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 13px;
+  border-top: 1px solid var(--hairline);
+}
+
+.axis {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.axisLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.axisVal {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.axisValGood {
+  color: var(--ink);
+}
+
+/* ---- Starting bar ---- */
+
+.startBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 34px;
+  padding: 20px 24px;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.startingLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-3);
+}
+
+.startingName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 2px;
+  color: var(--tone);
+}
+
+.startingTarget {
+  color: var(--ink-3);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.startRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.seedToggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.seedToggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.seedTrack {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--rule);
+  transition: background 160ms ease;
+  flex: none;
+}
+
+.seedTrackOn {
+  background: var(--accent);
+}
+
+.seedKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 160ms ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.seedKnobOn {
+  left: 18px;
+}
+
+.startBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  border-radius: 11px;
+  padding: 14px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+@media (hover: hover) {
+  .startBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.startBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
