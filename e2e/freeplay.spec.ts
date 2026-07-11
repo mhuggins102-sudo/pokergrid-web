@@ -26,8 +26,20 @@ test('achievements are reachable from the home tile', async ({ page }) => {
 
 test('difficulty picker links into a game', async ({ page }) => {
   await page.goto('/play');
-  await expect(page.getByRole('heading', { name: 'Free Play' })).toBeVisible();
-  await page.getByRole('link', { name: /easy/i }).click();
+  // Mobile keeps the "Free Play" heading + link-per-difficulty list;
+  // the desktop redesign shows "Choose your table" with select-then-
+  // Start difficulty cards instead.
+  await expect(
+    page.getByRole('heading', { name: /Free Play|Choose your table/ })
+  ).toBeVisible();
+  const card = page.getByRole('button', { name: /^Easy/ });
+  if (await card.count()) {
+    await card.click();
+    await expect(card).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('link', { name: /Start game/ }).click();
+  } else {
+    await page.getByRole('link', { name: /easy/i }).click();
+  }
   await expect(page).toHaveURL(/difficulty=easy/);
   await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
 });

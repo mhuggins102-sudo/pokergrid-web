@@ -11,12 +11,20 @@ import {
   UNDOS_BY_DIFFICULTY,
 } from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
+import { useIsDesktop } from './useIsDesktop';
+import { FreePlayDesk } from './FreePlayDesk';
 import styles from './DifficultyPicker.module.css';
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
 
 /** Free-play entry: pick a difficulty, see its rule set at a glance. */
 export function DifficultyPicker() {
+  // ≥1024px renders the desktop-redesign table picker INSTEAD of the
+  // phone card list (same JSX-fork pattern as HomePage) — below the
+  // breakpoint nothing changes.
+  const isDesktop = useIsDesktop();
+  if (isDesktop) return <FreePlayDesk />;
+
   return (
     <section className={styles.wrap}>
       <header>
