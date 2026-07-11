@@ -23,6 +23,12 @@ export interface Settings {
   // edge during play. Off restores the plain board (line totals stay
   // available via the Lines sheet and the tap-spotlight popup).
   lineRails: boolean;
+  // Desktop (≥1024px) edge chips: the potential-per-line pills right of
+  // and below the board. A SEPARATE key from lineRails because the two
+  // surfaces default differently — the desktop mockup ships chips on
+  // (pg-rails default '1'), phones ship rails off — mirroring the
+  // per-breakpoint dock-layout divergence.
+  deskLineChips: boolean;
   // Force-reduce animations regardless of the OS-level setting.
   reduceMotion: boolean;
   // Augment color-coded UI with glyphs for colorblind players.
@@ -40,6 +46,10 @@ export const DEFAULT_SETTINGS: Settings = {
   // Rails start off — the plain board reads cleaner for new players;
   // line totals stay reachable via the Lines sheet and tap-spotlight.
   lineRails: false,
+  // Desktop chips default ON — the mockup's default. Migration-safe:
+  // persist merges stored keys over these defaults, so profiles saved
+  // before this key existed simply pick up `true`.
+  deskLineChips: true,
   reduceMotion: false,
   colorBlindAssist: false,
   // Four-color suits by default — suit identity carries scoring meaning

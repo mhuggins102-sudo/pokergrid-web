@@ -23,6 +23,10 @@ export interface GameSession {
   /** The run's deterministic seed, when it has one — free play mints
    *  one per run so the share link can re-issue the exact deal. */
   seed?: number;
+  /** True when this session re-hydrates a STORED finished run for
+   *  viewing (desktop archive "View full result"). Result surfaces
+   *  must not re-record stats/achievements or re-save the play. */
+  viewOnly: boolean;
 }
 
 const GameSessionContext = createContext<GameSession | null>(null);
@@ -35,6 +39,12 @@ export interface GameSessionProviderProps {
    * every in-play random outcome — is reproducible.
    */
   seed?: number;
+  /**
+   * Re-hydrated stored state to open with (instead of a fresh deal) —
+   * the desktop archive's "view a finished run" path. Marks the whole
+   * session view-only so result recording stays with the live finish.
+   */
+  initialState?: GameState;
   children: ReactNode;
 }
 
@@ -56,6 +66,7 @@ const reduce = (s: GameState, a: Action): GameState => step(s, a);
 export function GameSessionProvider({
   mode,
   seed,
+  initialState,
   children,
 }: GameSessionProviderProps) {
   const setupRef = useRef<ModeSetup | null>(null);
@@ -64,18 +75,23 @@ export function GameSessionProvider({
   }
   const setup = setupRef.current;
 
-  const [state, rawDispatch] = useReducer(reduce, undefined, () =>
-    setup.start(seed !== undefined ? seededRng(seed) : Math.random)
+  const [state, rawDispatch] = useReducer(
+    reduce,
+    undefined,
+    () =>
+      initialState ??
+      setup.start(seed !== undefined ? seededRng(seed) : Math.random)
   );
 
   const dispatch = useCallback((action: Action) => rawDispatch(action), []);
 
   const maxUndos = setup.maxUndos;
   const canUndo = state.past.length > 0 && state.undoCount < maxUndos;
+  const viewOnly = initialState !== undefined;
 
   const session = useMemo<GameSession>(
-    () => ({ state, dispatch, mode, setup, maxUndos, canUndo, seed }),
-    [state, dispatch, mode, setup, maxUndos, canUndo, seed]
+    () => ({ state, dispatch, mode, setup, maxUndos, canUndo, seed, viewOnly }),
+    [state, dispatch, mode, setup, maxUndos, canUndo, seed, viewOnly]
   );
 
   return (

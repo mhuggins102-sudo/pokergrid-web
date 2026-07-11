@@ -230,21 +230,29 @@ export function DailyArchiveDesk() {
             {dates.map(iso => {
               const play = plays[iso];
               const recipe = recipeFor(iso);
-              const twist =
-                play && recipe.twist ? findChallenge(recipe.twist) : null;
+              // The twist shows on EVERY row that has one — played or
+              // not — so a player knows what they're getting into
+              // before starting a day.
+              const twist = recipe.twist ? findChallenge(recipe.twist) : null;
               const target = dailyTargetFor(recipe.difficulty, recipe.twist);
               const tier = play
                 ? tierForRun({ score: play.score, target, won: play.won })
                 : null;
               const on = iso === sel;
               return (
-                <button
+                // Wrapper div (not a button): unplayed rows layer a
+                // hover/focus-revealed Start link over the right edge,
+                // and interactive elements can't nest inside a button.
+                <div
                   key={iso}
-                  type="button"
                   className={`${styles.row} ${on ? styles.rowOn : ''}`}
-                  onClick={() => setSel(iso)}
-                  aria-current={on || undefined}
                 >
+                  <button
+                    type="button"
+                    className={styles.rowMain}
+                    onClick={() => setSel(iso)}
+                    aria-current={on || undefined}
+                  >
                   <div className={styles.rowLeft}>
                     <span
                       className={[
@@ -295,10 +303,21 @@ export function DailyArchiveDesk() {
                         </span>
                       </>
                     ) : (
-                      <span className={styles.startBadge}>Start ▸</span>
+                      // Unplayed: a quiet dash where the score would
+                      // be; hovering (or focusing) the row swaps in the
+                      // Start shortcut below.
+                      <span className={styles.rowDash} aria-hidden="true">
+                        –
+                      </span>
                     )}
                   </div>
-                </button>
+                  </button>
+                  {!play && (
+                    <Link to={`/daily/${iso}`} className={styles.rowStart}>
+                      Start ▸
+                    </Link>
+                  )}
+                </div>
               );
             })}
           </div>

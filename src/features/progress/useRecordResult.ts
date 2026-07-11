@@ -43,13 +43,16 @@ export function useRecordResult(
   report: ScoreReport,
   shapley: number[]
 ): RecordedResult {
-  const { state, mode, setup } = useGameSession();
+  const { state, mode, setup, viewOnly } = useGameSession();
   const won = report.total >= state.target;
   const tier = tierForRun({ score: report.total, target: state.target, won });
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
   const ranRef = useRef(false);
 
   useEffect(() => {
+    // A re-hydrated stored run (archive view) was recorded when it was
+    // actually played — never again.
+    if (viewOnly) return;
     if (ranRef.current || recordedStates.has(state)) return;
     ranRef.current = true;
     recordedStates.add(state);
@@ -152,7 +155,7 @@ export function useRecordResult(
     );
     for (const a of earned) store.recordAchievement(a.id);
     if (earned.length > 0) setNewAchievements(earned);
-  }, [mode, setup, state, report, shapley, won]);
+  }, [mode, setup, state, report, shapley, won, viewOnly]);
 
   return { won, tier, newAchievements };
 }

@@ -10,6 +10,7 @@ import {
   BonusCard,
   isPlaceholder,
   isSpecialCard,
+  isSpentSlot,
 } from '../../../game/bonusCards';
 import { Difficulty } from '../../../game/rules';
 import { TIER_ORDER } from '../../../lib/stats';
@@ -717,7 +718,11 @@ export function DesktopBonusPanel({
                 type="button"
                 className={styles.bonusMain}
                 onClick={() =>
-                  onSlotTap ? onSlotTap(i) : setDetail({ card, index: i })
+                  // Slot pick never targets a spent one-time slot — the
+                  // used card blocks that position for the whole game.
+                  onSlotTap && !isSpentSlot(card)
+                    ? onSlotTap(i)
+                    : setDetail({ card, index: i })
                 }
                 aria-label={`Bonus card: ${card.name}${card.used ? ' (used)' : ''}${
                   values?.[i] !== undefined

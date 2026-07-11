@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
-import { baseId } from '../../../game/bonusCards';
-import { rngStep } from '../../../game/deck';
 import { Button, Chevron, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
 import type { Achievement } from '../../../game/achievements';
-import { useTargetsStore } from '../../targets/targetsStore';
+import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { nextIncompleteDaily } from '../../daily/dailyDates';
 import { usePlaysStore } from '../../daily/sync/playsStore';
@@ -23,7 +21,6 @@ import { LinesPanel } from './LinesPanel';
 import { LineDetailSheet } from './LineDetailSheet';
 import { BonusCardStrip } from './BonusCardStrip';
 import { bonusCardLiveContext } from '../bonusCardLiveContext';
-import { RewardsResult, RewardsSheet } from './RewardsSheet';
 import { ScoreDetailsSheet } from './ScoreDetailsSheet';
 import { TierBreakdownSheet } from './TierBreakdownSheet';
 import { ShareButton } from './ShareButton';
@@ -42,8 +39,7 @@ export interface ResultViewProps {
  * reward picks and advances (or ends) the ladder.
  */
 export function ResultView({ onReplay }: ResultViewProps) {
-  const { state, mode, setup, seed } = useGameSession();
-  const targets = useTargetsStore();
+  const { state, mode, setup, seed, viewOnly } = useGameSession();
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [tiersOpen, setTiersOpen] = useState(false);
@@ -164,57 +160,18 @@ export function ResultView({ onReplay }: ResultViewProps) {
   // ---- Daily: save locally, then queue-first submit ----
   const dailyRecordedRef = useRef(false);
   useEffect(() => {
-    if (mode.kind !== 'daily' || dailyRecordedRef.current) return;
+    // viewOnly = a re-hydrated stored play (archive view) — it was
+    // saved and submitted when it actually finished.
+    if (mode.kind !== 'daily' || dailyRecordedRef.current || viewOnly) return;
     dailyRecordedRef.current = true;
     recordDailyCompletion(mode.dateISO, mode.recipe, state, report.total, won);
-  }, [mode, state, report.total, won]);
+  }, [mode, state, report.total, won, viewOnly]);
 
-  // ---- Targets-Up ladder lifecycle ----
-  const isTargets = mode.kind === 'targets';
-  const wantsRewards = isTargets && won && (tier === 'SS' || tier === 'S');
-  const [rewardsPending, setRewardsPending] = useState(wantsRewards);
-  // Let the final result land first, then bring up the perks picker — it
-  // used to pop on the same frame as the verdict, hiding the result.
-  const [rewardsRevealed, setRewardsRevealed] = useState(false);
-  useEffect(() => {
-    if (!wantsRewards) return;
-    const t = window.setTimeout(() => setRewardsRevealed(true), 1500);
-    return () => window.clearTimeout(t);
-  }, [wantsRewards]);
-  const tuDoneRef = useRef(false);
-
-  const finishTargets = (result: RewardsResult) => {
-    if (mode.kind !== 'targets' || tuDoneRef.current) return;
-    tuDoneRef.current = true;
-    const extras = result.poweredBonus
-      ? [...mode.deckExtras, result.poweredBonus]
-      : mode.deckExtras;
-    const charged = result.superchargedCard
-      ? [...mode.superchargedDeckCards, result.superchargedCard]
-      : mode.superchargedDeckCards;
-    const lastKept = result.poweredBonus
-      ? baseId(result.poweredBonus)
-      : (targets.save?.lastKeptBaseId ?? null);
-    targets.saveProgress(
-      mode.level + 1,
-      (targets.save?.wins ?? mode.level - 1) + 1,
-      extras,
-      charged,
-      lastKept
-    );
-    setRewardsPending(false);
-  };
-  const finishRef = useRef(finishTargets);
-  finishRef.current = finishTargets;
-
-  useEffect(() => {
-    if (!isTargets || tuDoneRef.current) return;
-    if (won && !wantsRewards) finishRef.current({});
-    if (!won) {
-      tuDoneRef.current = true;
-      useTargetsStore.getState().clearProgress();
-    }
-  }, [isTargets, won, wantsRewards]);
+  // ---- Targets-Up ladder lifecycle (shared with the desktop result
+  // dialog — the hook owns the advance/clear commit exactly once). ----
+  const { rewardsPending, rewardsSheet } = useTargetsResult(won, tier, {
+    autoReveal: true,
+  });
 
   // ---- Mode-specific copy + commit actions ----
   const verdict =
@@ -504,18 +461,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
         liveContext={card => bonusCardLiveContext(card, state, { final: true })}
       />
 
-      {rewardsPending && rewardsRevealed && (tier === 'SS' || tier === 'S') && (
-        <RewardsSheet
-          tier={tier}
-          grid={state.grid}
-          bonusCards={state.bonusCards}
-          blockedBaseId={targets.save?.lastKeptBaseId ?? null}
-          // Derived from the finished run's RNG word (not Math.random) so
-          // a seeded run's reward roll is reproducible too.
-          superchargeRoll={rngStep(state.rngState >>> 0).value}
-          onDone={finishTargets}
-        />
-      )}
+      {rewardsSheet}
 
       <LineDetailSheet
         line={detailLine}

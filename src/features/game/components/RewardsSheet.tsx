@@ -230,7 +230,7 @@ function GridReveal({ card }: { card: Card }) {
       >
         {charge === 'wild'
           ? 'Wild! Its suit is now flexible.'
-          : 'Doubled! It counts twice for pairs.'}
+          : 'Doubled! It counts twice for sets.'}
       </motion.p>
     </>
   );

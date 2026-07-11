@@ -64,6 +64,19 @@
   position: relative;
 }
 
+/* Invisible hover bridge across the 10px trigger→menu gap, so the
+   pointer can travel down into the menu without collapsing it. Wide
+   enough to cover the (centered, wider-than-trigger) menu. */
+.modesWrap::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 170px;
+  height: 10px;
+}
+
 .modesTrigger {
   display: inline-flex;
   align-items: center;

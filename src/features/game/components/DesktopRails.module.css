@@ -72,6 +72,18 @@
   display: inline-flex;
 }
 
+/* Hover bridge from the ⓘ (header right) across the panel's right
+   padding + the 16px gap into the fly-out. Anchored to .panel (the
+   wrap is static); nothing interactive sits under it. */
+.handsWrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -16px;
+  width: 64px;
+  height: 44px;
+}
+
 .handsPop {
   position: absolute;
   left: calc(100% + 16px);
@@ -470,6 +482,16 @@
    day's score distribution out to the RIGHT (mockup .lbwrap/.lbpop). */
 .lbWrap {
   position: relative;
+}
+
+/* Hover bridge across the 16px panel→fly-out gap. */
+.lbWrap::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 16px;
+  height: 100%;
 }
 
 .lbPop {

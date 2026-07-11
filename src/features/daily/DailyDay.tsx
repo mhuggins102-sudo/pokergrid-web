@@ -41,7 +41,25 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
   // Play, once per twist per device.
   const [twistInfoOpen, setTwistInfoOpen] = useState(false);
 
-  if (playedOnEntry && play) return <DailyResultStatic play={play} />;
+  if (playedOnEntry && play) {
+    // Desktop: re-hydrate the stored final state into a view-only
+    // session so the archive's "View full result" opens the SAME
+    // three-column finished-game presentation a live finish leaves
+    // behind (board explorable, dock offers Show result, the result
+    // dialog one click away). viewOnly suppresses every recording
+    // side effect. Mobile keeps the static result page.
+    if (isDesktop) {
+      return (
+        <GameSessionProvider
+          mode={{ kind: 'daily', dateISO, recipe: play.recipe }}
+          initialState={play.state}
+        >
+          <GameScreen onReplay={() => {}} />
+        </GameSessionProvider>
+      );
+    }
+    return <DailyResultStatic play={play} />;
+  }
 
   const recipe = recipeFor(dateISO);
   const twist = recipe.twist ? findChallenge(recipe.twist) : null;
@@ -95,7 +113,11 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
   }
 
   const startPlay = () => {
-    if (twist && !twistSeen(twist.id)) setTwistInfoOpen(true);
+    // Desktop skips the first-encounter explainer: the masthead intro
+    // it just clicked through already presented the twist in full. It
+    // does NOT mark the twist seen — a later phone visit (whose flow
+    // lacks the intro panel) still gets its one-time explainer.
+    if (!isDesktop && twist && !twistSeen(twist.id)) setTwistInfoOpen(true);
     setStarted(true);
   };
 

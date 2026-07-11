@@ -33,7 +33,8 @@ const thresholdFor = (
   target: number
 ): number => (rule.ratio === 0 ? 0 : Math.ceil(target * rule.ratio));
 
-const requirementFor = (
+// Exported for the nav score pill's tier-threshold hover menu.
+export const requirementFor = (
   rule: (typeof TIER_RULES)[number],
   target: number
 ): string => {

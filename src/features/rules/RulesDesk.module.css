@@ -137,6 +137,9 @@
   border-radius: 14px;
   box-shadow: var(--shadow-sm);
   padding: 20px 22px;
+  /* Bottom edge rides the bottom of the fact cards in the left
+     column (the left column is the taller one and sets the row). */
+  align-self: end;
 }
 
 .handTitle {
@@ -207,16 +210,6 @@
   color: var(--ink);
 }
 
-.refLink {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.refLink:hover {
-  text-decoration: underline;
-}
 
 .tabs {
   display: flex;

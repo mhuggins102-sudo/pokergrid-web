@@ -135,6 +135,68 @@ describe('Mixed Bag challenge', () => {
     expect(s.perkSpent.length).toBe(beforePerkSpent);
   });
 
+  describe('spent green slot (used one-time action)', () => {
+    const seatCard = (s: GameState, slot: number, card: BonusCard): GameState => {
+      const hand = s.bonusCards.slice();
+      hand[slot] = card;
+      return { ...s, bonusCards: hand };
+    };
+
+    it('a used special slot refuses BONUS_PICK_SLOT — spent for the game', () => {
+      let s = mixedBag();
+      s = seatCard(s, 0, { ...DOUBLER_CARD, used: true });
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      expect(s.phase.kind).toBe('awaiting-bonus-slot-choice');
+      const before = s;
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 0 });
+      // No-op: the pick is rejected, the choice stays open, and the
+      // used card is untouched.
+      expect(s).toBe(before);
+      expect(s.bonusCards[0].id).toBe(DOUBLER_CARD.id);
+      expect(s.bonusCards[0].used).toBe(true);
+    });
+
+    it('other slots stay replaceable while the green slot is spent', () => {
+      let s = mixedBag();
+      s = seatCard(s, 0, { ...DOUBLER_CARD, used: true });
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 1 });
+      if (s.phase.kind !== 'bonus-card-resolving') {
+        throw new Error('Expected bonus-card-resolving for the yellow slot');
+      }
+      expect(s.phase.targetSlot).toBe(1);
+      s = step(s, { type: 'BONUS_KEEP', idx: 0 });
+      // The kept yellow landed; the spent green card persisted, still
+      // marked used.
+      expect(isPlaceholder(s.bonusCards[1])).toBe(false);
+      expect(s.bonusCards[0].id).toBe(DOUBLER_CARD.id);
+      expect(s.bonusCards[0].used).toBe(true);
+    });
+
+    it('an UNUSED special in the green slot is still a valid target (forced swap)', () => {
+      let s = mixedBag();
+      s = seatCard(s, 0, { ...DOUBLER_CARD });
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 0 });
+      expect(s.phase.kind).toBe('bonus-card-resolving');
+    });
+
+    it('♣ is unavailable when the only drawable slot is spent', () => {
+      let s = mixedBag();
+      s = seatCard(s, 0, { ...DOUBLER_CARD, used: true });
+      // Deck reduced to special-only cards: the green slot is the only
+      // category with drawable cards, and it is spent.
+      s = {
+        ...s,
+        bonusDeck: s.bonusDeck.filter(c => cardMatchesSlot(c, 'special')),
+      };
+      const before = s;
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      expect(s).toBe(before);
+      expect(s.phase.kind).toBe('awaiting-action');
+    });
+  });
+
   describe('Spotlight exclusivity', () => {
     // Helper: surgically pre-place a card at a Mixed Bag slot. Mirrors
     // what handleBonusKeep does for the categorized-slot path.

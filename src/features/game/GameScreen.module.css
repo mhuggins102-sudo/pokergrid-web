@@ -393,6 +393,52 @@
   cursor: default;
 }
 
+/* Invisible hover bridge across the pill→menu gap (mockup offset
+   9px), so the pointer can cross into the menu without it folding. */
+.navMenuWrap::after,
+.navPillSeg::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: -12px;
+  right: -12px;
+  height: 14px;
+}
+
+/* The difficulty/score pill splits into two hover zones — the
+   difficulty segment keeps the rules menu, the score segment opens
+   the tier thresholds. Each segment hosts its own absolutely
+   positioned menu (anchored to the segment; the +14px offset lands it
+   ~8px under the pill, matching the sibling pills' 9px gap). */
+.navPillSplit {
+  cursor: default;
+}
+
+.navPillSeg {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navPillSeg .navMenu {
+  top: calc(100% + 14px);
+}
+
+@media (hover: hover) {
+  .navPillSeg:hover .navMenu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+.navPillSeg:focus-within .navMenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .twistPill {
   display: inline-flex;
   align-items: center;
@@ -556,17 +602,19 @@
     width: 104px;
   }
 
-  /* Compact ('hand-stack' / 'classic'): small card beside the button
-     column. */
+  /* Compact ('hand-stack' / 'classic'): card beside the button column,
+     per the mockup's non-center dock (Play.dc.html lines 750–757 +
+     892–894): inner row 'display:flex;align-items:center;gap:15px',
+     82px well, actions column flex:1. */
   .deskDockCompact {
     width: 100%;
     display: flex;
-    align-items: flex-start;
-    gap: 14px;
+    align-items: center;
+    gap: 15px;
   }
 
   .deskDockCompact [class*='cardSlot'] {
-    width: 56px;
+    width: 82px;
   }
 
   .deskActions {
