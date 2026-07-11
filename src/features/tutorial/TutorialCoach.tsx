@@ -1,4 +1,5 @@
 import { Button } from '../../design/primitives';
+import { useIsDesktop } from '../game/useIsDesktop';
 import { TutorialStep } from './tutorialSteps';
 import styles from './TutorialCoach.module.css';
 
@@ -28,6 +29,64 @@ export function TutorialCoach({
   onNext,
   onSkip,
 }: TutorialCoachProps) {
+  // ≥1024px the coach renders as a proper desktop rail panel (below,
+  // unchanged phone strip). No mockup covers the tutorial — the panel
+  // is composed from the established desktop language: raised-card
+  // chrome with an uppercase header + right-hand note (the SCORING /
+  // Bonus Cards panels), an accent progress track (the Challenges
+  // sweep bar, thinner), and the step copy in the panels' body type.
+  // Same aria contract and controls as the phone strip, so the
+  // tutorial e2e drives both breakpoints identically.
+  const isDesktop = useIsDesktop();
+  if (isDesktop) {
+    return (
+      <section className={styles.deskCoach} aria-label="Tutorial coach">
+        <div className={styles.deskHead}>
+          <span className={styles.deskTitle}>Tutorial</span>
+          <span className={styles.deskCount}>
+            Step {index + 1} of {count}
+          </span>
+        </div>
+        <div
+          className={styles.deskTrack}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={count}
+          aria-valuenow={index + 1}
+          aria-label="Tutorial progress"
+        >
+          <div
+            className={styles.deskFill}
+            style={{ width: `${((index + 1) / count) * 100}%` }}
+          />
+        </div>
+        {/* Keyed by step so an internal scroll never carries over. */}
+        <p key={step.id} className={styles.deskBody}>
+          <strong className={styles.deskStepTitle}>{step.title}.</strong>{' '}
+          {step.body}
+        </p>
+        <div className={styles.deskFoot}>
+          {step.kind === 'action' && (
+            <span className={styles.deskYourMove}>→ your move</span>
+          )}
+          <span className={styles.deskFootSpacer} />
+          <button
+            type="button"
+            className={styles.deskSkip}
+            onClick={onSkip}
+          >
+            Skip tutorial
+          </button>
+          {onNext && (
+            <Button size="sm" variant="primary" onClick={onNext}>
+              {step.kind === 'free' ? 'Got it' : 'Next'}
+            </Button>
+          )}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className={styles.coach} aria-label="Tutorial coach">
       <div className={styles.kickerRow}>

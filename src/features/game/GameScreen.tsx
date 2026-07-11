@@ -16,6 +16,7 @@ import {
   scoreGrid,
 } from '../../game/scoring';
 import { JOKERS_BY_DIFFICULTY } from '../../game/rules';
+import { TARGETS_UP_STEP } from '../../game/challenges';
 import { canPreviewDeck } from '../../game/state';
 import { Button, Sheet, useToast } from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
@@ -26,6 +27,7 @@ import { useCoachHighlight } from './coach';
 import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
+import { useStatsStore } from '../progress/statsStore';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { lineLabel } from './handLabels';
 import {
@@ -253,9 +255,29 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // the hook clears the slot when the game unmounts. Mobile passes
   // null — the desktop header isn't shown there.
   const twist = setup.challenge;
+  // Targets-Up runs wear a ✦ ladder pill before the difficulty pill —
+  // the twist-pill pattern reused: same chrome, same hover/focus menu,
+  // but carrying the rung's numbers instead of a challenge goal.
+  const tuLevel = mode.kind === 'targets' ? mode.level : null;
+  const tuBest = useStatsStore(s => s.stats.targetsUpBest);
   const navScore = activeReport.total;
   const navPill = useMemo(() => {
     const tone = difficultyColors[state.difficulty];
+    const ladderRows: [string, string][] =
+      tuLevel === null
+        ? []
+        : [
+            [
+              'Ruleset',
+              state.difficulty.charAt(0).toUpperCase() +
+                state.difficulty.slice(1),
+            ],
+            ['Next level target', String(state.target + TARGETS_UP_STEP)],
+            ['Wins this run', String(tuLevel - 1)],
+            ...(tuBest > 0
+              ? ([['Best level reached', `L${tuBest}`]] as [string, string][])
+              : []),
+          ];
     const rules: [string, string][] = [
       ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
       ['Deck peek', canPreviewDeck(state.difficulty) ? 'Available' : '—'],
@@ -278,6 +300,29 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 Twist · {twist.synopsis.replace(/^Twist:\s*/i, '')}
               </div>
               <div className={styles.navMenuGoal}>{twist.goal}</div>
+            </div>
+          </span>
+        )}
+        {tuLevel !== null && (
+          <span className={styles.navMenuWrap} tabIndex={0}>
+            <span className={styles.twistPill}>
+              <span className={styles.twistStar} aria-hidden="true">
+                ✦
+              </span>
+              Targets Up · L{tuLevel}
+            </span>
+            <div className={styles.navMenu}>
+              <div
+                className={`${styles.navMenuHead} ${styles.navMenuHeadAccent}`}
+              >
+                Ladder · level {tuLevel}
+              </div>
+              {ladderRows.map(([k, v]) => (
+                <div key={k} className={styles.navMenuRow}>
+                  <span>{k}</span>
+                  <b>{v}</b>
+                </div>
+              ))}
             </div>
           </span>
         )}
@@ -310,7 +355,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         </span>
       </span>
     );
-  }, [state.difficulty, navScore, state.target, state.noDiscards, maxUndos, twist]);
+  }, [
+    state.difficulty,
+    navScore,
+    state.target,
+    state.noDiscards,
+    maxUndos,
+    twist,
+    tuLevel,
+    tuBest,
+  ]);
   useNavExtras(isDesktop ? navPill : null);
 
   // Live per-card Shapley contribution, shown as a corner badge on each
@@ -497,8 +551,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Game over: desktop free-play / daily runs stay on the three-column
   // view with the result dialog overlaid (mockup lines 228–260); every
   // other surface — mobile, and the modes with bespoke end-of-run
-  // flows (tutorial, challenges, Targets-Up rewards) — keeps the full
-  // ResultView exactly as before.
+  // flows (tutorial, challenges, Targets-Up) — keeps the full
+  // ResultView exactly as before. Targets-Up in particular is a
+  // DELIBERATE keep, not a gap: ResultView owns the ladder lifecycle
+  // (record → save advance/clear → the S/SS RewardsSheet picks → the
+  // "Next level" commit), a stateful multi-step flow that must have
+  // exactly one owner — mirroring it into DesktopResultDialog would
+  // risk double-committing the save. Challenges resolve the same way,
+  // so the two bespoke modes stay consistent with each other.
   const deskResult =
     isDesktop && (mode.kind === 'free' || mode.kind === 'daily');
   if (ui.isGameOver && !deskResult) {
@@ -765,23 +825,33 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         <LayoutGroup>
           <div className={styles.desk}>
             <div className={styles.deskRail}>
-              <ScoringPanel
-                report={activeReport}
-                onLineTap={setDetailLine}
-                investBoost={state.investHands ? state.handBoost : undefined}
-                bonusCards={state.bonusCards}
-                handBoost={state.handBoost}
-                endgame={endgame}
-                hover={hoverCapable ? lineHover : undefined}
-              />
-              {mode.kind === 'daily' ? (
-                <DailyLeaderboardPanel
-                  dateISO={mode.dateISO}
-                  finished={finished}
-                  finalScore={activeReport.total}
-                />
-              ) : (
-                <DeskStatsPanel difficulty={state.difficulty} />
+              {/* While the tutorial coach is up the left rail stays
+                  empty — the guided deal never references the SCORING
+                  numbers or the stats, exactly why mobile suppresses
+                  its rails (and this fork its edge chips) on the same
+                  `!coach` condition. The panels arrive with the chips
+                  when the free tail dismisses the coach. */}
+              {!coach && (
+                <>
+                  <ScoringPanel
+                    report={activeReport}
+                    onLineTap={setDetailLine}
+                    investBoost={state.investHands ? state.handBoost : undefined}
+                    bonusCards={state.bonusCards}
+                    handBoost={state.handBoost}
+                    endgame={endgame}
+                    hover={hoverCapable ? lineHover : undefined}
+                  />
+                  {mode.kind === 'daily' ? (
+                    <DailyLeaderboardPanel
+                      dateISO={mode.dateISO}
+                      finished={finished}
+                      finalScore={activeReport.total}
+                    />
+                  ) : (
+                    <DeskStatsPanel difficulty={state.difficulty} />
+                  )}
+                </>
               )}
             </div>
 

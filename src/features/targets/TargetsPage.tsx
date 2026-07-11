@@ -2,7 +2,9 @@ import { Link } from 'react-router';
 import { difficultyForLevel, targetForLevel } from '../../game/challenges';
 import { Button } from '../../design/primitives';
 import { useStatsStore } from '../progress/statsStore';
+import { useIsDesktop } from '../game/useIsDesktop';
 import { useTargetsStore } from './targetsStore';
+import { TargetsDesk } from './TargetsDesk';
 import styles from './TargetsPage.module.css';
 
 /** Targets-Up home: resume (or start) the ladder. */
@@ -10,6 +12,11 @@ export function TargetsPage() {
   const save = useTargetsStore(s => s.save);
   const clearProgress = useTargetsStore(s => s.clearProgress);
   const best = useStatsStore(s => s.stats.targetsUpBest);
+  // ≥1024px renders the desktop ladder page INSTEAD of the phone card
+  // (same JSX-fork pattern as ChallengesPage / HomePage) — below the
+  // breakpoint nothing changes.
+  const isDesktop = useIsDesktop();
+  if (isDesktop) return <TargetsDesk />;
 
   const level = save?.level ?? 1;
   const target = targetForLevel(level);
