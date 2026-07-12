@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { useClassicChrome } from '../../app/useClassicChrome';
 import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../game/scoring';
 import { dailyTargetFor } from '../../game/daily/recipe';
 import { findChallenge } from '../../game/challenges';
@@ -30,10 +29,6 @@ import styles from '../game/components/ResultView.module.css';
  * /daily/:date renders once the date is played.
  */
 export function DailyResultStatic({ play }: { play: DailyPlay }) {
-  // A played-daily result reuses ResultView's phone layout; at the
-  // tablet tier keep the classic header it was tuned for (the desktop
-  // view-only three-column path is a separate desktop-only branch).
-  useClassicChrome();
   const [detailLine, setDetailLine] = useState<ScoredLine | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [tiersOpen, setTiersOpen] = useState(false);

@@ -23,6 +23,7 @@ import { Button, Sheet, useToast } from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
 import { useNavExtras } from '../../app/DesktopNav';
 import { useGameSession } from './GameSessionProvider';
+import { useGameFamily } from './useGameFamily';
 import { useTier } from '../../app/useTier';
 import { useCoachHighlight } from './coach';
 import { usePhaseUI } from './usePhaseUI';
@@ -87,8 +88,8 @@ type HoverTarget =
   | { type: 'bonus'; idx: number };
 
 const NO_TAGS: ReadonlySet<string> = new Set();
-// Desktop: the completion sweep never runs ≥1024px (revision item —
-// mobile keeps it); the empty map suppresses it per board render.
+// Desk families: the completion sweep never runs (revision item — the
+// column family keeps it); the empty map suppresses it per board render.
 const NO_SWEEP: ReadonlyMap<number, number> = new Map();
 
 // Vertical slack (px, each side) reserved around the board frame for
@@ -211,7 +212,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const { state, dispatch, mode, setup, canUndo, maxUndos, viewOnly } =
     useGameSession();
   const ui = usePhaseUI();
-  const isDesktop = useTier() === 'desktop';
+  const familyRaw = useGameFamily();
+  // Tutorial pins COLUMN below the desktop tier (plan C): the coach flow
+  // is column-tuned; ≥1024 keeps the desk tree (coach in the right rail).
+  const family = coach && familyRaw === 'desk-lite' ? 'column' : familyRaw;
+  const isDesk = family !== 'column';
+  // The raw tier (not the game family) drives the column measure cap:
+  // tablet-portrait is column too, but earns the higher ~600px board cap.
+  const tier = useTier();
   const navigate = useNavigate();
   const coachHighlight = useCoachHighlight();
   const [peekOpen, setPeekOpen] = useState(false);
@@ -270,8 +278,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // an optional ✦ twist pill (challenge runs / twisted dailies) and
   // the difficulty/score pill, each with a hover/focus rules menu.
   // Memoized so the nav only re-renders when a value actually changes;
-  // the hook clears the slot when the game unmounts. Mobile passes
-  // null — the desktop header isn't shown there.
+  // the hook clears the slot when the game unmounts. The column family
+  // passes null — the pill rides the desk families' nav header only.
   const twist = setup.challenge;
   // Targets-Up runs wear a ✦ ladder pill before the difficulty pill —
   // the twist-pill pattern reused: same chrome, same hover/focus menu,
@@ -420,7 +428,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     tuBest,
     finished,
   ]);
-  useNavExtras(isDesktop ? navPill : null);
+  useNavExtras(isDesk ? navPill : null);
 
   // Live per-card Shapley contribution, shown as a corner badge on each
   // held bonus card so the points it's adding are visible without opening
@@ -510,6 +518,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Rails add ~30px to the frame; caps mirror the CSS per breakpoint.
   const railsRef = useRef(lineRails);
   railsRef.current = lineRails;
+  // Family + tier mirrored into refs so the measure pipeline (a stable
+  // callback) reads today's value in lockstep with the render that set
+  // it: family gates whether JS sizes the board at all (column only);
+  // tier lifts the column cap at the tablet tier.
+  const familyRef = useRef(family);
+  familyRef.current = family;
+  const tierRef = useRef(tier);
+  tierRef.current = tier;
   const remeasureRef = useRef<(() => void) | null>(null);
   const boardAreaRef = useCallback((el: HTMLDivElement | null) => {
     measureCleanupRef.current?.();
@@ -521,19 +537,30 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       el.style.setProperty('--avail-h', `${h}px`);
       const frame = boardFrameRef.current;
       if (!frame) return;
-      if (window.matchMedia?.('(min-width: 1024px)').matches) {
-        // Desktop: the grid column sizes the board (width: 100%).
+      if (familyRef.current !== 'column') {
+        // Desk families (desk / desk-lite): the grid column sizes the
+        // board (CSS width), so JS backs off — release the inline width.
         frame.style.removeProperty('width');
+        if (el.style.getPropertyValue('--avail-w')) debugReport(el, frame);
         return;
       }
-      const wide = window.matchMedia?.('(min-width: 640px)').matches;
-      const cap = wide
-        ? railsRef.current
-          ? 550
-          : 520
-        : railsRef.current
-          ? 470
-          : 440;
+      // Column caps mirror the CSS fallbacks per breakpoint. The tablet
+      // tier (portrait column) earns the higher ~600px board cap; below
+      // it the legacy 640 width-step splits the phone caps. The 640
+      // query is a size step INSIDE the column family, not a family
+      // decision.
+      const cap =
+        tierRef.current === 'tablet'
+          ? railsRef.current
+            ? 630
+            : 600
+          : window.matchMedia?.('(min-width: 640px)').matches
+            ? railsRef.current
+              ? 550
+              : 520
+            : railsRef.current
+              ? 470
+              : 440;
       // Card Room's felt panel bleeds --board-pad (6px) past the cells
       // on every side (GridBoard ::before, negative inset). Reserve that
       // bleed on the height axis so a height-constrained board never
@@ -577,6 +604,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   useEffect(() => {
     remeasureRef.current?.();
   }, [lineRails]);
+  // Rotation / tier flips change whether JS sizes the board and which
+  // column cap applies — the observer won't fire for a family change on
+  // a same-size area, so re-apply (setting the width) or release it
+  // (removing the inline width) explicitly.
+  useEffect(() => {
+    remeasureRef.current?.();
+  }, [family]);
 
   // Desktop hover model gate: cell hover is disabled while a perk /
   // green action is targeting. When targeting CLEARS, board-cell
@@ -610,7 +644,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // unless the Line Rails setting turns them off — and never during
   // the tutorial: the guided deal never references line totals,
   // matching the mobile rails-off rationale.
-  const chipsShown = isDesktop && !coach && deskLineChips;
+  const chipsShown = isDesk && !coach && deskLineChips;
   // With chips/rails showing, the spotlight lights those chips instead
   // of floating text tags — the values are already on screen. Rails
   // off restores the tags (they're the only per-line readout then).
@@ -629,15 +663,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       ? { row: Math.floor(spotlight / 5), col: spotlight % 5 }
       : null;
 
-  // Game over: every desktop run except the tutorial stays on the
+  // Game over: every desk-family run except the tutorial stays on the
   // three-column view with the result dialog overlaid (mockup lines
   // 228–260) — free, daily, challenges, and Targets-Up alike. The
   // Targets-Up ladder lifecycle (record → save advance/clear → the
-  // S/SS RewardsSheet picks) lives in useTargetsResult, shared with
-  // mobile's ResultView and guarded so the commit has exactly one
-  // owner. Mobile (and the tutorial's bespoke wrap-up) keeps the full
+  // S/SS RewardsSheet picks) lives in useTargetsResult, shared with the
+  // column family's ResultView and guarded so the commit has exactly
+  // one owner — the guard the live rotation family-flip exercises. The
+  // column family (and the tutorial's bespoke wrap-up) keeps the full
   // ResultView exactly as before.
-  const deskResult = isDesktop && mode.kind !== 'tutorial';
+  const deskResult = isDesk && mode.kind !== 'tutorial';
   if (ui.isGameOver && !deskResult) {
     return <ResultView onReplay={onReplay} />;
   }
@@ -714,10 +749,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       // alone didn't purge the stale projection). Mid-draw resizes are
       // pure CSS while every layoutId is stripped, so no per-size
       // remount is needed.
-      // The remount exists for the MOBILE resize on the club toggle —
-      // the desktop board never changes size for the draw (it's a
-      // modal there), so remounting would only replay entrances.
-      key={!isDesktop && bonusOpen ? 'board-bonus' : 'board-full'}
+      // The remount exists for the COLUMN resize on the club toggle —
+      // the desk families never change board size for the draw (♣ is a
+      // modal / in-dock panel there), so remounting would only replay
+      // entrances. desk-lite's CSS-sized board must never remount on ♣:
+      // the remount is purely a column-resize workaround.
+      key={family === 'column' && bonusOpen ? 'board-bonus' : 'board-full'}
       grid={state.grid}
       roleOf={boardRole}
       isTappable={idx =>
@@ -779,11 +816,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     </>
   );
 
-  // ---- Desktop (≥1024px): the three-column redesign ----
+  // ---- Desk families: the three-column redesign ----
   // Left rail = SCORING + leaderboard/stats; center = board with edge
   // chips; right rail = deck/actions + bonus cards. Same engine, same
-  // phase UI — only the seating changes.
-  if (isDesktop) {
+  // phase UI — only the seating changes. desk-lite (tablet-landscape)
+  // renders this same tree minus the left rail (see `family === 'desk'`
+  // gate below); desk (≥1024) renders it whole.
+  if (isDesk) {
     const discardAction = ui.actions.find(a => a.id === 'discard');
     const stackActions = ui.actions.filter(a => a.id !== 'discard');
     const deskBanner = ui.banner && (
@@ -916,37 +955,48 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     return (
       <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
         <LayoutGroup>
-          <div className={styles.desk}>
-            <div className={styles.deskRail}>
-              {/* While the tutorial coach is up the left rail stays
-                  empty — the guided deal never references the SCORING
-                  numbers or the stats, exactly why mobile suppresses
-                  its rails (and this fork its edge chips) on the same
-                  `!coach` condition. The panels arrive with the chips
-                  when the free tail dismisses the coach. */}
-              {!coach && (
-                <>
-                  <ScoringPanel
-                    report={activeReport}
-                    onLineTap={setDetailLine}
-                    investBoost={state.investHands ? state.handBoost : undefined}
-                    bonusCards={state.bonusCards}
-                    handBoost={state.handBoost}
-                    endgame={endgame}
-                    hover={hoverCapable ? lineHover : undefined}
-                  />
-                  {mode.kind === 'daily' ? (
-                    <DailyLeaderboardPanel
-                      dateISO={mode.dateISO}
-                      finished={finished}
-                      finalScore={activeReport.total}
+          <div
+            className={`${styles.desk} ${
+              family === 'desk-lite' ? styles.deskLite : ''
+            }`}
+          >
+            {/* desk-lite (tablet-landscape) drops the left rail — the
+                grid narrows to board + right rail (see .deskLite). */}
+            {family === 'desk' && (
+              <div className={styles.deskRail}>
+                {/* While the tutorial coach is up the left rail stays
+                    empty — the guided deal never references the SCORING
+                    numbers or the stats, exactly why the column
+                    suppresses its rails (and this fork its edge chips)
+                    on the same `!coach` condition. The panels arrive
+                    with the chips when the free tail dismisses the
+                    coach. */}
+                {!coach && (
+                  <>
+                    <ScoringPanel
+                      report={activeReport}
+                      onLineTap={setDetailLine}
+                      investBoost={
+                        state.investHands ? state.handBoost : undefined
+                      }
+                      bonusCards={state.bonusCards}
+                      handBoost={state.handBoost}
+                      endgame={endgame}
+                      hover={hoverCapable ? lineHover : undefined}
                     />
-                  ) : (
-                    <DeskStatsPanel difficulty={state.difficulty} />
-                  )}
-                </>
-              )}
-            </div>
+                    {mode.kind === 'daily' ? (
+                      <DailyLeaderboardPanel
+                        dateISO={mode.dateISO}
+                        finished={finished}
+                        finalScore={activeReport.total}
+                      />
+                    ) : (
+                      <DeskStatsPanel difficulty={state.difficulty} />
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             <div className={styles.deskCenter}>
               <div className={styles.deskBoard}>

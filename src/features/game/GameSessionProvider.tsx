@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { seededRng } from '../../game/deck';
 import { Action, GameState, step } from '../../game/state';
-import { useClassicChrome } from '../../app/useClassicChrome';
 import { GameMode, ModeSetup, setupForMode } from './modes';
 
 export interface GameSession {
@@ -85,11 +84,6 @@ export function GameSessionProvider({
   );
 
   const dispatch = useCallback((action: Action) => rawDispatch(action), []);
-
-  // The in-game screen renders the phone layout under the classic
-  // header at the tablet tier (phase 5 gives tablets a real game
-  // layout); hold the classic chrome while any game session is mounted.
-  useClassicChrome();
 
   const maxUndos = setup.maxUndos;
   const canUndo = state.past.length > 0 && state.undoCount < maxUndos;

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, Outlet, ScrollRestoration } from 'react-router';
+import { useEffect } from 'react';
+import { Outlet, ScrollRestoration } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../design/primitives';
 import { bootDailySync, queryClient } from '../features/daily/sync/sync';
@@ -7,19 +7,7 @@ import { useSyncDailyAchievements } from '../features/progress/useSyncDailyAchie
 import { useApplyTheme } from '../features/settings/useTheme';
 import { UpdatePrompt } from './UpdatePrompt';
 import { DesktopNav, NavExtrasProvider } from './DesktopNav';
-import { ClassicChromeContext } from './useClassicChrome';
 import styles from './AppLayout.module.css';
-
-const NAV_ITEMS = [
-  { to: '/daily', label: 'Daily' },
-  { to: '/play', label: 'Free Play' },
-  { to: '/challenges', label: 'Challenges' },
-  { to: '/targets', label: 'Targets Up' },
-  { to: '/stats', label: 'Stats' },
-  { to: '/achievements', label: 'Achievements' },
-  { to: '/rules', label: 'Rules' },
-  { to: '/settings', label: 'Settings' },
-];
 
 export function AppLayout() {
   // Drain any queued daily submissions on start + when the browser
@@ -35,63 +23,19 @@ export function AppLayout() {
   // color-scheme changes).
   useApplyTheme();
 
-  // Ref-counted "classic chrome" flag: game-family surfaces
-  // (GameSessionProvider, DailyResultStatic) register while mounted so
-  // the TABLET band keeps them on the classic header — they still
-  // render the phone tree, tuned for it, until phase 5. Count in a ref
-  // (register/deregister mustn't depend on render state); a small
-  // state mirror drives the class. See useClassicChrome.ts.
-  const classicCountRef = useRef(0);
-  const [classicOn, setClassicOn] = useState(false);
-  const register = useCallback(() => {
-    classicCountRef.current += 1;
-    setClassicOn(classicCountRef.current > 0);
-    return () => {
-      classicCountRef.current -= 1;
-      setClassicOn(classicCountRef.current > 0);
-    };
-  }, []);
-  const chromeValue = useMemo(() => ({ register }), [register]);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
       <NavExtrasProvider>
-      <ClassicChromeContext.Provider value={chromeValue}>
-      <div
-        className={`${styles.shell} ${classicOn ? styles.classicChrome : ''}`}
-      >
+      <div className={styles.shell}>
         <UpdatePrompt />
-        {/* THE header at every tier since phase 4 (DesktopNav carries
-            its own phone variant). */}
+        {/* THE header at every tier: DesktopNav carries its own phone
+            (<768), condensed-tablet, and desktop variants, and now
+            serves the tablet game surfaces too (phase 5 retired the
+            classic scrolling header). */}
         <div className={styles.desktopHeader}>
           <DesktopNav />
         </div>
-        {/* The classic scrolling header, kept ONLY for tablet-band
-            classic-chrome (game) surfaces until phase 5's tablet game
-            layout; AppLayout.module.css swaps it in for that band. */}
-        <header className={styles.header}>
-          <div className={styles.headerInner}>
-            <NavLink to="/" className={styles.wordmark}>
-              PokerGrid
-            </NavLink>
-            <nav className={styles.nav} aria-label="Primary">
-              {NAV_ITEMS.map(item => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    isActive
-                      ? `${styles.navLink} ${styles.navLinkActive}`
-                      : styles.navLink
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-          </div>
-        </header>
         <main className={styles.main}>
           <Outlet />
         </main>
@@ -100,7 +44,6 @@ export function AppLayout() {
           back/forward) — without this, deep pages like the bonus card
           reference open mid-scroll. */}
       <ScrollRestoration />
-      </ClassicChromeContext.Provider>
       </NavExtrasProvider>
       </ToastProvider>
     </QueryClientProvider>

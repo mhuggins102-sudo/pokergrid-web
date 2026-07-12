@@ -45,6 +45,16 @@ export default defineConfig({
       },
     },
     {
+      // Tablet-landscape (768–1023 wide, landscape): the desk-lite game
+      // family (phase 5) — desk tree minus the left rail.
+      name: 'tablet-land-1000',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1000, height: 700 },
+        hasTouch: true,
+      },
+    },
+    {
       name: 'desktop-1280',
       use: {
         ...devices['Desktop Chrome'],
