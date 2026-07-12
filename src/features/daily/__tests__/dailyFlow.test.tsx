@@ -54,10 +54,11 @@ describe('daily flow', () => {
   it('plays a past date: intro → seeded game → recorded locally + queued', async () => {
     renderAt(`/daily/${DATE}`);
 
-    // Intro card shows the recipe (date in display format), then
-    // starts the seeded game.
-    expect(screen.getByText('6/1/26')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+    // The masthead intro shows the date, then starts the seeded game.
+    expect(screen.getByText('Monday, June 1, 2026')).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Play this puzzle' })
+    );
     expect(screen.getByRole('grid', { name: 'Game board' })).toBeInTheDocument();
 
     for (let i = 0; i < 30; i++) {
@@ -86,7 +87,7 @@ describe('daily flow', () => {
     for (let run = 0; run < 2; run++) {
       usePlaysStore.setState({ plays: {} });
       const view = renderAt(`/daily/${DATE}`);
-      fireEvent.click(view.getByRole('button', { name: 'Play' }));
+      fireEvent.click(view.getByRole('button', { name: 'Play this puzzle' }));
       for (let i = 0; i < 30; i++) {
         const place = view.queryByRole('button', { name: 'Place' });
         if (!place) break;
@@ -102,7 +103,7 @@ describe('daily flow', () => {
   it('a played date renders the stored result on revisit', () => {
     // Seed a stored play directly, then visit the date.
     const view = renderAt(`/daily/${DATE}`);
-    fireEvent.click(view.getByRole('button', { name: 'Play' }));
+    fireEvent.click(view.getByRole('button', { name: 'Play this puzzle' }));
     for (let i = 0; i < 30; i++) {
       const place = view.queryByRole('button', { name: 'Place' });
       if (!place) break;
@@ -112,8 +113,10 @@ describe('daily flow', () => {
     view.unmount();
 
     renderAt(`/daily/${DATE}`);
-    // No Play button — straight to the stored result.
-    expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+    // No intro CTA — straight to the stored result.
+    expect(
+      screen.queryByRole('button', { name: 'Play this puzzle' })
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId('final-score')).toHaveTextContent(score ?? '');
     expect(screen.getByText('Daily archive')).toBeInTheDocument();
   });
@@ -129,7 +132,7 @@ describe('daily flow', () => {
   it("a played row's score cell opens the day's leaderboard in place", () => {
     // Store a play by finishing the date, then visit the archive.
     const view = renderAt(`/daily/${DATE}`);
-    fireEvent.click(view.getByRole('button', { name: 'Play' }));
+    fireEvent.click(view.getByRole('button', { name: 'Play this puzzle' }));
     for (let i = 0; i < 30; i++) {
       const place = view.queryByRole('button', { name: 'Place' });
       if (!place) break;

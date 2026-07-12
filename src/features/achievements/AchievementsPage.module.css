@@ -1,69 +1,234 @@
+/* The trophy case at every tier (phase 3 convergence), per
+   design-refs/desktop/Achievements.dc.html. Base rules are the desktop
+   layout; the phone block at the bottom stacks it single-column. */
+
+/* Fills AppLayout's shared 1320px desktop container. */
 .wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  max-width: 560px;
-  margin: 0 auto;
+  width: 100%;
+  padding: 0 0 48px;
 }
 
-.progress {
-  font-size: 14px;
+/* ---- Page head ---- */
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.tally {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.tallyText {
+  text-align: right;
+}
+
+.tallyCount {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 680;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.tallyTotal {
+  color: var(--ink-3);
+  font-size: 20px;
+}
+
+.tallyLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.ring {
+  width: 56px;
+  height: 56px;
+  position: relative;
+}
+
+.ringSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+/* ---- Tier sections ---- */
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: 34px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  margin: 0;
+  color: var(--ink);
+}
+
+.sectionNote {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.sectionProgress {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
+/* ---- Achievement cards ---- */
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 .card {
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 14px 15px;
+  box-shadow: var(--shadow-sm);
+  opacity: 0.72;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
+}
+
+.cardOn {
+  border-color: color-mix(in srgb, var(--warn) 35%, var(--hairline));
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.cardInner {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-md);
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
-  background: var(--paper-raised);
-  border: 1px solid var(--rule);
+  gap: 12px;
 }
 
-.cardEarned {
-  border-color: var(--success);
-}
-
-.badge {
-  font-size: 18px;
-  line-height: 1.3;
-  width: 24px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.body {
+.medal {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  background: var(--paper-sunken);
+  color: var(--ink-3);
+}
+
+.cardOn .medal {
+  font-size: 17px;
+  background: color-mix(in srgb, var(--warn) 20%, var(--paper-raised));
+  color: var(--warn);
+}
+
+.cardBody {
   min-width: 0;
 }
 
-.name {
-  font-weight: 600;
+.cardName {
   font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-3);
 }
 
-.nameLocked {
-  color: var(--ink-2);
+.cardOn .cardName {
+  color: var(--ink);
 }
 
-.desc {
-  font-size: 13px;
+.cardDesc {
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.45;
   color: var(--ink-2);
-  line-height: 1.4;
+  margin-top: 3px;
+}
+
+/* Phone (<768): single-column cards, softer tally. Everything ≥768 is
+   untouched. */
+@media (max-width: 767px) { /* below bp-tablet */
+  .title {
+    font-size: 30px;
+  }
+
+  .tallyCount {
+    font-size: 26px;
+  }
+
+  .tallyTotal {
+    font-size: 17px;
+  }
+
+  .ring {
+    width: 48px;
+    height: 48px;
+  }
+
+  .sections {
+    gap: 26px;
+    margin-top: 26px;
+  }
+
+  .sectionHead {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }

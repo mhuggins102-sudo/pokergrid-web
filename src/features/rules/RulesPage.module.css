@@ -1,69 +1,367 @@
+/* The rules page at every tier (phase 3 convergence), per
+   design-refs/desktop/Rules.dc.html. Base rules are the desktop
+   layout; the phone block at the bottom stacks the spread. */
+
+/* Centered readability cap inside the shared container (narrow content
+   pages center; full-width pages keep the container edge). 1140 gives
+   the bonus-card reference meaningful width while the how-to columns
+   stay at a comfortable measure. */
 .wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-  max-width: 560px;
+  width: 100%;
+  max-width: 1140px;
   margin: 0 auto;
+  padding: 0 0 48px;
 }
 
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+/* ---- How-to-play spread ---- */
+
+.topGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 32px;
+  align-items: start;
 }
 
-.body {
-  font-size: 15px;
-  line-height: 1.55;
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 6px 0 28px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
-.muted {
-  color: var(--ink-2);
-}
-
-.perk {
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: var(--space-sm);
-  align-items: baseline;
-  font-size: 15px;
-  line-height: 1.5;
-  padding: var(--space-xs) 0;
-}
-
-.perkGlyph {
-  font-size: 18px;
-  text-align: center;
-}
-
-.red {
-  color: var(--card-red);
-}
-
-.black {
-  color: var(--card-black);
-}
-
-.table {
+.steps {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  gap: 16px;
 }
 
-.tableRow {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--space-lg);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
+.step {
+  display: flex;
+  gap: 14px;
+}
+
+.stepNum {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 680;
+  font-size: 15px;
+}
+
+.stepTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.stepBody {
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+.tutorialLink {
+  margin: 18px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.tutorialLink a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.tutorialLink a:hover {
+  text-decoration: underline;
+}
+
+.facts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.fact {
+  flex: 1;
+  min-width: 130px;
   background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 13px 15px;
+}
+
+.factNum {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.factDanger {
+  color: var(--danger);
+}
+
+.factAccent {
+  color: var(--accent);
+}
+
+.factBody {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+/* ---- Hand values panel ---- */
+
+.handPanel {
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  padding: 20px 22px;
+  /* Bottom edge rides the bottom of the fact cards in the left
+     column (the left column is the taller one and sets the row). */
+  align-self: end;
+}
+
+.handTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 680;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+
+.handList {
+  display: flex;
+  flex-direction: column;
+}
+
+.handRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
   border-bottom: 1px solid var(--hairline);
 }
 
-.tableRow:last-child {
-  border-bottom: none;
+.handName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.handNameZero {
+  font-weight: 500;
+}
+
+.handPts {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.handFoot {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink-3);
+  margin: 12px 0 0;
+}
+
+/* ---- Bonus card reference ---- */
+
+.refSection {
+  margin-top: 48px;
+}
+
+.refHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.refTitle {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--ink);
+}
+
+
+.tabs {
+  display: flex;
+  gap: 9px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: 1px solid var(--hairline);
+  background: var(--paper-raised);
+  color: var(--ink-2);
+  transition: all 0.14s ease;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tabOn {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+}
+
+.tabOn:hover {
+  color: var(--on-accent, #fff);
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 26px;
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 14px;
+}
+
+.groupSwatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+}
+
+.groupTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 680;
+  margin: 0;
+  color: var(--ink);
+}
+
+.groupNote {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.cardGrid {
+  display: grid;
+  /* 3-up at today's desktop widths; auto-fill so a future ≤1024 tablet
+     tier degrades to 2-up without needing a breakpoint. */
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--group-tone);
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.cardTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cardMult {
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--group-tone);
+  white-space: nowrap;
+}
+
+.cardDesc {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink-2);
+  margin-top: 5px;
+}
+
+/* Phone (<768): the how-to spread stacks (steps, facts, then the hand
+   panel) and the reference grid goes single-column. Everything ≥768 is
+   untouched. */
+@media (max-width: 767px) { /* below bp-tablet */
+  .topGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .title {
+    font-size: 30px;
+    margin-bottom: 20px;
+  }
+
+  .refSection {
+    margin-top: 34px;
+  }
+
+  .refTitle {
+    font-size: 24px;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
 }

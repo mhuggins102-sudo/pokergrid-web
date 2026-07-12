@@ -86,13 +86,11 @@ describe('challenges', () => {
     useStatsStore.getState().recordChallenge('short-circuit');
     renderAt('/challenges');
     expect(screen.getByText('✓ Beaten')).toBeInTheDocument();
-    // No lock gating — every catalog entry has a Start / Play again link.
+    // No lock gating — every catalog card carries a Play link.
     expect(screen.queryByText('Locked')).not.toBeInTheDocument();
-    const starts = [
-      ...screen.getAllByRole('button', { name: 'Start' }),
-      ...screen.getAllByRole('button', { name: 'Play again' }),
-    ];
-    expect(starts).toHaveLength(CHALLENGES.length);
+    expect(screen.getAllByRole('link', { name: 'Play' })).toHaveLength(
+      CHALLENGES.length
+    );
   });
 
   it('three-tricks seeds three one-time specials', () => {
