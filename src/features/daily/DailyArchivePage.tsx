@@ -10,7 +10,7 @@ import { DailyPlay, usePlaysStore } from './sync/playsStore';
 import { useArchiveRank } from './sync/useDailyRank';
 import { DayStatsSheet } from './RankPanel';
 import { DailyArchiveDesk } from './DailyArchiveDesk';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import styles from './DailyArchivePage.module.css';
 
 /**
@@ -47,9 +47,9 @@ function PlayedCell({
 
 /** /daily/archive — every published daily, play or revisit. */
 export function DailyArchivePage() {
-  // ≥1024px renders the desktop-redesign month list + day detail;
-  // below the breakpoint the phone archive is untouched.
-  const isDesktop = useIsDesktop();
+  // Non-phone tiers (≥768px) render the desktop-redesign month list +
+  // day detail; the phone archive is untouched below the tablet tier.
+  const tier = useTier();
   const plays = usePlaysStore(s => s.plays);
   const today = currentDateISO();
   const dates = datesBack(today, DAILY_LAUNCH_ISO);
@@ -63,7 +63,7 @@ export function DailyArchivePage() {
     open: false,
   });
 
-  if (isDesktop) return <DailyArchiveDesk />;
+  if (tier !== 'phone') return <DailyArchiveDesk />;
 
   return (
     <section className={styles.wrap}>

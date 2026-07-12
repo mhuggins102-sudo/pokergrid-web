@@ -23,7 +23,7 @@ import { clearTwistsSeen } from '../daily/twistSeen';
 import { HandleEditor } from '../daily/RankPanel';
 import { isBackendConfigured } from '../../lib/supabaseRpc';
 import { clearTutorialSeen } from '../tutorial/tutorialSeen';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { SettingsDesk } from './SettingsDesk';
 import styles from './SettingsPage.module.css';
 
@@ -153,11 +153,12 @@ export function SettingsPage() {
   const [info, setInfo] = useState<{ title: string; body: string } | null>(
     null
   );
-  // ≥1024px renders the desktop-redesign preferences page INSTEAD of
-  // the phone accordions — below the breakpoint nothing changes. After
-  // every hook so the hook count stays stable on breakpoint flips.
-  const isDesktop = useIsDesktop();
-  if (isDesktop) return <SettingsDesk />;
+  // Non-phone tiers (≥768px) render the desktop-redesign preferences
+  // page INSTEAD of the phone accordions — the phone page is untouched
+  // below the tablet tier. After every hook so the hook count stays
+  // stable on tier flips.
+  const tier = useTier();
+  if (tier !== 'phone') return <SettingsDesk />;
 
   const patch = (p: Partial<Settings>) => settings.set(p);
 

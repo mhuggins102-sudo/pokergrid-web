@@ -4,8 +4,12 @@
   flex-direction: column;
 }
 
-/* Two headers, one visible per breakpoint: the classic scrolling nav
-   below 1024px, the desktop-redesign nav (DesktopNav) at and above. */
+/* Two headers, one visible per tier: the classic scrolling nav below
+   the tablet tier, the desktop-redesign nav (DesktopNav) at and above.
+   The desktop tier (≥1024) shows DesktopNav unconditionally. The
+   tablet tier (768–1023) shows it too EXCEPT on game-family surfaces,
+   which register `.classicChrome` (see useClassicChrome.ts) and keep
+   the classic header until phase 5 gives tablets a real game layout. */
 .desktopHeader {
   display: none;
   background: var(--paper);
@@ -16,7 +20,19 @@
   background: var(--paper);
 }
 
-@media (min-width: 1024px) {
+/* Tablet tier (≥768): pages adopt DesktopNav; classic-chrome surfaces
+   (the in-game / played-daily screens) opt back out. */
+@media (min-width: 768px) { /* bp-tablet */
+  .shell:not(.classicChrome) .desktopHeader {
+    display: block;
+  }
+
+  .shell:not(.classicChrome) .header {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) { /* bp-desktop */
   .desktopHeader {
     display: block;
   }
@@ -114,12 +130,24 @@
   }
 }
 
+/* Tablet tier (768–1023): non-game pages adopt the desk container so
+   they align under DesktopNav; classic-chrome (game) surfaces keep the
+   phone .main (1200px/space-lg) they were tuned for. Scoped to the
+   band with max-width so the ≥1024 block below stays authoritative. */
+@media (min-width: 768px) and (max-width: 1023px) { /* bp-tablet */
+  .shell:not(.classicChrome) .main {
+    max-width: var(--desk-container);
+    padding-left: var(--desk-gutter);
+    padding-right: var(--desk-gutter);
+  }
+}
+
 /* Desktop: the ONE shared container (--desk-container/--desk-gutter in
    tokens.css), matching DesktopNav's .bar exactly so page content and
    the wordmark share a left edge on every route. Pages must not add
    their own top padding; the 24px here (mockup rhythm) is the whole
    nav→content gap. */
-@media (min-width: 1024px) {
+@media (min-width: 1024px) { /* bp-desktop */
   .main {
     max-width: var(--desk-container);
     padding-top: var(--space-xl);

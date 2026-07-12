@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, ScrollRestoration } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../design/primitives';
@@ -7,6 +7,7 @@ import { useSyncDailyAchievements } from '../features/progress/useSyncDailyAchie
 import { useApplyTheme } from '../features/settings/useTheme';
 import { UpdatePrompt } from './UpdatePrompt';
 import { DesktopNav, NavExtrasProvider } from './DesktopNav';
+import { ClassicChromeContext } from './useClassicChrome';
 import styles from './AppLayout.module.css';
 
 const NAV_ITEMS = [
@@ -34,11 +35,32 @@ export function AppLayout() {
   // color-scheme changes).
   useApplyTheme();
 
+  // Ref-counted "classic chrome" flag: game-family surfaces
+  // (GameSessionProvider, DailyResultStatic) register while mounted so
+  // the tablet-tier header swap skips them — they still render the
+  // phone tree under the classic header until phase 5. Count in a ref
+  // (register/deregister mustn't depend on render state); a small
+  // state mirror drives the class. See useClassicChrome.ts.
+  const classicCountRef = useRef(0);
+  const [classicOn, setClassicOn] = useState(false);
+  const register = useCallback(() => {
+    classicCountRef.current += 1;
+    setClassicOn(classicCountRef.current > 0);
+    return () => {
+      classicCountRef.current -= 1;
+      setClassicOn(classicCountRef.current > 0);
+    };
+  }, []);
+  const chromeValue = useMemo(() => ({ register }), [register]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
       <NavExtrasProvider>
-      <div className={styles.shell}>
+      <ClassicChromeContext.Provider value={chromeValue}>
+      <div
+        className={`${styles.shell} ${classicOn ? styles.classicChrome : ''}`}
+      >
         <UpdatePrompt />
         {/* Desktop-redesign header; AppLayout.module.css shows exactly
             one of the two headers per breakpoint. */}
@@ -75,6 +97,7 @@ export function AppLayout() {
           back/forward) — without this, deep pages like the bonus card
           reference open mid-scroll. */}
       <ScrollRestoration />
+      </ClassicChromeContext.Provider>
       </NavExtrasProvider>
       </ToastProvider>
     </QueryClientProvider>

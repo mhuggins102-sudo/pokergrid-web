@@ -3,7 +3,7 @@ import { difficultyForLevel, targetForLevel } from '../../game/challenges';
 import { Button } from '../../design/primitives';
 import { targetsUpReached } from '../../lib/stats';
 import { useStatsStore } from '../progress/statsStore';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { useTargetsStore } from './targetsStore';
 import { TargetsDesk } from './TargetsDesk';
 import styles from './TargetsPage.module.css';
@@ -15,11 +15,11 @@ export function TargetsPage() {
   // Stored = highest level beaten; shown = highest level reached
   // (beaten + 1) — the cross-breakpoint display fix.
   const best = targetsUpReached(useStatsStore(s => s.stats.targetsUpBest));
-  // ≥1024px renders the desktop ladder page INSTEAD of the phone card
+  // Non-phone tiers (≥768px) render the desktop ladder page INSTEAD of the phone card
   // (same JSX-fork pattern as ChallengesPage / HomePage) — below the
   // breakpoint nothing changes.
-  const isDesktop = useIsDesktop();
-  if (isDesktop) return <TargetsDesk />;
+  const tier = useTier();
+  if (tier !== 'phone') return <TargetsDesk />;
 
   const level = save?.level ?? 1;
   const target = targetForLevel(level);

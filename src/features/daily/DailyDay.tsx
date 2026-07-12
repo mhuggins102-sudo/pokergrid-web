@@ -12,7 +12,7 @@ import { GameScreen } from '../game/GameScreen';
 import { usePlaysStore } from './sync/playsStore';
 import { DailyResultStatic } from './DailyResultStatic';
 import { DailyIntroDesk } from './DailyIntroDesk';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { formatDailyDate } from './dailyDates';
 import styles from './DailyDay.module.css';
 
@@ -22,10 +22,13 @@ import styles from './DailyDay.module.css';
  * seeded game. Every player worldwide gets the same deal for a date.
  */
 export function DailyDay({ dateISO }: { dateISO: string }) {
-  // ≥1024px renders the newspaper-masthead intro from the desktop
-  // redesign instead of the phone intro card; the played result and
-  // the game itself are shared across breakpoints.
-  const isDesktop = useIsDesktop();
+  // Non-phone tiers (≥768px) render the newspaper-masthead intro from
+  // the desktop redesign instead of the phone intro card. The already-
+  // played view-only rehydrate stays DESKTOP-only (tablet keeps the
+  // static result until phase 5's tablet game layout), so it reads the
+  // narrower `isDesktop`; the intro fork + explainer-skip use the tier.
+  const tier = useTier();
+  const isDesktop = tier === 'desktop';
   const play = usePlaysStore(s => s.plays[dateISO]);
   // Entry-time snapshot, NOT a live check: finishing the puzzle during
   // this visit saves the play, and swapping to the static view then
@@ -113,15 +116,17 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
   }
 
   const startPlay = () => {
-    // Desktop skips the first-encounter explainer: the masthead intro
-    // it just clicked through already presented the twist in full. It
-    // does NOT mark the twist seen — a later phone visit (whose flow
-    // lacks the intro panel) still gets its one-time explainer.
-    if (!isDesktop && twist && !twistSeen(twist.id)) setTwistInfoOpen(true);
+    // Non-phone tiers skip the first-encounter explainer: the masthead
+    // intro they just clicked through already presented the twist in
+    // full. It does NOT mark the twist seen — a later phone visit
+    // (whose flow lacks the intro panel) still gets its one-time
+    // explainer.
+    if (tier === 'phone' && twist && !twistSeen(twist.id))
+      setTwistInfoOpen(true);
     setStarted(true);
   };
 
-  if (isDesktop) {
+  if (tier !== 'phone') {
     return (
       <DailyIntroDesk
         dateISO={dateISO}
