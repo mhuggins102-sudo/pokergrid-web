@@ -7,10 +7,11 @@ import {
   setHandleRemote,
   type TopScoreEntry,
 } from '../../lib/supabaseRpc';
-import { getOrCreateDeviceId, KEY_HANDLE } from './sync/deviceId';
+import { getOrCreateDeviceId } from './sync/deviceId';
+import { getLocalHandle, setLocalHandle, useHandle } from './sync/handleStore';
 import { usePlaysStore } from './sync/playsStore';
 import { useQueueStore } from './sync/queue';
-import { drainQueue } from './sync/sync';
+import { drainQueue, refreshDailyNames } from './sync/sync';
 import {
   useArchiveRank,
   useDailyHistogram,
@@ -248,10 +249,10 @@ export function DayStatsSheet({
   // the fetched top list entirely.
   const ownRank = useArchiveRank(dateISO);
   // The handle editor shows only until a name is saved — changing it
-  // later lives in Settings → More.
-  const [hasHandle, setHasHandle] = useState(
-    () => !!localStorage.getItem(KEY_HANDLE)
-  );
+  // later lives in Settings → More. Reactive, so a save (here or in the
+  // desktop result dialog) retires the editor and renames the own row
+  // immediately.
+  const savedHandle = useHandle();
 
   // Top 5, plus the player's own row when they didn't make the cut:
   // taken from the fetched list when it reaches that far (real server
@@ -264,7 +265,7 @@ export function DayStatsSheet({
       (ownRank.data
         ? {
             rank: ownRank.data.rank,
-            displayName: localStorage.getItem(KEY_HANDLE) ?? 'Anonymous',
+            displayName: savedHandle ?? 'Anonymous',
             score: ownRank.data.score,
             isOwn: true,
           }
@@ -387,9 +388,7 @@ export function DayStatsSheet({
 
         {/* First-time naming only — once saved, the box retires from
             this sheet (rename lives in Settings → More). */}
-        {!hasHandle && (
-          <HandleEditor onSaved={handle => setHasHandle(handle !== null)} />
-        )}
+        {!savedHandle && <HandleEditor />}
       </div>
     </Sheet>
   );
@@ -410,9 +409,7 @@ export function HandleEditor({
   onSaved?: (handle: string | null) => void;
 } = {}) {
   const { toast } = useToast();
-  const [handle, setHandle] = useState(
-    () => localStorage.getItem(KEY_HANDLE) ?? ''
-  );
+  const [handle, setHandle] = useState(() => getLocalHandle() ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -422,8 +419,11 @@ export function HandleEditor({
     try {
       const trimmed = handle.trim();
       await setHandleRemote(getOrCreateDeviceId(), trimmed || null);
-      if (trimmed) localStorage.setItem(KEY_HANDLE, trimmed);
-      else localStorage.removeItem(KEY_HANDLE);
+      // Local write is reactive (every synthesized own row renames at
+      // once); the invalidation refetches the server-side lists, whose
+      // display names the rename RPC just updated for ALL past scores.
+      setLocalHandle(trimmed || null);
+      refreshDailyNames();
       toast('Screen name saved.', 'success');
       onSaved?.(trimmed || null);
     } catch (e) {

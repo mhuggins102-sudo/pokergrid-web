@@ -6,6 +6,7 @@ import type { GameState } from '../../../game/state';
 import type { DailyRecipe } from '../../../game/daily/recipe';
 import { isBackendConfigured, submitDailyPlay } from '../../../lib/supabaseRpc';
 import { clearDailyIdentity, getOrCreateDeviceId } from './deviceId';
+import { notifyHandleChanged } from './handleStore';
 import { DailyPlay, usePlaysStore } from './playsStore';
 import { DrainDeps, drainGuarded, useQueueStore } from './queue';
 
@@ -46,6 +47,19 @@ export const drainQueue = () =>
       void queryClient.invalidateQueries({ queryKey: ['daily-histogram'] });
     }
   });
+
+/**
+ * A successful handle save renames this device's player row server-side
+ * (set_player_handle), which renames every already-submitted score at
+ * read time — so all cached name-bearing queries (the top-scores lists
+ * behind the leaderboard panel, day-stats sheet, and archive detail)
+ * are stale the moment the RPC lands. Rank rows carry no name, but
+ * share the refresh for cheap consistency.
+ */
+export const refreshDailyNames = (): void => {
+  void queryClient.invalidateQueries({ queryKey: ['daily-stats'] });
+  void queryClient.invalidateQueries({ queryKey: ['daily-rank'] });
+};
 
 /**
  * Record a finished daily: local play first (source of truth for "did
@@ -94,6 +108,7 @@ export const resetDailyProgress = (): void => {
   usePlaysStore.getState().reset();
   useQueueStore.getState().clear();
   clearDailyIdentity();
+  notifyHandleChanged();
   void queryClient.invalidateQueries({ queryKey: ['daily-rank'] });
   void queryClient.invalidateQueries({ queryKey: ['daily-stats'] });
   void queryClient.invalidateQueries({ queryKey: ['daily-histogram'] });

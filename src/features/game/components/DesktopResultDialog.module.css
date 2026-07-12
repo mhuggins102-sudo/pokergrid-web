@@ -228,6 +228,7 @@
 }
 
 .achievementBtn {
+  position: relative;
   background: none;
   border: none;
   padding: 0;
@@ -243,6 +244,53 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* The achievement's description as a hover/focus tooltip — the shared
+   dark pattern (ink-on-paper flips per theme), dropping below the name
+   like the edge-chip hand tooltip; click-through to the sheet stays. */
+.achTip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  width: max-content;
+  max-width: 250px;
+  white-space: normal;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  z-index: 8;
+}
+
+@media (hover: hover) {
+  .achievementBtn:hover {
+    /* Stacking bump so the tip clears the rows below (claim box,
+       footer buttons). */
+    z-index: 8;
+  }
+
+  .achievementBtn:hover .achTip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.achievementBtn:focus-visible .achTip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* Daily handle claim (mockup lines 244–251). */

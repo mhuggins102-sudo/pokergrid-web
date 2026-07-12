@@ -19,7 +19,7 @@ import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { Button } from '../../../design/primitives';
 import { useStatsStore } from '../../progress/statsStore';
 import { usePlaysStore } from '../../daily/sync/playsStore';
-import { KEY_HANDLE } from '../../daily/sync/deviceId';
+import { useHandle } from '../../daily/sync/handleStore';
 import {
   useDailyHistogram,
   useDailyRank,
@@ -372,6 +372,9 @@ export function DailyLeaderboardPanel({
   const stats = useDailyStats(dateISO, backend);
   const histo = useDailyHistogram(dateISO, backend);
   const rank = useDailyRank(dateISO);
+  // Reactive — a first-time handle save in the result dialog renames
+  // the synthesized own row without waiting for the refetch.
+  const handle = useHandle();
 
   if (!backend) return null;
 
@@ -391,7 +394,7 @@ export function DailyLeaderboardPanel({
       (rank.data
         ? {
             rank: rank.data.rank,
-            displayName: localStorage.getItem(KEY_HANDLE) ?? 'you',
+            displayName: handle ?? 'you',
             score: rank.data.score,
             isOwn: true,
           }
