@@ -1,6 +1,7 @@
 import { CSSProperties, useMemo, useState } from 'react';
-import { Difficulty } from '../../game/rules';
-import { TIER_ORDER, tierForRun } from '../../lib/stats';
+import { CHALLENGES } from '../../game/challenges';
+import { Difficulty, TARGET_BY_DIFFICULTY } from '../../game/rules';
+import { TIER_ORDER, Tier, tierForRun } from '../../lib/stats';
 import { difficultyColors } from '../../design/tokens';
 import { usePlaysStore } from '../daily/sync/playsStore';
 import { useStatsStore } from '../progress/statsStore';
@@ -17,287 +18,298 @@ import {
   emptyCell,
   emptyTiers,
 } from './modeStats';
-import { ScoreTrend } from './ScoreTrend';
-import { StatsDesk } from './StatsDesk';
-import { useTier } from '../../app/useTier';
 import styles from './StatsPage.module.css';
 
-// Tones for the BY MODE rows — distinct from the difficulty palette so
-// the two tables read as different axes.
-const MODE_TONE: Record<StatsMode, string> = {
-  daily: '#6d4fa3',
-  free: '#1f5d43',
+/*
+ * The stats dashboard, per design-refs/desktop/Stats.dc.html:
+ * two filter rows (mode, difficulty — each row filters one axis;
+ * nothing selected on a row means "all", clicking the active tab clears
+ * it), four headline stat cards, the rating breakdown bars, a
+ * recent-scores scatter with the difficulty's target line, and the
+ * recent-runs table with ✦ twist pills on twisted dailies. All values
+ * bind to the buildModeStats roll-up. One responsive tree at every
+ * tier (phase 4 convergence); the phone block in the stylesheet
+ * stacks the panels.
+ */
+
+const DIFF_NAME: Record<Difficulty, string> = {
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+  extreme: 'Extreme',
 };
 
-type Filter =
-  | { kind: 'mode'; mode: StatsMode }
-  | { kind: 'difficulty'; difficulty: Difficulty }
-  | null;
+// Tier tone ramp from the mockup — SS accent through D danger.
+const TIER_COLOR: Record<Tier, string> = {
+  SS: 'var(--accent)',
+  S: 'var(--success)',
+  A: 'var(--warn)',
+  B: 'var(--ink-2)',
+  C: 'var(--ink-3)',
+  D: 'var(--danger)',
+};
 
-/**
- * All-time stats dashboard. Filtering is single-axis: tap a mode to
- * scope the whole page (including the difficulty table) to that mode, or
- * tap a difficulty to scope it (including the mode table) to that
- * difficulty. Tapping the active row clears the filter.
- */
+const SCATTER_N = 14;
+
+const fmtDate = (ts: number): string =>
+  new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+const twistName = (id: string): string =>
+  CHALLENGES.find(c => c.id === id)?.name ?? id;
+
 export function StatsPage() {
   const stats = useStatsStore(s => s.stats);
   const plays = usePlaysStore(s => s.plays);
-  const [filter, setFilter] = useState<Filter>(null);
-  // Score distribution panel: tier bars vs the score-over-plays line.
-  const [scoreView, setScoreView] = useState<'tiers' | 'trend'>('tiers');
-  // Non-phone tiers (≥768px) render the desktop-redesign dashboard
-  // INSTEAD of the phone panels (same JSX-fork pattern as HomePage) —
-  // the phone panels are untouched below the tablet tier. Named
-  // `layoutTier` to avoid shadowing the `tier` loop var below.
-  const layoutTier = useTier();
+  // Independent single-select per row; 'all' = row unselected.
+  const [mode, setMode] = useState<StatsMode | 'all'>('all');
+  const [diff, setDiff] = useState<Difficulty | 'all'>('all');
 
   const data = useMemo(() => buildModeStats(stats, plays), [stats, plays]);
 
-  // A mode row sums across difficulties, unless a difficulty is selected
-  // (then it shows only that difficulty's games for the mode).
-  const modeCell = (mode: StatsMode): Cell =>
-    filter?.kind === 'difficulty'
-      ? data.cells[mode][filter.difficulty]
-      : DIFFICULTIES.reduce(
-          (acc, d) => addCell(acc, data.cells[mode][d]),
-          emptyCell()
-        );
+  const modes = mode === 'all' ? STATS_MODES : [mode];
+  const diffs = diff === 'all' ? DIFFICULTIES : [diff];
 
-  // A difficulty row sums across modes, unless a mode is selected.
-  const diffCell = (d: Difficulty): Cell =>
-    filter?.kind === 'mode'
-      ? data.cells[filter.mode][d]
-      : STATS_MODES.reduce(
-          (acc, m) => addCell(acc, data.cells[m][d]),
-          emptyCell()
-        );
-
-  const scopedTiers = useMemo(() => {
-    if (filter?.kind === 'mode') {
-      return DIFFICULTIES.reduce(
-        (acc, d) => addTiers(acc, data.tiers[filter.mode][d]),
-        emptyTiers()
-      );
-    }
-    if (filter?.kind === 'difficulty') {
-      return STATS_MODES.reduce(
-        (acc, m) => addTiers(acc, data.tiers[m][filter.difficulty]),
-        emptyTiers()
-      );
-    }
-    return STATS_MODES.reduce(
-      (acc, m) =>
-        DIFFICULTIES.reduce((a, d) => addTiers(a, data.tiers[m][d]), acc),
-      emptyTiers()
-    );
-  }, [data, filter]);
-
-  // After every hook so the hook count stays stable if the breakpoint
-  // flips mid-session (window resize across 1024px).
-  if (layoutTier !== 'phone') return <StatsDesk />;
-
+  // Both axes apply together (the mockup's two filter rows compose).
+  const scopedCell: Cell = modes.reduce(
+    (acc, m) => diffs.reduce((a, d) => addCell(a, data.cells[m][d]), acc),
+    emptyCell()
+  );
+  const scopedTiers = modes.reduce(
+    (acc, m) => diffs.reduce((a, d) => addTiers(a, data.tiers[m][d]), acc),
+    emptyTiers()
+  );
   const scopedRuns = data.runs.filter(
-    r =>
-      (filter?.kind !== 'mode' || r.mode === filter.mode) &&
-      (filter?.kind !== 'difficulty' || r.difficulty === filter.difficulty)
+    r => modes.includes(r.mode) && diffs.includes(r.difficulty)
   );
-
-  // Chronological score timeline, scoped by the same page filter.
   const scopedHistory = data.history.filter(
-    p =>
-      (filter?.kind !== 'mode' || p.mode === filter.mode) &&
-      (filter?.kind !== 'difficulty' || p.difficulty === filter.difficulty)
+    p => modes.includes(p.mode) && diffs.includes(p.difficulty)
   );
 
-  const tierTotals = TIER_ORDER.map(tier => ({ tier, count: scopedTiers[tier] }));
-  const tierMax = Math.max(1, ...tierTotals.map(t => t.count));
-  const scopedGames = tierTotals.reduce((sum, t) => sum + t.count, 0);
+  const winPct =
+    scopedCell.totalRuns > 0
+      ? `${Math.round((scopedCell.wins / scopedCell.totalRuns) * 100)}%`
+      : '—';
+  const headline = [
+    {
+      value: scopedCell.best ?? '—',
+      label: 'Best score',
+      color: 'var(--accent)',
+    },
+    { value: avgOf(scopedCell) ?? '—', label: 'Avg score', color: 'var(--ink)' },
+    { value: winPct, label: 'Win rate', color: 'var(--ink)' },
+    {
+      value: scopedCell.totalRuns,
+      label: 'Games played',
+      color: 'var(--ink)',
+    },
+  ];
 
-  const filterNote =
-    filter?.kind === 'mode'
-      ? { label: MODE_LABEL[filter.mode], tone: MODE_TONE[filter.mode] }
-      : filter?.kind === 'difficulty'
-        ? { label: filter.difficulty, tone: difficultyColors[filter.difficulty] }
-        : null;
+  const tierMax = Math.max(1, ...TIER_ORDER.map(t => scopedTiers[t]));
+  const selName = diff === 'all' ? 'All levels' : DIFF_NAME[diff];
 
-  const cellTriple = (cell: Cell) => (
-    <>
-      <span>
-        <span className={styles.cellLabel}>Best</span>
-        {cell.best ?? '—'}
-      </span>
-      <span>
-        <span className={styles.cellLabel}>Avg</span>
-        {avgOf(cell) ?? '—'}
-      </span>
-      <span>
-        <span className={styles.cellLabel}>Won</span>
-        {cell.wins}/{cell.totalRuns}
-      </span>
-    </>
+  // Scatter — the last N plays, oldest → newest. The target line only
+  // draws when one difficulty is scoped (each difficulty has its own).
+  const points = scopedHistory.slice(-SCATTER_N);
+  const target = diff === 'all' ? null : TARGET_BY_DIFFICULTY[diff];
+  const scores = points.map(p => p.score);
+  const lo =
+    Math.min(...(scores.length ? scores : [0]), ...(target ? [target] : [])) *
+    0.9;
+  const hi =
+    Math.max(...(scores.length ? scores : [1]), ...(target ? [target] : [])) *
+    1.05;
+  const yFor = (v: number) => 100 - ((v - lo) / Math.max(1, hi - lo)) * 100;
+
+  const tab = (
+    label: string,
+    tone: string,
+    active: boolean,
+    onClick: () => void
+  ) => (
+    <button
+      key={label}
+      type="button"
+      className={`${styles.tab} ${active ? styles.tabOn : ''}`}
+      style={{ '--tab-tone': tone } as CSSProperties}
+      aria-pressed={active}
+      onClick={onClick}
+    >
+      {label}
+    </button>
   );
 
   return (
-    <section className={styles.wrap}>
-      <header className={styles.header}>
-        <h1 className="text-title">Stats</h1>
-        {filterNote && (
-          <span
-            className={styles.filterNote}
-            style={{ '--difficulty-tone': filterNote.tone } as CSSProperties}
-          >
-            showing {filterNote.label} only
-          </span>
-        )}
-      </header>
-
-      <div className={styles.panel}>
-        <h2 className="text-section">By mode</h2>
-        <p className={styles.filterHint}>Tap a mode to filter the page.</p>
-        {STATS_MODES.map(m => {
-          const active = filter?.kind === 'mode' && filter.mode === m;
-          return (
-            <button
-              key={m}
-              type="button"
-              className={`${styles.diffRow} ${active ? styles.diffRowActive : ''}`}
-              style={{ '--difficulty-tone': MODE_TONE[m] } as CSSProperties}
-              aria-pressed={active}
-              onClick={() =>
-                setFilter(active ? null : { kind: 'mode', mode: m })
-              }
-            >
-              <span className={styles.diffName}>{MODE_LABEL[m]}</span>
-              {cellTriple(modeCell(m))}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className={styles.panel}>
-        <h2 className="text-section">By difficulty</h2>
-        <p className={styles.filterHint}>Tap a difficulty to filter the page.</p>
-        {DIFFICULTIES.map(d => {
-          const active = filter?.kind === 'difficulty' && filter.difficulty === d;
-          return (
-            <button
-              key={d}
-              type="button"
-              className={`${styles.diffRow} ${active ? styles.diffRowActive : ''}`}
-              style={{ '--difficulty-tone': difficultyColors[d] } as CSSProperties}
-              aria-pressed={active}
-              onClick={() =>
-                setFilter(active ? null : { kind: 'difficulty', difficulty: d })
-              }
-            >
-              <span className={styles.diffName}>{d}</span>
-              {cellTriple(diffCell(d))}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className={styles.panel}>
-        <div className={styles.panelHead}>
-          <h2 className="text-section">Score distribution</h2>
+    <div className={styles.wrap}>
+      <div className={styles.eyebrow}>Stats</div>
+      {/* One line: the heading with both filter groups beside it —
+          modes in one container, difficulties in a second to its
+          right. Same single-select-per-axis semantics as before. */}
+      <div className={styles.headRow}>
+        <h1 className={styles.title}>Your record</h1>
+        <div className={styles.filters}>
           <div
-            className={styles.chartToggle}
+            className={styles.filtGroup}
             role="group"
-            aria-label="Chart type"
+            aria-label="Mode filter"
           >
-            <button
-              type="button"
-              className={styles.chartBtn}
-              aria-label="Tier bars"
-              aria-pressed={scoreView === 'tiers'}
-              onClick={() => setScoreView('tiers')}
-            >
-              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                <rect x="1" y="8" width="3.4" height="7" rx="1" />
-                <rect x="6.3" y="4" width="3.4" height="11" rx="1" />
-                <rect x="11.6" y="1" width="3.4" height="14" rx="1" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className={styles.chartBtn}
-              aria-label="Score over plays"
-              aria-pressed={scoreView === 'trend'}
-              onClick={() => setScoreView('trend')}
-            >
-              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                <polyline
-                  points="1,12 5.5,7 9,9.5 15,2.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="5.5" cy="7" r="1.7" stroke="none" />
-                <circle cx="9" cy="9.5" r="1.7" stroke="none" />
-              </svg>
-            </button>
+            {STATS_MODES.map(m =>
+              tab(MODE_LABEL[m], 'var(--accent)', mode === m, () =>
+                setMode(cur => (cur === m ? 'all' : m))
+              )
+            )}
+          </div>
+          <div
+            className={styles.filtGroup}
+            role="group"
+            aria-label="Difficulty filter"
+          >
+            {DIFFICULTIES.map(d =>
+              tab(DIFF_NAME[d], difficultyColors[d], diff === d, () =>
+                setDiff(cur => (cur === d ? 'all' : d))
+              )
+            )}
           </div>
         </div>
-        {scoreView === 'tiers' ? (
-          scopedGames === 0 ? (
-            <span className={styles.empty}>
-              {filterNote
-                ? `No ${filterNote.label} games recorded yet.`
-                : 'Finish a game to see tiers.'}
-            </span>
-          ) : (
-            <div className={styles.tierBars}>
-              {tierTotals.map(({ tier, count }) => (
-                <div key={tier} className={styles.tierBarRow}>
-                  <span className={styles.tierName}>{tier}</span>
-                  <div className={styles.tierTrack}>
-                    <div
-                      className={styles.tierFill}
-                      style={{ width: `${(count / tierMax) * 100}%` }}
-                    />
-                  </div>
-                  <span>{count}</span>
-                </div>
-              ))}
-            </div>
-          )
-        ) : scopedHistory.length === 0 ? (
-          <span className={styles.empty}>
-            {filterNote
-              ? `No ${filterNote.label} plays recorded yet.`
-              : 'Finish a game to see your score timeline.'}
-          </span>
-        ) : (
-          <ScoreTrend points={scopedHistory} />
-        )}
       </div>
 
-      <div className={styles.panel}>
-        <h2 className="text-section">Recent runs</h2>
-        {scopedRuns.length === 0 ? (
-          <span className={styles.empty}>
-            {filterNote
-              ? `No recent ${filterNote.label} runs.`
-              : 'No games recorded yet.'}
-          </span>
-        ) : (
-          scopedRuns.slice(0, 20).map((run, i) => (
-            <div key={`${run.ts}-${i}`} className={styles.recentRow}>
-              <span className={styles.recentTier}>{tierForRun(run)}</span>
-              <span className={styles.recentDiff}>{run.difficulty}</span>
-              <span>
-                {run.score} / {run.target}
-              </span>
-              <span className={run.won ? styles.recentWon : styles.recentLost}>
-                {run.won ? 'won' : 'lost'}
-              </span>
+      <div className={styles.headline}>
+        {headline.map(h => (
+          <div key={h.label} className={styles.headCard}>
+            <div className={styles.headValue} style={{ color: h.color }}>
+              {h.value}
             </div>
-          ))
-        )}
+            <div className={styles.headLabel}>{h.label}</div>
+          </div>
+        ))}
       </div>
-    </section>
+
+      <div className={styles.chartRow}>
+        <div className={styles.panel}>
+          <h2 className={styles.panelTitle}>Rating breakdown</h2>
+          <p className={styles.panelSub}>
+            How your {selName} finishes graded out.
+          </p>
+          <div className={styles.tierList}>
+            {TIER_ORDER.map(t => (
+              <div key={t} className={styles.tierRow}>
+                <span
+                  className={styles.tierKey}
+                  style={{ color: TIER_COLOR[t] }}
+                >
+                  {t}
+                </span>
+                <div className={styles.tierTrack}>
+                  <div
+                    className={styles.tierFill}
+                    style={{
+                      width: `${Math.round((scopedTiers[t] / tierMax) * 100)}%`,
+                      background: TIER_COLOR[t],
+                    }}
+                  />
+                </div>
+                <span className={styles.tierCount}>{scopedTiers[t]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.panel}>
+          <div className={styles.scatterHead}>
+            <h2 className={styles.panelTitle}>Recent scores</h2>
+            <span className={styles.scatterNote}>
+              last {points.length} game{points.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div className={styles.scatterPlot}>
+            {target !== null && points.length > 0 && (
+              <>
+                <div
+                  className={styles.targetLine}
+                  style={{ top: `${yFor(target)}%` }}
+                />
+                <span
+                  className={styles.targetLabel}
+                  style={{ top: `${yFor(target)}%` }}
+                >
+                  TARGET {target}
+                </span>
+              </>
+            )}
+            {points.length === 0 ? (
+              <span className={styles.empty}>No games recorded yet.</span>
+            ) : (
+              points.map((p, i) => (
+                <div
+                  key={`${p.ts}-${i}`}
+                  className={`${styles.dot} ${p.won ? styles.dotWon : ''}`}
+                  style={{
+                    left: `${
+                      points.length === 1
+                        ? 50
+                        : (i / (points.length - 1)) * 96 + 2
+                    }%`,
+                    top: `${yFor(p.score)}%`,
+                  }}
+                  title={`${p.score} · ${p.difficulty} · ${
+                    p.won ? 'won' : 'lost'
+                  }`}
+                />
+              ))
+            )}
+          </div>
+          <div className={styles.scatterAxis}>
+            <span>Older</span>
+            <span>Recent</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.runsRow}>
+        <div className={styles.panel}>
+          <h2 className={`${styles.panelTitle} ${styles.runsTitle}`}>
+            Recent runs
+          </h2>
+          <div className={`${styles.runGrid} ${styles.runHead}`}>
+            <span>Date</span>
+            <span />
+            <span className={styles.runCenter}>Score</span>
+            <span className={styles.runCenter}>Target</span>
+            <span className={styles.runCenter}>Rating</span>
+          </div>
+          {scopedRuns.length === 0 ? (
+            <span className={styles.empty}>No games recorded yet.</span>
+          ) : (
+            scopedRuns.slice(0, 6).map((run, i) => {
+              const rt = tierForRun(run);
+              return (
+                <div key={`${run.ts}-${i}`} className={styles.runGrid}>
+                  <span className={styles.runDate}>{fmtDate(run.ts)}</span>
+                  <span>
+                    {run.twist && (
+                      <span className={styles.twistPill}>
+                        <span aria-hidden="true">✦</span>{' '}
+                        {twistName(run.twist)}
+                      </span>
+                    )}
+                  </span>
+                  <span className={styles.runScore}>{run.score}</span>
+                  <span className={styles.runTarget}>{run.target}</span>
+                  <span
+                    className={styles.runBadge}
+                    style={
+                      {
+                        '--tier-tone': TIER_COLOR[rt],
+                      } as CSSProperties
+                    }
+                  >
+                    {rt}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -8,17 +8,14 @@ import { HomePage } from '../../features/home/HomePage';
 import { mockTier } from '../../test/tier';
 
 /*
- * Tier-fork guards.
- *
- * Converged pages (phase 3, cluster A) render ONE responsive tree —
- * the same components at every tier; only CSS differs. Two
- * representative pages pin that (one interactive picker, one static
- * content page). jsdom answers false to width queries by default →
- * phone tier; mockTier('tablet') flips it.
- *
- * Cluster-B pages stay forked until phase 4 under the phase-2
- * contract: phone tree by default in jsdom, the *Desk variant at the
- * tablet tier and up. HomePage pins that fork condition.
+ * Convergence guards (phases 3–4): every page route renders ONE
+ * responsive tree — the same components at phone, tablet, and desktop;
+ * only CSS differs. Three representative pages pin that (an
+ * interactive picker, a static content page, and the landing page).
+ * jsdom answers false to width queries by default → phone tier;
+ * mockTier('tablet') flips it. The only remaining JSX fork is the
+ * in-game desktop layout (tier === 'desktop' in GameScreen), which
+ * the e2e suite exercises at all three viewports.
  */
 
 let active: { restore: () => void } | null = null;
@@ -38,7 +35,7 @@ const renderRoute = (path: string, element: React.ReactNode) =>
     </ToastProvider>
   );
 
-describe('converged pages render one tree at every tier (phase 3)', () => {
+describe('converged pages render one tree at every tier', () => {
   it('Free Play: the difficulty-card picker renders at the phone tier', () => {
     renderRoute('/play', <PlayPage />);
     expect(screen.getByText('Choose your table')).toBeInTheDocument();
@@ -60,17 +57,15 @@ describe('converged pages render one tree at every tier (phase 3)', () => {
     renderRoute('/rules', <RulesPage />);
     expect(screen.getByText('Bonus card reference')).toBeInTheDocument();
   });
-});
 
-describe('cluster-B pages stay forked until phase 4', () => {
-  it('Home: phone tile list by default (no desk hero)', () => {
+  it('Home: the landing hero renders at the phone tier', () => {
     renderRoute('/', <HomePage />);
     expect(
-      screen.queryByText(/Everyone plays the same deal/)
-    ).not.toBeInTheDocument();
+      screen.getByText(/Everyone plays the same deal/)
+    ).toBeInTheDocument();
   });
 
-  it('Home: renders the desk landing at the tablet tier', () => {
+  it('Home: and the same landing at the tablet tier', () => {
     active = mockTier('tablet');
     renderRoute('/', <HomePage />);
     expect(

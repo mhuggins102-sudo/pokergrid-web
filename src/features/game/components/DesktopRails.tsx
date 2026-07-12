@@ -14,7 +14,11 @@ import {
 } from '../../../game/bonusCards';
 import { Difficulty } from '../../../game/rules';
 import { TIER_ORDER } from '../../../lib/stats';
-import { styleFor } from '../../../lib/bonusCardCategory';
+import {
+  categoryIconStyle,
+  styleFor,
+} from '../../../lib/bonusCardCategory';
+import { useSettingsStore } from '../../settings/settingsStore';
 import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { Button } from '../../../design/primitives';
 import { useStatsStore } from '../../progress/statsStore';
@@ -676,6 +680,10 @@ export function DesktopBonusPanel({
     card: BonusCard;
     index: number;
   } | null>(null);
+  // Colorblind assist (phase 4 port): the entry's category is
+  // otherwise color-only (border tone) — the glyph is the non-color
+  // cue, same contract as the phone chip strip.
+  const assist = useSettingsStore(s => s.colorBlindAssist);
   const held = cards.filter(c => !isPlaceholder(c)).length;
 
   return (
@@ -734,6 +742,19 @@ export function DesktopBonusPanel({
                 }`}
               >
                 <span className={styles.bonusTitle}>
+                  {assist && (
+                    <>
+                      <span
+                        style={{
+                          color: cat.iconColor,
+                          ...categoryIconStyle(cat),
+                        }}
+                        aria-hidden="true"
+                      >
+                        {cat.icon}
+                      </span>{' '}
+                    </>
+                  )}
                   {card.title}
                   {card.used ? ' ✓' : ''}
                 </span>

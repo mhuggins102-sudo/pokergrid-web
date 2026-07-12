@@ -1,6 +1,11 @@
 import { CSSProperties, useState } from 'react';
 import { SPOTLIGHT_ID } from '../../../game/bonusCards';
-import { styleFor, toneLabelFor } from '../../../lib/bonusCardCategory';
+import {
+  categoryIconStyle,
+  styleFor,
+  toneLabelFor,
+} from '../../../lib/bonusCardCategory';
+import { useSettingsStore } from '../../settings/settingsStore';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
 import styles from './BonusDrawModal.module.css';
@@ -13,6 +18,9 @@ import styles from './BonusDrawModal.module.css';
  * differs. Desktop-only: mobile keeps BonusResolvePanel untouched.
  */
 export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
+  // Colorblind assist (phase 4 port): glyph beside each option title,
+  // same category-style contract as the phone surfaces.
+  const assist = useSettingsStore(s => s.colorBlindAssist);
   const { state, dispatch } = useGameSession();
   // Board-peek dim arming: the overlay opens FULLY solid no matter
   // where the pointer sits, and only starts dimming after the pointer
@@ -64,7 +72,22 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
                     <span className={styles.optionCat}>
                       {toneLabelFor(card)}
                     </span>
-                    <span className={styles.optionTitle}>{card.title}</span>
+                    <span className={styles.optionTitle}>
+                      {assist && (
+                        <>
+                          <span
+                            style={{
+                              color: cat.iconColor,
+                              ...categoryIconStyle(cat),
+                            }}
+                            aria-hidden="true"
+                          >
+                            {cat.icon}
+                          </span>{' '}
+                        </>
+                      )}
+                      {card.title}
+                    </span>
                     <span className={styles.optionMult}>{card.mult}</span>
                     <span className={styles.optionDesc}>
                       {card.description}
@@ -102,7 +125,22 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
                     onClick={() => dispatch({ type: 'BONUS_REPLACE', oldIdx: i })}
                     aria-label={`Swap out: ${card.title}`}
                   >
-                    <span className={styles.replaceTitle}>{card.title}</span>
+                    <span className={styles.replaceTitle}>
+                      {assist && (
+                        <>
+                          <span
+                            style={{
+                              color: cat.iconColor,
+                              ...categoryIconStyle(cat),
+                            }}
+                            aria-hidden="true"
+                          >
+                            {cat.icon}
+                          </span>{' '}
+                        </>
+                      )}
+                      {card.title}
+                    </span>
                     <span className={styles.replaceMult}>{card.mult}</span>
                   </button>
                 );

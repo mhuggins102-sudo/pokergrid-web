@@ -1,7 +1,6 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { BP_DESKTOP, BP_TABLET, useTier } from '../useTier';
-import { useIsDesktop } from '../../features/game/useIsDesktop';
 import { mockTier } from '../../test/tier';
 
 describe('useTier', () => {
@@ -70,24 +69,5 @@ describe('useTier', () => {
     unmount();
     // Firing a change after unmount must not throw (listeners removed).
     expect(() => mock.set('desktop')).not.toThrow();
-  });
-});
-
-describe('useIsDesktop (shim over useTier)', () => {
-  let restore: (() => void) | null = null;
-  afterEach(() => {
-    restore?.();
-    restore = null;
-  });
-
-  it('is false at phone and tablet, true at desktop', () => {
-    const mock = mockTier('phone');
-    restore = mock.restore;
-    const { result } = renderHook(() => useIsDesktop());
-    expect(result.current).toBe(false);
-    act(() => mock.set('tablet'));
-    expect(result.current).toBe(false);
-    act(() => mock.set('desktop'));
-    expect(result.current).toBe(true);
   });
 });

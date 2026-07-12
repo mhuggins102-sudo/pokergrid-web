@@ -37,8 +37,8 @@ export function AppLayout() {
 
   // Ref-counted "classic chrome" flag: game-family surfaces
   // (GameSessionProvider, DailyResultStatic) register while mounted so
-  // the tablet-tier header swap skips them — they still render the
-  // phone tree under the classic header until phase 5. Count in a ref
+  // the TABLET band keeps them on the classic header — they still
+  // render the phone tree, tuned for it, until phase 5. Count in a ref
   // (register/deregister mustn't depend on render state); a small
   // state mirror drives the class. See useClassicChrome.ts.
   const classicCountRef = useRef(0);
@@ -62,11 +62,14 @@ export function AppLayout() {
         className={`${styles.shell} ${classicOn ? styles.classicChrome : ''}`}
       >
         <UpdatePrompt />
-        {/* Desktop-redesign header; AppLayout.module.css shows exactly
-            one of the two headers per breakpoint. */}
+        {/* THE header at every tier since phase 4 (DesktopNav carries
+            its own phone variant). */}
         <div className={styles.desktopHeader}>
           <DesktopNav />
         </div>
+        {/* The classic scrolling header, kept ONLY for tablet-band
+            classic-chrome (game) surfaces until phase 5's tablet game
+            layout; AppLayout.module.css swaps it in for that band. */}
         <header className={styles.header}>
           <div className={styles.headerInner}>
             <NavLink to="/" className={styles.wordmark}>

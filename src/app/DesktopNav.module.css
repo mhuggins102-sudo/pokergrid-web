@@ -1,6 +1,7 @@
-/* Desktop-redesign header (≥1024px; AppLayout hides it below that).
-   Geometry and hover behaviors mirror the Claude Design mockups'
-   shared header block. */
+/* The app header at every tier (phase 4). Base rules are the ≥1024
+   desktop layout from the Claude Design mockups' shared header block;
+   the tablet block condenses it and the phone block at the bottom
+   swaps the center nav for a scrolling link row. */
 .bar {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -186,6 +187,12 @@
   outline-offset: 2px;
 }
 
+/* The phone (<768) link row lives in the DOM at every width; only the
+   phone block below displays it. */
+.phoneLinks {
+  display: none;
+}
+
 /* Tablet tier (768–1023): the nav condenses so the wordmark, five
    center links, the in-game score/twist pills, and the toggle all fit
    ~768px without overflow. Drop the dateline, tighten gaps, and step
@@ -206,5 +213,67 @@
 
   .link {
     font-size: 13.5px;
+  }
+}
+
+/* Phone (<768, phase 4 unified header): wordmark + extras + ◐ on the
+   top row, the full link row scrolling beneath — the classic header's
+   pill-link geometry in the desk voice. */
+@media (max-width: 767px) { /* below bp-tablet */
+  .bar {
+    grid-template-columns: 1fr auto;
+    gap: 4px 10px;
+    padding: 8px var(--space-lg) 6px;
+  }
+
+  .wordmark {
+    font-size: 22px;
+  }
+
+  .dateline {
+    display: none;
+  }
+
+  .center {
+    display: none;
+  }
+
+  .phoneLinks {
+    display: flex;
+    grid-column: 1 / -1;
+    gap: var(--space-xs);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    min-width: 0;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    /* Bleed to the header edges so the pills scroll off the screen
+       edge, matching the classic nav. */
+    margin: 0 calc(-1 * var(--space-lg));
+    padding: 0 var(--space-lg);
+  }
+
+  .phoneLinks::-webkit-scrollbar {
+    display: none;
+  }
+
+  .phoneLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-2);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .phoneLinkActive {
+    color: var(--ink);
+    background: var(--paper-sunken);
+    font-weight: 600;
   }
 }

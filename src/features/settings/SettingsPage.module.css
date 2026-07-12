@@ -1,239 +1,311 @@
+/* The ONE settings page at every tier (phase 4, decision D), per
+   design-refs/desktop/Settings.dc.html. Base rules are the single
+   centered readability column (which already serves 768–1199);
+   sections open into two columns + a full-width Identity band at
+   ≥1200, and the phone block at the bottom lets tight rows wrap. */
+
+/* Base (1024–1199 desk widths): one centered readability column. */
 .wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  max-width: 560px;
+  width: 100%;
+  max-width: 640px;
   margin: 0 auto;
+  padding: 0 0 48px;
 }
 
-/* Accordion section: a styled native <details> panel. */
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 6px 0 28px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* ---- Sections ---- */
+
+.sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  /* Top-align: no stretched empty card bottoms in the column tier. */
+  align-items: start;
+}
+
 .section {
-  border-radius: var(--radius-md);
   background: var(--paper-raised);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
-.sectionSummary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-lg);
-  padding: var(--space-md) var(--space-lg);
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  user-select: none;
-  list-style: none;
+/* Two-column tier. 1200px is the desk collapse breakpoint (see the
+   tokens.css layout note — a literal because media queries can't
+   resolve var()). Deliberately NOT a container query: inline-size
+   containment would make .wrap the containing block for the
+   position:fixed .confirmScrim below. */
+@media (min-width: 1200px) {
+  .wrap {
+    max-width: 1080px;
+  }
+
+  .sections {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+  }
+
+  /* Identity & data: the full-width footer band; its rows sit side by
+     side (hairline divider), and a lone Reset row (no backend) spans. */
+  .sectionSpan {
+    grid-column: 1 / -1;
+  }
+
+  .sectionSpan .bandRows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sectionSpan .bandRows .row + .row {
+    border-top: none;
+    border-left: 1px solid var(--hairline);
+  }
+
+  .sectionSpan .bandRows .row:only-child {
+    grid-column: 1 / -1;
+  }
 }
 
-.sectionSummary::-webkit-details-marker {
-  display: none;
-}
-
-.sectionSummary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.sectionCaret {
-  color: var(--ink-3);
-  transition: rotate 140ms ease;
-  flex-shrink: 0;
-}
-
-.section[open] > .sectionSummary {
+.sectionHead {
+  padding: 14px 22px;
   border-bottom: 1px solid var(--hairline);
-}
-
-.section[open] > .sectionSummary .sectionCaret {
-  rotate: 90deg;
-}
-
-.sectionBody {
-  display: flex;
-  flex-direction: column;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-3);
 }
 
 .row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* space-sm, not lg: the inline segmented rows (title + ⓘ + three
-     pickers) need every pixel on a 375px phone. */
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--hairline);
-  min-height: 56px;
+  gap: 20px;
+  padding: 18px 22px;
 }
 
-/* Only the segmented rows may wrap (dropping the picker group to its
-   own line on tight viewports). Toggle rows must NOT: a long hint
-   would push the toggle onto a second line, left-aligned — hints wrap
-   internally instead (rowText has min-width: 0). */
-.rowInline {
-  flex-wrap: wrap;
-}
-
-/* Segmented rows only (their titles have no hint text): keep the
-   title's min-content intact so it never wraps internally — with the
-   row's flex-wrap, a too-tight fit drops the whole picker group to
-   the next line instead. Toggle rows keep shrinkable text (their
-   hints must wrap). */
-.rowInline > .rowText {
-  flex-shrink: 0;
-}
-
-.row:last-child {
-  border-bottom: none;
-}
-
-/* Stacked row (screen-name editor): the control renders full-width
-   under the title instead of beside it. */
-.rowStack {
-  flex-direction: column;
-  align-items: stretch;
-}
-
-
-.rowText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.row + .row {
+  border-top: 1px solid var(--hairline);
 }
 
 .rowTitle {
+  font-size: 15px;
   font-weight: 600;
-  font-size: 15px;
-}
-
-.rowHint {
-  font-size: 13px;
-  color: var(--ink-2);
-}
-
-/* ⓘ beside a row title — same bare glyph as the result screen's
-   score-details button; opens the row's explainer sheet. */
-.rowInfo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  margin: -4px 0 -4px 1px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--ink-2);
-  font-size: 15px;
-  line-height: 1;
-  vertical-align: middle;
-  cursor: pointer;
-}
-
-@media (hover: hover) {
-  .rowInfo:hover {
-    color: var(--ink);
-    background: color-mix(in srgb, var(--ink) 6%, transparent);
-  }
-}
-
-.rowInfo:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-/* Editorial toggle: pill track, ink knob. */
-.toggle {
-  position: relative;
-  width: 46px;
-  height: 28px;
-  border-radius: var(--radius-pill);
-  background: var(--rule);
-  transition: background-color 140ms ease;
-  flex-shrink: 0;
-}
-
-.toggle::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--paper-raised);
-  box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease;
-}
-
-.toggleOn {
-  background: var(--accent);
-}
-
-.toggleOn::after {
-  transform: translateX(18px);
-}
-
-.toggle:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  color: var(--ink);
 }
 
 .danger {
   color: var(--danger);
 }
 
-/* Segmented radio pickers (theme / appearance / dock), inline on the
-   right of their row title — the Display section stays short enough
-   that the preview is visible without much scrolling. Same button
-   feel as the original full-width pickers (equal segments sharing the
-   space, 13px labels), just sharing the row: the group fills the
-   space right of the title; if a viewport is too tight for both on
-   one line, the row's flex-wrap drops the group to its own full-width
-   line — exactly the original stacked layout. */
-.segmented {
-  display: flex;
-  gap: var(--space-xs);
-  /* Grow to fill the space right of the title, but never shrink below
-     the labels' natural widths — when the row is too tight the group
-     wraps to its own full-width line instead of squeezing text. */
-  flex: 1 0 auto;
-  margin-left: auto;
+.rowHint {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink-2);
+  margin-top: 2px;
 }
 
-.segment {
-  flex: 1 0 auto;
-  padding: 8px 3px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
-  background: var(--paper);
+/* ---- Segmented picker ---- */
+
+.seg {
+  display: inline-flex;
+  background: var(--paper-sunken);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+  flex: none;
+}
+
+.segBtn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.13s ease;
   white-space: nowrap;
+}
+
+.segOn {
+  background: var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Pill toggle ---- */
+
+.toggle {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: var(--rule);
+  position: relative;
+  transition: background 0.16s ease;
   cursor: pointer;
 }
 
-.segment:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.toggleOn {
+  background: var(--accent);
 }
 
-.segmentOn {
-  border-color: var(--accent);
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.16s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.toggleOn .knob {
+  left: 21px;
+}
+
+/* ---- Identity rows ---- */
+
+.handleBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper-sunken);
+  border-radius: 9px;
+  padding: 8px 14px;
+}
+
+.handleName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.handleEditor {
+  flex: 1;
+  max-width: 300px;
+}
+
+.quietAction {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  cursor: pointer;
 }
 
-/* The live theme/board sample at the bottom of Display. */
+.quietAction:hover {
+  text-decoration: underline;
+}
+
+.resetBtn {
+  flex: none;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 9px;
+  padding: 9px 18px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .resetBtn:hover {
+    background: color-mix(in srgb, var(--danger) 8%, transparent);
+  }
+}
+
+.buildId {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Reset-all-progress confirm — the DesktopResultDialog scrim/card
+   pattern at small size (centered modal, not the mobile sheet). */
+.confirmScrim {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.confirmCard {
+  width: 420px;
+  max-width: 100%;
+  background: var(--paper-raised);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px 26px 22px;
+}
+
+.confirmTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  color: var(--ink);
+}
+
+.confirmBody {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* ---- Display preview (ported from the phone page) ---- */
+
 .previewSlot {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--hairline);
 }
 
 .previewLabel {
@@ -242,4 +314,23 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--ink-3);
+}
+
+/* Phone (<768): rows may wrap their control under the text (the
+   3-option segmented pickers don't fit beside a title at 390), and
+   the title steps down. Everything ≥768 is untouched. */
+@media (max-width: 767px) { /* below bp-tablet */
+  .title {
+    font-size: 30px;
+  }
+
+  .row {
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    padding: 16px 18px;
+  }
+
+  .previewSlot {
+    padding: 12px 18px 16px;
+  }
 }

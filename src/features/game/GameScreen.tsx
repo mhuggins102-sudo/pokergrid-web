@@ -23,7 +23,7 @@ import { Button, Sheet, useToast } from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
 import { useNavExtras } from '../../app/DesktopNav';
 import { useGameSession } from './GameSessionProvider';
-import { useIsDesktop } from './useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { useCoachHighlight } from './coach';
 import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
@@ -211,7 +211,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const { state, dispatch, mode, setup, canUndo, maxUndos, viewOnly } =
     useGameSession();
   const ui = usePhaseUI();
-  const isDesktop = useIsDesktop();
+  const isDesktop = useTier() === 'desktop';
   const navigate = useNavigate();
   const coachHighlight = useCoachHighlight();
   const [peekOpen, setPeekOpen] = useState(false);
