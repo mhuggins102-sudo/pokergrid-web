@@ -14,6 +14,16 @@
   padding: 14px 16px;
 }
 
+/* Desk-lite density trim (tablet-landscape only): the three-column desk
+   grid is compressed to fit ~1000px, so shave the panel padding. Media-
+   scoped to the tablet-landscape band so desktop (≥1024) panels — which
+   render the same components at full width — are untouched. */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .panel {
+    padding: 12px 13px;
+  }
+}
+
 .head {
   display: flex;
   align-items: baseline;
@@ -74,14 +84,18 @@
 
 /* Hover bridge from the ⓘ (header right) across the panel's right
    padding + the 16px gap into the fly-out. Anchored to .panel (the
-   wrap is static); nothing interactive sits under it. */
-.handsWrap::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: -16px;
-  width: 64px;
-  height: 44px;
+   wrap is static). hover-media-gated: it overlays the ⓘ button, so on
+   touch it would swallow the tap-toggle — coarse pointers have no gap to
+   bridge, so the bridge simply doesn't exist there. */
+@media (hover: hover) {
+  .handsWrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -16px;
+    width: 64px;
+    height: 44px;
+  }
 }
 
 .handsPop {
@@ -114,6 +128,14 @@
 }
 
 .handsWrap:focus-within .handsPop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+/* Touch tap-toggle (TapPopover, decision E): the ⓘ tap forces the
+   hand-values pop open. Not hover-media-gated (coarse is hover:none). */
+.handsWrapOpen .handsPop {
   opacity: 1;
   pointer-events: auto;
   transform: translateX(0);
@@ -522,6 +544,15 @@
 }
 
 .lbWrap:focus-within .lbPop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+/* Touch tap-toggle (TapPopover, decision E): the panel tap forces the
+   score-distribution pop open. Not hover-media-gated (coarse is
+   hover:none). */
+.lbWrapOpen .lbPop {
   opacity: 1;
   pointer-events: auto;
   transform: translateX(0);

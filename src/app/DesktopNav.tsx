@@ -4,23 +4,23 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { NavLink, useLocation } from 'react-router';
+import { useTapPopover } from '../design/primitives';
 import { useSettingsStore } from '../features/settings/settingsStore';
 import { useResolvedTheme } from '../features/settings/useTheme';
 import styles from './DesktopNav.module.css';
 
 /**
- * THE app header (phase 4 unification). Desktop/tablet (≥768): wordmark
- * + date on the left, centered links with a hover-opening "Game Modes"
- * dropdown, theme toggle (and a page-fillable extras slot — the in-game
- * score pill) on the right. Phone (<768): wordmark + ◐ on the top row
- * with the full link row scrolling beneath (the classic header's
- * geometry in the desk voice); the dropdown and dateline are desk-only.
- * The old classic header survives only for tablet-band classic-chrome
- * (game) surfaces until phase 5 — see AppLayout.module.css.
+ * THE app header (phase 4 unification; phase 6 folded the phone row into
+ * the desk center-nav). Desktop/tablet (≥768): wordmark + date on the
+ * left, centered links with a "Game Modes" dropdown (hover/focus on a
+ * mouse, tap-toggle on touch via TapPopover), theme toggle (and a
+ * page-fillable extras slot — the in-game score pill) on the right.
+ * Phone (<768): the same `.center` nav becomes the second header row
+ * beneath the wordmark + ◐, and the Game Modes dropdown is now touch-
+ * driven; the dateline stays desk-only.
  */
 
 // Pages push transient nav content (score pill, etc.) through this
@@ -99,36 +99,13 @@ export function DesktopNav() {
   // pin it open) — suppressed until the pointer leaves the wrap.
   const [modesClosed, setModesClosed] = useState(false);
 
-  // Touch (coarse pointer): hover/:focus-within can't open the Game
-  // Modes menu, so tapping the trigger toggles it. Interim shim —
-  // phase 6's TapPopover primitive replaces this. Fine-pointer devices
-  // keep the pure hover/focus CSS untouched (coarse is false there).
-  const coarse =
-    typeof window !== 'undefined' &&
-    !!window.matchMedia?.('(pointer: coarse)').matches;
-  const [modesOpen, setModesOpen] = useState(false);
-  const modesWrapRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!modesOpen) return;
-    const onDown = (e: PointerEvent) => {
-      if (!modesWrapRef.current?.contains(e.target as Node)) {
-        setModesOpen(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setModesOpen(false);
-    };
-    document.addEventListener('pointerdown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [modesOpen]);
-  // Close on navigation (item tap or any route change).
-  useEffect(() => {
-    setModesOpen(false);
-  }, [pathname]);
+  // Touch (coarse pointer): hover/:focus-within can't open the Game Modes
+  // menu, so tapping the trigger toggles it — the TapPopover primitive
+  // (decision E) owns that behavior, plus outside-tap / Escape / route /
+  // game-commit dismissal and single-open. Fine-pointer devices keep the
+  // pure hover/focus CSS untouched (`open` stays false, no class, no
+  // handlers there). Reuses the existing `.modesWrapOpen` open class.
+  const modes = useTapPopover('nav-modes');
 
   // ◐ flips light↔dark within the chosen family. Explicit appearance
   // (not 'system') so the click always visibly does something.
@@ -149,10 +126,10 @@ export function DesktopNav() {
       </div>
       <nav className={styles.center} aria-label="Primary">
         <div
-          ref={modesWrapRef}
+          ref={modes.wrapRef}
           className={`${styles.modesWrap} ${
             modesClosed ? styles.modesWrapClosed : ''
-          } ${modesOpen ? styles.modesWrapOpen : ''}`}
+          } ${modes.open ? styles.modesWrapOpen : ''}`}
           tabIndex={0}
           // Hover-only trigger on fine pointers: a mouse press must not
           // FOCUS the wrap (that pinned the menu open via :focus-within
@@ -160,7 +137,7 @@ export function DesktopNav() {
           // opens it. On coarse pointers the tap must fire a click, so
           // the preventDefault is skipped there.
           onMouseDown={e => {
-            if (!coarse) e.preventDefault();
+            if (!modes.coarse) e.preventDefault();
           }}
           onMouseLeave={() => setModesClosed(false)}
           onFocus={() => setModesClosed(false)}
@@ -169,9 +146,9 @@ export function DesktopNav() {
             className={`${styles.link} ${styles.modesTrigger} ${
               inGameMode ? styles.on : ''
             }`}
-            // Touch: tap toggles the menu (hover can't). No-op on fine
+            // Touch: tap toggles the menu (hover can't). Empty on fine
             // pointers, where hover/focus drive it.
-            onClick={coarse ? () => setModesOpen(o => !o) : undefined}
+            {...modes.toggleProps}
           >
             Game Modes <span className={styles.caret}>▾</span>
           </span>
@@ -188,9 +165,10 @@ export function DesktopNav() {
                   // (keyboard Enter) and suppress the hover-open until
                   // the pointer leaves — so the menu doesn't linger
                   // under the parked cursor, and the trigger drops any
-                  // focus tint. Route-based .on styling is untouched.
+                  // focus tint. (On coarse the navigation also fires the
+                  // TapPopover route-change dismissal.) Route-based .on
+                  // styling is untouched.
                   setModesClosed(true);
-                  setModesOpen(false);
                   (document.activeElement as HTMLElement | null)?.blur?.();
                 }}
               >
@@ -223,24 +201,6 @@ export function DesktopNav() {
           ◐
         </button>
       </div>
-      {/* Phone (<768) link row — every mode + page in one scrolling
-          strip (no room for the dropdown, and touch can't hover it).
-          Hidden ≥768, where .center is the nav. */}
-      <nav className={styles.phoneLinks} aria-label="Primary">
-        {[...MODES, ...LINKS].map(l => (
-          <NavLink
-            key={l.to}
-            to={l.to}
-            className={({ isActive }) =>
-              isActive
-                ? `${styles.phoneLink} ${styles.phoneLinkActive}`
-                : styles.phoneLink
-            }
-          >
-            {l.label}
-          </NavLink>
-        ))}
-      </nav>
     </header>
   );
 }

@@ -61,6 +61,19 @@ export default defineConfig({
         viewport: { width: 1280, height: 800 },
       },
     },
+    {
+      // Touch at the desktop tier (unification plan's "iPad-landscape is
+      // desktop tier!" case): same 1280×800 desk layout as desktop-1280
+      // but coarse-pointer, so the TapPopover touch paths (phase 6) run
+      // at desktop width. Every spec runs here too — anything that wrongly
+      // assumes touch implies a small viewport fails loudly.
+      name: 'touch-1280',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        hasTouch: true,
+      },
+    },
   ],
   webServer: {
     command: 'npm run build && npx vite preview --port 4173 --strictPort',

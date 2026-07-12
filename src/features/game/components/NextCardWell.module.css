@@ -144,6 +144,14 @@ button.cardSlot:focus-visible {
   transform: translateX(0);
 }
 
+/* Touch tap-toggle (TapPopover, decision E): the hook forces the peek
+   popover open. Not hover-media-gated (coarse pointers are hover:none). */
+.peekWrapOpen .peekPop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
 .peekHead {
   display: block;
   font-size: 11px;

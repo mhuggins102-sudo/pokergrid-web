@@ -1,7 +1,7 @@
-/* The app header at every tier (phase 4). Base rules are the ≥1024
-   desktop layout from the Claude Design mockups' shared header block;
-   the tablet block condenses it and the phone block at the bottom
-   swaps the center nav for a scrolling link row. */
+/* The app header at every tier. Base rules are the ≥1024 desktop
+   layout from the Claude Design mockups' shared header block; the
+   tablet block condenses it and the phone block at the bottom drops
+   the same center nav to a second, left-aligned row. */
 .bar {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -187,12 +187,6 @@
   outline-offset: 2px;
 }
 
-/* The phone (<768) link row lives in the DOM at every width; only the
-   phone block below displays it. */
-.phoneLinks {
-  display: none;
-}
-
 /* Tablet tier (768–1023): the nav condenses so the wordmark, five
    center links, the in-game score/twist pills, and the toggle all fit
    ~768px without overflow. Drop the dateline, tighten gaps, and step
@@ -216,9 +210,10 @@
   }
 }
 
-/* Phone (<768, phase 4 unified header): wordmark + extras + ◐ on the
-   top row, the full link row scrolling beneath — the classic header's
-   pill-link geometry in the desk voice. */
+/* Phone (<768, phase 6 unified header): wordmark + extras + ◐ on the
+   top row, and the SAME desk `.center` nav — Game Modes dropdown + the
+   four page links — as the second header row beneath (the phone link
+   row was retired for the desk nav per the directive). */
 @media (max-width: 767px) { /* below bp-tablet */
   .bar {
     grid-template-columns: 1fr auto;
@@ -234,46 +229,83 @@
     display: none;
   }
 
+  /* The center nav drops to a left-aligned second row spanning the full
+     header width. "Game Modes ▾" + Stats + Achievements + Rules +
+     Settings ≈ 360px at the condensed 13.5px link font / 14px gaps, so
+     it fits 390 without scrolling.
+     Pinned to row 2 EXPLICITLY so it leaves row 1 to auto-placement —
+     the wordmark (.left) and ◐ (.right) then fill row 1 in DOM order.
+     (An explicit row on .right instead would place it before .left and
+     swap them; a full-width auto .center would sparse-push ◐ to row 3.)
+     No overflow here: overflow-x:auto would force overflow-y:auto and
+     CLIP the Game Modes dropdown even at 390 — the scroll safety net is
+     scoped to sub-384 widths below, where the fixed row truly overflows. */
   .center {
-    display: none;
+    display: flex;
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
   }
 
-  .phoneLinks {
-    display: flex;
-    grid-column: 1 / -1;
-    gap: var(--space-xs);
-    flex-wrap: nowrap;
+  .link {
+    font-size: 13px;
+    /* ~38px touch target without growing the row height via font size. */
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .modesTrigger {
+    flex-shrink: 0;
+  }
+
+  /* The desk menu is centered under its trigger (translateX(-50%)); on
+     the phone row the trigger sits at the left edge, so centering clips
+     the menu off the left of the viewport. Anchor it to the trigger's
+     left edge instead — same vertical slide/transition, no X-centering. */
+  .modesMenu {
+    left: 0;
+    transform: translateX(0) translateY(-4px);
+  }
+
+  .modesWrap:hover .modesMenu,
+  .modesWrap:focus-within .modesMenu,
+  .modesWrap.modesWrapOpen .modesMenu {
+    transform: translateX(0) translateY(0);
+  }
+
+  .modesWrap.modesWrapClosed .modesMenu {
+    transform: translateX(0) translateY(-4px);
+  }
+
+  /* Re-anchor the hover bridge to match. */
+  .modesWrap::after {
+    left: 0;
+    transform: none;
+  }
+}
+
+/* Narrow-device safety net (sub-~384px, where the fixed-width link row
+   would overflow the viewport): let the ROW scroll instead of forcing
+   horizontal PAGE scroll. overflow-x:auto forces overflow-y:auto, so the
+   Game Modes dropdown can clip at the row's scroll edge here — acceptable
+   per the directive; 390 never reaches this branch (the row fits ~360). */
+@media (max-width: 383px) { /* narrow phones */
+  .center {
     overflow-x: auto;
-    min-width: 0;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    /* Bleed to the header edges so the pills scroll off the screen
-       edge, matching the classic nav. */
+    /* Bleed to the header edges so the row scrolls off the screen edge. */
     margin: 0 calc(-1 * var(--space-lg));
     padding: 0 var(--space-lg);
   }
 
-  .phoneLinks::-webkit-scrollbar {
+  .center::-webkit-scrollbar {
     display: none;
-  }
-
-  .phoneLink {
-    display: inline-flex;
-    align-items: center;
-    min-height: 36px;
-    padding: 0 var(--space-md);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink-2);
-    text-decoration: none;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .phoneLinkActive {
-    color: var(--ink);
-    background: var(--paper-sunken);
-    font-weight: 600;
   }
 }

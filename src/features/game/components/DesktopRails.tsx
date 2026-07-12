@@ -20,7 +20,7 @@ import {
 } from '../../../lib/bonusCardCategory';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { isBackendConfigured } from '../../../lib/supabaseRpc';
-import { Button } from '../../../design/primitives';
+import { Button, useTapPopover } from '../../../design/primitives';
 import { useStatsStore } from '../../progress/statsStore';
 import { usePlaysStore } from '../../daily/sync/playsStore';
 import { useHandle } from '../../daily/sync/handleStore';
@@ -127,18 +127,27 @@ export function ScoringPanel({
   endgame = NO_ROWS,
   hover,
 }: ScoringPanelProps) {
+  // Touch tap-toggle for the ⓘ hand-values fly-out (decision E).
+  const handsPop = useTapPopover('scoring-hands');
   return (
     <section className={styles.panel} aria-label="Scoring">
       <header className={styles.head}>
         <h2 className={styles.title}>Scoring</h2>
         {/* Hand-values reference: hover/focus fly-out off the panel
-            (the dialog stays mobile-only). The popover is a child of
-            the wrap, so pointing into it keeps it open (scrollable). */}
-        <span className={styles.handsWrap}>
+            (the dialog stays mobile-only), tap-toggled on touch. The
+            popover is a child of the wrap, so pointing into it keeps it
+            open (scrollable). */}
+        <span
+          ref={handsPop.wrapRef}
+          className={`${styles.handsWrap} ${
+            handsPop.open ? styles.handsWrapOpen : ''
+          }`}
+        >
           <button
             type="button"
             className={styles.headBtn}
             aria-label="Hand values"
+            {...handsPop.toggleProps}
           >
             ⓘ
           </button>
@@ -379,6 +388,9 @@ export function DailyLeaderboardPanel({
   // Reactive — a first-time handle save in the result dialog renames
   // the synthesized own row without waiting for the refetch.
   const handle = useHandle();
+  // Touch tap-toggle for the score-distribution fly-out (decision E).
+  // Called before the no-backend early return so hook order stays stable.
+  const lbPop = useTapPopover('daily-lb');
 
   if (!backend) return null;
 
@@ -434,9 +446,13 @@ export function DailyLeaderboardPanel({
 
   return (
     <section
-      className={`${styles.panel} ${styles.lbWrap}`}
+      ref={lbPop.wrapRef}
+      className={`${styles.panel} ${styles.lbWrap} ${
+        lbPop.open ? styles.lbWrapOpen : ''
+      }`}
       aria-label="Leaderboard"
       tabIndex={0}
+      {...lbPop.toggleProps}
     >
       <header className={styles.head}>
         <h2 className={styles.title}>Leaderboard</h2>

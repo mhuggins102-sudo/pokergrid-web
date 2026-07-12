@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Card, Rank, Suit, isJoker, rankIndex } from '../../../game/cards';
 import { canPreviewDeck } from '../../../game/state';
+import { useTapPopover } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { CardFace, cardAriaLabel, cardLayoutId } from './CardFace';
 import styles from './NextCardWell.module.css';
@@ -96,6 +97,12 @@ export function NextCardWell({
   const drawn = state.drawn;
   const canPeek = canPreviewDeck(state.difficulty);
   const hoverPeek = peek === 'hover' && canPeek;
+  // Touch tap-toggle for the hover-peek popover (decision E). On desk
+  // tiers this is the ONLY touch affordance for a deck peek — the desk
+  // dock passes a no-op onPeekDeck (no dialog), so without this a coarse
+  // pointer could never see the remaining deck. Only wired for the hover
+  // variant; the mobile dialog well keeps its own onClick.
+  const peekPop = useTapPopover('deck-peek');
 
   const shown = flight ? flight.card : drawn;
   const shownLayoutId = flight
@@ -136,10 +143,13 @@ export function NextCardWell({
         styles.well,
         stacked ? styles.stacked : null,
         hoverPeek ? styles.peekWrap : null,
+        hoverPeek && peekPop.open ? styles.peekWrapOpen : null,
       ]
         .filter(Boolean)
         .join(' ')}
-      {...(hoverPeek ? { tabIndex: 0 } : {})}
+      {...(hoverPeek
+        ? { tabIndex: 0, ref: peekPop.wrapRef, ...peekPop.toggleProps }
+        : {})}
     >
       <SlotTag
         {...(dialogPeek ? { type: 'button' as const, onClick: onPeekDeck } : {})}

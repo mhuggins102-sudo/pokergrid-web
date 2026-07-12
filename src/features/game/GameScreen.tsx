@@ -19,7 +19,13 @@ import { JOKERS_BY_DIFFICULTY } from '../../game/rules';
 import { TARGETS_UP_STEP } from '../../game/challenges';
 import { canPreviewDeck } from '../../game/state';
 import { targetsUpReached, tierForRun } from '../../lib/stats';
-import { Button, Sheet, useToast } from '../../design/primitives';
+import {
+  Button,
+  Sheet,
+  useTapPopover,
+  useTapPopoverCloseAll,
+  useToast,
+} from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
 import { useNavExtras } from '../../app/DesktopNav';
 import { useGameSession } from './GameSessionProvider';
@@ -287,6 +293,28 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const tuLevel = mode.kind === 'targets' ? mode.level : null;
   const tuBest = useStatsStore(s => s.stats.targetsUpBest);
   const navScore = activeReport.total;
+
+  // Touch tap-toggles for the four in-game nav-pill hover menus
+  // (decision E): the ✦ twist pill, the ✦ Targets-Up ladder pill, and
+  // the split pill's two segments (difficulty rules, score tiers). Hooks
+  // can't live inside the navPill useMemo, so they're called here and
+  // closed over below. The pills render into the desk nav's extras slot
+  // (still inside the TapPopover provider), so registry / outside-tap /
+  // route / game-commit dismissal all reach them.
+  const twistPop = useTapPopover('pill-twist');
+  const ladderPop = useTapPopover('pill-ladder');
+  const diffPop = useTapPopover('pill-diff');
+  const scorePop = useTapPopover('pill-score');
+
+  // Game-commit dismissal (decision E): every committed action produces a
+  // NEW state object (the reducer is pure — GameSessionProvider), so this
+  // closes any open tap-popover on each commit. View-only archive runs
+  // never dispatch, so they never trigger it.
+  const closeAllPopovers = useTapPopoverCloseAll();
+  useEffect(() => {
+    closeAllPopovers();
+  }, [state, closeAllPopovers]);
+
   const navPill = useMemo(() => {
     const tone = difficultyColors[state.difficulty];
     const ladderRows: [string, string][] =
@@ -326,7 +354,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     return (
       <span className={styles.navPillGroup}>
         {twist && (
-          <span className={styles.navMenuWrap} tabIndex={0}>
+          <span
+            ref={twistPop.wrapRef}
+            className={`${styles.navMenuWrap} ${
+              twistPop.open ? styles.navMenuWrapOpen : ''
+            }`}
+            tabIndex={0}
+            {...twistPop.toggleProps}
+          >
             <span className={styles.twistPill}>
               <span className={styles.twistStar} aria-hidden="true">
                 ✦
@@ -342,7 +377,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           </span>
         )}
         {tuLevel !== null && (
-          <span className={styles.navMenuWrap} tabIndex={0}>
+          <span
+            ref={ladderPop.wrapRef}
+            className={`${styles.navMenuWrap} ${
+              ladderPop.open ? styles.navMenuWrapOpen : ''
+            }`}
+            tabIndex={0}
+            {...ladderPop.toggleProps}
+          >
             <span className={styles.twistPill}>
               <span className={styles.twistStar} aria-hidden="true">
                 ✦
@@ -372,7 +414,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           className={`${styles.navPill} ${styles.navPillSplit}`}
           style={{ '--pill-tone': tone } as CSSProperties}
         >
-          <span className={styles.navPillSeg} tabIndex={0}>
+          <span
+            ref={diffPop.wrapRef}
+            className={`${styles.navPillSeg} ${
+              diffPop.open ? styles.navPillSegOpen : ''
+            }`}
+            tabIndex={0}
+            {...diffPop.toggleProps}
+          >
             <span className={styles.navPillDot} aria-hidden="true" />
             <span className={styles.navPillDiff}>{state.difficulty}</span>
             <div className={styles.navMenu}>
@@ -387,7 +436,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               ))}
             </div>
           </span>
-          <span className={styles.navPillSeg} tabIndex={0}>
+          <span
+            ref={scorePop.wrapRef}
+            className={`${styles.navPillSeg} ${
+              scorePop.open ? styles.navPillSegOpen : ''
+            }`}
+            tabIndex={0}
+            {...scorePop.toggleProps}
+          >
             <span
               className={styles.navPillScore}
               aria-label={`Score ${navScore} of ${state.target}`}
@@ -427,6 +483,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     tuLevel,
     tuBest,
     finished,
+    twistPop,
+    ladderPop,
+    diffPop,
+    scorePop,
   ]);
   useNavExtras(isDesk ? navPill : null);
 
@@ -819,9 +879,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // ---- Desk families: the three-column redesign ----
   // Left rail = SCORING + leaderboard/stats; center = board with edge
   // chips; right rail = deck/actions + bonus cards. Same engine, same
-  // phase UI — only the seating changes. desk-lite (tablet-landscape)
-  // renders this same tree minus the left rail (see `family === 'desk'`
-  // gate below); desk (≥1024) renders it whole.
+  // phase UI — only the seating changes. Both desk families render the
+  // full three-column tree: desk (≥1024) at full width, desk-lite
+  // (tablet-landscape) as the same grid compressed via track widths and
+  // paddings (see .deskLite) — text sizes stay put.
   if (isDesk) {
     const discardAction = ui.actions.find(a => a.id === 'discard');
     const stackActions = ui.actions.filter(a => a.id !== 'discard');
@@ -960,9 +1021,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               family === 'desk-lite' ? styles.deskLite : ''
             }`}
           >
-            {/* desk-lite (tablet-landscape) drops the left rail — the
-                grid narrows to board + right rail (see .deskLite). */}
-            {family === 'desk' && (
+            {/* Both desk families render the left rail; desk-lite
+                (tablet-landscape) just compresses the grid tracks (see
+                .deskLite). The tutorial still empties it via `!coach`. */}
+            {isDesk && (
               <div className={styles.deskRail}>
                 {/* While the tutorial coach is up the left rail stays
                     empty — the guided deal never references the SCORING

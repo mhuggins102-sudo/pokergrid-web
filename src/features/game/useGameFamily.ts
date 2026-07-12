@@ -8,8 +8,9 @@ export type GameFamily = 'column' | 'desk-lite' | 'desk';
  * Which in-game tree renders, keyed on tier + orientation:
  *
  *   column    phone, tablet-portrait — the measured phone column
- *   desk-lite tablet-landscape — the desk tree minus the left rail
- *   desk      ≥1024 — the full three-column desk tree
+ *   desk-lite tablet-landscape — the full three-column desk tree,
+ *             compressed (track widths / paddings; text sizes unchanged)
+ *   desk      ≥1024 — the full three-column desk tree at full width
  *
  * The tutorial pin (coach → column below the desktop tier) is NOT
  * applied here: the coach prop isn't visible at this layer. GameScreen
