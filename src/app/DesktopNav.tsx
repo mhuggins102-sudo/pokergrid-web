@@ -24,8 +24,11 @@ import styles from './DesktopNav.module.css';
  */
 
 // Pages push transient nav content (score pill, etc.) through this
-// context; the slot empties itself when the page unmounts.
-const NavExtrasContext = createContext<{
+// context; the slot empties itself when the page unmounts. Exported so
+// tests can supply a stable-value provider that captures the mounted
+// node without the real provider's per-set value churn (which, with a
+// fresh-identity pill node, act() amplifies into a render loop).
+export const NavExtrasContext = createContext<{
   extras: ReactNode;
   setExtras: (n: ReactNode) => void;
 } | null>(null);
