@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { seededRng } from '../../game/deck';
 import { Action, GameState, step } from '../../game/state';
+import { useRegisterActiveGame } from '../../app/gameActiveStore';
 import { GameMode, ModeSetup, setupForMode } from './modes';
 
 export interface GameSession {
@@ -88,6 +89,11 @@ export function GameSessionProvider({
   const maxUndos = setup.maxUndos;
   const canUndo = state.past.length > 0 && state.undoCount < maxUndos;
   const viewOnly = initialState !== undefined;
+
+  // Hold any pending auto-update while a live game is mounted — a reload
+  // would drop this in-memory board. View-only (rehydrated) sessions
+  // carry no unsaved progress, so they don't register.
+  useRegisterActiveGame(!viewOnly);
 
   const session = useMemo<GameSession>(
     () => ({ state, dispatch, mode, setup, maxUndos, canUndo, seed, viewOnly }),

@@ -2,22 +2,33 @@ import { CSSProperties, useEffect } from 'react';
 import { Link, useRouteError } from 'react-router';
 
 // A redeploy replaces every hashed chunk; a tab holding the previous
-// index.html then lazy-imports a chunk that no longer exists, and the
-// SPA fallback answers that .js request with HTML. The failure message
-// differs per engine:
+// index.html then lazy-imports a chunk that no longer exists (or that
+// the just-activated service worker has evicted mid-swap). The failure
+// message differs per engine AND per cause:
 //   Chrome:  "Failed to fetch dynamically imported module" /
 //            "'text/html' is not a valid JavaScript MIME type"
-//   Safari:  "Importing a module script failed."
-//   Firefox: "error loading dynamically imported module"
-const isStaleChunkError = (error: unknown): boolean => {
+//   Safari:  "Importing a module script failed." — or, when the fetch
+//            itself fails during the SW activation race, the generic
+//            "Load failed" (which is why the update card used to slip
+//            through to the non-self-healing branch).
+//   Firefox: "error loading dynamically imported module" /
+//            "NetworkError when attempting to fetch resource"
+// Covered broadly so EVERY chunk-load failure self-heals instead of
+// surfacing the scary generic card. `ChunkLoadError` is matched by name
+// too (some bundlers throw it with a non-matching message).
+export const isChunkLoadError = (error: unknown): boolean => {
   const msg =
     error instanceof Error
       ? error.message
       : typeof error === 'string'
         ? error
         : '';
-  return /dynamically imported module|module script failed|MIME type/i.test(
-    msg
+  const name = error instanceof Error ? error.name : '';
+  return (
+    name === 'ChunkLoadError' ||
+    /dynamically imported module|module script failed|importing a module script|MIME type|load failed|failed to fetch|error loading dynamically imported|unable to preload|networkerror when attempting to fetch/i.test(
+      msg
+    )
   );
 };
 
@@ -38,7 +49,7 @@ const RELOAD_KEY = 'pokergrid:chunk-reload-at';
 export function RouteError() {
   const error = useRouteError();
 
-  const stale = isStaleChunkError(error);
+  const stale = isChunkLoadError(error);
   useEffect(() => {
     if (!stale) return;
     const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
