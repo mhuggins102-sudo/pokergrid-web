@@ -89,11 +89,11 @@
 
 /* Desktop: two-up cards within each group. */
 @media (min-width: 1024px) {
-  /* Readability cap, LEFT-aligned inside the shared 1320px container
-     so the content edge lines up with the wordmark. */
+  /* Centered readability cap inside the shared container (narrow
+     content pages center; full-width pages keep the container edge). */
   .wrap {
     max-width: 1000px;
-    margin: 0;
+    margin: 0 auto;
   }
 
   .cards {

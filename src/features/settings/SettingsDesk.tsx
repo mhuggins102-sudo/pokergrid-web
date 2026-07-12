@@ -76,9 +76,21 @@ function Row({
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  span = false,
+  children,
+}: {
+  title: string;
+  /** ≥1200px: span both columns of the sections grid (the Identity &
+   *  data footer band; its rows then sit side by side). */
+  span?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <section className={styles.section}>
+    <section
+      className={span ? `${styles.section} ${styles.sectionSpan}` : styles.section}
+    >
       <div className={styles.sectionHead}>{title}</div>
       {children}
     </section>
@@ -147,6 +159,7 @@ export function SettingsDesk() {
       <div className={styles.eyebrow}>Settings</div>
       <h1 className={styles.title}>Preferences</h1>
 
+      <div className={styles.sections}>
       <Section title="Gameplay">
         <Row
           title="Dock layout"
@@ -238,50 +251,55 @@ export function SettingsDesk() {
             The setting itself (and the phone page's toggle) remain. */}
       </Section>
 
-      <Section title="Identity & data">
-        {isBackendConfigured() && (
+      <Section title="Identity & data" span>
+        {/* ≥1200px the band's rows sit side by side (hairline divider);
+            when the handle row is absent, Reset spans the band alone. */}
+        <div className={styles.bandRows}>
+          {isBackendConfigured() && (
+            <Row
+              title="Leaderboard handle"
+              hint="Shown on the daily leaderboard."
+            >
+              {editingHandle || !handle ? (
+                <div className={styles.handleEditor}>
+                  <HandleEditor
+                    heading={null}
+                    onSaved={h => {
+                      setHandle(h);
+                      setEditingHandle(false);
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className={styles.handleBox}>
+                  <span className={styles.handleName}>{handle}</span>
+                  <button
+                    type="button"
+                    className={styles.quietAction}
+                    onClick={() => setEditingHandle(true)}
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
+            </Row>
+          )}
           <Row
-            title="Leaderboard handle"
-            hint="Shown on the daily leaderboard."
+            title="Reset all progress"
+            hint="Clears stats, achievements, streaks, and saved runs on this device. Can't be undone."
+            danger
           >
-            {editingHandle || !handle ? (
-              <div className={styles.handleEditor}>
-                <HandleEditor
-                  heading={null}
-                  onSaved={h => {
-                    setHandle(h);
-                    setEditingHandle(false);
-                  }}
-                />
-              </div>
-            ) : (
-              <div className={styles.handleBox}>
-                <span className={styles.handleName}>{handle}</span>
-                <button
-                  type="button"
-                  className={styles.quietAction}
-                  onClick={() => setEditingHandle(true)}
-                >
-                  Edit
-                </button>
-              </div>
-            )}
+            <button
+              type="button"
+              className={styles.resetBtn}
+              onClick={() => setConfirmReset(true)}
+            >
+              Reset…
+            </button>
           </Row>
-        )}
-        <Row
-          title="Reset all progress"
-          hint="Clears stats, achievements, streaks, and saved runs on this device. Can't be undone."
-          danger
-        >
-          <button
-            type="button"
-            className={styles.resetBtn}
-            onClick={() => setConfirmReset(true)}
-          >
-            Reset…
-          </button>
-        </Row>
+        </div>
       </Section>
+      </div>
 
       <p className={styles.buildId}>Build {__BUILD_ID__}</p>
 

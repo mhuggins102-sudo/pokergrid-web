@@ -2,12 +2,13 @@
    article (design-refs/desktop/Daily.dc.html). Rendered only by
    DailyDay's desktop fork. */
 
-/* Readability cap, LEFT-aligned inside the shared 1320px container so
-   the card edge lines up with the wordmark (item-21 text-page rule). */
+/* Centered readability cap inside the shared container — the front
+   page reads as a deliberately narrow artifact on the desk (narrow
+   content pages center; full-width pages keep the container edge). */
 .wrap {
   width: 100%;
   max-width: 760px;
-  margin: 0;
+  margin: 0 auto;
   padding: 0 0 40px;
 }
 

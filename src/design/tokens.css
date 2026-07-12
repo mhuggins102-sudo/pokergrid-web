@@ -2,11 +2,25 @@
  * PokerGrid "Morning Paper" editorial tokens.
  *
  * Single source of truth for the visual system. The typed mirror in
- * tokens.ts must stay in sync — every value here has a counterpart there.
+ * tokens.ts must stay in sync — every color/spacing value here has a
+ * counterpart there (theme-independent layout tokens like the desktop
+ * container are CSS-only; nothing reads them from JS).
  *
  * Scoped to [data-theme] so a dark theme can later override the same
  * variable names without touching any component CSS.
  */
+
+/* ---- Desktop layout (theme-independent) ----
+   The ONE ≥1024px container. AppLayout .main and DesktopNav .bar both
+   consume these so the wordmark and page content share a left edge.
+   Related literal that CANNOT be a var (media queries don't resolve
+   var()): the Settings two-column collapse breakpoint is 1200px —
+   currently only in SettingsDesk.module.css; keep occurrences in sync. */
+:root {
+  --desk-container: 1320px;
+  --desk-gutter: 30px;
+}
+
 :root,
 [data-theme='paper'] {
   /* ---- Surfaces ---- */
