@@ -137,18 +137,34 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
     expect(Math.abs(m.boardCentering.above - m.boardCentering.below)).toBeLessThanOrEqual(2);
   }
 
-  // 4. Tier pinning (unification phase 1): the tablet band (768–1023,
-  //    the tablet-820 project) still renders the PHONE game — the flex
-  //    column present, the desk panels absent. Later phases flip the
-  //    tablet game deliberately; when they do, this assertion is
-  //    EXPECTED to be rewritten, not silently skipped.
+  // 4. Tablet game families (unification phase 5 landed the split): in
+  //    the tablet band (768–1023) the game keys on orientation —
+  //    portrait renders the phone COLUMN (flex layout, no desk panels),
+  //    landscape renders DESK-LITE (the desk tree minus the left rail:
+  //    the deck/actions region present, the Scoring left rail dropped).
   if (m.viewport.w >= 768 && m.viewport.w < 1024) {
-    expect(m.layout).not.toBeNull();
-    expect(m.layout?.display).toBe('flex');
-    await expect(
-      page.getByRole('region', { name: 'Deck and actions' })
-    ).toHaveCount(0);
-    await expect(page.getByRole('region', { name: 'Scoring' })).toHaveCount(0);
+    const portrait = m.viewport.h > m.viewport.w;
+    if (portrait) {
+      // Column family: the phone flex layout, desk panels absent.
+      expect(m.layout).not.toBeNull();
+      expect(m.layout?.display).toBe('flex');
+      await expect(
+        page.getByRole('region', { name: 'Deck and actions' })
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole('region', { name: 'Scoring' })
+      ).toHaveCount(0);
+    } else {
+      // Desk-lite family: the desk grid minus the left rail — no phone
+      // .layout, the deck/actions right rail present, Scoring dropped.
+      expect(m.layout).toBeNull();
+      await expect(
+        page.getByRole('region', { name: 'Deck and actions' })
+      ).toHaveCount(1);
+      await expect(
+        page.getByRole('region', { name: 'Scoring' })
+      ).toHaveCount(0);
+    }
   }
 
   // 5. Desktop redesign (phase 2): at ≥1024px GameScreen renders the

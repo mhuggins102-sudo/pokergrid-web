@@ -4,95 +4,13 @@
   flex-direction: column;
 }
 
-/* ONE header (DesktopNav, with its own phone variant <768) at every
-   tier since phase 4 — except the tablet band's game-family surfaces,
-   which register `.classicChrome` (see useClassicChrome.ts) and keep
-   the classic scrolling header until phase 5 gives tablets a real
-   game layout. The classic header dies with that phase. */
+/* ONE header at every tier: DesktopNav, with its own phone (<768),
+   condensed-tablet, and desktop variants. Phase 5 retired the classic
+   scrolling header (and the classic-chrome flag) — DesktopNav serves
+   the tablet game surfaces too. */
 .desktopHeader {
   display: block;
   background: var(--paper);
-}
-
-.header {
-  display: none;
-  border-bottom: 1px solid var(--rule);
-  background: var(--paper);
-}
-
-@media (min-width: 768px) and (max-width: 1023px) { /* bp-tablet */
-  .shell.classicChrome .desktopHeader {
-    display: none;
-  }
-
-  .shell.classicChrome .header {
-    display: block;
-  }
-}
-
-.headerInner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-xs) var(--space-lg);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-lg);
-  /* Single row always — the nav scrolls sideways instead of wrapping,
-     so the header never steals a second line from the play area. */
-  flex-wrap: nowrap;
-  min-width: 0;
-}
-
-.wordmark {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 680;
-  letter-spacing: -0.01em;
-  text-decoration: none;
-  flex-shrink: 0;
-}
-
-.nav {
-  display: flex;
-  gap: var(--space-xs);
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  min-width: 0;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.nav::-webkit-scrollbar {
-  display: none;
-}
-
-.navLink {
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 var(--space-md);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink-2);
-  text-decoration: none;
-  transition: background-color 120ms ease, color 120ms ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-@media (hover: hover) {
-  .navLink:hover {
-    color: var(--ink);
-    background: color-mix(in srgb, var(--ink) 5%, transparent);
-  }
-}
-
-.navLinkActive {
-  color: var(--ink);
-  background: var(--paper-sunken);
-  font-weight: 600;
 }
 
 .main {
@@ -118,12 +36,11 @@
   }
 }
 
-/* Tablet tier (768–1023): non-game pages adopt the desk container so
-   they align under DesktopNav; classic-chrome (game) surfaces keep the
-   phone .main (1200px/space-lg) they were tuned for. Scoped to the
-   band with max-width so the ≥1024 block below stays authoritative. */
+/* Tablet tier (768–1023): every route adopts the desk container so it
+   aligns under DesktopNav. Scoped to the band with max-width so the
+   ≥1024 block below stays authoritative. */
 @media (min-width: 768px) and (max-width: 1023px) { /* bp-tablet */
-  .shell:not(.classicChrome) .main {
+  .main {
     max-width: var(--desk-container);
     padding-left: var(--desk-gutter);
     padding-right: var(--desk-gutter);

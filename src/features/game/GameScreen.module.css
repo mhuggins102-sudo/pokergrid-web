@@ -319,8 +319,27 @@
   }
 }
 
-/* ===== Desktop nav score pill (mounted into DesktopNav's extras
-   slot via useNavExtras — the nav only renders at ≥1024px). Mirrors
+@media (min-width: 768px) { /* bp-tablet */
+  /* Tablet-portrait column: let the measured board reach its ~600px
+     cap (the JS pipeline caps at 600/630; the frame min() fallback
+     rises to match). Only the column family carries .layout/.boardFrame
+     — the desk families render the desk tree — so raising these caps at
+     768 never touches desk output. */
+  .layout {
+    max-width: 640px;
+  }
+
+  .boardFrame {
+    width: min(var(--avail-w, 100cqw), calc(var(--avail-h, 100cqh) - 12px), 630px);
+  }
+
+  .boardFrameBare {
+    width: min(var(--avail-w, 100cqw), calc(var(--avail-h, 100cqh) - 12px), 600px);
+  }
+}
+
+/* ===== Desk-family nav score pill (mounted into DesktopNav's extras
+   slot via useNavExtras by the desk + desk-lite families). Mirrors
    the mockup's header pill: difficulty dot + name, live score/target
    in an accent bubble. ===== */
 .navPill {
@@ -375,8 +394,9 @@
 
 /* Pill cluster: optional ✦ twist pill + the difficulty/score pill,
    each with a hover/focus dropdown (mockup .diffwrap/.diffmenu). Only
-   rendered inside the ≥1024px nav, so no width media query needed —
-   hover affordances are still hover-media-gated for touch desktops. */
+   rendered inside the desk-family nav (≥768 in landscape), so no width
+   media query needed — hover affordances are still hover-media-gated
+   for touch desktops. */
 .navPillGroup {
   display: inline-flex;
   align-items: center;
@@ -554,13 +574,15 @@
   letter-spacing: normal;
 }
 
-/* ===== Desktop (≥1024px): the three-column redesign. GameScreen
-   renders this tree INSTEAD of the mobile flex column (JSX fork on
-   the same 1024px matchMedia breakpoint), so nothing below 1024px is
-   touched. Left rail ~280px (scoring + leaderboard/stats), flexible
-   center board with edge chips, right rail ~300px (deck/actions +
-   bonus cards). ===== */
-@media (min-width: 1024px) {
+/* ===== Desk families: the three-column redesign. GameScreen renders
+   this tree (INSTEAD of the column flex layout) for the desk family
+   (≥1024) and the desk-lite family (tablet-landscape) — the JSX gate
+   picks the tree, so these rules can open at 768 safely: nothing below
+   768 renders desk markup, and the column family never carries these
+   classes. Left rail ~280px (scoring + leaderboard/stats, desk only),
+   flexible center board with edge chips, right rail ~300px
+   (deck/actions + bonus cards). ===== */
+@media (min-width: 768px) { /* bp-tablet */
   .desk {
     /* Fills AppLayout's shared 1320px desktop container (item 21's
        reference route — every page now aligns with this). */
@@ -570,6 +592,11 @@
     grid-template-columns: 280px minmax(0, 1fr) 300px;
     gap: var(--space-xl);
     align-items: start;
+  }
+
+  /* Desk-lite (tablet-landscape): the desk grid minus the left rail. */
+  .deskLite {
+    grid-template-columns: minmax(0, 1fr) 300px;
   }
 
   .deskRail {
