@@ -1,13 +1,14 @@
 /* Desktop (≥1024px) settings page, per
    design-refs/desktop/Settings.dc.html. Rendered only by SettingsPage's
-   desktop fork. */
+   desktop fork. Two tiers: a single centered readability column from
+   1024, opening into two section columns + a full-width Identity band
+   at ≥1200 (see .sections below). */
 
-/* Readability cap, LEFT-aligned inside the shared 1320px container so
-   the content edge lines up with the wordmark. */
+/* Base (1024–1199 desk widths): one centered readability column. */
 .wrap {
   width: 100%;
   max-width: 640px;
-  margin: 0;
+  margin: 0 auto;
   padding: 0 0 48px;
 }
 
@@ -30,6 +31,14 @@
 
 /* ---- Sections ---- */
 
+.sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  /* Top-align: no stretched empty card bottoms in the column tier. */
+  align-items: start;
+}
+
 .section {
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
@@ -38,8 +47,40 @@
   overflow: hidden;
 }
 
-.section + .section {
-  margin-top: 18px;
+/* Two-column tier. 1200px is the desk collapse breakpoint (see the
+   tokens.css layout note — a literal because media queries can't
+   resolve var()). Deliberately NOT a container query: inline-size
+   containment would make .wrap the containing block for the
+   position:fixed .confirmScrim below. */
+@media (min-width: 1200px) {
+  .wrap {
+    max-width: 1080px;
+  }
+
+  .sections {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+  }
+
+  /* Identity & data: the full-width footer band; its rows sit side by
+     side (hairline divider), and a lone Reset row (no backend) spans. */
+  .sectionSpan {
+    grid-column: 1 / -1;
+  }
+
+  .sectionSpan .bandRows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sectionSpan .bandRows .row + .row {
+    border-top: none;
+    border-left: 1px solid var(--hairline);
+  }
+
+  .sectionSpan .bandRows .row:only-child {
+    grid-column: 1 / -1;
+  }
 }
 
 .sectionHead {

@@ -1,12 +1,14 @@
 /* Desktop (≥1024px) rules page, per design-refs/desktop/Rules.dc.html.
    Rendered only by RulesPage's desktop fork. */
 
-/* Readability cap, LEFT-aligned inside the shared 1320px container so
-   the content edge lines up with the wordmark. */
+/* Centered readability cap inside the shared container (narrow content
+   pages center; full-width pages keep the container edge). 1140 gives
+   the bonus-card reference meaningful width while the how-to columns
+   stay at a comfortable measure. */
 .wrap {
   width: 100%;
-  max-width: 1000px;
-  margin: 0;
+  max-width: 1140px;
+  margin: 0 auto;
   padding: 0 0 48px;
 }
 
@@ -283,7 +285,9 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* 3-up at today's desktop widths; auto-fill so a future ≤1024 tablet
+     tier degrades to 2-up without needing a breakpoint. */
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 12px;
 }
 
