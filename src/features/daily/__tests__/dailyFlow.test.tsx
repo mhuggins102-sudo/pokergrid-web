@@ -121,15 +121,16 @@ describe('daily flow', () => {
     expect(screen.getByText('Daily archive')).toBeInTheDocument();
   });
 
-  it('archive lists played scores and playable dates', () => {
+  it('archive lists the month and offers Start on unplayed days', () => {
     renderAt('/daily/archive');
-    expect(screen.getByText('Today')).toBeInTheDocument();
-    // Every date back to the 2026-03-01 launch, all playable when
-    // nothing's been played.
-    expect(screen.getAllByText('Play').length).toBeGreaterThanOrEqual(40);
+    expect(screen.getByText('Past puzzles')).toBeInTheDocument();
+    // Nothing played: every listed day carries a Start shortcut, and
+    // the selected day's detail panel offers Start too.
+    expect(screen.getByText('Not played')).toBeInTheDocument();
+    expect(screen.getAllByText('Start ▸').length).toBeGreaterThanOrEqual(2);
   });
 
-  it("a played row's score cell opens the day's leaderboard in place", () => {
+  it("selecting a played day opens its result detail in place", () => {
     // Store a play by finishing the date, then visit the archive.
     const view = renderAt(`/daily/${DATE}`);
     fireEvent.click(view.getByRole('button', { name: 'Play this puzzle' }));
@@ -138,19 +139,17 @@ describe('daily flow', () => {
       if (!place) break;
       fireEvent.click(place);
     }
+    const score = view.getByTestId('final-score').textContent ?? '';
     view.unmount();
 
     renderAt('/daily/archive');
-    // The played row splits: date side is still the result link, the
-    // score cell is a button that opens the leaderboard popup here.
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Leaderboard — 6/1/26' })
-    );
-    // The popup opens right here (title text, not just the button's
-    // label) with the sheet's body (stats/histogram fetches are
-    // network-dependent; the screen-name editor is not).
-    expect(screen.getByText('Leaderboard — 6/1/26')).toBeInTheDocument();
-    expect(screen.getByLabelText('Screen name')).toBeInTheDocument();
+    // June 2026 (the month picker's items are always in the DOM; CSS
+    // hides the closed menu), then the played day's row — it shows the
+    // stored score — which loads that day's detail panel in place.
+    fireEvent.click(screen.getByRole('button', { name: 'June 2026' }));
+    fireEvent.click(screen.getByText(score).closest('button')!);
+    expect(screen.getByText('Monday, June 1, 2026')).toBeInTheDocument();
+    expect(screen.getByText('View full result →')).toBeInTheDocument();
   });
 
   it('future dates bounce to today', () => {

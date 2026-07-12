@@ -13,11 +13,14 @@ import { useResolvedTheme } from '../features/settings/useTheme';
 import styles from './DesktopNav.module.css';
 
 /**
- * ≥1024px header from the desktop redesign: wordmark + date on the
- * left, centered links with a hover-opening "Game Modes" dropdown,
- * theme toggle (and a page-fillable extras slot — the in-game score
- * pill) on the right. Mobile keeps the classic scrolling nav; the two
- * headers swap via media queries in AppLayout.module.css.
+ * THE app header (phase 4 unification). Desktop/tablet (≥768): wordmark
+ * + date on the left, centered links with a hover-opening "Game Modes"
+ * dropdown, theme toggle (and a page-fillable extras slot — the in-game
+ * score pill) on the right. Phone (<768): wordmark + ◐ on the top row
+ * with the full link row scrolling beneath (the classic header's
+ * geometry in the desk voice); the dropdown and dateline are desk-only.
+ * The old classic header survives only for tablet-band classic-chrome
+ * (game) surfaces until phase 5 — see AppLayout.module.css.
  */
 
 // Pages push transient nav content (score pill, etc.) through this
@@ -220,6 +223,24 @@ export function DesktopNav() {
           ◐
         </button>
       </div>
+      {/* Phone (<768) link row — every mode + page in one scrolling
+          strip (no room for the dropdown, and touch can't hover it).
+          Hidden ≥768, where .center is the nav. */}
+      <nav className={styles.phoneLinks} aria-label="Primary">
+        {[...MODES, ...LINKS].map(l => (
+          <NavLink
+            key={l.to}
+            to={l.to}
+            className={({ isActive }) =>
+              isActive
+                ? `${styles.phoneLink} ${styles.phoneLinkActive}`
+                : styles.phoneLink
+            }
+          >
+            {l.label}
+          </NavLink>
+        ))}
+      </nav>
     </header>
   );
 }

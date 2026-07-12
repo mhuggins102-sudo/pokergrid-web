@@ -1,129 +1,180 @@
-import { useState } from 'react';
+import { CSSProperties, useState } from 'react';
 import { Link } from 'react-router';
-import { useStatsStore } from '../progress/statsStore';
-import { countDailyWins } from '../daily/dailyWinsLite';
 import { markTutorialSeen, tutorialSeen } from '../tutorial/tutorialSeen';
-import { useTier } from '../../app/useTier';
-import { DesktopHome } from './DesktopHome';
+import { CHALLENGES, findChallenge } from '../../game/challenges';
+import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
+import { currentDateISO } from '../../game/daily/seed';
+import { difficultyColors } from '../../design/tokens';
+import {
+  bestDailyStreak,
+  dailyStreak,
+  readPlayedDatesLite,
+} from '../daily/streak';
 import styles from './HomePage.module.css';
 
-const TILES = [
-  {
-    to: '/daily',
-    title: 'Daily Puzzle',
-    blurb: 'One seeded deal a day, shared leaderboard.',
-  },
-  {
-    to: '/play',
-    title: 'Free Play',
-    blurb: 'Unlimited games across four difficulties.',
-  },
-  {
-    to: '/challenges',
-    title: 'Challenges',
-    blurb: 'Twisted rule sets: Gridlock, Mixed Bag, Three Tricks…',
-  },
-  {
-    to: '/targets',
-    title: 'Targets Up',
-    blurb: 'Climb the ladder — the target rises every level.',
-  },
+/*
+ * The landing page at every tier (phase 4 convergence), per
+ * design-refs/desktop/Home.dc.html: a hero CTA for today's daily
+ * (recipe chips + streak), the three-mode card row, and the newcomer
+ * footer strip — which, on a first visit, upgrades to the tutorial
+ * callout (prominent CTA + dismiss; the ported phone behavior). Every
+ * number binds to the real recipe / challenge catalog / streak helper.
+ */
+
+// The mockup's decorative 3×3 of card faces on the hero's right panel.
+const HERO_CARDS: { rank: string; suit: 'h' | 'd' | 'c' | 's' }[] = [
+  { rank: 'A', suit: 's' },
+  { rank: 'K', suit: 'h' },
+  { rank: 'Q', suit: 'd' },
+  { rank: 'J', suit: 'c' },
+  { rank: '10', suit: 's' },
+  { rank: '9', suit: 'h' },
+  { rank: '8', suit: 'd' },
+  { rank: '7', suit: 'c' },
+  { rank: '6', suit: 's' },
 ];
 
-export function HomePage() {
-  // Non-phone tiers (≥768px) render the desktop-redesign landing page
-  // INSTEAD of the phone tile list (same JSX-fork pattern as
-  // GameScreen) — on phones nothing changes.
-  const tier = useTier();
-  // First-visit callout; "No thanks" suppresses it for good (the
-  // tutorial stays reachable from Rules and Settings).
-  const [showIntro, setShowIntro] = useState(() => !tutorialSeen());
-  // The stats/achievements tiles mirror the original home cards: a
-  // running count once there is one. (statsStore is light — type-only
-  // game imports — so home stays out of the engine chunk.)
-  // Free-play wins (reactive) + daily wins (read once from storage, so
-  // Home stays off the engine chunk). Snapshot refreshes whenever Home
-  // remounts, e.g. after returning from a daily.
-  const freeWins = useStatsStore(s => s.stats.wins);
-  const [dailyWins] = useState(() => countDailyWins());
-  const wins = freeWins + dailyWins;
-  const earned = useStatsStore(s => s.stats.achievementsDone.length);
+const SUIT_GLYPH = { h: '♥', d: '♦', c: '♣', s: '♠' } as const;
+const SUIT_TONE = {
+  h: 'var(--face-suit-h)',
+  d: 'var(--face-suit-d)',
+  c: 'var(--face-suit-c)',
+  s: 'var(--face-suit-s)',
+} as const;
 
-  if (tier !== 'phone') return <DesktopHome />;
+// "Friday, July 10" — built from the daily's ISO parts (never
+// `new Date('YYYY-MM-DD')`, which parses as UTC and can shift a day).
+const heroDate = (iso: string): string => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+export function HomePage() {
+  // First-visit tutorial callout in the footer strip; "No thanks"
+  // suppresses it for good (the tutorial stays reachable from Rules
+  // and Settings).
+  const [showIntro, setShowIntro] = useState(() => !tutorialSeen());
+  const today = currentDateISO();
+  const recipe = recipeFor(today);
+  const twist = recipe.twist ? findChallenge(recipe.twist) : null;
+  const target = dailyTargetFor(recipe.difficulty, recipe.twist);
+  // Engine-free snapshot (the dailyWinsLite pattern): Home stays out
+  // of the engine chunk, and remounts on navigation keep it fresh.
+  const [streak] = useState(() => {
+    const s = dailyStreak(readPlayedDatesLite(), today);
+    return { ...s, best: bestDailyStreak(s.best) };
+  });
+  const diffTone = difficultyColors[recipe.difficulty];
 
   return (
-    <section className={styles.wrap}>
-      {/* Redundant with the top nav on purpose — quick reach for the
-          two "help me" pages from the landing screen. */}
-      <nav className={styles.quickLinks} aria-label="Rules and settings">
-        <Link
-          to="/rules"
-          className={styles.quickLink}
-          aria-label="Rules"
-          title="Rules"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-        </Link>
-        <Link
-          to="/settings"
-          className={styles.quickLink}
-          aria-label="Settings"
-          title="Settings"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-        </Link>
-      </nav>
-      <header className={styles.hero}>
-        <h1 className={`text-hero ${styles.heroTitle}`}>PokerGrid</h1>
-        <p className={`text-body ${styles.tagline}`}>
-          Place 25 cards. Build ten poker hands at once. Beat the target.
-        </p>
-      </header>
-      {showIntro && (
-        <div className={styles.intro}>
-          <div className={styles.introText}>
-            <span className={styles.introTitle}>First time here?</span>
-            <span className={`text-label ${styles.introBlurb}`}>
-              Learn by playing — a guided practice deal walks you through
-              every move in about three minutes.
-            </span>
+    <div className={styles.wrap}>
+      {/* HERO — today's daily. A <div> with a stretched primary link
+          (the CTA's ::after covers the card) instead of one big <a>,
+          so the quiet archive link can sit beside the CTA without
+          nesting anchors. */}
+      <div className={styles.hero}>
+        <div className={styles.heroBody}>
+          <div className={styles.heroEyebrow}>
+            <span className={styles.heroKicker}>Today&apos;s Daily</span>
+            <span className={styles.heroDot} aria-hidden="true" />
+            <span className={styles.heroDate}>{heroDate(today)}</span>
           </div>
-          <div className={styles.introActions}>
-            <Link to="/tutorial" className={styles.introStart}>
+          <h1 className={styles.heroTitle}>
+            One grid.
+            <br />
+            Everyone plays the same deal.
+          </h1>
+          <div className={styles.heroChips}>
+            <span
+              className={styles.diffChip}
+              style={{ '--tone': diffTone } as CSSProperties}
+            >
+              <span className={styles.diffDot} aria-hidden="true" />
+              {recipe.difficulty} · {target}
+            </span>
+            {twist && (
+              <span className={styles.twistChip}>✦ {twist.name}</span>
+            )}
+            {streak.current > 0 && (
+              <span className={styles.streakChip}>
+                🔥 {streak.current}-day streak
+              </span>
+            )}
+          </div>
+          <div className={styles.heroCtaRow}>
+            <Link to="/daily" className={styles.heroCta}>
+              Play today&apos;s puzzle <span aria-hidden="true">→</span>
+            </Link>
+            <Link to="/daily/archive" className={styles.heroArchive}>
+              Browse the archive <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+        <div className={styles.heroArt} aria-hidden="true">
+          <div className={styles.heroGrid}>
+            {HERO_CARDS.map((c, i) => (
+              <div
+                key={i}
+                className={styles.heroCard}
+                style={{ color: SUIT_TONE[c.suit] }}
+              >
+                <span className={styles.heroCardWm}>{SUIT_GLYPH[c.suit]}</span>
+                <span className={styles.heroCardRank}>{c.rank}</span>
+                <span className={styles.heroCardPip}>{SUIT_GLYPH[c.suit]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* MODE ROW */}
+      <div className={styles.modeRow}>
+        <Link to="/play" className={styles.modeCard}>
+          <span className={styles.modeTitle}>Free Play</span>
+          <span className={styles.modeBlurb}>
+            Pick any difficulty and play as many boards as you like.
+            Doesn&apos;t touch the daily leaderboard.
+          </span>
+          <span className={styles.modeLink}>Choose a difficulty →</span>
+        </Link>
+        <Link to="/challenges" className={styles.modeCard}>
+          <span className={styles.modeTitle}>Challenges</span>
+          <span className={styles.modeBlurb}>
+            Ten twisted rule sets — No Discards, Short Deck, Poker Purist and
+            more. Beat them all for the sweep.
+          </span>
+          <span className={styles.modeLink}>{CHALLENGES.length} modes to beat →</span>
+        </Link>
+        <Link to="/stats" className={styles.modeCard}>
+          <span className={styles.modeTitle}>Stats</span>
+          <span className={styles.modeBlurb}>
+            Best scores, win rate, and tier ratings by difficulty, filtered by
+            mode and level.
+          </span>
+          <span className={styles.modeLink}>See your stats →</span>
+        </Link>
+      </div>
+
+      {/* FOOTER STRIP — the tutorial callout on a first visit, the
+          quiet rules pointer ever after. */}
+      {showIntro ? (
+        <div className={styles.footerStrip}>
+          <span className={styles.footerText}>
+            <span className={styles.footerLead}>First time here?</span> Learn
+            by playing — a guided practice deal walks you through every move
+            in about three minutes.
+          </span>
+          <span className={styles.footerActions}>
+            <Link to="/tutorial" className={styles.footerCta}>
               Start the tutorial
             </Link>
             <button
               type="button"
-              className={styles.introDismiss}
+              className={styles.footerDismiss}
               onClick={() => {
                 markTutorialSeen();
                 setShowIntro(false);
@@ -131,38 +182,19 @@ export function HomePage() {
             >
               No thanks
             </button>
-          </div>
+          </span>
+        </div>
+      ) : (
+        <div className={styles.footerStrip}>
+          <span className={styles.footerText}>
+            <span className={styles.footerLead}>New here?</span> The whole game
+            is 25 cards, 10 poker hands, one target.
+          </span>
+          <Link to="/rules" className={styles.footerLink}>
+            Read the rules →
+          </Link>
         </div>
       )}
-      <div className={styles.tiles}>
-        {TILES.map(t => (
-          <Link key={t.to} to={t.to} className={styles.tile}>
-            <span className={styles.tileTitle}>{t.title}</span>
-            <span className={`text-label ${styles.tileBlurb}`}>{t.blurb}</span>
-          </Link>
-        ))}
-        <Link to="/stats" className={styles.tile}>
-          <span className={styles.tileTitle}>Stats</span>
-          <span className={`text-label ${styles.tileBlurb}`}>
-            {wins > 0
-              ? `${wins} win${wins === 1 ? '' : 's'} — records and tiers per difficulty.`
-              : 'Your records and tiers, per difficulty.'}
-          </span>
-        </Link>
-        <Link to="/achievements" className={styles.tile}>
-          <span className={styles.tileTitle}>Achievements</span>
-          <span className={`text-label ${styles.tileBlurb}`}>
-            {earned > 0
-              ? `${earned} earned — quiet goals that unlock as you play.`
-              : 'Quiet goals that unlock as you play.'}
-          </span>
-        </Link>
-      </div>
-      {!showIntro && (
-        <p className={`text-label ${styles.tutorialLink}`}>
-          New here? <Link to="/tutorial">Take the interactive tutorial</Link>.
-        </p>
-      )}
-    </section>
+    </div>
   );
 }

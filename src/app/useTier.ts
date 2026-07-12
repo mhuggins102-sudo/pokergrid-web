@@ -37,8 +37,8 @@ const tierNow = (): Tier => {
 
 /**
  * The current presentation tier, live across viewport resizes. Two
- * matchMedia listeners (768 and 1024) — same jsdom/SSR-safe pattern as
- * the original useIsDesktop, which is now a shim over this hook.
+ * matchMedia listeners (768 and 1024), jsdom/SSR-safe. (The original
+ * useIsDesktop hook was a shim over this until phase 4 deleted it.)
  */
 export function useTier(): Tier {
   const [tier, setTier] = useState<Tier>(tierNow);

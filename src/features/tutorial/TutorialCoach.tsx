@@ -1,5 +1,5 @@
 import { Button } from '../../design/primitives';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { TutorialStep } from './tutorialSteps';
 import styles from './TutorialCoach.module.css';
 
@@ -37,7 +37,7 @@ export function TutorialCoach({
   // sweep bar, thinner), and the step copy in the panels' body type.
   // Same aria contract and controls as the phone strip, so the
   // tutorial e2e drives both breakpoints identically.
-  const isDesktop = useIsDesktop();
+  const isDesktop = useTier() === 'desktop';
   if (isDesktop) {
     return (
       <section className={styles.deskCoach} aria-label="Tutorial coach">

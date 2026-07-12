@@ -1,14 +1,14 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import {
-  Button,
-  Chevron,
-  Dialog,
-  Sheet,
-  useToast,
-} from '../../design/primitives';
-import { DOCK_LAYOUT_LABEL } from './DockLayoutPreview';
-import { DisplayPreview } from './DisplayPreview';
+import { Button, useToast } from '../../design/primitives';
+import { HandleEditor } from '../daily/RankPanel';
+import { useHandle } from '../daily/sync/handleStore';
+import { resetDailyProgress } from '../daily/sync/sync';
+import { clearTwistsSeen } from '../daily/twistSeen';
+import { isBackendConfigured } from '../../lib/supabaseRpc';
+import { useStatsStore } from '../progress/statsStore';
+import { useTargetsStore } from '../targets/targetsStore';
+import { clearTutorialSeen } from '../tutorial/tutorialSeen';
 import {
   Appearance,
   DockLayout,
@@ -16,328 +16,390 @@ import {
   ThemeFamily,
   useSettingsStore,
 } from './settingsStore';
-import { useStatsStore } from '../progress/statsStore';
-import { useTargetsStore } from '../targets/targetsStore';
-import { resetDailyProgress } from '../daily/sync/sync';
-import { clearTwistsSeen } from '../daily/twistSeen';
-import { HandleEditor } from '../daily/RankPanel';
-import { isBackendConfigured } from '../../lib/supabaseRpc';
-import { clearTutorialSeen } from '../tutorial/tutorialSeen';
+import { DOCK_LAYOUT_LABEL } from './DockLayoutPreview';
+import { DisplayPreview } from './DisplayPreview';
 import { useTier } from '../../app/useTier';
-import { SettingsDesk } from './SettingsDesk';
 import styles from './SettingsPage.module.css';
 
-// Small ⓘ next to a row title — same glyph treatment as the result
-// screen's score-details button. Opens the row's explainer popup.
-function InfoButton({ title, onInfo }: { title: string; onInfo: () => void }) {
+/*
+ * The ONE settings page at every tier (phase 4, plan decision D), per
+ * design-refs/desktop/Settings.dc.html: three raised sections
+ * (Gameplay / Presentation / Identity & data) of hairline-separated
+ * rows with segmented pickers and pill toggles, plus the live display
+ * preview. All rows read/write the same persisted settings store — no
+ * key migrations.
+ *
+ * Tier-conditional rows:
+ *  - Dock layout: phone/tablet offer the three phone-family layouts;
+ *    desktop offers TWO — Center stage and Compact — because the
+ *    desktop game dock only distinguishes center-stage vs the compact
+ *    variant ('hand-stack' and 'classic' render identically there).
+ *    Mapping (user directive, unchanged): Center stage writes
+ *    'center-stage'; Compact writes 'hand-stack' only when coming FROM
+ *    'center-stage', so a phone-side Classic choice survives desktop
+ *    visits.
+ *  - Line totals: ONE row binding the tier's key — phone → lineRails
+ *    (the column game family reads it), tablet/desktop →
+ *    deskLineChips (the desk family's chips). Both keys kept.
+ */
+
+function Toggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <button
       type="button"
-      className={styles.rowInfo}
-      aria-label={`About ${title}`}
-      onClick={onInfo}
+      role="switch"
+      aria-checked={value}
+      aria-label={label}
+      className={`${styles.toggle} ${value ? styles.toggleOn : ''}`}
+      onClick={() => onChange(!value)}
     >
-      ⓘ
+      <span className={styles.knob} />
     </button>
   );
 }
 
-function ToggleRow({
+function Row({
   title,
   hint,
-  value,
-  onChange,
-  onInfo,
-}: {
-  title: string;
-  hint?: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  onInfo?: () => void;
-}) {
-  return (
-    <div className={styles.row}>
-      <div className={styles.rowText}>
-        <span className={styles.rowTitle}>
-          {title}
-          {onInfo && <InfoButton title={title} onInfo={onInfo} />}
-        </span>
-        {hint && <span className={styles.rowHint}>{hint}</span>}
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={value}
-        aria-label={title}
-        className={`${styles.toggle} ${value ? styles.toggleOn : ''}`}
-        onClick={() => onChange(!value)}
-      />
-    </div>
-  );
-}
-
-// A labeled radio-segment picker; generic over the option value type.
-function SegmentedRow<T extends string>({
-  title,
-  hint,
-  options,
-  value,
-  onChange,
-  onInfo,
-}: {
-  title: string;
-  hint?: string;
-  options: readonly [T, string][];
-  value: T;
-  onChange: (v: T) => void;
-  onInfo?: () => void;
-}) {
-  return (
-    <div className={`${styles.row} ${styles.rowInline}`}>
-      <div className={styles.rowText}>
-        <span className={styles.rowTitle}>
-          {title}
-          {onInfo && <InfoButton title={title} onInfo={onInfo} />}
-        </span>
-        {hint && <span className={styles.rowHint}>{hint}</span>}
-      </div>
-      <div className={styles.segmented} role="radiogroup" aria-label={title}>
-        {options.map(([v, label]) => (
-          <button
-            key={v}
-            type="button"
-            role="radio"
-            aria-checked={value === v}
-            className={`${styles.segment} ${value === v ? styles.segmentOn : ''}`}
-            onClick={() => onChange(v)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Accordion section: styled native <details>, so open/close state and
-// keyboard behavior come free.
-function Section({
-  title,
-  defaultOpen = false,
+  danger,
   children,
 }: {
   title: string;
-  defaultOpen?: boolean;
+  hint: string;
+  danger?: boolean;
   children: ReactNode;
 }) {
   return (
-    <details className={styles.section} open={defaultOpen}>
-      <summary className={styles.sectionSummary}>
-        {title}
-        <Chevron direction="right" size={18} className={styles.sectionCaret} />
-      </summary>
-      <div className={styles.sectionBody}>{children}</div>
-    </details>
+    <div className={styles.row}>
+      <div>
+        <div className={`${styles.rowTitle} ${danger ? styles.danger : ''}`}>
+          {title}
+        </div>
+        <div className={styles.rowHint}>{hint}</div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Section({
+  title,
+  span = false,
+  children,
+}: {
+  title: string;
+  /** ≥1200px: span both columns of the sections grid (the Identity &
+   *  data footer band; its rows then sit side by side). */
+  span?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={span ? `${styles.section} ${styles.sectionSpan}` : styles.section}
+    >
+      <div className={styles.sectionHead}>{title}</div>
+      {children}
+    </section>
   );
 }
 
 export function SettingsPage() {
+  const tier = useTier();
   const settings = useSettingsStore();
   const resetStats = useStatsStore(s => s.reset);
   const clearTargets = useTargetsStore(s => s.clearProgress);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
-  // Row explainer popup (the ⓘ next to Line rails / Dock) — the text
-  // that used to live inline; the live preview covers the rest.
-  const [info, setInfo] = useState<{ title: string; body: string } | null>(
-    null
-  );
-  // Non-phone tiers (≥768px) render the desktop-redesign preferences
-  // page INSTEAD of the phone accordions — the phone page is untouched
-  // below the tablet tier. After every hook so the hook count stays
-  // stable on tier flips.
-  const tier = useTier();
-  if (tier !== 'phone') return <SettingsDesk />;
+  // Reactive handle (the save path notifies) — no local copy to stale.
+  const handle = useHandle();
+  const [editingHandle, setEditingHandle] = useState(false);
 
   const patch = (p: Partial<Settings>) => settings.set(p);
 
-  return (
-    <section className={styles.wrap}>
-      <header>
-        <h1 className="text-title">Settings</h1>
-      </header>
+  // Escape dismisses the reset confirm (backdrop click does too).
+  useEffect(() => {
+    if (!confirmReset) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmReset(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [confirmReset]);
 
-      <Section title="Display" defaultOpen>
-        <SegmentedRow<ThemeFamily>
+  // Desktop dock picker — see the mapping note in the file comment.
+  const dockValue =
+    settings.dockLayout === 'center-stage' ? 'center-stage' : 'compact';
+  const pickDock = (v: 'center-stage' | 'compact') => {
+    if (v === 'center-stage') {
+      patch({ dockLayout: 'center-stage' });
+    } else if (settings.dockLayout === 'center-stage') {
+      patch({ dockLayout: 'hand-stack' });
+    }
+  };
+
+  const seg = <T extends string>(
+    options: Array<[T, string]>,
+    value: T,
+    onPick: (v: T) => void,
+    label: string
+  ) => (
+    <div className={styles.seg} role="radiogroup" aria-label={label}>
+      {options.map(([v, text]) => (
+        <button
+          key={v}
+          type="button"
+          role="radio"
+          aria-checked={value === v}
+          className={`${styles.segBtn} ${value === v ? styles.segOn : ''}`}
+          onClick={() => onPick(v)}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className={styles.wrap}>
+      <div className={styles.eyebrow}>Settings</div>
+      <h1 className={styles.title}>Preferences</h1>
+
+      <div className={styles.sections}>
+      <Section title="Gameplay">
+        <Row
+          title="Dock layout"
+          hint="Where the drawn card and action buttons sit."
+        >
+          {tier === 'desktop'
+            ? seg<'center-stage' | 'compact'>(
+                [
+                  ['center-stage', 'Center stage'],
+                  ['compact', 'Compact'],
+                ],
+                dockValue,
+                pickDock,
+                'Dock layout'
+              )
+            : seg<DockLayout>(
+                (['classic', 'hand-stack', 'center-stage'] as const).map(
+                  l => [l, DOCK_LAYOUT_LABEL[l]] as [DockLayout, string]
+                ),
+                settings.dockLayout,
+                dockLayout => patch({ dockLayout }),
+                'Dock layout'
+              )}
+        </Row>
+        <Row
+          title="Line totals"
+          hint="Show each row and column's running total along the board edges during play."
+        >
+          {/* ONE row, two keys (decision D): phone binds lineRails
+              (default off), tablet/desktop bind deskLineChips (default
+              on per the mockup). The per-tier defaults predate this
+              page; both keys persist unchanged. */}
+          <Toggle
+            label="Line totals"
+            value={tier === 'phone' ? settings.lineRails : settings.deskLineChips}
+            onChange={v =>
+              patch(tier === 'phone' ? { lineRails: v } : { deskLineChips: v })
+            }
+          />
+        </Row>
+        {/* Not in the mockup — keeps the guided tutorial reachable on
+            desktop (feature-reachability convention). */}
+        <Row
+          title="Replay tutorial"
+          hint="Re-run the guided practice deal that walks through every move."
+        >
+          <button
+            type="button"
+            className={styles.quietAction}
+            onClick={() => navigate('/tutorial')}
+          >
+            Replay
+          </button>
+        </Row>
+      </Section>
+
+      <Section title="Presentation">
+        <Row
           title="Theme"
-          options={[
-            ['card-room', 'Card Room'],
-            ['paper', 'Morning Paper'],
-          ]}
-          value={settings.themeFamily}
-          onChange={themeFamily => patch({ themeFamily })}
-        />
-        <SegmentedRow<Appearance>
-          title="Appearance"
-          options={[
-            ['light', 'Light'],
-            ['dark', 'Dark'],
-            ['system', 'System'],
-          ]}
-          value={settings.appearance}
-          onChange={appearance => patch({ appearance })}
-        />
-        <ToggleRow
-          title="Line rails"
-          value={settings.lineRails}
-          onChange={v => patch({ lineRails: v })}
-          onInfo={() =>
-            setInfo({
-              title: 'Line rails',
-              body: "Show each row and column's running total along the board edges during play. Tapping a total opens that line's full scoring breakdown. Off restores the plain board — line totals stay available via the Lines sheet.",
-            })
-          }
-        />
-        <ToggleRow
-          title="Two-color deck"
-          value={settings.twoColorDeck}
-          onChange={v => patch({ twoColorDeck: v })}
-        />
-        <SegmentedRow<DockLayout>
-          title="Dock"
-          options={(['classic', 'hand-stack', 'center-stage'] as const).map(
-            l => [l, DOCK_LAYOUT_LABEL[l]] as [DockLayout, string]
+          hint="Card Room felt or Morning Paper editorial, light or dark."
+        >
+          {seg<ThemeFamily>(
+            [
+              ['paper', 'Morning Paper'],
+              ['card-room', 'Card Room'],
+            ],
+            settings.themeFamily,
+            themeFamily => patch({ themeFamily }),
+            'Theme'
           )}
-          value={settings.dockLayout}
-          onChange={dockLayout => patch({ dockLayout })}
-          onInfo={() =>
-            setInfo({
-              title: 'Dock',
-              body: 'How the drawn card and action buttons arrange under the board. Classic keeps a slim card row with a full-width Place; Hand stack makes the drawn card the hero with actions stacked beside it; Center stage puts the card front and center with its actions flanking it.',
-            })
-          }
-        />
+        </Row>
+        <Row title="Appearance" hint="Light, dark, or follow the system.">
+          {seg<Appearance>(
+            [
+              ['light', 'Light'],
+              ['dark', 'Dark'],
+              ['system', 'System'],
+            ],
+            settings.appearance,
+            appearance => patch({ appearance }),
+            'Appearance'
+          )}
+        </Row>
+        <Row title="Sound" hint="Place ticks, ♣ chime, and win / lose stings.">
+          <Toggle
+            label="Sound"
+            value={settings.sounds}
+            onChange={v => patch({ sounds: v })}
+          />
+        </Row>
+        <Row
+          title="Two-color deck"
+          hint="Classic red & black suits instead of the four-color deck."
+        >
+          <Toggle
+            label="Two-color deck"
+            value={settings.twoColorDeck}
+            onChange={v => patch({ twoColorDeck: v })}
+          />
+        </Row>
+        <Row
+          title="Reduce motion"
+          hint="Skip card-travel and celebration animations."
+        >
+          <Toggle
+            label="Reduce motion"
+            value={settings.reduceMotion}
+            onChange={v => patch({ reduceMotion: v })}
+          />
+        </Row>
+        <Row
+          title="Color-blind assist"
+          hint="Add glyphs alongside color-coded bonus categories."
+        >
+          <Toggle
+            label="Color-blind assist"
+            value={settings.colorBlindAssist}
+            onChange={v => patch({ colorBlindAssist: v })}
+          />
+        </Row>
+        {/* Live sample (ported from the phone page): mini board + dock
+            arrangement following the current choices. Reads lineRails,
+            so it previews the phone rails on desk tiers too — it is a
+            picture of the setting, not of this viewport's game. */}
         <div className={styles.previewSlot}>
           <span className={styles.previewLabel}>Preview</span>
           <DisplayPreview />
         </div>
       </Section>
 
-      <Section title="Preferences">
-        <ToggleRow
-          title="Sounds"
-          hint="Card and scoring sound effects."
-          value={settings.sounds}
-          onChange={v => patch({ sounds: v })}
-        />
-        <ToggleRow
-          title="Reduce motion"
-          hint="Minimize card-travel and dialog animations."
-          value={settings.reduceMotion}
-          onChange={v => patch({ reduceMotion: v })}
-        />
-        <ToggleRow
-          title="Color-blind assist"
-          hint="Add glyphs alongside color-coded bonus categories."
-          value={settings.colorBlindAssist}
-          onChange={v => patch({ colorBlindAssist: v })}
-        />
-      </Section>
-
-      <Section title="More">
-        {/* Set or change the daily-leaderboard name. The stats sheet
-            only offers the editor until a name is first saved — this
-            row is the permanent home. Hidden on backendless builds. */}
-        {isBackendConfigured() && (
-          <div className={`${styles.row} ${styles.rowStack}`}>
-            <div className={styles.rowText}>
-              <span className={styles.rowTitle}>Screen name</span>
-            </div>
-            <HandleEditor heading={null} />
-          </div>
-        )}
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={styles.rowTitle}>Replay tutorial</span>
-            <span className={styles.rowHint}>
-              Re-run the guided practice deal that walks through every move.
-            </span>
-          </div>
-          <Button size="sm" onClick={() => navigate('/tutorial')}>
-            Replay
-          </Button>
-        </div>
-        <div className={styles.row}>
-          <div className={styles.rowText}>
-            <span className={`${styles.rowTitle} ${styles.danger}`}>
-              Reset all progress
-            </span>
-            <span className={styles.rowHint}>
-              Wipes stats, achievements, challenge completion, and the
-              Targets-Up run.
-            </span>
-          </div>
-          <Button variant="danger" size="sm" onClick={() => setConfirmReset(true)}>
-            Reset
-          </Button>
-        </div>
-      </Section>
-
-      <p
-        style={{
-          fontSize: 12,
-          color: 'var(--ink-3)',
-          textAlign: 'center',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        Build {__BUILD_ID__}
-      </p>
-
-      <Sheet
-        open={info !== null}
-        onClose={() => setInfo(null)}
-        title={info?.title}
-      >
-        {info && <p className="text-body">{info.body}</p>}
-      </Sheet>
-
-      <Dialog
-        open={confirmReset}
-        onClose={() => setConfirmReset(false)}
-        title="Reset all progress?"
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <p className="text-body">
-            This permanently clears your stats, achievements, completed
-            challenges, the current Targets-Up run, and your daily puzzle
-            results and leaderboard identity on this device — so you can
-            start over under a different name. It also re-arms the one-time
-            explainers (tutorial callout, daily twist intros). Scores
-            already submitted stay on the online leaderboard.
-          </p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Button variant="ghost" onClick={() => setConfirmReset(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                resetStats();
-                clearTargets();
-                resetDailyProgress();
-                clearTwistsSeen();
-                clearTutorialSeen();
-                setConfirmReset(false);
-                toast('Progress reset.', 'success');
-              }}
+      <Section title="Identity & data" span>
+        {/* ≥1200px the band's rows sit side by side (hairline divider);
+            when the handle row is absent, Reset spans the band alone. */}
+        <div className={styles.bandRows}>
+          {isBackendConfigured() && (
+            <Row
+              title="Leaderboard handle"
+              hint="Shown on the daily leaderboard."
             >
-              Reset everything
-            </Button>
+              {editingHandle || !handle ? (
+                <div className={styles.handleEditor}>
+                  <HandleEditor
+                    heading={null}
+                    onSaved={() => setEditingHandle(false)}
+                  />
+                </div>
+              ) : (
+                <div className={styles.handleBox}>
+                  <span className={styles.handleName}>{handle}</span>
+                  <button
+                    type="button"
+                    className={styles.quietAction}
+                    onClick={() => setEditingHandle(true)}
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
+            </Row>
+          )}
+          <Row
+            title="Reset all progress"
+            hint="Clears stats, achievements, streaks, and saved runs on this device. Can't be undone."
+            danger
+          >
+            <button
+              type="button"
+              className={styles.resetBtn}
+              onClick={() => setConfirmReset(true)}
+            >
+              Reset…
+            </button>
+          </Row>
+        </div>
+      </Section>
+      </div>
+
+      <p className={styles.buildId}>Build {__BUILD_ID__}</p>
+
+      {/* Centered confirm modal — the DesktopResultDialog scrim/card
+          pattern at small size (the primitive Dialog reads as the
+          mobile sheet); same copy and actions as the phone confirm. */}
+      {confirmReset && (
+        <div
+          className={styles.confirmScrim}
+          onClick={e => {
+            if (e.target === e.currentTarget) setConfirmReset(false);
+          }}
+        >
+          <div
+            className={styles.confirmCard}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Reset all progress?"
+          >
+            <h2 className={styles.confirmTitle}>Reset all progress?</h2>
+            <p className={styles.confirmBody}>
+              This permanently clears your stats, achievements, completed
+              challenges, the current Targets-Up run, and your daily puzzle
+              results and leaderboard identity on this device — so you can
+              start over under a different name. It also re-arms the
+              one-time explainers (tutorial callout, daily twist intros).
+              Scores already submitted stay on the online leaderboard.
+            </p>
+            <div className={styles.confirmActions}>
+              <Button variant="ghost" onClick={() => setConfirmReset(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  resetStats();
+                  clearTargets();
+                  resetDailyProgress();
+                  clearTwistsSeen();
+                  clearTutorialSeen();
+                  setConfirmReset(false);
+                  toast('Progress reset.', 'success');
+                }}
+              >
+                Reset everything
+              </Button>
+            </div>
           </div>
         </div>
-      </Dialog>
-    </section>
+      )}
+    </div>
   );
 }
