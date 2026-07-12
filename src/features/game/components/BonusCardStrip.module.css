@@ -167,10 +167,11 @@
   border: 1px solid var(--chip-tone, var(--rule));
   box-shadow: none;
   border-radius: var(--radius-md);
-  /* Taller, comfortable internals — the v2 header/scorebar savings buy
-     the vertical room (preferred over pure outer margin). */
-  padding: 8px 10px 9px;
-  min-height: 46px;
+  /* Comfortable but trim — v2's 46px/8-9 padding read too tall on device;
+     land between the original row chip and v2 so the board keeps the
+     reclaimed height. */
+  padding: 6px 10px 7px;
+  min-height: 40px;
   gap: 3px;
 }
 
@@ -190,7 +191,7 @@
    band reads as one set. */
 .rowDocked .emptySlot {
   border-radius: var(--radius-md);
-  min-height: 46px;
+  min-height: 40px;
 }
 
 .detailBody {

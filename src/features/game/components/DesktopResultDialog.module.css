@@ -413,3 +413,54 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Phone (<768): the streamlined column game reuses this dialog for game
+   over, so it must fit a 390 viewport. Tighten the scrim inset, let the
+   card span the width, and step the header / score / button type down.
+   Desk (≥768) is untouched. */
+@media (max-width: 767px) {
+  .scrim {
+    padding: 14px;
+    /* Sit the card a touch high rather than dead-center so the tall
+       finished board peeks behind it. */
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+
+  .card {
+    width: 100%;
+    border-radius: 16px;
+    max-height: calc(100vh - 40px);
+  }
+
+  .head {
+    padding: 20px 20px 18px;
+  }
+
+  .tier {
+    font-size: 52px;
+  }
+
+  .tierLabel {
+    font-size: 14px;
+  }
+
+  .body {
+    padding: 18px 18px 20px;
+  }
+
+  .score {
+    font-size: 38px;
+  }
+
+  .footer {
+    gap: 8px;
+  }
+
+  .primaryBtn,
+  .ghostBtn {
+    padding: 12px 6px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+}

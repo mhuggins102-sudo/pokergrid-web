@@ -107,7 +107,9 @@ const fmtDateline = (d: Date): string => {
 // The masthead dateline next to the wordmark ("Thu · Jul 10"): inside
 // an archived daily it names THAT puzzle's date; the non-daily modes
 // are labeled by mode (Free Play / Challenges / Targets Up — the same
-// mechanism for all three); everywhere else it's today.
+// mechanism for all three); everywhere else it's today. DESKTOP-scoped
+// (the `.dateline` span is shown only ≥1024) — kept exactly as-is so
+// the desktop header stays byte-identical; phones use `phoneLabel`.
 const dateline = (pathname: string): string => {
   const daily = /^\/daily\/(\d{4})-(\d{2})-(\d{2})$/.exec(pathname);
   if (daily) {
@@ -120,6 +122,23 @@ const dateline = (pathname: string): string => {
   if (pathname.startsWith('/challenges')) return 'Challenges';
   if (pathname.startsWith('/targets')) return 'Targets Up';
   return fmtDateline(new Date());
+};
+
+// The PHONE label beside the wordmark (the `.datelinePhone` span, shown
+// only <768): every named page names itself so the header states where
+// you are without the big page title (the density pass dropped those).
+// Extends the desktop mapping with the four utility pages + the archive;
+// home and an archived daily keep the date. Kept separate from
+// `dateline` so desktop's ≥1024 header is untouched.
+const phoneLabel = (pathname: string): string => {
+  // Archive lives under /daily/ but names itself; order it before the
+  // daily-date regex (which it wouldn't match anyway).
+  if (pathname.startsWith('/daily/archive')) return 'Archive';
+  if (pathname.startsWith('/stats')) return 'Stats';
+  if (pathname.startsWith('/achievements')) return 'Achievements';
+  if (pathname.startsWith('/rules')) return 'Rules';
+  if (pathname.startsWith('/settings')) return 'Settings';
+  return dateline(pathname);
 };
 
 export function DesktopNav() {
@@ -161,7 +180,10 @@ export function DesktopNav() {
         <NavLink to="/" className={styles.wordmark}>
           PokerGrid
         </NavLink>
+        {/* Two labels, one shown per tier: the desktop dateline (≥1024)
+            and the phone page-name (<768); tablet hides both. */}
         <span className={styles.dateline}>{dateline(pathname)}</span>
+        <span className={styles.datelinePhone}>{phoneLabel(pathname)}</span>
       </div>
       <nav className={styles.center} aria-label="Primary">
         <div
