@@ -616,7 +616,7 @@
      paddings, and button widths (tuned against 1000×700 and 900×640
      screenshots of the seeded game). */
   .deskLite {
-    grid-template-columns: 216px minmax(0, 1fr) 236px;
+    grid-template-columns: 216px minmax(0, 1fr) 224px;
     gap: var(--space-md);
   }
 
@@ -640,6 +640,13 @@
   .deskLite .deskBtnRow > * {
     padding-left: var(--space-xs);
     padding-right: var(--space-xs);
+  }
+
+  /* Undo is icon-only here (see GameScreen.tsx) — it yields its half
+     of the row to Discard and holds a square-ish touch target. */
+  .deskLite .deskBtnRow > *:last-child {
+    flex: 0 0 auto;
+    min-width: 46px;
   }
 
   .deskRail {
