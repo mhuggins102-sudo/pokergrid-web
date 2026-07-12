@@ -151,8 +151,19 @@ Program phases (this plan):
       left rail; column tablet cap 600/630; classic header + classic-chrome
       flag deleted; rotation e2e proves single-commit across the family
       flip). Shipped `18e2769`.
-- [ ] **Phase 6** — Touch tap-equivalents (`TapPopover` primitive across the
-      hover-only surfaces).
+- [x] **Phase 6** — Touch tap-equivalents: `TapPopover` primitive
+      (behavior-only; single-open registry; outside-tap / Escape / route /
+      game-commit dismissal) across Game Modes, the nav pill menus, deck
+      peek, scoring ⓘ, and the leaderboard fly-out. Plus two user-directed
+      revisions: desk-lite is the FULL three-column game grid with
+      compressed rails (216/1fr/236), and the phone header adopts the desk
+      center-nav (Game Modes dropdown + links) as its second row. Shipped
+      `PENDING`.
+
+**All six phases complete — the program is done.** Every page route and
+the in-game screen render one responsive tree per surface; the tier
+system (`useTier`) + game families (`useGameFamily`) are the only forks;
+the classic header, `useIsDesktop`, and the classic-chrome flag are gone.
 
 Related deferred item (outside this program):
 
