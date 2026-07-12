@@ -10,7 +10,7 @@ import { useRecordResult } from '../../progress/useRecordResult';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { HandleEditor } from '../../daily/RankPanel';
-import { KEY_HANDLE } from '../../daily/sync/deviceId';
+import { useHandle } from '../../daily/sync/handleStore';
 import { LinesPanel } from './LinesPanel';
 import { TIER_RULES } from './TierBreakdownSheet';
 import styles from './DesktopResultDialog.module.css';
@@ -91,9 +91,9 @@ export function DesktopResultDialog({
   const isDaily = mode.kind === 'daily';
   const isChallenge = mode.kind === 'challenge';
   const isTargets = mode.kind === 'targets';
-  const [hasHandle, setHasHandle] = useState(
-    () => !!localStorage.getItem(KEY_HANDLE)
-  );
+  // Reactive: the claim box swaps to "Posted as …" the instant the
+  // editor's save lands (and the leaderboard panel renames with it).
+  const savedHandle = useHandle();
 
   const verdict = isChallenge
     ? won
@@ -241,6 +241,11 @@ export function DesktopResultDialog({
                     onClick={() => setAchInfo(a)}
                   >
                     {a.name}
+                    {/* Hover/focus explainer — the dark tooltip
+                        pattern; click still opens the full sheet. */}
+                    <span className={styles.achTip} role="tooltip">
+                      {a.description}
+                    </span>
                   </button>
                 ))}
               </span>
@@ -248,10 +253,10 @@ export function DesktopResultDialog({
           )}
           {isDaily &&
             isBackendConfigured() &&
-            (hasHandle ? (
+            (savedHandle ? (
               <div className={styles.posted}>
                 <span aria-hidden="true">✓</span>
-                Posted as {localStorage.getItem(KEY_HANDLE)}
+                Posted as {savedHandle}
               </div>
             ) : (
               <div className={styles.claim}>
@@ -262,10 +267,7 @@ export function DesktopResultDialog({
                   Pick a handle to post this score and track your daily
                   streak.
                 </span>
-                <HandleEditor
-                  heading={null}
-                  onSaved={handle => setHasHandle(handle !== null)}
-                />
+                <HandleEditor heading={null} />
               </div>
             ))}
           <div className={styles.footer}>

@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button, useToast } from '../../design/primitives';
 import { HandleEditor } from '../daily/RankPanel';
-import { KEY_HANDLE } from '../daily/sync/deviceId';
+import { useHandle } from '../daily/sync/handleStore';
 import { resetDailyProgress } from '../daily/sync/sync';
 import { clearTwistsSeen } from '../daily/twistSeen';
 import { isBackendConfigured } from '../../lib/supabaseRpc';
@@ -104,9 +104,8 @@ export function SettingsDesk() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
-  const [handle, setHandle] = useState<string | null>(
-    () => localStorage.getItem(KEY_HANDLE)
-  );
+  // Reactive handle (the save path notifies) — no local copy to stale.
+  const handle = useHandle();
   const [editingHandle, setEditingHandle] = useState(false);
 
   const patch = (p: Partial<Settings>) => settings.set(p);
@@ -264,10 +263,7 @@ export function SettingsDesk() {
                 <div className={styles.handleEditor}>
                   <HandleEditor
                     heading={null}
-                    onSaved={h => {
-                      setHandle(h);
-                      setEditingHandle(false);
-                    }}
+                    onSaved={() => setEditingHandle(false)}
                   />
                 </div>
               ) : (
@@ -340,7 +336,6 @@ export function SettingsDesk() {
                   resetDailyProgress();
                   clearTwistsSeen();
                   clearTutorialSeen();
-                  setHandle(null);
                   setConfirmReset(false);
                   toast('Progress reset.', 'success');
                 }}

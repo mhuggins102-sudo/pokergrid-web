@@ -13,7 +13,7 @@ import {
   useDailyHistogram,
   useDailyStats,
 } from './sync/useDailyRank';
-import { KEY_HANDLE } from './sync/deviceId';
+import { useHandle } from './sync/handleStore';
 import styles from './DailyArchiveDesk.module.css';
 
 /*
@@ -52,7 +52,8 @@ const monthLabel = (month: string): string => {
   return `${MONTH_NAME[m - 1]} ${y}`;
 };
 
-/** Every published month, launch → current, ascending (mockup order). */
+/** Every published month, current → launch — newest at the top of the
+ *  picker, matching the newest-first day list. */
 const publishedMonths = (todayISO: string): string[] => {
   const out: string[] = [];
   let [y, m] = DAILY_LAUNCH_ISO.split('-').map(Number).slice(0, 2);
@@ -67,7 +68,7 @@ const publishedMonths = (todayISO: string): string[] => {
       y += 1;
     }
   }
-  return out;
+  return out.reverse();
 };
 
 /** The month's published dates, newest first. */
@@ -95,6 +96,8 @@ const longDate = (iso: string): string => {
 export function DailyArchiveDesk() {
   const plays = usePlaysStore(s => s.plays);
   const backend = isBackendConfigured();
+  // Reactive — a rename elsewhere updates the synthesized own row.
+  const handle = useHandle();
   const today = currentDateISO();
   const months = useMemo(() => publishedMonths(today), [today]);
   const [month, setMonth] = useState(() => monthOf(today));
@@ -152,7 +155,7 @@ export function DailyArchiveDesk() {
       (rank.data
         ? {
             rank: rank.data.rank,
-            displayName: localStorage.getItem(KEY_HANDLE) ?? 'you',
+            displayName: handle ?? 'you',
             score: rank.data.score,
             isOwn: true,
           }
