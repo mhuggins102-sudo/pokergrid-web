@@ -80,6 +80,46 @@ const HAND_ORDER: HandRank[] = [
   'HIGH_CARD',
 ];
 
+/**
+ * The hand → base value table (with any Bull Market boosts folded in and
+ * flagged) — the shared content of the SCORING panel's ⓘ fly-out. Lifted
+ * out so the streamlined phone game's "Hands" popover shows the BYTE-SAME
+ * table as the desk flyout (no drift). Carries only content; the caller
+ * supplies the positioned surface (.handsPop on desk, .rowHandsPop on
+ * the phone row).
+ */
+export function HandValuesTable({
+  investBoost,
+}: {
+  investBoost?: Partial<Record<HandRank, number>>;
+}) {
+  return (
+    <>
+      <span className={styles.handsTitle}>Hand values</span>
+      <div className={styles.handsRows}>
+        {HAND_ORDER.map(hand => {
+          const boost = investBoost?.[hand] ?? 0;
+          return (
+            <div key={hand} className={styles.handsRow}>
+              <span>{HAND_LABEL[hand]}</span>
+              <b>
+                {HAND_BASE_VALUE[hand] + boost}
+                {boost > 0 && (
+                  <span className={styles.handsBoost}> (+{boost})</span>
+                )}
+              </b>
+            </div>
+          );
+        })}
+        <div className={`${styles.handsRow} ${styles.handsPenalty}`}>
+          <span>Unfinished line at game end</span>
+          <b>{INCOMPLETE_LINE_PENALTY}</b>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export interface ScoringPanelProps {
   report: ScoreReport;
   /** Row tap → that line's full scoring breakdown (LineDetailSheet). */
@@ -93,6 +133,11 @@ export interface ScoringPanelProps {
   /** One row per end-game card currently firing (purple). */
   endgame?: EndgameRow[];
   hover?: LineHoverProps;
+  /** Hide the header's ⓘ hand-values fly-out. Set when the panel is
+   *  reused inside the streamlined phone game's "Scoring" popover, where
+   *  the row's own "Hands" control already owns that door — desk usage
+   *  leaves it unset (the flyout shows). */
+  hideHandsInfo?: boolean;
 }
 
 // Status column per the mockup: Empty, In Progress (partial names live
@@ -126,8 +171,10 @@ export function ScoringPanel({
   handBoost,
   endgame = NO_ROWS,
   hover,
+  hideHandsInfo = false,
 }: ScoringPanelProps) {
-  // Touch tap-toggle for the ⓘ hand-values fly-out (decision E).
+  // Touch tap-toggle for the ⓘ hand-values fly-out (decision E). Called
+  // unconditionally (hooks rule) even when the ⓘ is hidden.
   const handsPop = useTapPopover('scoring-hands');
   return (
     <section className={styles.panel} aria-label="Scoring">
@@ -136,45 +183,29 @@ export function ScoringPanel({
         {/* Hand-values reference: hover/focus fly-out off the panel
             (the dialog stays mobile-only), tap-toggled on touch. The
             popover is a child of the wrap, so pointing into it keeps it
-            open (scrollable). */}
-        <span
-          ref={handsPop.wrapRef}
-          className={`${styles.handsWrap} ${
-            handsPop.open ? styles.handsWrapOpen : ''
-          }`}
-        >
-          <button
-            type="button"
-            className={styles.headBtn}
-            aria-label="Hand values"
-            {...handsPop.toggleProps}
+            open (scrollable). Suppressed when the panel is reused inside
+            the phone game's Scoring popover (its own Hands control owns
+            this door). */}
+        {!hideHandsInfo && (
+          <span
+            ref={handsPop.wrapRef}
+            className={`${styles.handsWrap} ${
+              handsPop.open ? styles.handsWrapOpen : ''
+            }`}
           >
-            ⓘ
-          </button>
-          <div className={styles.handsPop} role="tooltip">
-            <span className={styles.handsTitle}>Hand values</span>
-            <div className={styles.handsRows}>
-              {HAND_ORDER.map(hand => {
-                const boost = investBoost?.[hand] ?? 0;
-                return (
-                  <div key={hand} className={styles.handsRow}>
-                    <span>{HAND_LABEL[hand]}</span>
-                    <b>
-                      {HAND_BASE_VALUE[hand] + boost}
-                      {boost > 0 && (
-                        <span className={styles.handsBoost}> (+{boost})</span>
-                      )}
-                    </b>
-                  </div>
-                );
-              })}
-              <div className={`${styles.handsRow} ${styles.handsPenalty}`}>
-                <span>Unfinished line at game end</span>
-                <b>{INCOMPLETE_LINE_PENALTY}</b>
-              </div>
+            <button
+              type="button"
+              className={styles.headBtn}
+              aria-label="Hand values"
+              {...handsPop.toggleProps}
+            >
+              ⓘ
+            </button>
+            <div className={styles.handsPop} role="tooltip">
+              <HandValuesTable investBoost={investBoost} />
             </div>
-          </div>
-        </span>
+          </span>
+        )}
       </header>
       <div className={styles.lineRows}>
         {report.lines.map(line => {

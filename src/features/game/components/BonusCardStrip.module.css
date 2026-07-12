@@ -150,6 +150,49 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ---- streamlined docked strip (row layout only) ----
+   Bring the row chips into the DESK bonus-panel entry's visual language
+   (DesktopRails .bonusEntry): a toned fill + a full 1px tone border
+   (instead of the flat paper + inset ring), the rounder --radius-md
+   corners, a 700 tone-colored title, and roomier internal padding for
+   breathing room. Scoped to .rowDocked so classic phone mode and the
+   desk panel are byte-untouched; declared AFTER the `.row .chip` rules so
+   the equal-specificity descendant selectors resolve in this block. */
+.rowDocked .chip {
+  background: color-mix(
+    in srgb,
+    var(--chip-tone, var(--rule)) 8%,
+    var(--paper-raised)
+  );
+  border: 1px solid var(--chip-tone, var(--rule));
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  /* Taller, comfortable internals — the v2 header/scorebar savings buy
+     the vertical room (preferred over pure outer margin). */
+  padding: 8px 10px 9px;
+  min-height: 46px;
+  gap: 3px;
+}
+
+.rowDocked .chipTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--chip-tone, var(--ink));
+}
+
+.rowDocked .chipMult {
+  font-size: 11.5px;
+  /* Keep the mult clear of the bottom-right contribution badge. */
+  padding-right: 30px;
+}
+
+/* Empty slots adopt the same rounder corners + height so the three-slot
+   band reads as one set. */
+.rowDocked .emptySlot {
+  border-radius: var(--radius-md);
+  min-height: 46px;
+}
+
 .detailBody {
   display: flex;
   flex-direction: column;

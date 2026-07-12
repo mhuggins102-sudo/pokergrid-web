@@ -161,6 +161,38 @@
   gap: 12px;
 }
 
+/* Streamlined in-game details row + HOME icon: phone-only surfaces.
+   Hidden by default (tablet / desktop), revealed only in the <768 block
+   below when a streamlined game has pushed a gameRow. */
+.gameRow {
+  display: none;
+}
+
+.homeBtn {
+  display: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (hover: hover) {
+  .homeBtn:hover {
+    color: var(--ink);
+    border-color: var(--ink-3);
+  }
+}
+
+.homeBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .themeToggle {
   width: 34px;
   height: 34px;
@@ -249,6 +281,29 @@
     align-items: center;
     gap: 10px;
     min-width: 0;
+  }
+
+  /* In-game (streamlined): the details row TAKES OVER row 2 — the center
+     nav yields (its Game Modes + links belong to non-game pages), and the
+     HOME icon appears left of ◐ so the game keeps a one-tap exit. */
+  .bar.gameRowActive .center {
+    display: none;
+  }
+
+  .gameRow {
+    display: flex;
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .homeBtn {
+    display: inline-flex;
+    flex: none;
   }
 
   .link {

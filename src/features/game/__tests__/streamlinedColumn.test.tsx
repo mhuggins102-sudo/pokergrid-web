@@ -10,18 +10,21 @@ import {
 import { PlayPage } from '../PlayPage';
 
 /*
- * The streamlined column preview (settingsStore.streamlinedColumn). The
- * flag re-homes the ScoreBar: score → a header pill (mounted through
- * useNavExtras), Lines / hand values → the pill menu, Undo → the dock.
- * Off is a no-op — the ScoreBar renders exactly as before.
+ * The streamlined column preview (settingsStore.streamlinedColumn), v2.
+ * The flag re-homes the ScoreBar: at the PHONE tier (jsdom's default —
+ * matchMedia answers false to both width queries) score + difficulty →
+ * the pill cluster in a second header row (mounted through
+ * useNavGameRow, NOT useNavExtras), Hands / Scoring / Lines → that row's
+ * tap-driven popovers, Undo → the dock. Off is a no-op — the ScoreBar
+ * renders exactly as before, and NO game row is pushed.
  *
  * The real NavExtrasProvider re-provides a fresh context value on every
- * setExtras, so a fresh-identity pill node feeds a re-render → re-set →
+ * setter call, so a fresh-identity node feeds a re-render → re-set →
  * re-render cascade that act() flushes to a hang in jsdom (the same
  * pattern the desk pill uses — it settles in a real browser, verified by
  * screenshot). The probe swaps in a STABLE-value provider that captures
- * the mounted node into a ref without re-providing it, so the game tree
- * never re-renders from the write and the loop can't form.
+ * the mounted gameRow node into a ref without re-providing it, so the
+ * game tree never re-renders from the write and the loop can't form.
  */
 function CaptureNav({
   captured,
@@ -33,7 +36,11 @@ function CaptureNav({
   const value = useMemo(
     () => ({
       extras: null as ReactNode,
-      setExtras: (n: ReactNode) => {
+      // Phone tier mounts nothing into the extras slot (the tablet tier
+      // would) — capture the gameRow instead.
+      setExtras: () => {},
+      gameRow: null as ReactNode,
+      setGameRow: (n: ReactNode) => {
         captured.current = n;
       },
     }),
@@ -76,17 +83,17 @@ describe('streamlined column preview', () => {
     renderGame(captured);
     // The ScoreBar's Lines button is the tell for the row being present.
     expect(screen.getByRole('button', { name: 'Lines' })).toBeInTheDocument();
-    // Off mounts no header pill.
+    // Off pushes no game row.
     expect(captured.current).toBeNull();
   });
 
-  it('drops the ScoreBar and re-homes its controls when enabled', () => {
+  it('drops the ScoreBar and re-homes its controls into the game row when enabled', () => {
     useSettingsStore.setState({ streamlinedColumn: true });
     const captured: MutableRefObject<ReactNode> = { current: null };
     renderGame(captured);
 
     // ScoreBar gone: its exact "Lines" button no longer exists (the
-    // pill menu's door reads "Lines breakdown", not "Lines").
+    // Lines breakdown now opens from the Scoring popover's line rows).
     expect(
       screen.queryByRole('button', { name: 'Lines' })
     ).not.toBeInTheDocument();
@@ -94,16 +101,17 @@ describe('streamlined column preview', () => {
     // Undo relocated into the dock (easy grants one undo).
     expect(screen.getByRole('button', { name: /Undo/ })).toBeInTheDocument();
 
-    // Header pill mounted: render the captured node and confirm it
-    // carries the score readout + the two re-homed menu doors.
+    // Game row mounted (phone tier): render the captured node and confirm
+    // it carries the score readout (the split pill) + the Hands / Scoring
+    // controls that re-home the removed ScoreBar's doors.
     expect(captured.current).not.toBeNull();
-    const pill = render(<>{captured.current}</>);
-    expect(pill.getByLabelText(/Score \d+ of 400/)).toBeInTheDocument();
+    const row = render(<>{captured.current}</>);
+    expect(row.getByLabelText(/Score \d+ of 400/)).toBeInTheDocument();
     expect(
-      pill.getByRole('button', { name: 'Lines breakdown' })
+      row.getByRole('button', { name: 'Hand values' })
     ).toBeInTheDocument();
     expect(
-      pill.getByRole('button', { name: 'Hand values' })
+      row.getByRole('button', { name: 'Scoring' })
     ).toBeInTheDocument();
   });
 });

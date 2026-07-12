@@ -303,7 +303,12 @@
   /* Cancel the layout column's flex gap (var(--space-sm) here) so the
      strip sits directly on the dock. */
   margin-bottom: calc(-1 * var(--space-sm));
-  padding: var(--space-xs) var(--space-lg);
+  /* A small breath ABOVE the strip (between the board and the merged
+     block), and roomier internal padding — the v2 header/scorebar
+     savings pay for it. Preferred over piling it onto the board's own
+     margin. */
+  margin-top: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
 }
 
 .dockJoined {
@@ -449,74 +454,164 @@
   white-space: nowrap;
 }
 
-/* ===== Streamlined column pill (Settings preview). The desk score pill
-   compressed to fit the phone header's row-1 right slot beside ◐ — must
-   stay ≤ ~130px at 390. Tighter paddings / gap and a smaller score than
-   the desk .navPill; the ✦ + rung prefix appears on twist / Targets-Up
-   runs. Mounted into DesktopNav's extras slot via useNavExtras. ===== */
-.columnPill {
-  gap: 6px;
-  padding: 3px 4px 3px 9px;
-}
-
-.columnPill .navPillScore {
-  font-size: 15px;
-  padding: 1px 8px 2px;
-}
-
-.columnPill .navPillTarget {
-  font-size: 11px;
-}
-
-.columnPillStar {
-  font-size: 10px;
-  line-height: 1;
-  color: var(--accent);
-}
-
-.columnPillLevel {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--accent);
-}
-
-/* The pill's tap menu: reuses .navMenu chrome but narrower (it holds two
-   action rows, not a table) and anchored to the pill's right edge so it
-   never runs off the left of a 390 viewport. */
-.columnMenu {
-  width: 190px;
-}
-
-.columnMenuBtn {
-  display: block;
+/* ===== Streamlined game-details row (Settings preview, v2). The phone
+   header's second row (mounted via useNavGameRow, CSS-gated to <768 in
+   DesktopNav): the SAME desk pill cluster (twist/ladder + split
+   difficulty/score pill) followed by two right-hugging controls — Hands
+   and Scoring — each opening a tap-driven anchored popover. Phone-only
+   surface, so no width media query is needed here. ===== */
+.gameDetailsRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  text-align: left;
-  padding: 8px 10px;
-  border: none;
-  background: transparent;
-  border-radius: 7px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
+  min-width: 0;
 }
 
-.columnMenuBtn + .columnMenuBtn {
-  margin-top: 2px;
+/* Hands + Scoring hug the right edge, so their popovers anchor to the
+   right and open leftward — never clipping the left of a 390 viewport. */
+.rowControls {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.rowCtrl {
+  position: relative;
+  display: inline-flex;
+}
+
+.rowCtrlBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rowCtrlBtn svg {
+  display: block;
+}
+
+.rowCtrlGlyph {
+  font-size: 13px;
+  line-height: 1;
 }
 
 @media (hover: hover) {
-  .columnMenuBtn:hover {
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--accent);
+  .rowCtrlBtn:hover {
+    color: var(--ink);
+    border-color: var(--ink-3);
   }
 }
 
-.columnMenuBtn:focus-visible {
+.rowCtrlBtn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* The two anchored popovers: under their trigger, right-edge aligned,
+   sliding down. z-index matches .navMenu (45) so they overlay the board.
+   Hover parity isn't needed (phone-only, tap-driven) but the transition
+   is harmless. */
+.rowPop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  z-index: 45;
+}
+
+.rowCtrlOpen .rowPop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Hands popover: the desk .handsPop chrome, re-anchored under the row
+   control (its content is HandValuesTable, shared with the desk flyout). */
+.rowHandsPop {
+  width: 236px;
+  max-height: 66vh;
+  overflow: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 14px 15px;
+}
+
+/* Scoring popover: ~280px so it never clips at 390 (right-anchored). The
+   ScoringPanel inside supplies its own .panel chrome. */
+.rowScoringPop {
+  width: 288px;
+  max-width: calc(100vw - 2 * var(--space-lg));
+  max-height: 72vh;
+  overflow: auto;
+}
+
+/* The pill cluster's own dropdowns (.navMenu) anchor to the pill's RIGHT
+   edge (right:0) — correct on the desk header where the pill sits at the
+   right, but on the phone row the pill is at the LEFT, so re-anchor its
+   menus to the left edge to open rightward and stay on screen. Scoped to
+   the game-details row, so desk pills are untouched. */
+.gameDetailsRow .navMenu {
+  left: 0;
+  right: auto;
+}
+
+/* Phone-row size trim: the desk pills are chunky for a 390 viewport, so
+   compress their paddings / gaps / score type (the v1 columnPill did the
+   same). Scoped to .gameDetailsRow, so the desk + tablet-extras cluster
+   is untouched. Sized so the widest case — a ✦ twist pill + the full
+   split pill + both icon controls — fits 390 with no wrap or clip. */
+.gameDetailsRow .navPillGroup {
+  gap: 8px;
+}
+
+.gameDetailsRow .twistPill {
+  gap: 5px;
+  padding: 5px 9px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+.gameDetailsRow .navPill {
+  gap: 7px;
+  padding: 4px 5px 4px 10px;
+}
+
+.gameDetailsRow .navPillSeg {
+  gap: 7px;
+}
+
+.gameDetailsRow .navPillDiff {
+  font-size: 11.5px;
+}
+
+.gameDetailsRow .navPillScore {
+  font-size: 14px;
+  padding: 1px 7px 2px;
+}
+
+.gameDetailsRow .navPillTarget {
+  font-size: 10.5px;
 }
 
 /* Pill cluster: optional ✦ twist pill + the difficulty/score pill,
