@@ -295,6 +295,49 @@
   outline-offset: 2px;
 }
 
+/* ---- Phone difficulty selector (segmented pills, Stats-filter
+   styling) — rendered only at phone via the TSX fork. ---- */
+
+.diffSelect {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.diffPill {
+  padding: 9px 6px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.14s ease;
+}
+
+.diffPillOn {
+  border-color: var(--tone);
+  background: var(--tone);
+  color: var(--on-accent, #fff);
+}
+
+.diffPill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.singleCard {
+  margin-top: 12px;
+}
+
 /* Phone (<768): the four cards stack and the start bar folds into a
    column. Everything ≥768 is untouched. */
 @media (max-width: 767px) { /* below bp-tablet */

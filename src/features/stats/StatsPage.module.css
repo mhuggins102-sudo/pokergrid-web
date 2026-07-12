@@ -362,14 +362,17 @@
    chart panels and runs table single-column. Everything ≥768 is
    untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
+  /* Density pass: the eyebrow + title drop; the filters lead. */
+  .eyebrow,
   .title {
-    font-size: 30px;
+    display: none;
   }
 
   .headRow {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+    margin: 0 0 18px;
   }
 
   .filters {
@@ -377,14 +380,38 @@
     gap: 8px;
   }
 
+  /* Four headline cards on ONE row — value font + padding shrink to
+     fit 390. */
   .headline {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+
+  .headCard {
+    padding: 12px 9px;
+  }
+
+  .headValue {
+    font-size: 21px;
+  }
+
+  .headLabel {
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    margin-top: 3px;
   }
 
   .chartRow {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  /* Recent runs spans the full width like the other panels, and its
+     top gap matches .chartRow's (was 20px → uneven above the panel). */
+  .runsRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 12px;
   }
 
   .runGrid {

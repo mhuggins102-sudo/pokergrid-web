@@ -1,4 +1,5 @@
 import { ACHIEVEMENTS, AchievementTier } from '../../game/achievements';
+import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import styles from './AchievementsPage.module.css';
 
@@ -9,6 +10,10 @@ import styles from './AchievementsPage.module.css';
  * per-tier progress — over a card grid (three columns, one on phones).
  * Earned cards get the warn-toned ★ medal and border; locked ones dim
  * with an ○. Earned state comes from the real stats store.
+ *
+ * Phone (density pass): the eyebrow + title + tally/ring give way to a
+ * Challenges-style horizontal progress bar; section heads put the
+ * title (with its per-tier count) on one row and the subtitle below.
  */
 
 const TIER_META: Array<{
@@ -35,46 +40,70 @@ export function AchievementsPage() {
   const doneCount = ACHIEVEMENTS.filter(a => earned.has(a.id)).length;
   const total = ACHIEVEMENTS.length;
   const pct = total ? doneCount / total : 0;
+  const isPhone = useTier() === 'phone';
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.head}>
-        <div>
-          <div className={styles.eyebrow}>Achievements</div>
-          <h1 className={styles.title}>The trophy case</h1>
+      {isPhone ? (
+        /* Phone: a Challenges-style horizontal progress bar stands in
+           for the eyebrow + title + tally/ring. */
+        <div className={styles.progress}>
+          <div
+            className={styles.progressTrack}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={doneCount}
+            aria-label="Achievements earned"
+          >
+            <div
+              className={styles.progressFill}
+              style={{ width: `${Math.round(pct * 100)}%` }}
+            />
+          </div>
+          <span className={styles.progressLabel}>
+            {doneCount} of {total} earned
+          </span>
         </div>
-        <div className={styles.tally}>
-          <div className={styles.tallyText}>
-            <div className={styles.tallyCount}>
-              {doneCount}
-              <span className={styles.tallyTotal}> / {total}</span>
+      ) : (
+        <div className={styles.head}>
+          <div>
+            <div className={styles.eyebrow}>Achievements</div>
+            <h1 className={styles.title}>The trophy case</h1>
+          </div>
+          <div className={styles.tally}>
+            <div className={styles.tallyText}>
+              <div className={styles.tallyCount}>
+                {doneCount}
+                <span className={styles.tallyTotal}> / {total}</span>
+              </div>
+              <div className={styles.tallyLabel}>earned</div>
             </div>
-            <div className={styles.tallyLabel}>earned</div>
-          </div>
-          <div className={styles.ring} role="img" aria-label={`${doneCount} of ${total} achievements earned`}>
-            <svg viewBox="0 0 36 36" className={styles.ringSvg}>
-              <circle
-                cx="18"
-                cy="18"
-                r="15.5"
-                fill="none"
-                stroke="var(--paper-sunken)"
-                strokeWidth="4"
-              />
-              <circle
-                cx="18"
-                cy="18"
-                r="15.5"
-                fill="none"
-                stroke="var(--accent)"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeDasharray={`${(pct * RING).toFixed(1)} ${RING}`}
-              />
-            </svg>
+            <div className={styles.ring} role="img" aria-label={`${doneCount} of ${total} achievements earned`}>
+              <svg viewBox="0 0 36 36" className={styles.ringSvg}>
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke="var(--paper-sunken)"
+                  strokeWidth="4"
+                />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke="var(--accent)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(pct * RING).toFixed(1)} ${RING}`}
+                />
+              </svg>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className={styles.sections}>
         {TIER_META.map(({ tier, label, note }) => {

@@ -10,6 +10,7 @@ import {
   UNDOS_BY_DIFFICULTY,
 } from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
+import { useTier } from '../../app/useTier';
 import styles from './DifficultyPicker.module.css';
 
 /*
@@ -18,7 +19,11 @@ import styles from './DifficultyPicker.module.css';
  * (select-on-click, Medium preselected), each carrying the target, a
  * blurb, and the five rule axes from the real rules tables; below,
  * the Starting bar with the seeded-run toggle and the Start button.
- * The cards stack single-column on phones.
+ *
+ * Phone (density pass): the header text block and the four stacked
+ * cards are replaced by a 4-button difficulty selector row (segmented
+ * pills, Medium preselected) over ONE difficulty card that re-renders
+ * per selection, then the same Starting bar. ≥768 is unchanged.
  */
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
@@ -75,62 +80,87 @@ export function DifficultyPicker() {
   // PIN the deal in the address bar so it can be copied/shared before
   // the run even starts.
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
+  const isPhone = useTier() === 'phone';
 
   const startTo = `/play?difficulty=${sel}${seeded ? `&seed=${seed}` : ''}`;
 
+  // The full difficulty card — reused as the four-up grid ≥768 and as
+  // the single re-rendering card at phone.
+  const renderCard = (d: Difficulty) => {
+    const selected = d === sel;
+    return (
+      <button
+        key={d}
+        type="button"
+        aria-pressed={selected}
+        className={`${styles.card} ${selected ? styles.cardSel : ''}`}
+        style={{ '--tone': difficultyColors[d] } as CSSProperties}
+        onClick={() => setSel(d)}
+      >
+        <span className={styles.cardTop}>
+          <span className={styles.cardName}>{NAME[d]}</span>
+          <span className={styles.cardDot} aria-hidden="true" />
+        </span>
+        <span className={styles.cardTarget}>
+          <span className={styles.targetNum}>{TARGET_BY_DIFFICULTY[d]}</span>
+          <span className={styles.targetLabel}>target</span>
+        </span>
+        <span className={styles.blurb}>{BLURB[d]}</span>
+        <span className={styles.axes}>
+          {axesFor(d).map(ax => (
+            <span key={ax.label} className={styles.axis}>
+              <span className={styles.axisLabel}>{ax.label}</span>
+              <span
+                className={`${styles.axisVal} ${ax.good ? styles.axisValGood : ''}`}
+              >
+                {ax.value}
+              </span>
+            </span>
+          ))}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <div className={styles.wrap}>
-      <div className={styles.head}>
-        <div>
-          <div className={styles.eyebrow}>Free Play</div>
-          <h1 className={styles.title}>Choose your table</h1>
-        </div>
-        <p className={styles.lede}>
-          Same 5×5 puzzle, four levels of help. Pick a difficulty — the deck,
-          tools, and target all shift with it. Play as many as you like; Free
-          Play doesn&apos;t touch the daily leaderboard.
-        </p>
-      </div>
+      {isPhone ? (
+        <>
+          {/* Segmented difficulty selector (Stats-filter styling). */}
+          <div className={styles.diffSelect} role="group" aria-label="Difficulty">
+            {DIFFICULTIES.map(d => (
+              <button
+                key={d}
+                type="button"
+                aria-pressed={d === sel}
+                className={`${styles.diffPill} ${d === sel ? styles.diffPillOn : ''}`}
+                style={{ '--tone': difficultyColors[d] } as CSSProperties}
+                onClick={() => setSel(d)}
+              >
+                {NAME[d]}
+              </button>
+            ))}
+          </div>
+          {/* One card, re-rendered for the current selection. */}
+          <div className={styles.singleCard}>{renderCard(sel)}</div>
+        </>
+      ) : (
+        <>
+          <div className={styles.head}>
+            <div>
+              <div className={styles.eyebrow}>Free Play</div>
+              <h1 className={styles.title}>Choose your table</h1>
+            </div>
+            <p className={styles.lede}>
+              Same 5×5 puzzle, four levels of help. Pick a difficulty — the
+              deck, tools, and target all shift with it. Play as many as you
+              like; Free Play doesn&apos;t touch the daily leaderboard.
+            </p>
+          </div>
 
-      <div className={styles.cards}>
-        {DIFFICULTIES.map(d => {
-          const selected = d === sel;
-          return (
-            <button
-              key={d}
-              type="button"
-              aria-pressed={selected}
-              className={`${styles.card} ${selected ? styles.cardSel : ''}`}
-              style={{ '--tone': difficultyColors[d] } as CSSProperties}
-              onClick={() => setSel(d)}
-            >
-              <span className={styles.cardTop}>
-                <span className={styles.cardName}>{NAME[d]}</span>
-                <span className={styles.cardDot} aria-hidden="true" />
-              </span>
-              <span className={styles.cardTarget}>
-                <span className={styles.targetNum}>
-                  {TARGET_BY_DIFFICULTY[d]}
-                </span>
-                <span className={styles.targetLabel}>target</span>
-              </span>
-              <span className={styles.blurb}>{BLURB[d]}</span>
-              <span className={styles.axes}>
-                {axesFor(d).map(ax => (
-                  <span key={ax.label} className={styles.axis}>
-                    <span className={styles.axisLabel}>{ax.label}</span>
-                    <span
-                      className={`${styles.axisVal} ${ax.good ? styles.axisValGood : ''}`}
-                    >
-                      {ax.value}
-                    </span>
-                  </span>
-                ))}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+          <div className={styles.cards}>{DIFFICULTIES.map(renderCard)}</div>
+        </>
+      )}
 
       <div className={styles.startBar}>
         <div>

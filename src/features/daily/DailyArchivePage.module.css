@@ -610,8 +610,11 @@
    own scroll) and the day detail below. The TSX skips the desktop
    detail-height sync at this width. Everything ≥768 is untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
+  /* Density pass: the eyebrow + page title drop (the month picker and
+     rows carry the context). */
+  .eyebrow,
   .pageTitle {
-    font-size: 30px;
+    display: none;
   }
 
   .columns {
@@ -621,5 +624,22 @@
 
   .dateScroll {
     max-height: 42vh;
+  }
+
+  /* Unplayed rows: the Start affordance sits permanently in the score
+     cell (replacing the hover-only reveal + the "–" dash). */
+  .rowStart {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .rowDash {
+    display: none;
+  }
+
+  /* The row already covers Start, so the detail panel's own button is
+     redundant here. */
+  .detailUnplayed .startBtn {
+    display: none;
   }
 }

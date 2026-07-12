@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
-import { CHALLENGES } from '../../game/challenges';
+import { CHALLENGES, ChallengeId } from '../../game/challenges';
+import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import styles from './ChallengesPage.module.css';
 
@@ -10,12 +12,26 @@ import styles from './ChallengesPage.module.css';
  * warn-toned twist synopsis, ✓ Beaten / Open badge, full goal copy,
  * and a Target / Play footer whose Play button surfaces on hover
  * (always visible on touch / keyboard focus).
+ *
+ * Phone (density pass): cards collapse to the number + name + synopsis
+ * + badge; tapping a card expands it in place to reveal the goal copy
+ * and the Target / Play footer. ≥768 keeps the always-expanded cards.
  */
 
 export function ChallengesPage() {
   const done = useStatsStore(s => s.stats.challengesDone);
   const doneCount = CHALLENGES.filter(c => done.includes(c.id)).length;
   const pct = Math.round((doneCount / CHALLENGES.length) * 100);
+  const isPhone = useTier() === 'phone';
+  // Phone-only per-card expansion (any number open at once).
+  const [expanded, setExpanded] = useState<Set<ChallengeId>>(new Set());
+  const toggle = (id: ChallengeId) =>
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   return (
     <div className={styles.wrap}>
@@ -53,25 +69,30 @@ export function ChallengesPage() {
       <div className={styles.grid}>
         {CHALLENGES.map((challenge, i) => {
           const isDone = done.includes(challenge.id);
-          return (
-            <article key={challenge.id} className={styles.card}>
-              <div className={styles.cardTop}>
-                <div className={styles.cardId}>
-                  <span className={styles.num}>{i + 1}</span>
-                  <div>
-                    <div className={styles.name}>{challenge.name}</div>
-                    <div className={styles.synopsis}>
-                      <span className={styles.synopsisDot} aria-hidden="true" />
-                      {challenge.synopsis.replace(/^Twist:\s*/i, '')}
-                    </div>
+          const isOpen = expanded.has(challenge.id);
+
+          const head = (
+            <div className={styles.cardTop}>
+              <div className={styles.cardId}>
+                <span className={styles.num}>{i + 1}</span>
+                <div>
+                  <div className={styles.name}>{challenge.name}</div>
+                  <div className={styles.synopsis}>
+                    <span className={styles.synopsisDot} aria-hidden="true" />
+                    {challenge.synopsis.replace(/^Twist:\s*/i, '')}
                   </div>
                 </div>
-                <span
-                  className={`${styles.badge} ${isDone ? styles.badgeDone : ''}`}
-                >
-                  {isDone ? '✓ Beaten' : 'Open'}
-                </span>
               </div>
+              <span
+                className={`${styles.badge} ${isDone ? styles.badgeDone : ''}`}
+              >
+                {isDone ? '✓ Beaten' : 'Open'}
+              </span>
+            </div>
+          );
+
+          const body = (
+            <>
               <p className={styles.goal}>{challenge.goal}</p>
               <div className={styles.cardFoot}>
                 <span className={styles.target}>
@@ -84,6 +105,32 @@ export function ChallengesPage() {
                   Play <span aria-hidden="true">→</span>
                 </Link>
               </div>
+            </>
+          );
+
+          if (isPhone) {
+            return (
+              <article
+                key={challenge.id}
+                className={`${styles.card} ${isOpen ? styles.cardOpen : ''}`}
+              >
+                <button
+                  type="button"
+                  className={styles.cardToggle}
+                  aria-expanded={isOpen}
+                  onClick={() => toggle(challenge.id)}
+                >
+                  {head}
+                </button>
+                {isOpen && body}
+              </article>
+            );
+          }
+
+          return (
+            <article key={challenge.id} className={styles.card}>
+              {head}
+              {body}
             </article>
           );
         })}

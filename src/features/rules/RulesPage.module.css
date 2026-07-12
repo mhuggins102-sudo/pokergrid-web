@@ -343,6 +343,11 @@
    panel) and the reference grid goes single-column. Everything ≥768 is
    untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
+  /* Density pass: the RULES eyebrow drops; the page title stays. */
+  .eyebrow {
+    display: none;
+  }
+
   .topGrid {
     grid-template-columns: 1fr;
     gap: 24px;

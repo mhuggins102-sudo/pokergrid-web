@@ -78,6 +78,41 @@
   transform: rotate(-90deg);
 }
 
+/* ---- Phone progress bar (Challenges .progress pattern) — rendered
+   only at phone via the TSX fork. ---- */
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.progressTrack {
+  flex: 1;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--paper-sunken);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.progressLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
 /* ---- Tier sections ---- */
 
 .sections {
@@ -219,12 +254,31 @@
 
   .sections {
     gap: 26px;
-    margin-top: 26px;
+    margin-top: 18px;
   }
 
+  /* Uniform two-row section heads: title (+ per-tier count) on row 1,
+     subtitle on row 2. */
   .sectionHead {
     flex-wrap: wrap;
-    gap: 4px 12px;
+    align-items: baseline;
+    gap: 3px 12px;
+  }
+
+  .sectionTitle {
+    order: 0;
+    font-size: 19px;
+  }
+
+  .sectionProgress {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .sectionNote {
+    order: 2;
+    flex-basis: 100%;
+    margin-left: 0;
   }
 
   .grid {

@@ -1,6 +1,13 @@
-import { ReactNode, useEffect, useState } from 'react';
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useNavigate } from 'react-router';
-import { Button, useToast } from '../../design/primitives';
+import { Button, Sheet, useToast } from '../../design/primitives';
 import { HandleEditor } from '../daily/RankPanel';
 import { useHandle } from '../daily/sync/handleStore';
 import { resetDailyProgress } from '../daily/sync/sync';
@@ -66,6 +73,13 @@ function Toggle({
   );
 }
 
+/* Shared phone-density UI state: whether we're at the phone tier (rows
+ * compact and hints move to a Sheet) and the info-sheet opener. */
+const SettingsUICtx = createContext<{
+  phone: boolean;
+  onInfo: (title: string, hint: string) => void;
+}>({ phone: false, onInfo: () => {} });
+
 function Row({
   title,
   hint,
@@ -77,6 +91,30 @@ function Row({
   danger?: boolean;
   children: ReactNode;
 }) {
+  const { phone, onInfo } = useContext(SettingsUICtx);
+  if (phone) {
+    // Compact: title (+ ⓘ opening the hint in a Sheet) on the left, the
+    // control on the right of the SAME row; wide segmented controls may
+    // wrap below only when they can't fit (the row wraps).
+    return (
+      <div className={styles.row}>
+        <div className={styles.rowHead}>
+          <span className={`${styles.rowTitle} ${danger ? styles.danger : ''}`}>
+            {title}
+          </span>
+          <button
+            type="button"
+            className={styles.infoBtn}
+            aria-label={`About ${title}`}
+            onClick={() => onInfo(title, hint)}
+          >
+            ⓘ
+          </button>
+        </div>
+        {children}
+      </div>
+    );
+  }
   return (
     <div className={styles.row}>
       <div>
@@ -93,14 +131,40 @@ function Row({
 function Section({
   title,
   span = false,
+  defaultOpen = false,
   children,
 }: {
   title: string;
   /** ≥1200px: span both columns of the sections grid (the Identity &
    *  data footer band; its rows then sit side by side). */
   span?: boolean;
+  /** Phone accordion: whether this section starts expanded. */
+  defaultOpen?: boolean;
   children: ReactNode;
 }) {
+  const { phone } = useContext(SettingsUICtx);
+  // Controlled <details> so the open state survives parent re-renders
+  // (settings changes) instead of snapping back to defaultOpen.
+  const [open, setOpen] = useState(defaultOpen);
+  if (phone) {
+    return (
+      <details className={styles.section} open={open}>
+        <summary
+          className={styles.sectionHead}
+          onClick={e => {
+            e.preventDefault();
+            setOpen(o => !o);
+          }}
+        >
+          <span>{title}</span>
+          <span className={styles.sectionCaret} aria-hidden="true">
+            ▾
+          </span>
+        </summary>
+        {children}
+      </details>
+    );
+  }
   return (
     <section
       className={span ? `${styles.section} ${styles.sectionSpan}` : styles.section}
@@ -122,6 +186,20 @@ export function SettingsPage() {
   // Reactive handle (the save path notifies) — no local copy to stale.
   const handle = useHandle();
   const [editingHandle, setEditingHandle] = useState(false);
+  // Phone: one shared info-sheet, opened by any row's ⓘ button.
+  const [infoSheet, setInfoSheet] = useState<{
+    title: string;
+    hint: string;
+  } | null>(null);
+
+  const phone = tier === 'phone';
+  const uiCtx = useMemo(
+    () => ({
+      phone,
+      onInfo: (title: string, hint: string) => setInfoSheet({ title, hint }),
+    }),
+    [phone]
+  );
 
   const patch = (p: Partial<Settings>) => settings.set(p);
 
@@ -173,8 +251,9 @@ export function SettingsPage() {
       <div className={styles.eyebrow}>Settings</div>
       <h1 className={styles.title}>Preferences</h1>
 
+      <SettingsUICtx.Provider value={uiCtx}>
       <div className={styles.sections}>
-      <Section title="Gameplay">
+      <Section title="Gameplay" defaultOpen>
         <Row
           title="Dock layout"
           hint="Where the drawn card and action buttons sit."
@@ -360,6 +439,17 @@ export function SettingsPage() {
         </div>
       </Section>
       </div>
+      </SettingsUICtx.Provider>
+
+      {phone && (
+        <Sheet
+          open={infoSheet !== null}
+          onClose={() => setInfoSheet(null)}
+          title={infoSheet?.title}
+        >
+          <p className={styles.infoSheetBody}>{infoSheet?.hint}</p>
+        </Sheet>
+      )}
 
       <p className={styles.buildId}>Build {__BUILD_ID__}</p>
 

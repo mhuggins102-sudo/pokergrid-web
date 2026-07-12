@@ -9,6 +9,7 @@ import { HandRank } from '../../game/hands';
 import { HAND_BASE_VALUE, INCOMPLETE_LINE_PENALTY } from '../../game/scoring';
 import { HAND_LABEL } from '../game/handLabels';
 import { BonusCategory, categoryOf } from '../../lib/bonusCardCategory';
+import { useTier } from '../../app/useTier';
 import styles from './RulesPage.module.css';
 
 /*
@@ -105,6 +106,11 @@ const TABS: Array<{ key: 'all' | ToneGroup; label: string }> = [
 
 export function RulesPage() {
   const [filter, setFilter] = useState<'all' | ToneGroup>('all');
+  const isPhone = useTier() === 'phone';
+  // Phone drops the "All cards" tab; the three remaining tabs are
+  // toggles (clicking the active one clears it back to 'all' = show
+  // all). ≥768 keeps the four-tab set with plain selection.
+  const tabs = isPhone ? TABS.filter(t => t.key !== 'all') : TABS;
 
   const maxBase = Math.max(...HAND_ORDER.map(h => HAND_BASE_VALUE[h]), 1);
 
@@ -199,13 +205,17 @@ export function RulesPage() {
           <h2 className={styles.refTitle}>Bonus card reference</h2>
         </div>
         <div className={styles.tabs}>
-          {TABS.map(t => (
+          {tabs.map(t => (
             <button
               key={t.key}
               type="button"
               className={`${styles.tab} ${filter === t.key ? styles.tabOn : ''}`}
               aria-pressed={filter === t.key}
-              onClick={() => setFilter(t.key)}
+              onClick={() =>
+                setFilter(cur =>
+                  isPhone && cur === t.key ? 'all' : t.key
+                )
+              }
             >
               {t.label}
             </button>
