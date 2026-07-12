@@ -248,6 +248,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // mockup's pg-rails default) so the phone rails choice stays
   // independent — see settingsStore.deskLineChips.
   const deskLineChips = useSettingsStore(s => s.deskLineChips);
+  // Streamlined column preview (Settings, default off): score → header
+  // pill, ScoreBar row dropped, bonus strip merged into the dock. Gated
+  // to the phone / tablet-portrait column family; never during the
+  // tutorial (coach pins the classic presentation its guided deal
+  // explains, same rationale as rails-off), and never on view-only
+  // archive revisits (no live undo to re-home into the dock).
+  const streamlinedColumn = useSettingsStore(s => s.streamlinedColumn);
+  const streamlined =
+    streamlinedColumn && family === 'column' && !coach && !viewOnly;
 
   const liveReport = useMemo(
     () =>
@@ -305,6 +314,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const ladderPop = useTapPopover('pill-ladder');
   const diffPop = useTapPopover('pill-diff');
   const scorePop = useTapPopover('pill-score');
+  // Streamlined column pill's menu (Lines breakdown / Hand values). Top
+  // level like the others — TapPopover hooks never live inside a memo.
+  const columnPop = useTapPopover('column-pill');
 
   // Game-commit dismissal (decision E): every committed action produces a
   // NEW state object (the reducer is pure — GameSessionProvider), so this
@@ -488,7 +500,94 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     diffPop,
     scorePop,
   ]);
-  useNavExtras(isDesk ? navPill : null);
+
+  // Streamlined column pill (Settings preview): the desk families' score
+  // pill compressed for the phone header's row-1 right slot (beside ◐).
+  // One pill — difficulty dot + live SCORE / TARGET — carrying a ✦ and
+  // the ladder rung on a twist / Targets-Up run, mirroring navPill in
+  // compressed form. Tapping it opens a small menu re-homing the two
+  // doors the removed ScoreBar carried: the Lines breakdown sheet and
+  // the hand-values sheet. Built unconditionally (cheap, memoized); only
+  // MOUNTED when `streamlined`, so the flag stays a no-op when off.
+  const columnPill = useMemo(() => {
+    const tone = difficultyColors[state.difficulty];
+    const diffCap =
+      state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+    const context = twist
+      ? `${diffCap} · ${twist.name}`
+      : tuLevel !== null
+        ? `${diffCap} · Targets Up L${tuLevel}`
+        : `${diffCap} · target ${state.target}`;
+    const marked = !!twist || tuLevel !== null;
+    return (
+      <span
+        ref={columnPop.wrapRef}
+        className={`${styles.navMenuWrap} ${
+          columnPop.open ? styles.navMenuWrapOpen : ''
+        }`}
+        tabIndex={0}
+        {...columnPop.toggleProps}
+      >
+        <span
+          className={`${styles.navPill} ${styles.columnPill}`}
+          style={{ '--pill-tone': tone } as CSSProperties}
+        >
+          <span className={styles.navPillDot} aria-hidden="true" />
+          {marked && (
+            <span className={styles.columnPillStar} aria-hidden="true">
+              ✦
+            </span>
+          )}
+          {tuLevel !== null && (
+            <span className={styles.columnPillLevel}>L{tuLevel}</span>
+          )}
+          <span
+            className={styles.navPillScore}
+            aria-label={`Score ${navScore} of ${state.target}`}
+          >
+            {navScore}
+            <span className={styles.navPillTarget}>/ {state.target}</span>
+          </span>
+        </span>
+        <div className={`${styles.navMenu} ${styles.columnMenu}`}>
+          <div className={styles.navMenuHead} style={{ color: tone }}>
+            {context}
+          </div>
+          <button
+            type="button"
+            className={styles.columnMenuBtn}
+            onClick={() => {
+              closeAllPopovers();
+              setLinesOpen(true);
+            }}
+          >
+            Lines breakdown
+          </button>
+          <button
+            type="button"
+            className={styles.columnMenuBtn}
+            onClick={() => {
+              closeAllPopovers();
+              setHandsOpen(true);
+            }}
+          >
+            Hand values
+          </button>
+        </div>
+      </span>
+    );
+  }, [
+    state.difficulty,
+    state.target,
+    navScore,
+    twist,
+    tuLevel,
+    columnPop,
+    closeAllPopovers,
+    setLinesOpen,
+    setHandsOpen,
+  ]);
+  useNavExtras(isDesk ? navPill : streamlined ? columnPill : null);
 
   // Live per-card Shapley contribution, shown as a corner badge on each
   // held bonus card so the points it's adding are visible without opening
@@ -1211,6 +1310,29 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     );
   }
 
+  // The bonus strip / side panel render on the same condition in both
+  // slots; hoisted so the streamlined merge can gate the dock's join
+  // class on it too (no strip → the dock keeps its own top rule).
+  const bonusRowShown = state.bonusCards.length > 0 || !state.noBonusCards;
+  // Streamlined dock Undo: with the ScoreBar row gone, its undo control
+  // moves into each dock arrangement as a compact icon-only button next
+  // to the discard action. Same accounting and disabled condition as
+  // ScoreBar's (the dock's flight guard added, as the sibling dock
+  // buttons carry it); gated on maxUndos > 0, mirroring ScoreBar.
+  const dockUndoBtn = streamlined && maxUndos > 0 && (
+    <Button
+      key="dock-undo"
+      size="sm"
+      variant="secondary"
+      className={styles.dockUndo}
+      disabled={!canUndo || flight !== null}
+      onClick={() => dispatch({ type: 'UNDO' })}
+      aria-label={`Undo (${Math.max(0, maxUndos - state.undoCount)} left)`}
+    >
+      ↺
+    </Button>
+  );
+
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <LayoutGroup>
@@ -1228,12 +1350,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             .filter(Boolean)
             .join(' ')}
         >
-          <div className={styles.scoreSlot}>
-            <ScoreBar
-              onShowHandValues={() => setHandsOpen(true)}
-              onShowLines={() => setLinesOpen(true)}
-            />
-          </div>
+          {/* Streamlined drops the whole ScoreBar row — score lives in
+              the header pill, Lines / hand values in its menu, Undo in
+              the dock. A JSX skip (not a CSS hide) so the row costs no
+              layout; every GameScreen hook stays above and unconditional. */}
+          {!streamlined && (
+            <div className={styles.scoreSlot}>
+              <ScoreBar
+                onShowHandValues={() => setHandsOpen(true)}
+                onShowLines={() => setLinesOpen(true)}
+              />
+            </div>
+          )}
 
           {coach && !ui.bonusDialog && (
             <div className={styles.coachSlot}>{coach}</div>
@@ -1266,8 +1394,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               inside the dock's pinned height, so nothing needs to
               yield space — and the held cards staying visible is
               exactly what the swap decision wants. */}
-          {(state.bonusCards.length > 0 || !state.noBonusCards) && (
-            <div className={styles.bonusRowSlot}>
+          {bonusRowShown && (
+            // Streamlined merges this strip onto the dock (shared surface,
+            // one hairline divider) via .bonusRowDocked — see the CSS.
+            // Off keeps the historical unstyled wrapper exactly.
+            <div className={streamlined ? styles.bonusRowDocked : styles.bonusRowSlot}>
               <BonusCardStrip
                 layout="row"
                 cards={state.bonusCards}
@@ -1290,6 +1421,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           <div
             className={`${styles.dock} ${
               dockLayout === 'hand-stack' ? styles.dockHandPad : ''
+            }${
+              // Streamlined + a strip above → the dock drops its own top
+              // rule so the merged block reads as one surface (the strip
+              // now carries the top edge + divider).
+              streamlined && bonusRowShown ? ' ' + styles.dockJoined : ''
             }`}
           >
             {ui.bonusDialog ? (
@@ -1310,6 +1446,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   />
                   {banner}
                   {rowActions.map(a => actionBtn(a))}
+                  {dockUndoBtn}
                 </div>
                 {commitBtn(
                   commitAction?.id === 'cancel' ? 'secondary' : undefined
@@ -1343,6 +1480,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </div>
                   <div className={styles.stageSide}>
                     {rowActions[1] && actionBtn(rowActions[1], styles.stageBtn)}
+                    {dockUndoBtn}
                   </div>
                 </div>
                 {commitBtn(
@@ -1364,9 +1502,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 <div className={styles.actionStack}>
                   {banner}
                   {commitAction?.id === 'place' && commitBtn()}
-                  {rowActions.length > 0 && (
+                  {(rowActions.length > 0 || dockUndoBtn) && (
                     <div className={styles.actionRow}>
                       {rowActions.map(a => actionBtn(a))}
+                      {dockUndoBtn}
                     </div>
                   )}
                   {commitAction && commitAction.id !== 'place' && commitBtn('secondary')}

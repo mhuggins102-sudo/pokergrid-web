@@ -214,6 +214,16 @@ export function SettingsPage() {
             }
           />
         </Row>
+        <Row
+          title="Streamlined game (preview)"
+          hint="Score moves to the header pill; bonus cards join the dock. Phone and tablet-portrait games only."
+        >
+          <Toggle
+            label="Streamlined game (preview)"
+            value={settings.streamlinedColumn}
+            onChange={v => patch({ streamlinedColumn: v })}
+          />
+        </Row>
         {/* Not in the mockup — keeps the guided tutorial reachable on
             desktop (feature-reachability convention). */}
         <Row
