@@ -150,25 +150,3 @@
   letter-spacing: 0.06em;
   color: var(--ink-3);
 }
-
-/* Desktop: two columns of days. */
-@media (min-width: 1024px) {
-  .wrap {
-    max-width: 900px;
-  }
-
-  .list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border: none;
-    background: transparent;
-    gap: var(--space-sm);
-    overflow: visible;
-  }
-
-  .row {
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-md);
-    background: var(--paper-raised);
-  }
-}

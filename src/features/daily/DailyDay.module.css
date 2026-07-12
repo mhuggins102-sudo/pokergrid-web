@@ -78,10 +78,3 @@
   color: var(--ink-3);
   text-align: center;
 }
-
-@media (min-width: 1024px) {
-  .intro {
-    max-width: 560px;
-    padding-top: var(--space-xxl);
-  }
-}

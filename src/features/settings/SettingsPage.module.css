@@ -186,12 +186,6 @@
   color: var(--danger);
 }
 
-@media (min-width: 1024px) {
-  .wrap {
-    max-width: 720px;
-  }
-}
-
 /* Segmented radio pickers (theme / appearance / dock), inline on the
    right of their row title — the Display section stays short enough
    that the preview is visible without much scrolling. Same button

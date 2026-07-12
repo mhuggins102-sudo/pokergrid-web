@@ -281,10 +281,6 @@
   width: 56px;
 }
 
-.linesSlot {
-  display: none;
-}
-
 /* The desktop side panel; smaller screens get the in-flow bonus row. */
 .bonusSlot {
   display: none;

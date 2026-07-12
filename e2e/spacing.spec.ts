@@ -16,8 +16,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
  *
  * Selectors lean on CSS-module local names, which Vite preserves as a
  * substring of the hashed class (`_scoreSlot_ab12`), plus the board's
- * stable ARIA role. Runs at both configured viewports (mobile-390,
- * desktop-1280) automatically.
+ * stable ARIA role. Runs at every configured viewport (mobile-390,
+ * tablet-820, desktop-1280) automatically.
  */
 
 const SEEDED_GAME = '/play?difficulty=easy&seed=42';
@@ -68,8 +68,6 @@ async function measure(page: Page) {
     const dock = layout
       ? (Array.from(layout.children).find(c => /_dock_/.test((c as HTMLElement).className)) ?? null)
       : null;
-    const linesPanelEl = pick('[class*="linesSlot"] [class*="panel"]');
-    const linesPanel = linesPanelEl && visible(linesPanelEl) ? linesPanelEl : null;
 
     const layoutPad = layout ? pad(layout) : null;
 
@@ -94,12 +92,6 @@ async function measure(page: Page) {
               below: round(box(boardArea).bottom - box(boardFrame).bottom),
             }
           : null,
-      // LinesPanel (desktop only, null when hidden): gap below the heading
-      // vs between rows. These SHOULD be equal — a mismatch is the
-      // double-spacing bug.
-      linesPanel: linesPanel
-        ? { rowGap: pad(linesPanel).rowGap, renderedGaps: childGaps(linesPanel) }
-        : null,
     };
   });
 }
@@ -145,13 +137,18 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
     expect(Math.abs(m.boardCentering.above - m.boardCentering.below)).toBeLessThanOrEqual(2);
   }
 
-  // 4. LinesPanel (desktop): the space below the heading equals the space
-  //    between rows — no child adds its own margin on top of the panel gap.
-  //    This is the fix for the heading double-spacing bug.
-  if (m.linesPanel && m.linesPanel.renderedGaps.length > 0) {
-    for (const g of m.linesPanel.renderedGaps) {
-      expect(Math.abs(g - m.linesPanel.rowGap)).toBeLessThanOrEqual(1);
-    }
+  // 4. Tier pinning (unification phase 1): the tablet band (768–1023,
+  //    the tablet-820 project) still renders the PHONE game — the flex
+  //    column present, the desk panels absent. Later phases flip the
+  //    tablet game deliberately; when they do, this assertion is
+  //    EXPECTED to be rewritten, not silently skipped.
+  if (m.viewport.w >= 768 && m.viewport.w < 1024) {
+    expect(m.layout).not.toBeNull();
+    expect(m.layout?.display).toBe('flex');
+    await expect(
+      page.getByRole('region', { name: 'Deck and actions' })
+    ).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Scoring' })).toHaveCount(0);
   }
 
   // 5. Desktop redesign (phase 2): at ≥1024px GameScreen renders the
