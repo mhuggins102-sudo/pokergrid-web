@@ -9,39 +9,35 @@ test('token gallery renders the design system', async ({ page }) => {
 
 test('achievements are reachable from the home tile', async ({ page }) => {
   await page.goto('/');
-  // Mobile home carries an Achievements tile in main; the desktop
-  // redesign's landing page reaches it through the header nav instead.
+  // Home's card grid doesn't include Achievements; it's reached through
+  // the header nav (the Game Modes row on phone, the center nav ≥768).
   const tile = page.locator('main').getByRole('link', { name: /Achievements/ });
   if (await tile.count()) {
     await tile.click();
   } else {
     await page.getByRole('link', { name: 'Achievements' }).click();
   }
-  // Mobile keeps the "Achievements" heading + "0 of N earned" note; the
-  // desktop redesign titles it "The trophy case" with a "0 / N" tally.
-  await expect(
-    page.getByRole('heading', { name: /Achievements|The trophy case/ })
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/achievements/);
+  // Titles differ by tier (desk "The trophy case"; the phone density
+  // pass drops the title for a progress bar), but every tier shows the
+  // earned count and the tier sections.
   await expect(page.getByText(/0 (of \d+ earned|\/ \d+)/).first()).toBeVisible();
   await expect(page.getByText('Milestones')).toBeVisible();
 });
 
 test('difficulty picker links into a game', async ({ page }) => {
   await page.goto('/play');
-  // Mobile keeps the "Free Play" heading + link-per-difficulty list;
-  // the desktop redesign shows "Choose your table" with select-then-
-  // Start difficulty cards instead.
-  await expect(
-    page.getByRole('heading', { name: /Free Play|Choose your table/ })
-  ).toBeVisible();
-  const card = page.getByRole('button', { name: /^Easy/ });
-  if (await card.count()) {
-    await card.click();
-    await expect(card).toHaveAttribute('aria-pressed', 'true');
-    await page.getByRole('link', { name: /Start game/ }).click();
-  } else {
-    await page.getByRole('link', { name: /easy/i }).click();
-  }
+  // Both layouts are select-then-Start: the phone density variant uses a
+  // segmented difficulty selector (Medium preselected) over one card;
+  // ≥768 shows the four-card grid. Each exposes an Easy button with
+  // aria-pressed and a shared "Start game" link. (After selecting Easy on
+  // phone the single card mirrors the pill, so two buttons match — take
+  // the first.)
+  const easy = page.getByRole('button', { name: /^Easy/ }).first();
+  await expect(easy).toBeVisible();
+  await easy.click();
+  await expect(easy).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('link', { name: /Start game/ }).click();
   await expect(page).toHaveURL(/difficulty=easy/);
   await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
 });

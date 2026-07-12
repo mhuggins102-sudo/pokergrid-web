@@ -314,9 +314,19 @@
     padding: 18px 16px 22px;
   }
 
+  /* Density pass: keep the two briefing boxes side by side, tighter. */
   .briefing {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .brief {
+    padding: 12px 12px;
+  }
+
+  .briefDiff,
+  .briefValue {
+    font-size: 19px;
   }
 
   .streak {

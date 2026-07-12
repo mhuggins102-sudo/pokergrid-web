@@ -24,6 +24,29 @@
   grid-row: 1;
 }
 
+/* Row chips on the RIGHT (streamlined column game — matches the desk edge
+   chips). Mirror the track order: board first, row rail second; the column
+   rail + corner shift under the board's (now first) column. */
+.railsRight {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.railsRight .board {
+  grid-column: 1;
+}
+
+.railsRight .rowRail {
+  grid-column: 2;
+}
+
+.railsRight .colRail {
+  grid-column: 1;
+}
+
+.railsRight .corner {
+  grid-column: 2;
+}
+
 .rowRail {
   grid-column: 1;
   grid-row: 1;

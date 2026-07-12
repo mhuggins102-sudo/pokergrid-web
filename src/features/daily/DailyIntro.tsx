@@ -9,6 +9,7 @@ import {
   STARTER_BONUS_BY_DIFFICULTY,
 } from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
+import { useTier } from '../../app/useTier';
 import { DAILY_LAUNCH_ISO, dayMs, toUTC } from './dailyDates';
 import { useDailyStreak } from './useDailyStreak';
 import styles from './DailyIntro.module.css';
@@ -71,6 +72,7 @@ export function DailyIntro({
 }: DailyIntroProps) {
   const isToday = dateISO === currentDateISO();
   const streak = useDailyStreak();
+  const isPhone = useTier() === 'phone';
   const tone = difficultyColors[recipe.difficulty];
 
   const streakSub = streak.playedToday
@@ -125,7 +127,13 @@ export function DailyIntro({
                   </span>
                   <span className={styles.twistName}>{twist.name}</span>
                 </div>
-                <div className={styles.twistGoal}>{twistGoal ?? twist.goal}</div>
+                <div className={styles.twistGoal}>
+                  {/* Phone: the brief synopsis only; the target-adjusted
+                      goal sentence stays ≥768. */}
+                  {isPhone
+                    ? twist.synopsis.replace(/^Twist:\s*/i, '')
+                    : (twistGoal ?? twist.goal)}
+                </div>
               </div>
             </div>
           )}

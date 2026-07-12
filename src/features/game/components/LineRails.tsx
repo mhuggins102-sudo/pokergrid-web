@@ -40,6 +40,12 @@ export interface LineRailsProps {
    * replacement for the floating line tags while rails are showing).
    */
   highlight?: { row: number; col: number } | null;
+  /**
+   * Which edge the row-total chips ride. 'left' (default) is the classic
+   * phone placement; 'right' matches the desk edge chips and is used by
+   * the streamlined column game. Column totals always sit underneath.
+   */
+  side?: 'left' | 'right';
 }
 
 const toneOf = (line: ScoredLine): string =>
@@ -71,6 +77,7 @@ export function LineRails({
   tally,
   children,
   highlight = null,
+  side = 'left',
 }: LineRailsProps) {
   const rows = report.lines.filter(l => l.kind === 'row');
   const cols = report.lines.filter(l => l.kind === 'col');
@@ -120,7 +127,7 @@ export function LineRails({
   };
 
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} ${side === 'right' ? styles.railsRight : ''}`}>
       <div className={styles.board}>
         {children ?? <GridBoard grid={grid} />}
       </div>

@@ -12,6 +12,7 @@ export {
   TapPopoverProvider,
   useTapPopover,
   useTapPopoverCloseAll,
+  useTapPopoverDismissGuard,
 } from './TapPopover';
 export type { TapPopoverHandle } from './TapPopover';
 export { ToastProvider, useToast } from './Toast';

@@ -5,6 +5,7 @@ import { CHALLENGES, findChallenge } from '../../game/challenges';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
 import { difficultyColors } from '../../design/tokens';
+import { useTier } from '../../app/useTier';
 import {
   bestDailyStreak,
   dailyStreak,
@@ -69,6 +70,38 @@ export function HomePage() {
     return { ...s, best: bestDailyStreak(s.best) };
   });
   const diffTone = difficultyColors[recipe.difficulty];
+  const isPhone = useTier() === 'phone';
+
+  // The three mode cards — identical at every tier; only their
+  // container (the desk mode row vs the phone 2×2 grid) differs.
+  const modeCards = (
+    <>
+      <Link to="/play" className={styles.modeCard}>
+        <span className={styles.modeTitle}>Free Play</span>
+        <span className={styles.modeBlurb}>
+          Pick any difficulty and play as many boards as you like.
+          Doesn&apos;t touch the daily leaderboard.
+        </span>
+        <span className={styles.modeLink}>Choose a difficulty →</span>
+      </Link>
+      <Link to="/challenges" className={styles.modeCard}>
+        <span className={styles.modeTitle}>Challenges</span>
+        <span className={styles.modeBlurb}>
+          Ten twisted rule sets — No Discards, Short Deck, Poker Purist and
+          more. Beat them all for the sweep.
+        </span>
+        <span className={styles.modeLink}>{CHALLENGES.length} modes to beat →</span>
+      </Link>
+      <Link to="/stats" className={styles.modeCard}>
+        <span className={styles.modeTitle}>Stats</span>
+        <span className={styles.modeBlurb}>
+          Best scores, win rate, and tier ratings by difficulty, filtered by
+          mode and level.
+        </span>
+        <span className={styles.modeLink}>See your stats →</span>
+      </Link>
+    </>
+  );
 
   return (
     <div className={styles.wrap}>
@@ -131,69 +164,89 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* MODE ROW */}
-      <div className={styles.modeRow}>
-        <Link to="/play" className={styles.modeCard}>
-          <span className={styles.modeTitle}>Free Play</span>
-          <span className={styles.modeBlurb}>
-            Pick any difficulty and play as many boards as you like.
-            Doesn&apos;t touch the daily leaderboard.
-          </span>
-          <span className={styles.modeLink}>Choose a difficulty →</span>
-        </Link>
-        <Link to="/challenges" className={styles.modeCard}>
-          <span className={styles.modeTitle}>Challenges</span>
-          <span className={styles.modeBlurb}>
-            Ten twisted rule sets — No Discards, Short Deck, Poker Purist and
-            more. Beat them all for the sweep.
-          </span>
-          <span className={styles.modeLink}>{CHALLENGES.length} modes to beat →</span>
-        </Link>
-        <Link to="/stats" className={styles.modeCard}>
-          <span className={styles.modeTitle}>Stats</span>
-          <span className={styles.modeBlurb}>
-            Best scores, win rate, and tier ratings by difficulty, filtered by
-            mode and level.
-          </span>
-          <span className={styles.modeLink}>See your stats →</span>
-        </Link>
-      </div>
-
-      {/* FOOTER STRIP — the tutorial callout on a first visit, the
-          quiet rules pointer ever after. */}
-      {showIntro ? (
-        <div className={styles.footerStrip}>
-          <span className={styles.footerText}>
-            <span className={styles.footerLead}>First time here?</span> Learn
-            by playing — a guided practice deal walks you through every move
-            in about three minutes.
-          </span>
-          <span className={styles.footerActions}>
-            <Link to="/tutorial" className={styles.footerCta}>
-              Start the tutorial
-            </Link>
-            <button
-              type="button"
-              className={styles.footerDismiss}
-              onClick={() => {
-                markTutorialSeen();
-                setShowIntro(false);
-              }}
-            >
-              No thanks
-            </button>
-          </span>
+      {isPhone ? (
+        /* Phone: the three mode cards + the newcomer strip become a
+           2×2 grid of half-width cards — the strip's content rides as
+           the fourth card (both its first-visit and quiet variants). */
+        <div className={styles.phoneGrid}>
+          {modeCards}
+          {showIntro ? (
+            <div className={styles.footerCard}>
+              <span className={styles.modeTitle}>First time here?</span>
+              <span className={styles.modeBlurb}>
+                Learn by playing — a guided practice deal walks you through
+                every move in about three minutes.
+              </span>
+              <span className={styles.footerCardActions}>
+                <Link to="/tutorial" className={styles.footerCta}>
+                  Start the tutorial
+                </Link>
+                <button
+                  type="button"
+                  className={styles.footerDismiss}
+                  onClick={() => {
+                    markTutorialSeen();
+                    setShowIntro(false);
+                  }}
+                >
+                  No thanks
+                </button>
+              </span>
+            </div>
+          ) : (
+            <div className={styles.footerCard}>
+              <span className={styles.modeTitle}>New here?</span>
+              <span className={styles.modeBlurb}>
+                The whole game is 25 cards, 10 poker hands, one target.
+              </span>
+              <Link to="/rules" className={styles.modeLink}>
+                Read the rules →
+              </Link>
+            </div>
+          )}
         </div>
       ) : (
-        <div className={styles.footerStrip}>
-          <span className={styles.footerText}>
-            <span className={styles.footerLead}>New here?</span> The whole game
-            is 25 cards, 10 poker hands, one target.
-          </span>
-          <Link to="/rules" className={styles.footerLink}>
-            Read the rules →
-          </Link>
-        </div>
+        <>
+          {/* MODE ROW */}
+          <div className={styles.modeRow}>{modeCards}</div>
+
+          {/* FOOTER STRIP — the tutorial callout on a first visit, the
+              quiet rules pointer ever after. */}
+          {showIntro ? (
+            <div className={styles.footerStrip}>
+              <span className={styles.footerText}>
+                <span className={styles.footerLead}>First time here?</span> Learn
+                by playing — a guided practice deal walks you through every move
+                in about three minutes.
+              </span>
+              <span className={styles.footerActions}>
+                <Link to="/tutorial" className={styles.footerCta}>
+                  Start the tutorial
+                </Link>
+                <button
+                  type="button"
+                  className={styles.footerDismiss}
+                  onClick={() => {
+                    markTutorialSeen();
+                    setShowIntro(false);
+                  }}
+                >
+                  No thanks
+                </button>
+              </span>
+            </div>
+          ) : (
+            <div className={styles.footerStrip}>
+              <span className={styles.footerText}>
+                <span className={styles.footerLead}>New here?</span> The whole
+                game is 25 cards, 10 poker hands, one target.
+              </span>
+              <Link to="/rules" className={styles.footerLink}>
+                Read the rules →
+              </Link>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

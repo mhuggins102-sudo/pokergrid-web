@@ -85,9 +85,16 @@ describe('challenges', () => {
   it('every challenge is playable; beaten ones stay marked', () => {
     useStatsStore.getState().recordChallenge('short-circuit');
     renderAt('/challenges');
+    // The Beaten badge shows on the collapsed phone card head.
     expect(screen.getByText('✓ Beaten')).toBeInTheDocument();
-    // No lock gating — every catalog card carries a Play link.
+    // No lock gating anywhere.
     expect(screen.queryByText('Locked')).not.toBeInTheDocument();
+    // Phone (jsdom default): cards collapse, so the Play footer lives
+    // behind a tap. Expand every card (names are unique), then confirm
+    // each still carries exactly one Play link.
+    CHALLENGES.forEach(c => {
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(c.name) }));
+    });
     expect(screen.getAllByRole('link', { name: 'Play' })).toHaveLength(
       CHALLENGES.length
     );

@@ -24,6 +24,7 @@ import {
   Sheet,
   useTapPopover,
   useTapPopoverCloseAll,
+  useTapPopoverDismissGuard,
   useToast,
 } from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
@@ -675,6 +676,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // first-run rescue for the universal "tap the board" instinct.
   const { toast } = useToast();
   const lastNudgeRef = useRef(0);
+  // A board tap that closed an open pill/Hands/Scoring popover (outside
+  // pointerdown) also lands here as a cell tap — consult the dismiss stamp
+  // so dismissing a popover by tapping the board never also fires the nudge.
+  const { wasRecentDismiss } = useTapPopoverDismissGuard();
 
   // Line spotlight: tapping a seated card (outside perk targeting)
   // lights up its row + column with their R/C names and live values —
@@ -865,7 +870,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // one owner — the guard the live rotation family-flip exercises. The
   // column family (and the tutorial's bespoke wrap-up) keeps the full
   // ResultView exactly as before.
-  const deskResult = isDesk && mode.kind !== 'tutorial';
+  // Streamlined column joins the desk families here: game over stays
+  // in-tree with the DesktopResultDialog overlay + the finished dock
+  // ("Show result" / Play Again) instead of swapping to the full-screen
+  // ResultView. Recording + the Targets-Up ladder commit live in
+  // DesktopResultDialog / useTargetsResult, already guarded single-owner.
+  const deskResult = (isDesk || streamlined) && mode.kind !== 'tutorial';
   if (ui.isGameOver && !deskResult) {
     return <ResultView onReplay={onReplay} />;
   }
@@ -893,6 +903,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const nudgePlacement = () => {
     const now = Date.now();
     if (now - lastNudgeRef.current < 4000) return;
+    // Suppress when this same tap just dismissed an open popover — the user
+    // meant "close the popover", not "I'm looking for where cards land".
+    if (wasRecentDismiss()) return;
     lastNudgeRef.current = now;
     toast('Cards land on the pulsing slot — tap it (or press Place).');
   };
@@ -1353,7 +1366,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // to the discard action. Same accounting and disabled condition as
   // ScoreBar's (the dock's flight guard added, as the sibling dock
   // buttons carry it); gated on maxUndos > 0, mirroring ScoreBar.
-  const dockUndoBtn = streamlined && maxUndos > 0 && (
+  // Hidden while a suit action is armed (ui.banner shows the targeting
+  // instruction): the dock then leads with the banner + Cancel, and the ↺
+  // squeezing in beside them reads as noise — the classic layout drops it
+  // there too (canUndo is false mid-targeting).
+  const dockUndoBtn = streamlined && maxUndos > 0 && !ui.banner && (
     <Button
       key="dock-undo"
       size="sm"
@@ -1418,6 +1435,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 report={liveReport}
                 onLineTap={setDetailLine}
                 highlight={railHighlight}
+                // Streamlined puts the row chips on the RIGHT of the board
+                // (the desk edge-chip side); classic phone keeps them left.
+                side={streamlined ? 'right' : 'left'}
               >
                 {board()}
               </MaybeRails>
@@ -1461,9 +1481,42 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // rule so the merged block reads as one surface (the strip
               // now carries the top edge + divider).
               streamlined && bonusRowShown ? ' ' + styles.dockJoined : ''
+            }${
+              // Streamlined dock carries an extra ↺ that steals row width —
+              // the marker scopes the perk/Discard sizing that keeps every
+              // perk label (♦ Destroy is the widest) on one line.
+              streamlined ? ' ' + styles.dockStreamlined : ''
             }`}
           >
-            {ui.bonusDialog ? (
+            {finished ? (
+              // Streamlined game over (desk-result path): the frozen board
+              // stays, the dialog overlays, and the dock offers only the
+              // way back into the result + the replay — the phone twin of
+              // the desk finished-dock.
+              <div className={styles.finishedDock}>
+                <Button
+                  variant="primary"
+                  className={styles.commitButton}
+                  onClick={() => setResultOpen(true)}
+                >
+                  Show result
+                </Button>
+                {(mode.kind !== 'targets' ||
+                  activeReport.total < state.target) && (
+                  <Button
+                    variant="secondary"
+                    className={styles.commitButton}
+                    onClick={() =>
+                      mode.kind === 'daily'
+                        ? navigate('/daily/archive')
+                        : onReplay()
+                    }
+                  >
+                    Play Again
+                  </Button>
+                )}
+              </div>
+            ) : ui.bonusDialog ? (
               // ♣ draw takes over the whole dock — the well hides so the
               // board keeps as much room as possible. Safe to unmount:
               // instantLayout strips every shared layoutId while the
@@ -1571,6 +1624,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         </div>
       </LayoutGroup>
       {overlays}
+      {/* Streamlined game over shares the desk result surface: the dialog
+          owns recording + the finished-dock reopen path. Mounted whenever
+          finished so its one-shot recording effects always run. */}
+      {finished && (
+        <DesktopResultDialog
+          open={resultOpen}
+          onViewGrid={() => setResultOpen(false)}
+          onReplay={onReplay}
+        />
+      )}
     </MotionConfig>
   );
 }

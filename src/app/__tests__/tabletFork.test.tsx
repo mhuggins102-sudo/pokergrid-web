@@ -36,12 +36,18 @@ const renderRoute = (path: string, element: React.ReactNode) =>
   );
 
 describe('converged pages render one tree at every tier', () => {
-  it('Free Play: the difficulty-card picker renders at the phone tier', () => {
+  it('Free Play: the phone density variant shows the segmented picker', () => {
+    // Phone (jsdom default): the header text block + four stacked cards
+    // give way to the four-button difficulty selector (Medium
+    // preselected) over a single card. The desk heading is absent.
     renderRoute('/play', <PlayPage />);
-    expect(screen.getByText('Choose your table')).toBeInTheDocument();
+    expect(screen.queryByText('Choose your table')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Medium', pressed: true })
+    ).toBeInTheDocument();
   });
 
-  it('Free Play: and the same picker at the tablet tier', () => {
+  it('Free Play: the tablet tier keeps the four-card picker + heading', () => {
     active = mockTier('tablet');
     renderRoute('/play', <PlayPage />);
     expect(screen.getByText('Choose your table')).toBeInTheDocument();

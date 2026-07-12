@@ -46,6 +46,14 @@ interface TapPopoverRegistry {
   notifyOpen(id: string): void;
   /** Close every registered popover (route change / game commit). */
   closeAll(): void;
+  /** Stamp "an open popover was just dismissed by an OUTSIDE pointerdown"
+   *  (the tap that closed it also lands as a normal tap on whatever sits
+   *  behind — e.g. the game board). Consumers can consult wasRecentDismiss
+   *  to suppress the behavior that tap would otherwise trigger. */
+  recordOutsideDismiss(): void;
+  /** True when an outside-pointerdown dismissal happened within `withinMs`
+   *  (default 400ms) of now. */
+  wasRecentDismiss(withinMs?: number): boolean;
 }
 
 const TapPopoverContext = createContext<TapPopoverRegistry | null>(null);
@@ -63,6 +71,9 @@ export function TapPopoverProvider({ children }: { children: ReactNode }) {
   // registry mutates on every popover mount/open and must never re-render
   // the shell it wraps.
   const registry = useRef(new Map<string, () => void>());
+  // Timestamp of the last outside-pointerdown dismissal — a plain ref, so
+  // stamping it never re-renders the shell.
+  const outsideDismissAt = useRef(0);
   const { pathname } = useLocation();
 
   const value = useMemo<TapPopoverRegistry>(
@@ -82,6 +93,12 @@ export function TapPopoverProvider({ children }: { children: ReactNode }) {
       },
       closeAll() {
         for (const close of registry.current.values()) close();
+      },
+      recordOutsideDismiss() {
+        outsideDismissAt.current = Date.now();
+      },
+      wasRecentDismiss(withinMs = 400) {
+        return Date.now() - outsideDismissAt.current < withinMs;
       },
     }),
     []
@@ -145,7 +162,13 @@ export function useTapPopover(id: string): TapPopoverHandle {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: PointerEvent) => {
-      if (!wrapEl.current?.contains(e.target as Node)) close();
+      if (!wrapEl.current?.contains(e.target as Node)) {
+        // The same tap that dismisses this popover also lands on whatever
+        // is behind it (typically the game board). Stamp it so that tap's
+        // own handler (e.g. GameScreen's placement nudge) can bow out.
+        registry?.recordOutsideDismiss();
+        close();
+      }
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close();
@@ -156,7 +179,7 @@ export function useTapPopover(id: string): TapPopoverHandle {
       document.removeEventListener('pointerdown', onDown);
       document.removeEventListener('keydown', onKey);
     };
-  }, [open, close]);
+  }, [open, close, registry]);
 
   // `open` read from the render closure — the onClick binds fresh every
   // render, so it always sees the current value (and avoids side effects
@@ -170,12 +193,45 @@ export function useTapPopover(id: string): TapPopoverHandle {
     }
   }, [open, close, registry, id]);
 
-  return {
-    open,
-    coarse,
-    wrapRef,
-    toggleProps: coarse ? { onClick: toggle } : {},
-  };
+  // Stable handle identity: recompute ONLY when a value actually changes
+  // (open flips, or the toggle callback rebinds — which it does with
+  // `open`). Without this the hook returned a fresh object every render, so
+  // any memo that closes over the handle (the in-game nav pill, the
+  // streamlined game-details row) churned identity every render — and since
+  // GameScreen re-homes that row through a context it also consumes, that
+  // churn drove an unbounded render loop (row → setGameRow → provider value
+  // → GameScreen re-render → new row → …). A stable handle breaks it: the
+  // re-render triggered by setGameRow now yields the SAME row node, so the
+  // re-home effect doesn't re-fire.
+  const toggleProps = useMemo(
+    () => (coarse ? { onClick: toggle } : {}),
+    [coarse, toggle]
+  );
+  return useMemo(
+    () => ({ open, coarse, wrapRef, toggleProps }),
+    [open, coarse, wrapRef, toggleProps]
+  );
+}
+
+/**
+ * Read-only access to the registry's outside-dismiss stamp. A tap that
+ * closes an open popover by landing outside it (outside pointerdown) also
+ * reaches whatever sits behind the popover; a handler back there can call
+ * `wasRecentDismiss()` to tell "this tap was really a popover dismissal"
+ * and skip its own effect. Fine pointers never open a tap-popover, so the
+ * stamp is never set there — behavior stays untouched.
+ */
+export function useTapPopoverDismissGuard(): {
+  wasRecentDismiss: (withinMs?: number) => boolean;
+} {
+  const registry = useContext(TapPopoverContext);
+  return useMemo(
+    () => ({
+      wasRecentDismiss: (withinMs?: number) =>
+        registry?.wasRecentDismiss(withinMs) ?? false,
+    }),
+    [registry]
+  );
 }
 
 export function useTapPopoverCloseAll(): () => void {

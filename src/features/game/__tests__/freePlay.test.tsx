@@ -15,9 +15,14 @@ const renderPlay = (search: string) =>
 describe('free play', () => {
   it('shows the difficulty picker without a difficulty param', () => {
     renderPlay('');
-    expect(screen.getByText('Choose your table')).toBeInTheDocument();
-    // Select-then-start: picking Extreme pins the Start link's URL.
-    fireEvent.click(screen.getByRole('button', { name: /^Extreme/ }));
+    // Phone (jsdom default): the segmented difficulty selector, Medium
+    // preselected. Selecting Extreme pins the Start link's URL. Query
+    // by the exact pill label so it doesn't also match the single
+    // difficulty card (whose name begins "Extreme 450 target …").
+    expect(
+      screen.getByRole('button', { name: 'Medium', pressed: true })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Extreme' }));
     expect(screen.getByRole('link', { name: /Start game/ })).toHaveAttribute(
       'href',
       '/play?difficulty=extreme'

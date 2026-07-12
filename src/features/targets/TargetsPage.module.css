@@ -325,8 +325,10 @@
    8–12 rungs into the column; the start bar and explainers stack.
    Everything ≥768 is untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
+  /* Density pass: the eyebrow + title drop; the ladder leads. */
+  .eyebrow,
   .title {
-    font-size: 30px;
+    display: none;
   }
 
   .lede {

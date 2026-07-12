@@ -48,6 +48,41 @@ test('mobile header: Game Modes taps open and route into Daily', async ({
   await expect.poll(() => popOpacity(daily)).toBeLessThan(0.5);
 });
 
+test('mobile streamlined game: the HOME icon exits home mid-game', async ({
+  page,
+}, testInfo) => {
+  const vp = page.viewportSize();
+  test.skip(
+    !testInfo.project.use.hasTouch || !vp || vp.width >= 768,
+    'streamlined phone game is the <768 touch case'
+  );
+
+  // Pre-set the streamlined column preview before any app script runs, so
+  // the running game re-homes its details row into the phone header (which
+  // reveals the HOME icon in place of the center nav).
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'pokergrid:settings:v1',
+      JSON.stringify({ state: { streamlinedColumn: true }, version: 0 })
+    );
+  });
+
+  await page.goto('/play?difficulty=easy&seed=42');
+  await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
+
+  // Regression: the game-details row used to churn identity every render,
+  // which re-fired its re-home effect into an unbounded loop that pegged
+  // the main thread and swallowed header taps — so the HOME icon (and
+  // wordmark) never navigated during a streamlined game. Tapping HOME must
+  // route to '/'.
+  const home = page.getByRole('link', { name: 'Home' });
+  await expect(home).toBeVisible();
+  await home.tap();
+  await expect
+    .poll(() => new URL(page.url()).pathname)
+    .toBe('/');
+});
+
 test('desk game: deck peek + scoring ⓘ are tap-toggled and single-open', async ({
   page,
 }, testInfo) => {

@@ -40,6 +40,12 @@
   white-space: nowrap;
 }
 
+/* Phone-only page-name label (see phoneLabel in DesktopNav.tsx). Hidden
+   at tablet/desktop, where the desktop `.dateline` above is the label. */
+.datelinePhone {
+  display: none;
+}
+
 .center {
   display: flex;
   align-items: center;
@@ -255,10 +261,33 @@
 
   .wordmark {
     font-size: 22px;
+    /* Never shrink — the dateline label absorbs any row-1 overflow. */
+    flex: none;
   }
 
+  /* Phones name their page beside the wordmark via the phone-only
+     `.datelinePhone` span (phoneLabel in DesktopNav.tsx) — a smaller
+     weight-carrying label that fits row 1 at 390 next to the wordmark,
+     with ◐ (and, in-game, the HOME icon) on the right. min-width:0 +
+     ellipsis so the longest label never pushes ◐ off. The desktop
+     `.dateline` stays hidden here (unchanged from before). */
   .dateline {
     display: none;
+  }
+
+  .datelinePhone {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-3);
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .left {
+    min-width: 0;
   }
 
   /* The center nav drops to a left-aligned second row spanning the full

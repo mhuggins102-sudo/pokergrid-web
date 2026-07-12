@@ -342,6 +342,31 @@
   align-self: center;
 }
 
+/* Streamlined dock only: the extra ↺ narrows the perk + Discard, so a long
+   perk label ("♦ Destroy") wrapped its glyph to a second line at 390. Trim
+   the two action buttons' side padding and forbid the label wrap so every
+   perk label (♥ Swap · ♠ Slide · ♦ Destroy · ♣ Bonus) sits on one line in
+   all three arrangements; the ↺ keeps its own fixed width, so the trim
+   feeds the perk. Scoped to .dockStreamlined — classic flag-off is
+   byte-untouched. */
+.dockStreamlined .dockRow > button:not(.dockUndo),
+.dockStreamlined .actionRow > button:not(.dockUndo),
+.dockStreamlined .stageBtn {
+  white-space: nowrap;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+}
+
+/* Streamlined game over: the finished dock stacks the two full-width
+   actions ("Show result" over Play Again) centered in the pinned dock. */
+.finishedDock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-sm);
+  height: 100%;
+}
+
 @media (min-width: 640px) {
   .layout {
     max-width: 560px;
