@@ -885,18 +885,24 @@
   transform: translateY(0);
 }
 
-/* Purple cards: live progress under a faint divider. */
+/* Purple cards: live progress under a faint divider. The popover's
+   surface is var(--ink) — light cream in the dark themes — so every
+   color in here derives from the theme's paper/ink pair instead of
+   fixed light-on-dark values (which went unreadable on paper-dark). */
 .bonusProg {
   margin-top: 7px;
   padding-top: 7px;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);
   font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.82);
+  color: color-mix(in srgb, var(--paper) 85%, var(--ink));
 }
 
+/* Condition met: a success tone mixed toward paper, so it stays
+   legible against var(--ink) in all four themes (bright green on the
+   light themes' dark ink, deep green on the dark themes' cream ink). */
 .bonusProgOk {
-  color: #7cffb0;
+  color: color-mix(in srgb, var(--success) 62%, var(--paper));
 }
 
 .bonusMain {

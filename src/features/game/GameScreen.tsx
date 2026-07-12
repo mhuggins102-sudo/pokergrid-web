@@ -18,6 +18,7 @@ import {
 import { JOKERS_BY_DIFFICULTY } from '../../game/rules';
 import { TARGETS_UP_STEP } from '../../game/challenges';
 import { canPreviewDeck } from '../../game/state';
+import { targetsUpReached, tierForRun } from '../../lib/stats';
 import { Button, Sheet, useToast } from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
 import { useNavExtras } from '../../app/DesktopNav';
@@ -86,6 +87,9 @@ type HoverTarget =
   | { type: 'bonus'; idx: number };
 
 const NO_TAGS: ReadonlySet<string> = new Set();
+// Desktop: the completion sweep never runs ≥1024px (revision item —
+// mobile keeps it); the empty map suppresses it per board render.
+const NO_SWEEP: ReadonlyMap<number, number> = new Map();
 
 // Vertical slack (px, each side) reserved around the board frame for
 // Card Room's felt bleed — see the frame-width computation below and
@@ -288,10 +292,22 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             ],
             ['Next level target', String(state.target + TARGETS_UP_STEP)],
             ['Wins this run', String(tuLevel - 1)],
+            // Stored = highest beaten; shown = highest REACHED (+1).
             ...(tuBest > 0
-              ? ([['Best level reached', `L${tuBest}`]] as [string, string][])
+              ? ([
+                  ['Best level reached', `L${targetsUpReached(tuBest)}`],
+                ] as [string, string][])
               : []),
           ];
+    // Game over (including view-only revisits): the earned tier's row
+    // lights up in the score segment's tier menu.
+    const earnedTier = finished
+      ? tierForRun({
+          score: navScore,
+          target: state.target,
+          won: navScore >= state.target,
+        })
+      : null;
     const rules: [string, string][] = [
       ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
       ['Deck peek', canPreviewDeck(state.difficulty) ? 'Available' : '—'],
@@ -376,7 +392,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 Score tiers · target {state.target}
               </div>
               {TIER_RULES.map(rule => (
-                <div key={rule.tier} className={styles.navMenuRow}>
+                <div
+                  key={rule.tier}
+                  className={`${styles.navMenuRow} ${
+                    rule.tier === earnedTier ? styles.navMenuRowOn : ''
+                  }`}
+                >
                   <span>
                     {rule.tier} · {rule.label}
                   </span>
@@ -397,6 +418,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     twist,
     tuLevel,
     tuBest,
+    finished,
   ]);
   useNavExtras(isDesktop ? navPill : null);
 
@@ -416,7 +438,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     [state]
   );
 
-  useGameSfx(state, liveReport.total);
+  // View-only archive revisits stay silent — no replayed place ticks,
+  // no win/lose sting (revision item 17).
+  useGameSfx(state, liveReport.total, viewOnly);
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
   const dockLayout = useSettingsStore(s => s.dockLayout);
 
@@ -553,6 +577,25 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   useEffect(() => {
     remeasureRef.current?.();
   }, [lineRails]);
+
+  // Desktop hover model gate: cell hover is disabled while a perk /
+  // green action is targeting. When targeting CLEARS, board-cell
+  // highlights only resume after a short grace (~600ms) — the commit
+  // click leaves the pointer parked on a cell, and lighting it up the
+  // same instant startles. Any pointer movement after the grace
+  // re-reports the cell (GridBoard's mousemove), so nothing sticks
+  // dark. Chips / table rows resume immediately (they gate on
+  // hoverEnabled alone).
+  const hoverEnabled = ui.phaseKind === 'awaiting-action' || finished;
+  const [cellHoverArmed, setCellHoverArmed] = useState(true);
+  useEffect(() => {
+    if (!hoverEnabled) {
+      setCellHoverArmed(false);
+      return;
+    }
+    const t = window.setTimeout(() => setCellHoverArmed(true), 600);
+    return () => window.clearTimeout(t);
+  }, [hoverEnabled]);
 
   const spotlightEnabled = ui.phaseKind === 'awaiting-action';
   const lineText = (kind: 'row' | 'col', index: number): string => {
@@ -787,7 +830,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     const anyHover = hover !== null;
     // Cell hover is disabled while a perk / green action is targeting
     // (mockup lines 736–737); edge chips mute then too (railMute).
-    const hoverEnabled = ui.phaseKind === 'awaiting-action' || finished;
+    // hoverEnabled + the cellHoverArmed grace live above the game-over
+    // early return (hooks).
     const lineIsActive = (line: ScoredLine) =>
       activeTags.has(lineLabel(line.kind, line.index));
     const lineHover = {
@@ -832,14 +876,29 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     const playAgain = () =>
       mode.kind === 'daily' ? navigate('/daily/archive') : onReplay();
     const deskBoard = board({
+      // No completion sweep on desktop (revision item 11).
+      sweepSlots: NO_SWEEP,
       hoverState: hoverCapable ? cellHoverState : undefined,
       onCellHover: hoverCapable && hoverEnabled
-        ? idx =>
-            setHover(
-              idx === null
-                ? null
-                : { type: 'cell', r: Math.floor(idx / 5), c: idx % 5 }
-            )
+        ? idx => {
+            if (idx === null) {
+              // Leave only clears a CELL hover — a chip/bonus hover in
+              // flight must not be wiped by a stray board leave.
+              setHover(h => (h?.type === 'cell' ? null : h));
+              return;
+            }
+            if (!cellHoverArmed) return; // post-targeting grace
+            const r = Math.floor(idx / 5);
+            const c = idx % 5;
+            // Identity-guarded: mousemove re-reports the same cell on
+            // every pixel — returning the previous state skips the
+            // re-render.
+            setHover(h =>
+              h?.type === 'cell' && h.r === r && h.c === c
+                ? h
+                : { type: 'cell', r, c }
+            );
+          }
         : undefined,
       hoverOutline: idx => ui.isTappable(idx) || boardRole(idx) === 'next',
       // The pulsing next slot names its action (mockup line 746).
@@ -916,10 +975,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 {finished ? (
                   // Game over, dialog dismissed via View Grid: the dock
                   // offers only the way back in (and the replay).
-                  // Targets-Up gets no dock replay — its continue
-                  // actions (Choose Reward(s) / Next Round / Play
-                  // Again) live in the dialog, where the ladder commit
-                  // can gate them.
+                  // Targets-Up WINS get no dock replay — the continue
+                  // actions (Choose Reward(s) / Next Round) live in the
+                  // dialog, where the ladder commit can gate them. A
+                  // LOSS has nothing to gate (the save is already
+                  // cleared), so its dock offers Play Again → a fresh
+                  // level-1 run, matching the dialog's lost-path
+                  // restart.
                   <div className={styles.deskDockStage}>
                     <div className={styles.deskActions}>
                       <Button
@@ -929,7 +991,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       >
                         Show result
                       </Button>
-                      {mode.kind !== 'targets' && (
+                      {(mode.kind !== 'targets' ||
+                        activeReport.total < state.target) && (
                         <Button
                           variant="secondary"
                           className={styles.deskStackBtn}

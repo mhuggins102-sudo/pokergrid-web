@@ -1,6 +1,6 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, Dialog, useToast } from '../../design/primitives';
+import { Button, useToast } from '../../design/primitives';
 import { HandleEditor } from '../daily/RankPanel';
 import { KEY_HANDLE } from '../daily/sync/deviceId';
 import { resetDailyProgress } from '../daily/sync/sync';
@@ -98,6 +98,16 @@ export function SettingsDesk() {
   const [editingHandle, setEditingHandle] = useState(false);
 
   const patch = (p: Partial<Settings>) => settings.set(p);
+
+  // Escape dismisses the reset confirm (backdrop click does too).
+  useEffect(() => {
+    if (!confirmReset) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmReset(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [confirmReset]);
 
   // Desktop dock picker — see the mapping note in the file comment.
   const dockValue =
@@ -223,18 +233,9 @@ export function SettingsDesk() {
             onChange={v => patch({ reduceMotion: v })}
           />
         </Row>
-        {/* Not in the mockup — kept so the accessibility option stays
-            reachable on desktop. */}
-        <Row
-          title="Color-blind assist"
-          hint="Add glyphs alongside color-coded bonus categories."
-        >
-          <Toggle
-            label="Color-blind assist"
-            value={settings.colorBlindAssist}
-            onChange={v => patch({ colorBlindAssist: v })}
-          />
-        </Row>
+        {/* Color-blind assist is deliberately NOT offered here: it only
+            affects mobile surfaces, so the desktop page omits the row.
+            The setting itself (and the phone page's toggle) remain. */}
       </Section>
 
       <Section title="Identity & data">
@@ -284,42 +285,54 @@ export function SettingsDesk() {
 
       <p className={styles.buildId}>Build {__BUILD_ID__}</p>
 
-      <Dialog
-        open={confirmReset}
-        onClose={() => setConfirmReset(false)}
-        title="Reset all progress?"
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <p className="text-body">
-            This permanently clears your stats, achievements, completed
-            challenges, the current Targets-Up run, and your daily puzzle
-            results and leaderboard identity on this device — so you can
-            start over under a different name. It also re-arms the one-time
-            explainers (tutorial callout, daily twist intros). Scores
-            already submitted stay on the online leaderboard.
-          </p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Button variant="ghost" onClick={() => setConfirmReset(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                resetStats();
-                clearTargets();
-                resetDailyProgress();
-                clearTwistsSeen();
-                clearTutorialSeen();
-                setHandle(null);
-                setConfirmReset(false);
-                toast('Progress reset.', 'success');
-              }}
-            >
-              Reset everything
-            </Button>
+      {/* Centered confirm modal — the DesktopResultDialog scrim/card
+          pattern at small size (the primitive Dialog reads as the
+          mobile sheet); same copy and actions as the phone confirm. */}
+      {confirmReset && (
+        <div
+          className={styles.confirmScrim}
+          onClick={e => {
+            if (e.target === e.currentTarget) setConfirmReset(false);
+          }}
+        >
+          <div
+            className={styles.confirmCard}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Reset all progress?"
+          >
+            <h2 className={styles.confirmTitle}>Reset all progress?</h2>
+            <p className={styles.confirmBody}>
+              This permanently clears your stats, achievements, completed
+              challenges, the current Targets-Up run, and your daily puzzle
+              results and leaderboard identity on this device — so you can
+              start over under a different name. It also re-arms the
+              one-time explainers (tutorial callout, daily twist intros).
+              Scores already submitted stay on the online leaderboard.
+            </p>
+            <div className={styles.confirmActions}>
+              <Button variant="ghost" onClick={() => setConfirmReset(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  resetStats();
+                  clearTargets();
+                  resetDailyProgress();
+                  clearTwistsSeen();
+                  clearTutorialSeen();
+                  setHandle(null);
+                  setConfirmReset(false);
+                  toast('Progress reset.', 'success');
+                }}
+              >
+                Reset everything
+              </Button>
+            </div>
           </div>
         </div>
-      </Dialog>
+      )}
     </div>
   );
 }

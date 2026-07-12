@@ -113,3 +113,16 @@
     padding-bottom: var(--space-xxxl);
   }
 }
+
+/* Desktop: the ONE shared container — 1320px + 30px gutters, matching
+   DesktopNav's .bar exactly so page content and the wordmark share a
+   left edge on every route. Pages must not add their own top padding;
+   the 24px here (mockup rhythm) is the whole nav→content gap. */
+@media (min-width: 1024px) {
+  .main {
+    max-width: 1320px;
+    padding-top: var(--space-xl);
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+}

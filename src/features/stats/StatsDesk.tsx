@@ -140,22 +140,34 @@ export function StatsDesk() {
   return (
     <div className={styles.wrap}>
       <div className={styles.eyebrow}>Stats</div>
-      <h1 className={styles.title}>Your record</h1>
-
-      <div className={styles.filters}>
-        <div className={styles.filtRow}>
-          {STATS_MODES.map(m =>
-            tab(MODE_LABEL[m], 'var(--accent)', mode === m, () =>
-              setMode(cur => (cur === m ? 'all' : m))
-            )
-          )}
-        </div>
-        <div className={styles.filtRow}>
-          {DIFFICULTIES.map(d =>
-            tab(DIFF_NAME[d], difficultyColors[d], diff === d, () =>
-              setDiff(cur => (cur === d ? 'all' : d))
-            )
-          )}
+      {/* One line: the heading with both filter groups beside it —
+          modes in one container, difficulties in a second to its
+          right. Same single-select-per-axis semantics as before. */}
+      <div className={styles.headRow}>
+        <h1 className={styles.title}>Your record</h1>
+        <div className={styles.filters}>
+          <div
+            className={styles.filtGroup}
+            role="group"
+            aria-label="Mode filter"
+          >
+            {STATS_MODES.map(m =>
+              tab(MODE_LABEL[m], 'var(--accent)', mode === m, () =>
+                setMode(cur => (cur === m ? 'all' : m))
+              )
+            )}
+          </div>
+          <div
+            className={styles.filtGroup}
+            role="group"
+            aria-label="Difficulty filter"
+          >
+            {DIFFICULTIES.map(d =>
+              tab(DIFF_NAME[d], difficultyColors[d], diff === d, () =>
+                setDiff(cur => (cur === d ? 'all' : d))
+              )
+            )}
+          </div>
         </div>
       </div>
 

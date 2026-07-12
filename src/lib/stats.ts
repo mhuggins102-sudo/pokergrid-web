@@ -85,6 +85,16 @@ export const tierForRun = (run: Pick<RunRecord, 'score' | 'target' | 'won'>): Ti
   return 'D';
 };
 
+/**
+ * Display mapping for the Targets-Up high-water mark: the store keeps
+ * the highest level BEATEN (stats.targetsUpBest), but every surface
+ * shows the highest level REACHED — beating L3 put you on L4, so with
+ * at least one win the reached level is beaten + 1. No wins yet → 0
+ * (callers hide the stat).
+ */
+export const targetsUpReached = (beaten: number): number =>
+  beaten > 0 ? beaten + 1 : 0;
+
 // One point in the all-time score timeline — the compact per-run
 // record behind the Stats page's score-over-plays chart. Kept separate
 // from `recent` (which carries full RunRecords but only the last 20).

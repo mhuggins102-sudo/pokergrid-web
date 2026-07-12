@@ -47,7 +47,13 @@ export function LineDetailSheet({
       title={
         line
           ? `${lineLabel(line.kind, line.index)} — ${
-              line.hand ? HAND_LABEL[line.hand] : line.incomplete ? 'Open line' : 'No hand'
+              line.hand
+                ? HAND_LABEL[line.hand]
+                : line.incomplete
+                  ? line.cards.some(c => c !== null)
+                    ? 'In Progress'
+                    : 'Empty'
+                  : 'No hand'
             }`
           : ''
       }

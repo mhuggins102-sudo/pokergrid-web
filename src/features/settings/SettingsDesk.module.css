@@ -2,11 +2,13 @@
    design-refs/desktop/Settings.dc.html. Rendered only by SettingsPage's
    desktop fork. */
 
+/* Readability cap, LEFT-aligned inside the shared 1320px container so
+   the content edge lines up with the wordmark. */
 .wrap {
   width: 100%;
   max-width: 640px;
-  margin: 0 auto;
-  padding: 24px 0 48px;
+  margin: 0;
+  padding: 0 0 48px;
 }
 
 .eyebrow {
@@ -208,4 +210,49 @@
   color: var(--ink-3);
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+/* Reset-all-progress confirm — the DesktopResultDialog scrim/card
+   pattern at small size (centered modal, not the mobile sheet). */
+.confirmScrim {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.confirmCard {
+  width: 420px;
+  max-width: 100%;
+  background: var(--paper-raised);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px 26px 22px;
+}
+
+.confirmTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  color: var(--ink);
+}
+
+.confirmBody {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
 }

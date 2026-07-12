@@ -196,6 +196,13 @@ export function GridBoard({
             onMouseEnter={
               card && onCellHover ? () => onCellHover(idx) : undefined
             }
+            // Re-reported on movement too: after the post-targeting
+            // hover grace expires, the first pointer twitch re-lights
+            // the cell even though no new mouseenter fires. The
+            // consumer identity-guards its state, so this is cheap.
+            onMouseMove={
+              card && onCellHover ? () => onCellHover(idx) : undefined
+            }
             onMouseLeave={
               card && onCellHover ? () => onCellHover(null) : undefined
             }

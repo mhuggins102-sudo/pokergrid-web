@@ -155,7 +155,10 @@ export const evaluatePartialLine = (line: (Card | null)[]): HandRank | null => {
   for (const c of cards) {
     if (isJoker(c)) continue;
     const r = rankIndex(c.rank);
-    counts.set(r, (counts.get(r) ?? 0) + 1);
+    // A 'double' supercharge counts as two of its rank for pair-class
+    // hands — exactly how evalStandardFive counts it in final scoring,
+    // so a lone doubled card already reads as a forming PAIR.
+    counts.set(r, (counts.get(r) ?? 0) + (c.supercharge === 'double' ? 2 : 1));
   }
   const multiset = [...counts.values()].sort((a, b) => b - a);
   if (multiset.length === 0) multiset.push(0);

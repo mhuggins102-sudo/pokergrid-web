@@ -2,11 +2,10 @@
    design-refs/desktop/Stats.dc.html. Rendered only by StatsPage's
    desktop fork. */
 
+/* Fills AppLayout's shared 1320px desktop container. */
 .wrap {
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 24px 0 48px;
+  padding: 0 0 48px;
 }
 
 .eyebrow {
@@ -18,7 +17,7 @@
 }
 
 .title {
-  margin: 6px 0 22px;
+  margin: 0;
   font-family: var(--font-display);
   font-size: 44px;
   font-weight: 680;
@@ -26,33 +25,53 @@
   color: var(--ink);
 }
 
-/* ---- Filter rows ---- */
+/* ---- Heading + filters on one line ---- */
+
+.headRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 6px 0 22px;
+}
 
 .filters {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
 }
 
-.filtRow {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  align-items: center;
-  max-width: 560px;
+/* One container per axis: Daily/Free Play, then the four levels. */
+.filtGroup {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-sm);
 }
 
 .tab {
-  padding: 13px 22px;
-  border-radius: 12px;
-  font-size: 14px;
+  /* Narrow paddings so heading + both groups fit one line at 1200px. */
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 13px;
   font-weight: 600;
   font-family: var(--font-body);
   cursor: pointer;
-  border: 1px solid var(--hairline);
-  background: var(--paper-raised);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--ink);
+  white-space: nowrap;
   transition: all 0.14s ease;
+}
+
+@media (hover: hover) {
+  .tab:not(.tabOn):hover {
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+  }
 }
 
 .tabOn {

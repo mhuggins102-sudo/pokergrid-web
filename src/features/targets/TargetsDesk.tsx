@@ -6,6 +6,7 @@ import {
   targetForLevel,
 } from '../../game/challenges';
 import { difficultyColors } from '../../design/tokens';
+import { targetsUpReached } from '../../lib/stats';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from './targetsStore';
 import styles from './TargetsDesk.module.css';
@@ -48,7 +49,9 @@ const rungWindow = (level: number, best: number): number[] => {
 export function TargetsDesk() {
   const save = useTargetsStore(s => s.save);
   const clearProgress = useTargetsStore(s => s.clearProgress);
-  const best = useStatsStore(s => s.stats.targetsUpBest);
+  // Stored value = highest level BEATEN; every display shows the level
+  // REACHED (beaten + 1) — beating L3 put you on L4.
+  const best = targetsUpReached(useStatsStore(s => s.stats.targetsUpBest));
 
   const level = save?.level ?? 1;
   const target = targetForLevel(level);
