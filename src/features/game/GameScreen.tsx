@@ -1161,7 +1161,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                             maxUndos - state.undoCount
                           )} left)`}
                         >
-                          ↺ Undo
+                          {/* Icon-only in the compressed desk-lite rail
+                              so Discard keeps a full-word button. */}
+                          {family === 'desk-lite' ? '↺' : '↺ Undo'}
                         </Button>
                       </div>
                     </div>
