@@ -1,184 +1,252 @@
+import { CSSProperties, useState } from 'react';
 import { Link } from 'react-router';
-import { CHALLENGES } from '../../game/challenges';
-import { TARGET_BY_DIFFICULTY } from '../../game/rules';
+import {
+  BONUS_DECK_POOL,
+  BonusCard,
+  SPECIAL_DECK_POOL,
+} from '../../game/bonusCards';
+import { HandRank } from '../../game/hands';
 import { HAND_BASE_VALUE, INCOMPLETE_LINE_PENALTY } from '../../game/scoring';
 import { HAND_LABEL } from '../game/handLabels';
-import { HandRank } from '../../game/hands';
-import { useTier } from '../../app/useTier';
-import { RulesDesk } from './RulesDesk';
+import { BonusCategory, categoryOf } from '../../lib/bonusCardCategory';
 import styles from './RulesPage.module.css';
 
+/*
+ * The rules page at every tier (phase 3 convergence), per
+ * design-refs/desktop/Rules.dc.html: numbered how-to-play steps + the
+ * −25 / 10-lines fact cards beside the hand-values table, then the
+ * full bonus-card reference inline — filterable by the three payout
+ * tones (in-game gold, end-game purple, one-time green). Hand values
+ * and cards bind to the real scoring tables / bonus pools. The
+ * standalone /rules/cards reference stays for deep links.
+ */
+
+// Ascending, matching the mockup's low → high ordering.
 const HAND_ORDER: HandRank[] = [
-  'FIVE_OF_A_KIND',
-  'ROYAL_FLUSH',
-  'STRAIGHT_FLUSH',
-  'FOUR_OF_A_KIND',
-  'FULL_HOUSE',
-  'FLUSH',
-  'STRAIGHT',
-  'THREE_OF_A_KIND',
-  'TWO_PAIR',
-  'PAIR',
   'HIGH_CARD',
+  'PAIR',
+  'TWO_PAIR',
+  'THREE_OF_A_KIND',
+  'STRAIGHT',
+  'FLUSH',
+  'FULL_HOUSE',
+  'FOUR_OF_A_KIND',
+  'STRAIGHT_FLUSH',
+  'ROYAL_FLUSH',
+  'FIVE_OF_A_KIND',
+];
+
+const STEPS = [
+  {
+    n: '1',
+    title: 'Place 25 cards',
+    body: 'Draw a card from the deck and drop it onto the 5×5 grid — normally along a spiral. Fill every cell.',
+  },
+  {
+    n: '2',
+    title: 'Build 10 poker hands',
+    body: 'Each of the 5 rows and 5 columns scores as its own 5-card poker hand. Ten lines, ten scores.',
+  },
+  {
+    n: '3',
+    title: 'Spend suit perks',
+    body: 'Instead of placing, spend the drawn card on its suit: ♥ swap, ♠ slide, ♦ destroy, ♣ draw a bonus card.',
+  },
+  {
+    n: '4',
+    title: 'Beat the target',
+    body: 'Bonus cards multiply lines and the whole grid. Clear the difficulty target — mind the −25 per unfinished line.',
+  },
+];
+
+// The mockup's three payout groups. Every card in the real pools maps
+// onto one via its category tone (gold / purple / green).
+type ToneGroup = 'in-game' | 'end-game' | 'special';
+
+const TONE_GROUP_OF: Record<BonusCategory, ToneGroup> = {
+  hand: 'in-game',
+  line: 'in-game',
+  suit: 'in-game',
+  conditional: 'in-game',
+  grid: 'end-game',
+  'deck-management': 'end-game',
+  special: 'special',
+};
+
+const GROUP_META: Record<
+  ToneGroup,
+  { label: string; note: string; tone: string }
+> = {
+  'in-game': {
+    label: 'In-game multiplier',
+    tone: 'var(--warn)',
+    note: 'Yellow · boosts a line while you play',
+  },
+  'end-game': {
+    label: 'End-game multiplier',
+    tone: 'var(--joker)',
+    note: 'Purple · scores the whole grid at the finish',
+  },
+  special: {
+    label: 'One-time action',
+    tone: 'var(--accent)',
+    note: 'Green · a single-use move, then spent',
+  },
+};
+
+const GROUP_ORDER: ToneGroup[] = ['in-game', 'end-game', 'special'];
+
+const TABS: Array<{ key: 'all' | ToneGroup; label: string }> = [
+  { key: 'all', label: 'All cards' },
+  { key: 'in-game', label: 'In-game' },
+  { key: 'end-game', label: 'End-game' },
+  { key: 'special', label: 'One-time' },
 ];
 
 export function RulesPage() {
-  // Non-phone tiers (≥768px) render the desktop-redesign rules spread (with the inline
-  // bonus-card reference) INSTEAD of the phone article — below the
-  // breakpoint nothing changes.
-  const tier = useTier();
-  if (tier !== 'phone') return <RulesDesk />;
+  const [filter, setFilter] = useState<'all' | ToneGroup>('all');
+
+  const maxBase = Math.max(...HAND_ORDER.map(h => HAND_BASE_VALUE[h]), 1);
+
+  const grouped = new Map<ToneGroup, BonusCard[]>();
+  for (const card of [...BONUS_DECK_POOL, ...SPECIAL_DECK_POOL]) {
+    const g = TONE_GROUP_OF[categoryOf(card)];
+    grouped.set(g, [...(grouped.get(g) ?? []), card]);
+  }
 
   return (
-    <section className={styles.wrap}>
-      <header className={styles.header}>
-        <h1 className="text-title">How to Play</h1>
-        <p className={`${styles.body} ${styles.muted}`}>
-          5×5 poker solitaire. Place every card, score the ten lines, beat
-          your target.
-        </p>
-        <p className={styles.body}>
-          Prefer to learn by playing?{' '}
-          <Link to="/tutorial">Take the interactive tutorial</Link> — a
-          guided practice deal that walks you through every move.
-        </p>
-      </header>
-
-      <div className={styles.section}>
-        <h2 className="text-section">Each turn</h2>
-        <p className={styles.body}>
-          One card is drawn at a time. <strong>Place</strong> it on the next
-          spiral slot (the pulsing cell — the spiral grows outward from the
-          center), <strong>discard</strong> it, or spend it on its{' '}
-          <strong>suit perk</strong>. The game ends when the board fills or
-          the deck runs out.
-        </p>
-        <p className={`${styles.body} ${styles.muted}`}>
-          On Easy and Medium you can tap the deck to peek at every card
-          still in it. Extreme disables the Discard button entirely —
-          every draw must be placed or spent.
-        </p>
-      </div>
-
-      <div className={styles.section}>
-        <h2 className="text-section">Undo</h2>
-        <p className={styles.body}>
-          Easy and Medium allow <strong>one undo</strong> per game; Hard and
-          Extreme allow none, and Challenges never do. The Daily grants one
-          free undo regardless of its difficulty — using it does not affect
-          your score or rank.
-        </p>
-      </div>
-
-      <div className={styles.section}>
-        <h2 className="text-section">Suit perks</h2>
-        <div className={styles.perk}>
-          <span className={`${styles.perkGlyph} ${styles.red}`}>♥</span>
-          <span>
-            <strong>Swap</strong> — exchange any two cards that share a row
-            or column.
-          </span>
-        </div>
-        <div className={styles.perk}>
-          <span className={`${styles.perkGlyph} ${styles.black}`}>♠</span>
-          <span>
-            <strong>Slide</strong> — slide a card (and the chain of cards
-            behind it) into empty space.
-          </span>
-        </div>
-        <div className={styles.perk}>
-          <span className={`${styles.perkGlyph} ${styles.red}`}>♦</span>
-          <span>
-            <strong>Destroy</strong> — remove any one card from the board.
-          </span>
-        </div>
-        <div className={styles.perk}>
-          <span className={`${styles.perkGlyph} ${styles.black}`}>♣</span>
-          <span>
-            <strong>Bonus</strong> — draw two bonus cards, keep one (hold up
-            to three; at the cap, keeping means swapping one out).
-          </span>
-        </div>
-        <p className={`${styles.body} ${styles.muted}`}>
-          The drawn card is spent when you use its perk. A perk is disabled
-          when it has no legal move.
-        </p>
-      </div>
-
-      <div className={styles.section}>
-        <h2 className="text-section">Bonus cards</h2>
-        <p className={styles.body}>
-          Bonus cards multiply your score — per hand type, per line, per
-          suit, or for whole-board feats at game end. Multipliers on the
-          same line stack multiplicatively. Chip color tells you when a
-          card pays: <strong>gold</strong> during the run,{' '}
-          <strong>purple</strong> at game end, <strong>green</strong> for
-          the one-time action cards in the twisted modes.
-        </p>
-        <p className={styles.body}>
-          You hold up to <strong>three</strong>. A ♣ draw shows two cards;
-          at the cap, keeping one means swapping a held card out — only
-          Easy lets you decline at the cap. Tap any held chip to read its
-          card and the live numbers behind its condition.
-        </p>
-        <p className={styles.body}>
-          <Link to="/rules/cards">Browse the full bonus card reference →</Link>
-        </p>
-      </div>
-
-      <div className={styles.section}>
-        <h2 className="text-section">The joker</h2>
-        <p className={styles.body}>
-          Jokers place themselves the moment they're drawn and count as the
-          best possible card for each of their lines — independently in the
-          row and the column. Easy decks carry two jokers, Medium and Hard
-          one, Extreme none.
-        </p>
-      </div>
-
-      <div className={styles.section}>
-        <h2 className="text-section">Scoring</h2>
-        <div className={styles.table}>
-          {HAND_ORDER.map(h => (
-            <div key={h} className={styles.tableRow}>
-              <span>{HAND_LABEL[h]}</span>
-              <span />
-              <span>{HAND_BASE_VALUE[h]}</span>
+    <div className={styles.wrap}>
+      <section className={styles.topGrid}>
+        <div>
+          <div className={styles.eyebrow}>Rules</div>
+          <h1 className={styles.title}>How PokerGrid works</h1>
+          <div className={styles.steps}>
+            {STEPS.map(s => (
+              <div key={s.n} className={styles.step}>
+                <span className={styles.stepNum} aria-hidden="true">
+                  {s.n}
+                </span>
+                <div>
+                  <div className={styles.stepTitle}>{s.title}</div>
+                  <div className={styles.stepBody}>{s.body}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Not in the mockup — keeps the guided tutorial reachable on
+              desktop (feature-reachability convention). */}
+          <p className={styles.tutorialLink}>
+            Prefer to learn by playing?{' '}
+            <Link to="/tutorial">Take the interactive tutorial</Link>
+          </p>
+          <div className={styles.facts}>
+            <div className={styles.fact}>
+              <div className={`${styles.factNum} ${styles.factDanger}`}>
+                {INCOMPLETE_LINE_PENALTY}
+              </div>
+              <div className={styles.factBody}>
+                per incomplete row or column at game end
+              </div>
             </div>
-          ))}
-          <div className={styles.tableRow} style={{ color: 'var(--danger)' }}>
-            <span>Unfinished line at game end</span>
-            <span />
-            <span>{INCOMPLETE_LINE_PENALTY}</span>
+            <div className={styles.fact}>
+              <div className={`${styles.factNum} ${styles.factAccent}`}>10</div>
+              <div className={styles.factBody}>
+                scoring lines — 5 rows + 5 columns
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className={styles.section}>
-        <h2 className="text-section">Modes</h2>
-        <p className={styles.body}>
-          <strong>Free Play</strong> — four difficulties (targets{' '}
-          {TARGET_BY_DIFFICULTY.easy}/{TARGET_BY_DIFFICULTY.medium}/
-          {TARGET_BY_DIFFICULTY.hard}/{TARGET_BY_DIFFICULTY.extreme}), each
-          tightening jokers, undos, discards, and bonus rules.
-        </p>
-        <p className={styles.body}>
-          <strong>Targets Up</strong> — a ladder that adds 25 to the target
-          every level; high-tier wins earn powered-up cards for the next
-          level. One loss ends the run.
-        </p>
-        <p className={styles.body}>
-          <strong>Challenges</strong> — {CHALLENGES.length} twisted rule sets
-          on the Hard ruleset, from random perks to two-way cards with a
-          second identity. All are open from the start.
-        </p>
-        <p className={styles.body}>
-          <strong>Daily</strong> — one puzzle per UTC day, the same deal for
-          every player worldwide, with a shared leaderboard. Some days roll
-          a twist from the challenge list (the target adjusts to match).
-          One play per day; missed days stay playable from the archive.
-        </p>
-      </div>
-    </section>
+        <div className={styles.handPanel}>
+          <h2 className={styles.handTitle}>Hand values</h2>
+          <div className={styles.handList}>
+            {HAND_ORDER.map(h => {
+              const base = HAND_BASE_VALUE[h];
+              const zero = base === 0;
+              return (
+                <div key={h} className={styles.handRow}>
+                  <span
+                    className={`${styles.handName} ${zero ? styles.handNameZero : ''}`}
+                  >
+                    {HAND_LABEL[h]}
+                  </span>
+                  <span
+                    className={styles.handPts}
+                    style={{
+                      color: zero
+                        ? 'var(--ink-3)'
+                        : `color-mix(in srgb, var(--accent) ${Math.round(
+                            40 + (base / maxBase) * 60
+                          )}%, var(--ink))`,
+                    }}
+                  >
+                    {base}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p className={styles.handFoot}>
+            Base points per line, before any bonus-card multipliers. A
+            line&apos;s multipliers compose, then round up; grid-wide bonuses
+            multiply the final total.
+          </p>
+        </div>
+      </section>
+
+      <section className={styles.refSection}>
+        <div className={styles.refHead}>
+          <h2 className={styles.refTitle}>Bonus card reference</h2>
+        </div>
+        <div className={styles.tabs}>
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              type="button"
+              className={`${styles.tab} ${filter === t.key ? styles.tabOn : ''}`}
+              aria-pressed={filter === t.key}
+              onClick={() => setFilter(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.groups}>
+          {GROUP_ORDER.filter(g => filter === 'all' || filter === g).map(g => {
+            const meta = GROUP_META[g];
+            const cards = grouped.get(g) ?? [];
+            return (
+              <div key={g}>
+                <div className={styles.groupHead}>
+                  <span
+                    className={styles.groupSwatch}
+                    style={{ background: meta.tone }}
+                    aria-hidden="true"
+                  />
+                  <h3 className={styles.groupTitle}>{meta.label}</h3>
+                  <span className={styles.groupNote}>{meta.note}</span>
+                </div>
+                <div className={styles.cardGrid}>
+                  {cards.map(c => (
+                    <div
+                      key={c.id}
+                      className={styles.card}
+                      style={{ '--group-tone': meta.tone } as CSSProperties}
+                    >
+                      <div className={styles.cardTop}>
+                        <span className={styles.cardTitle}>{c.title}</span>
+                        <span className={styles.cardMult}>{c.mult}</span>
+                      </div>
+                      <div className={styles.cardDesc}>{c.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </div>
   );
 }

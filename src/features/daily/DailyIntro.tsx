@@ -11,18 +11,18 @@ import {
 import { difficultyColors } from '../../design/tokens';
 import { DAILY_LAUNCH_ISO, dayMs, toUTC } from './dailyDates';
 import { useDailyStreak } from './useDailyStreak';
-import styles from './DailyIntroDesk.module.css';
+import styles from './DailyIntro.module.css';
 
 /*
- * The ≥1024px daily intro — the mockup's newspaper masthead card
- * (design-refs/desktop/Daily.dc.html): issue number + "The Daily
- * Grid", the difficulty/target briefing, today's twist, the streak
- * box with its week of dots, and the play CTA. Rendered by DailyDay's
- * desktop fork for any unplayed date; the streak box only shows for
- * TODAY's puzzle (its copy is about keeping today alive).
+ * The daily intro at every tier (phase 3 convergence) — the mockup's
+ * newspaper masthead card (design-refs/desktop/Daily.dc.html): issue
+ * number + "The Daily Grid", the difficulty/target briefing, today's
+ * twist, the streak box with its week of dots, and the play CTA.
+ * Rendered by DailyDay for any unplayed date; the streak box only
+ * shows for TODAY's puzzle (its copy is about keeping today alive).
  */
 
-export interface DailyIntroDeskProps {
+export interface DailyIntroProps {
   dateISO: string;
   recipe: DailyRecipe;
   twist: Challenge | null;
@@ -61,14 +61,14 @@ const longDate = (iso: string): string => {
 const issueNumber = (iso: string): number =>
   Math.round((toUTC(iso) - toUTC(DAILY_LAUNCH_ISO)) / dayMs) + 1;
 
-export function DailyIntroDesk({
+export function DailyIntro({
   dateISO,
   recipe,
   twist,
   twistGoal,
   target,
   onPlay,
-}: DailyIntroDeskProps) {
+}: DailyIntroProps) {
   const isToday = dateISO === currentDateISO();
   const streak = useDailyStreak();
   const tone = difficultyColors[recipe.difficulty];

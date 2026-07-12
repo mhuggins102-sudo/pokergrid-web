@@ -15,10 +15,13 @@ const renderPlay = (search: string) =>
 describe('free play', () => {
   it('shows the difficulty picker without a difficulty param', () => {
     renderPlay('');
-    expect(screen.getByText('Free Play')).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: /extreme/i })
-    ).toHaveAttribute('href', '/play?difficulty=extreme');
+    expect(screen.getByText('Choose your table')).toBeInTheDocument();
+    // Select-then-start: picking Extreme pins the Start link's URL.
+    fireEvent.click(screen.getByRole('button', { name: /^Extreme/ }));
+    expect(screen.getByRole('link', { name: /Start game/ })).toHaveAttribute(
+      'href',
+      '/play?difficulty=extreme'
+    );
   });
 
   it('plays a seeded easy game to completion with Place only', () => {

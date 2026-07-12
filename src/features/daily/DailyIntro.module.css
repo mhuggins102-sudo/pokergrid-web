@@ -1,6 +1,7 @@
-/* Desktop (≥1024px) daily intro — the mockup's newspaper masthead
-   article (design-refs/desktop/Daily.dc.html). Rendered only by
-   DailyDay's desktop fork. */
+/* The daily intro at every tier (phase 3 convergence) — the mockup's
+   newspaper masthead article (design-refs/desktop/Daily.dc.html).
+   Base rules are the desktop layout; the phone block at the bottom
+   tightens the masthead and stacks the briefing. */
 
 /* Centered readability cap inside the shared container — the front
    page reads as a deliberately narrow artifact on the desk (narrow
@@ -295,5 +296,36 @@
 @media (hover: hover) {
   .archiveLink:hover {
     color: var(--ink);
+  }
+}
+
+/* Phone (<768): tighter masthead, stacked briefing and streak box.
+   Everything ≥768 is untouched. */
+@media (max-width: 767px) { /* below bp-tablet */
+  .masthead {
+    padding: 22px 18px 16px;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .body {
+    padding: 18px 16px 22px;
+  }
+
+  .briefing {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .streak {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .cta {
+    margin-top: 18px;
   }
 }

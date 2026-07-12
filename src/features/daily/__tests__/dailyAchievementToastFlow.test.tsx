@@ -61,7 +61,11 @@ describe('daily finish surfaces cumulative achievements (end-to-end)', () => {
       </QueryClientProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+    // The masthead intro's CTA ("Play this puzzle" for archive dates,
+    // "Play today's puzzle" for today).
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Play (today's|this) puzzle$/ })
+    );
     for (let i = 0; i < 30; i++) {
       const placeBtn = screen.queryByRole('button', { name: 'Place' });
       if (!placeBtn) break;

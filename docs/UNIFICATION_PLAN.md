@@ -1,18 +1,10 @@
 # Mobile/Tablet Unification Program
 
-## Execution status (as of resume)
+## Execution status
 
-- **Phase 1: DONE and pushed** (`477f499`): useTier foundation + mockTier test
-  helper, useIsDesktop shim, dead CSS removed (−182 lines), tablet-820 Playwright
-  project (suite now 24 tests / 3 viewports), `scripts/sweep.mjs` committed;
-  sweep proven byte-identical (48/48) before/after. Repo-wide lint fixed.
-- **Phase 2: IN FLIGHT, interrupted by the usage-limit window** — the build agent
-  had only completed its BEFORE sweep (no source edits yet; working tree clean at
-  477f499). On approval: resume the agent with its Phase-2 brief unchanged
-  (tablet adopts desktop pages + nav; bar: 390/1280/1024×768 sweeps
-  byte-identical, 820 changes on page routes only). If the limit window is still
-  active, schedule a self-wakeup for just after it resets and resume then.
-- Phases 3–6 queued as previously approved (no changes to their scope).
+The **Task list & status** section at the bottom of this document is
+the live record — phases are checked off there, with their commit
+SHAs, as they ship.
 
 ## Context
 
@@ -144,9 +136,11 @@ Program phases (this plan):
       (classic-chrome flag keeps the in-game screen byte-identical; ten fork
       flips; Game Modes tap-toggle; per-page tablet CSS verified unnecessary).
       Shipped `b740a93` (checkpoint) + `04f6174` (complete).
-- [ ] **Phase 3** — Phone convergence, cluster A (Rules, Challenges, Targets,
-      Achievements, Free Play picker, Daily intro become responsive; delete the
-      old mobile pages).
+- [x] **Phase 3** — Phone convergence, cluster A (Rules, Challenges, Targets,
+      Achievements, Free Play picker, Daily intro are one responsive component
+      each; old mobile pages deleted; *Desk files promoted to the canonical
+      names; daily twist explainer replaced by "intro shown → skip explainer"
+      with twistSeen bookkeeping kept). Shipped `9ed892c`.
 - [ ] **Phase 4** — Phone convergence, cluster B (Home, Daily Archive, Stats) +
       unified phone header + one responsive Settings page (decision D).
 - [ ] **Phase 5** — Tablet game layout: column / desk-lite families keyed on
