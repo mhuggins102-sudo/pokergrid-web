@@ -137,11 +137,12 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
     expect(Math.abs(m.boardCentering.above - m.boardCentering.below)).toBeLessThanOrEqual(2);
   }
 
-  // 4. Tablet game families (unification phase 5 landed the split): in
-  //    the tablet band (768–1023) the game keys on orientation —
-  //    portrait renders the phone COLUMN (flex layout, no desk panels),
-  //    landscape renders DESK-LITE (the desk tree minus the left rail:
-  //    the deck/actions region present, the Scoring left rail dropped).
+  // 4. Tablet game families (unification phase 5 landed the split, phase
+  //    6 gave desk-lite the full three columns): in the tablet band
+  //    (768–1023) the game keys on orientation — portrait renders the
+  //    phone COLUMN (flex layout, no desk panels), landscape renders
+  //    DESK-LITE, which is now the full three-column desk grid compressed
+  //    (Scoring left rail present, just narrower — not dropped).
   if (m.viewport.w >= 768 && m.viewport.w < 1024) {
     const portrait = m.viewport.h > m.viewport.w;
     if (portrait) {
@@ -155,15 +156,16 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
         page.getByRole('region', { name: 'Scoring' })
       ).toHaveCount(0);
     } else {
-      // Desk-lite family: the desk grid minus the left rail — no phone
-      // .layout, the deck/actions right rail present, Scoring dropped.
+      // Desk-lite family: the compressed three-column desk grid — no
+      // phone .layout, the deck/actions right rail AND the Scoring left
+      // rail both present.
       expect(m.layout).toBeNull();
       await expect(
         page.getByRole('region', { name: 'Deck and actions' })
       ).toHaveCount(1);
       await expect(
         page.getByRole('region', { name: 'Scoring' })
-      ).toHaveCount(0);
+      ).toHaveCount(1);
     }
   }
 

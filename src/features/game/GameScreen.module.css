@@ -455,6 +455,14 @@
   transform: translateY(0);
 }
 
+/* Touch tap-toggle (TapPopover, decision E): the hook forces the segment
+   menu open. Not hover-media-gated — coarse pointers are hover:none. */
+.navPillSegOpen .navMenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .twistPill {
   display: inline-flex;
   align-items: center;
@@ -507,6 +515,14 @@
 }
 
 .navMenuWrap:focus-within .navMenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Touch tap-toggle (TapPopover, decision E): the hook forces the twist /
+   ladder pill menu open. Not hover-media-gated (coarse is hover:none). */
+.navMenuWrapOpen .navMenu {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
@@ -594,9 +610,36 @@
     align-items: start;
   }
 
-  /* Desk-lite (tablet-landscape): the desk grid minus the left rail. */
+  /* Desk-lite (tablet-landscape): the full three-column desk grid,
+     compressed to fit the ~1000px landscape band. Per the user directive
+     text / font sizes stay put — the squeeze is entirely track widths,
+     paddings, and button widths (tuned against 1000×700 and 900×640
+     screenshots of the seeded game). */
   .deskLite {
-    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-columns: 216px minmax(0, 1fr) 236px;
+    gap: var(--space-md);
+  }
+
+  /* Tighter dock padding in the narrower right rail. */
+  .deskLite .deskDock {
+    padding: var(--space-md);
+    min-height: 168px;
+  }
+
+  /* Narrower card wells so the compressed dock keeps its button room. */
+  .deskLite .deskDockStage [class*='cardSlot'] {
+    width: 92px;
+  }
+
+  .deskLite .deskDockCompact [class*='cardSlot'] {
+    width: 74px;
+  }
+
+  /* Discard / Undo sit two-up in the ~248px rail — trim their horizontal
+     padding so the labels never wrap. */
+  .deskLite .deskBtnRow > * {
+    padding-left: var(--space-xs);
+    padding-right: var(--space-xs);
   }
 
   .deskRail {
