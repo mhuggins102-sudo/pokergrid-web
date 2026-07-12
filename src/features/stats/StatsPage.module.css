@@ -284,25 +284,3 @@
   color: var(--ink-3);
   font-size: 14px;
 }
-
-/* Desktop: 2-column dashboard — overview + tiers left, recents right. */
-@media (min-width: 1024px) {
-  .header {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-md);
-}
-
-.wrap {
-    max-width: 1000px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-xl);
-    align-items: start;
-  }
-
-  .header,
-  .summaryRow {
-    grid-column: 1 / -1;
-  }
-}

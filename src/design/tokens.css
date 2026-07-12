@@ -21,6 +21,26 @@
   --desk-gutter: 30px;
 }
 
+/* ---- Presentation tiers (mobile/tablet unification, decision B) ----
+   Three tiers, mirrored in JS by src/app/useTier.ts (Tier /
+   BP_TABLET / BP_DESKTOP). A JSX fork and its stylesheet must flip
+   together — keep the numbers in sync with useTier.ts:
+
+     phone   <768px
+     tablet  768–1023px
+     desktop ≥1024px
+
+   Media queries can't resolve var(), so tier breakpoints stay
+   literals, tagged with a marker comment for grep-ability:
+
+     @media (min-width: 768px)  { \/* bp-tablet *\/ ... }
+     @media (min-width: 1024px) { \/* bp-desktop *\/ ... }
+
+   The convention applies to NEW/UPDATED tier queries; existing 1024
+   queries pick their marker up as each feature area migrates
+   (phases 2+). 640px remains a legacy micro-breakpoint (in-page
+   refinement, not a tier boundary). */
+
 :root,
 [data-theme='paper'] {
   /* ---- Surfaces ---- */

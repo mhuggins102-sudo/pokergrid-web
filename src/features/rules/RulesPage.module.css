@@ -67,18 +67,3 @@
 .tableRow:last-child {
   border-bottom: none;
 }
-
-/* Desktop: two-column editorial spread. */
-@media (min-width: 1024px) {
-  .wrap {
-    max-width: 1000px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-xl) var(--space-xxxl);
-    align-items: start;
-  }
-
-  .header {
-    grid-column: 1 / -1;
-  }
-}

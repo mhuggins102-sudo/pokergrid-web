@@ -151,11 +151,3 @@
     gap: var(--space-sm);
   }
 }
-
-/* The lines sheet trigger only exists where the persistent panel is
-   hidden (below the desktop three-panel breakpoint). */
-@media (min-width: 1024px) {
-  .linesBtn {
-    display: none;
-  }
-}

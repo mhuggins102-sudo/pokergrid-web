@@ -127,20 +127,3 @@
   align-self: flex-start;
   margin-top: var(--space-xs);
 }
-
-/* Desktop: two-up catalog with room for the goal copy. */
-@media (min-width: 1024px) {
-  .wrap {
-    max-width: 1000px;
-  }
-
-  .list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-lg);
-  }
-
-  .card {
-    padding: var(--space-xl);
-  }
-}

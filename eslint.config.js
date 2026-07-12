@@ -1,9 +1,18 @@
 import js from '@eslint/js';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules'] },
+  // design-refs holds the Claude Design mockup artifacts (spec, not
+  // shipped code) — don't lint them.
+  { ignores: ['dist', 'coverage', 'node_modules', 'design-refs'] },
+  {
+    // Node build/tooling scripts (icon generation, screenshot sweep):
+    // plain-Node globals, browser globals for the page.evaluate bodies.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

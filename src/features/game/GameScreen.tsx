@@ -1125,10 +1125,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             <div className={styles.coachSlot}>{coach}</div>
           )}
 
-          <div className={styles.linesSlot}>
-            <LinesPanel report={liveReport} />
-          </div>
-
           <div className={styles.boardArea} ref={boardAreaRef}>
             <div
               ref={boardFrameRef}

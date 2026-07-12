@@ -65,18 +65,3 @@
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
-
-/* Desktop: ladder card + explainer side by side. */
-@media (min-width: 1024px) {
-  .wrap {
-    max-width: 960px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-xl);
-    align-items: start;
-  }
-
-  .header {
-    grid-column: 1 / -1;
-  }
-}
