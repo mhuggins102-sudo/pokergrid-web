@@ -19,10 +19,13 @@
    dialog card (and no keyboard focus is inside), the whole overlay —
    card and scrim — fades way down so the board underneath is fully
    readable. Moving back over the card restores it (the card keeps its
-   pointer-events while dimmed). Hover-gated: touch devices and
-   keyboard (focus-within) users always get the full-opacity modal. */
+   pointer-events while dimmed). ARMED only after the pointer has
+   entered the card once and then left (.scrimDimmable, JS state reset
+   per open) — the overlay must open fully solid even when the pointer
+   happens to sit elsewhere. Hover-gated: touch devices and keyboard
+   (focus-within) users always get the full-opacity modal. */
 @media (hover: hover) {
-  .scrim:hover:not(:focus-within):not(:has(.card:hover)) {
+  .scrim.scrimDimmable:hover:not(:focus-within):not(:has(.card:hover)) {
     opacity: 0.15;
   }
 }

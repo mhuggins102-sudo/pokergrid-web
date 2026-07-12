@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { difficultyForLevel, targetForLevel } from '../../game/challenges';
 import { Button } from '../../design/primitives';
+import { targetsUpReached } from '../../lib/stats';
 import { useStatsStore } from '../progress/statsStore';
 import { useIsDesktop } from '../game/useIsDesktop';
 import { useTargetsStore } from './targetsStore';
@@ -11,7 +12,9 @@ import styles from './TargetsPage.module.css';
 export function TargetsPage() {
   const save = useTargetsStore(s => s.save);
   const clearProgress = useTargetsStore(s => s.clearProgress);
-  const best = useStatsStore(s => s.stats.targetsUpBest);
+  // Stored = highest level beaten; shown = highest level reached
+  // (beaten + 1) — the cross-breakpoint display fix.
+  const best = targetsUpReached(useStatsStore(s => s.stats.targetsUpBest));
   // ≥1024px renders the desktop ladder page INSTEAD of the phone card
   // (same JSX-fork pattern as ChallengesPage / HomePage) — below the
   // breakpoint nothing changes.

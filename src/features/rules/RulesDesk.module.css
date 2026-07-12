@@ -1,11 +1,13 @@
 /* Desktop (≥1024px) rules page, per design-refs/desktop/Rules.dc.html.
    Rendered only by RulesPage's desktop fork. */
 
+/* Readability cap, LEFT-aligned inside the shared 1320px container so
+   the content edge lines up with the wordmark. */
 .wrap {
   width: 100%;
   max-width: 1000px;
-  margin: 0 auto;
-  padding: 24px 0 48px;
+  margin: 0;
+  padding: 0 0 48px;
 }
 
 /* ---- How-to-play spread ---- */

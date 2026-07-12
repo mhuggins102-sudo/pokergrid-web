@@ -3,6 +3,7 @@ import {
   EMPTY_STATS,
   RunRecord,
   recordRun,
+  targetsUpReached,
   tierForRun,
 } from '../stats';
 
@@ -80,5 +81,17 @@ describe('recordRun → bonusCardStatsByDifficulty', () => {
       timesHeld: 2,
       totalShapley: 54,
     });
+  });
+});
+
+describe('targetsUpReached — beaten high-water → displayed reached level', () => {
+  it('maps beaten + 1 once there is at least one win', () => {
+    // Beat L1 → you advanced to (reached) L2.
+    expect(targetsUpReached(1)).toBe(2);
+    expect(targetsUpReached(3)).toBe(4);
+  });
+
+  it('reports 0 (hide the stat) before any win', () => {
+    expect(targetsUpReached(0)).toBe(0);
   });
 });

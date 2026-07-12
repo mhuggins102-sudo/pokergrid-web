@@ -6,9 +6,12 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 28px;
-  padding: 18px 40px;
+  /* 1320px container + 30px gutters — the ONE desktop width every page
+     shares (AppLayout .main mirrors it), so the wordmark's left edge
+     lines up with page content on every route. */
+  padding: 18px 30px;
   border-bottom: 1px solid var(--rule);
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   width: 100%;
 }
@@ -81,6 +84,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  /* Hover-only affordance — the trigger itself is not clickable. The
+     menu items keep their pointer cursor. */
+  cursor: default;
 }
 
 .caret {
@@ -110,6 +116,15 @@
   opacity: 1;
   pointer-events: auto;
   transform: translateX(-50%) translateY(0);
+}
+
+/* A mode was just selected: the menu closes and stays closed while the
+   pointer is still parked over the wrap (cleared on mouseleave /
+   re-focus). Declared after the open rules so the tie-break wins. */
+.modesWrap.modesWrapClosed .modesMenu {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-4px);
 }
 
 .menuItem {

@@ -74,6 +74,32 @@ describe('evaluatePartialLine — the desktop hand-so-far evaluator', () => {
     );
   });
 
+  test('a doubled (supercharged) card counts twice for sets', () => {
+    const dbl = (rank: Rank, suit: Suit): StandardCard => ({
+      ...C(rank, suit),
+      supercharge: 'double',
+    });
+    // A lone doubled card already reads as a forming Pair — matching
+    // how evalStandardFive counts it once the line completes.
+    expectPartial(line(dbl('9', 'H')), 'PAIR');
+    // Doubled card + a natural same-rank card → trips.
+    expectPartial(line(dbl('9', 'H'), C('9', 'C')), 'THREE_OF_A_KIND');
+    // A joker extends the doubled group: 2 (double) + 1 (joker) → trips.
+    expectPartial(line(dbl('Q', 'S'), JK), 'THREE_OF_A_KIND');
+    // Doubled card + same rank + joker → quads.
+    expectPartial(line(dbl('9', 'H'), C('9', 'C'), JK), 'FOUR_OF_A_KIND');
+    // Doubled pair beside a natural pair → full-house shape (3 + 2).
+    expectPartial(
+      line(dbl('K', 'H'), C('K', 'C'), C('3', 'D'), C('3', 'S')),
+      'FULL_HOUSE'
+    );
+    // A 'wild' supercharge does NOT double rank counts.
+    expectPartial(
+      line({ ...C('9', 'H'), supercharge: 'wild' }),
+      'HIGH_CARD'
+    );
+  });
+
   test('a full 5-card line delegates to the real evaluator', () => {
     // Flush — only visible through evaluateLine, never the count pass.
     expectPartial(

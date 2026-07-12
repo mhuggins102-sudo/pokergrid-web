@@ -89,8 +89,11 @@
 
 /* Desktop: two-up cards within each group. */
 @media (min-width: 1024px) {
+  /* Readability cap, LEFT-aligned inside the shared 1320px container
+     so the content edge lines up with the wordmark. */
   .wrap {
     max-width: 1000px;
+    margin: 0;
   }
 
   .cards {

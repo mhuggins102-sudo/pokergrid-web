@@ -523,6 +523,27 @@
   border-top: 1px solid var(--hairline);
 }
 
+/* Game over: the tier row actually earned lights up in the score
+   segment's hover menu — same accent-tint vocabulary as the other
+   active rows (SCORING hover, leaderboard own-row). */
+.navMenuRowOn {
+  margin: 0 -6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.navMenuRowOn,
+.navMenuRowOn b {
+  color: var(--accent);
+}
+
+/* Keep the hairline rhythm intact around the tinted row. */
+.navMenuRow + .navMenuRowOn,
+.navMenuRowOn + .navMenuRow {
+  border-top: 1px solid var(--hairline);
+}
+
 .navMenuRow b {
   font-weight: 700;
   color: var(--ink);
@@ -545,8 +566,9 @@
    bonus cards). ===== */
 @media (min-width: 1024px) {
   .desk {
+    /* Fills AppLayout's shared 1320px desktop container (item 21's
+       reference route — every page now aligns with this). */
     width: 100%;
-    max-width: 1200px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr) 300px;

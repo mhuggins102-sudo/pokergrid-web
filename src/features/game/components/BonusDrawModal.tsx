@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react';
+import { CSSProperties, useState } from 'react';
 import { SPOTLIGHT_ID } from '../../../game/bonusCards';
 import { styleFor, toneLabelFor } from '../../../lib/bonusCardCategory';
 import { useGameSession } from '../GameSessionProvider';
@@ -14,6 +14,12 @@ import styles from './BonusDrawModal.module.css';
  */
 export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
   const { state, dispatch } = useGameSession();
+  // Board-peek dim arming: the overlay opens FULLY solid no matter
+  // where the pointer sits, and only starts dimming after the pointer
+  // has entered the dialog card once and then left. Resets on each
+  // open (the modal unmounts between draws). Keyboard focus still
+  // forces solid via the CSS :focus-within guard.
+  const [hasHovered, setHasHovered] = useState(false);
 
   const pick = (idx: number) => {
     const card = ui.drawn[idx];
@@ -25,12 +31,15 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
   };
 
   return (
-    <div className={styles.scrim}>
+    <div
+      className={`${styles.scrim} ${hasHovered ? styles.scrimDimmable : ''}`}
+    >
       <div
         className={styles.card}
         role="dialog"
         aria-modal="true"
         aria-label="Draw a bonus card"
+        onMouseEnter={() => setHasHovered(true)}
       >
         <div className={styles.headRow}>
           <span className={styles.title}>Draw a bonus card</span>

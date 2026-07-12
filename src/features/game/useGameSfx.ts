@@ -16,7 +16,14 @@ import {
  * logged until resolved), and game over plays win/lose. Gated on the
  * sounds setting; the reducer itself stays silent.
  */
-export const useGameSfx = (state: GameState, finalScore: number): void => {
+export const useGameSfx = (
+  state: GameState,
+  finalScore: number,
+  /** View-only rehydrated sessions (revisiting a completed daily) must
+   *  be silent — the ~25 rehydrated placements would otherwise replay
+   *  their ticks, and the win/lose sting + joker chime with them. */
+  muted = false
+): void => {
   const sounds = useSettingsStore(s => s.sounds);
   const prev = useRef<{ historyLen: number; phase: string } | null>(null);
   // Timers for the opening deal's placement ticks, cleared on unmount so
@@ -27,7 +34,7 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
     const cur = { historyLen: state.history.length, phase: state.phase.kind };
     const last = prev.current;
     prev.current = cur;
-    if (!sounds) return;
+    if (!sounds || muted) return;
     if (last === null) {
       // Session mount: the engine seated the opening card(s) before the
       // first paint. Give that deal its placement tick(s), timed to the
@@ -90,7 +97,7 @@ export const useGameSfx = (state: GameState, finalScore: number): void => {
       if (finalScore >= state.target) sfxWin();
       else sfxLose();
     }
-  }, [state, sounds, finalScore]);
+  }, [state, sounds, finalScore, muted]);
 
   // Cancel any pending opening-deal ticks on unmount (e.g. leaving mid
   // Gridlock deal) so they don't fire after the screen is gone.

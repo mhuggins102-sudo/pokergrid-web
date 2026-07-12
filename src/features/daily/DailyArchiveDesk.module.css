@@ -1,11 +1,10 @@
 /* Desktop (≥1024px) daily archive, per design-refs/desktop/Daily
    Archive.dc.html. Rendered only by DailyArchivePage's desktop fork. */
 
+/* Fills AppLayout's shared 1320px desktop container. */
 .wrap {
   width: 100%;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 16px 0 40px;
+  padding: 0 0 40px;
 }
 
 .eyebrow {

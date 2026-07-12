@@ -65,8 +65,11 @@ export function DesktopHome() {
 
   return (
     <div className={styles.wrap}>
-      {/* HERO — today's daily */}
-      <Link to="/daily" className={styles.hero}>
+      {/* HERO — today's daily. A <div> with a stretched primary link
+          (the CTA's ::after covers the card) instead of one big <a>,
+          so the quiet archive link can sit beside the CTA without
+          nesting anchors. */}
+      <div className={styles.hero}>
         <div className={styles.heroBody}>
           <div className={styles.heroEyebrow}>
             <span className={styles.heroKicker}>Today&apos;s Daily</span>
@@ -95,9 +98,14 @@ export function DesktopHome() {
               </span>
             )}
           </div>
-          <span className={styles.heroCta}>
-            Play today&apos;s puzzle <span aria-hidden="true">→</span>
-          </span>
+          <div className={styles.heroCtaRow}>
+            <Link to="/daily" className={styles.heroCta}>
+              Play today&apos;s puzzle <span aria-hidden="true">→</span>
+            </Link>
+            <Link to="/daily/archive" className={styles.heroArchive}>
+              Browse the archive <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
         <div className={styles.heroArt} aria-hidden="true">
           <div className={styles.heroGrid}>
@@ -114,7 +122,7 @@ export function DesktopHome() {
             ))}
           </div>
         </div>
-      </Link>
+      </div>
 
       {/* MODE ROW */}
       <div className={styles.modeRow}>

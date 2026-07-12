@@ -69,8 +69,9 @@ const fmtDateline = (d: Date): string => {
 };
 
 // The masthead dateline next to the wordmark ("Thu · Jul 10"): inside
-// an archived daily it names THAT puzzle's date, free play is labeled
-// per the mockup, everywhere else it's today.
+// an archived daily it names THAT puzzle's date; the non-daily modes
+// are labeled by mode (Free Play / Challenges / Targets Up — the same
+// mechanism for all three); everywhere else it's today.
 const dateline = (pathname: string): string => {
   const daily = /^\/daily\/(\d{4})-(\d{2})-(\d{2})$/.exec(pathname);
   if (daily) {
@@ -80,6 +81,8 @@ const dateline = (pathname: string): string => {
     return fmtDateline(new Date(+y, +m - 1, +d));
   }
   if (pathname.startsWith('/play')) return 'Free Play';
+  if (pathname.startsWith('/challenges')) return 'Challenges';
+  if (pathname.startsWith('/targets')) return 'Targets Up';
   return fmtDateline(new Date());
 };
 
@@ -87,6 +90,10 @@ export function DesktopNav() {
   const ctx = useContext(NavExtrasContext);
   const { pathname } = useLocation();
   const inGameMode = MODES.some(m => pathname.startsWith(m.to));
+  // Selecting a menu item must CLOSE the dropdown even though the
+  // pointer is still parked over it (and :focus-within would otherwise
+  // pin it open) — suppressed until the pointer leaves the wrap.
+  const [modesClosed, setModesClosed] = useState(false);
 
   // ◐ flips light↔dark within the chosen family. Explicit appearance
   // (not 'system') so the click always visibly does something.
@@ -106,7 +113,18 @@ export function DesktopNav() {
         <span className={styles.dateline}>{dateline(pathname)}</span>
       </div>
       <nav className={styles.center} aria-label="Primary">
-        <div className={styles.modesWrap} tabIndex={0}>
+        <div
+          className={`${styles.modesWrap} ${
+            modesClosed ? styles.modesWrapClosed : ''
+          }`}
+          tabIndex={0}
+          // Hover-only trigger: a mouse press must not FOCUS the wrap
+          // (that pinned the menu open via :focus-within until a click
+          // landed elsewhere) — keyboard Tab focus still opens it.
+          onMouseDown={e => e.preventDefault()}
+          onMouseLeave={() => setModesClosed(false)}
+          onFocus={() => setModesClosed(false)}
+        >
           <span
             className={`${styles.link} ${styles.modesTrigger} ${
               inGameMode ? styles.on : ''
@@ -122,6 +140,15 @@ export function DesktopNav() {
                 className={({ isActive }) =>
                   `${styles.menuItem} ${isActive ? styles.menuItemOn : ''}`
                 }
+                onClick={() => {
+                  // Close on selection: drop any focus inside the wrap
+                  // (keyboard Enter) and suppress the hover-open until
+                  // the pointer leaves — so the menu doesn't linger
+                  // under the parked cursor, and the trigger drops any
+                  // focus tint. Route-based .on styling is untouched.
+                  setModesClosed(true);
+                  (document.activeElement as HTMLElement | null)?.blur?.();
+                }}
               >
                 {m.label}
               </NavLink>
