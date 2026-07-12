@@ -87,8 +87,8 @@
   color: var(--ink-2);
 }
 
-/* Desktop: two-up cards within each group. */
-@media (min-width: 1024px) {
+/* Tablet+ (≥768): two-up cards within each group, centered cap. */
+@media (min-width: 768px) { /* bp-tablet */
   /* Centered readability cap inside the shared container (narrow
      content pages center; full-width pages keep the container edge). */
   .wrap {

@@ -1,6 +1,6 @@
 import { ACHIEVEMENTS, AchievementTier } from '../../game/achievements';
 import { useStatsStore } from '../progress/statsStore';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { AchievementsDesk } from './AchievementsDesk';
 import styles from './AchievementsPage.module.css';
 
@@ -31,8 +31,8 @@ export function AchievementsPage() {
   const done = useStatsStore(s => s.stats.achievementsDone);
   // ≥1024px renders the desktop-redesign trophy case INSTEAD of the
   // phone list — below the breakpoint nothing changes.
-  const isDesktop = useIsDesktop();
-  if (isDesktop) return <AchievementsDesk />;
+  const tier = useTier();
+  if (tier !== 'phone') return <AchievementsDesk />;
 
   return (
     <section className={styles.wrap}>

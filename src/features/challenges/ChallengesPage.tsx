@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { CHALLENGES, ChallengeId } from '../../game/challenges';
 import { Button, Chevron } from '../../design/primitives';
 import { useStatsStore } from '../progress/statsStore';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { ChallengesDesk } from './ChallengesDesk';
 import styles from './ChallengesPage.module.css';
 
@@ -16,11 +16,11 @@ import styles from './ChallengesPage.module.css';
 export function ChallengesPage() {
   const done = useStatsStore(s => s.stats.challengesDone);
   const [expanded, setExpanded] = useState<ChallengeId | null>(null);
-  // ≥1024px renders the desktop-redesign catalog INSTEAD of the phone
+  // Non-phone tiers (≥768px) render the desktop-redesign catalog INSTEAD of the phone
   // accordion (same JSX-fork pattern as HomePage) — below the
   // breakpoint nothing changes.
-  const isDesktop = useIsDesktop();
-  if (isDesktop) return <ChallengesDesk />;
+  const tier = useTier();
+  if (tier !== 'phone') return <ChallengesDesk />;
 
   return (
     <section className={styles.wrap}>

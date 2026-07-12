@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { useStatsStore } from '../progress/statsStore';
 import { countDailyWins } from '../daily/dailyWinsLite';
 import { markTutorialSeen, tutorialSeen } from '../tutorial/tutorialSeen';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import { DesktopHome } from './DesktopHome';
 import styles from './HomePage.module.css';
 
@@ -31,10 +31,10 @@ const TILES = [
 ];
 
 export function HomePage() {
-  // ≥1024px renders the desktop-redesign landing page INSTEAD of the
-  // phone tile list (same JSX-fork pattern as GameScreen) — below the
-  // breakpoint nothing changes.
-  const isDesktop = useIsDesktop();
+  // Non-phone tiers (≥768px) render the desktop-redesign landing page
+  // INSTEAD of the phone tile list (same JSX-fork pattern as
+  // GameScreen) — on phones nothing changes.
+  const tier = useTier();
   // First-visit callout; "No thanks" suppresses it for good (the
   // tutorial stays reachable from Rules and Settings).
   const [showIntro, setShowIntro] = useState(() => !tutorialSeen());
@@ -49,7 +49,7 @@ export function HomePage() {
   const wins = freeWins + dailyWins;
   const earned = useStatsStore(s => s.stats.achievementsDone.length);
 
-  if (isDesktop) return <DesktopHome />;
+  if (tier !== 'phone') return <DesktopHome />;
 
   return (
     <section className={styles.wrap}>

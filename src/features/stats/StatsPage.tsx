@@ -19,7 +19,7 @@ import {
 } from './modeStats';
 import { ScoreTrend } from './ScoreTrend';
 import { StatsDesk } from './StatsDesk';
-import { useIsDesktop } from '../game/useIsDesktop';
+import { useTier } from '../../app/useTier';
 import styles from './StatsPage.module.css';
 
 // Tones for the BY MODE rows — distinct from the difficulty palette so
@@ -46,10 +46,11 @@ export function StatsPage() {
   const [filter, setFilter] = useState<Filter>(null);
   // Score distribution panel: tier bars vs the score-over-plays line.
   const [scoreView, setScoreView] = useState<'tiers' | 'trend'>('tiers');
-  // ≥1024px renders the desktop-redesign dashboard INSTEAD of the phone
-  // panels (same JSX-fork pattern as HomePage) — below the breakpoint
-  // nothing changes.
-  const isDesktop = useIsDesktop();
+  // Non-phone tiers (≥768px) render the desktop-redesign dashboard
+  // INSTEAD of the phone panels (same JSX-fork pattern as HomePage) —
+  // the phone panels are untouched below the tablet tier. Named
+  // `layoutTier` to avoid shadowing the `tier` loop var below.
+  const layoutTier = useTier();
 
   const data = useMemo(() => buildModeStats(stats, plays), [stats, plays]);
 
@@ -94,7 +95,7 @@ export function StatsPage() {
 
   // After every hook so the hook count stays stable if the breakpoint
   // flips mid-session (window resize across 1024px).
-  if (isDesktop) return <StatsDesk />;
+  if (layoutTier !== 'phone') return <StatsDesk />;
 
   const scopedRuns = data.runs.filter(
     r =>
