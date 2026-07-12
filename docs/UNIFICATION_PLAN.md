@@ -141,8 +141,11 @@ Program phases (this plan):
       each; old mobile pages deleted; *Desk files promoted to the canonical
       names; daily twist explainer replaced by "intro shown → skip explainer"
       with twistSeen bookkeeping kept). Shipped `9ed892c`.
-- [ ] **Phase 4** — Phone convergence, cluster B (Home, Daily Archive, Stats) +
-      unified phone header + one responsive Settings page (decision D).
+- [x] **Phase 4** — Phone convergence, cluster B (Home, Daily Archive, Stats)
+      + unified phone header (classic header now tablet-band classic-chrome
+      only, dies in phase 5) + one responsive Settings page per decision D +
+      color-blind glyphs on the desk game surfaces + `useIsDesktop` deleted.
+      Shipped `6b1e988`.
 - [ ] **Phase 5** — Tablet game layout: column / desk-lite families keyed on
       tier + orientation.
 - [ ] **Phase 6** — Touch tap-equivalents (`TapPopover` primitive across the
