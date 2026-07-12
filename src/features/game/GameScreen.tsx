@@ -27,7 +27,7 @@ import {
   useToast,
 } from '../../design/primitives';
 import { difficultyColors } from '../../design/tokens';
-import { useNavExtras } from '../../app/DesktopNav';
+import { useNavExtras, useNavGameRow } from '../../app/DesktopNav';
 import { useGameSession } from './GameSessionProvider';
 import { useGameFamily } from './useGameFamily';
 import { useTier } from '../../app/useTier';
@@ -62,6 +62,7 @@ import {
   DeskStatsPanel,
   DesktopBonusPanel,
   EdgeRails,
+  HandValuesTable,
   ScoringPanel,
 } from './components/DesktopRails';
 import { InvestWheel } from './components/InvestWheel';
@@ -314,9 +315,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const ladderPop = useTapPopover('pill-ladder');
   const diffPop = useTapPopover('pill-diff');
   const scorePop = useTapPopover('pill-score');
-  // Streamlined column pill's menu (Lines breakdown / Hand values). Top
-  // level like the others — TapPopover hooks never live inside a memo.
-  const columnPop = useTapPopover('column-pill');
+  // Streamlined phone details-row controls: the "Hands" popover (hand
+  // values) and the "Scoring" popover (the desk SCORING panel). Top level
+  // like the others — TapPopover hooks never live inside a memo.
+  const handsRowPop = useTapPopover('row-hands');
+  const scoringRowPop = useTapPopover('row-scoring');
 
   // Game-commit dismissal (decision E): every committed action produces a
   // NEW state object (the reducer is pure — GameSessionProvider), so this
@@ -501,93 +504,124 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     scorePop,
   ]);
 
-  // Streamlined column pill (Settings preview): the desk families' score
-  // pill compressed for the phone header's row-1 right slot (beside ◐).
-  // One pill — difficulty dot + live SCORE / TARGET — carrying a ✦ and
-  // the ladder rung on a twist / Targets-Up run, mirroring navPill in
-  // compressed form. Tapping it opens a small menu re-homing the two
-  // doors the removed ScoreBar carried: the Lines breakdown sheet and
-  // the hand-values sheet. Built unconditionally (cheap, memoized); only
-  // MOUNTED when `streamlined`, so the flag stays a no-op when off.
-  const columnPill = useMemo(() => {
-    const tone = difficultyColors[state.difficulty];
-    const diffCap =
-      state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
-    const context = twist
-      ? `${diffCap} · ${twist.name}`
-      : tuLevel !== null
-        ? `${diffCap} · Targets Up L${tuLevel}`
-        : `${diffCap} · target ${state.target}`;
-    const marked = !!twist || tuLevel !== null;
+  // Streamlined phone details row (v2): the SAME desk pill cluster
+  // (twist / ladder + split difficulty/score pill, built once as
+  // `navPill`) plus two anchored controls — "Hands" (the desk SCORING
+  // ⓘ's hand-values table) and "Scoring" (the desk SCORING panel itself)
+  // — replacing v1's compact columnPill. Rendered as the phone header's
+  // second row via useNavGameRow. The controls collapse to icon-only when
+  // a twist / Targets-Up pill is competing for the row's width.
+  const compactRowIcons = !!(twist || mode.kind === 'targets');
+  const gameDetailsRow = useMemo(() => {
+    const investBoost = state.investHands ? state.handBoost : undefined;
+    const purpleInputs = {
+      grid: state.grid,
+      lines: activeReport.lines,
+      deckRemaining: state.deck.length,
+      discards: state.discards,
+      perkSpent: state.perkSpent,
+    };
+    const endgame = computeEndgameRows(state.bonusCards, purpleInputs);
     return (
-      <span
-        ref={columnPop.wrapRef}
-        className={`${styles.navMenuWrap} ${
-          columnPop.open ? styles.navMenuWrapOpen : ''
-        }`}
-        tabIndex={0}
-        {...columnPop.toggleProps}
-      >
-        <span
-          className={`${styles.navPill} ${styles.columnPill}`}
-          style={{ '--pill-tone': tone } as CSSProperties}
-        >
-          <span className={styles.navPillDot} aria-hidden="true" />
-          {marked && (
-            <span className={styles.columnPillStar} aria-hidden="true">
-              ✦
-            </span>
-          )}
-          {tuLevel !== null && (
-            <span className={styles.columnPillLevel}>L{tuLevel}</span>
-          )}
+      <div className={styles.gameDetailsRow}>
+        {navPill}
+        <div className={styles.rowControls}>
           <span
-            className={styles.navPillScore}
-            aria-label={`Score ${navScore} of ${state.target}`}
+            ref={handsRowPop.wrapRef}
+            className={`${styles.rowCtrl} ${
+              handsRowPop.open ? styles.rowCtrlOpen : ''
+            }`}
           >
-            {navScore}
-            <span className={styles.navPillTarget}>/ {state.target}</span>
+            <button
+              type="button"
+              className={styles.rowCtrlBtn}
+              aria-label="Hand values"
+              {...handsRowPop.toggleProps}
+            >
+              <span className={styles.rowCtrlGlyph} aria-hidden="true">
+                ⓘ
+              </span>
+              {!compactRowIcons && <span>Hands</span>}
+            </button>
+            <div
+              className={`${styles.rowPop} ${styles.rowHandsPop}`}
+              role="tooltip"
+            >
+              <HandValuesTable investBoost={investBoost} />
+            </div>
           </span>
-        </span>
-        <div className={`${styles.navMenu} ${styles.columnMenu}`}>
-          <div className={styles.navMenuHead} style={{ color: tone }}>
-            {context}
-          </div>
-          <button
-            type="button"
-            className={styles.columnMenuBtn}
-            onClick={() => {
-              closeAllPopovers();
-              setLinesOpen(true);
-            }}
+          <span
+            ref={scoringRowPop.wrapRef}
+            className={`${styles.rowCtrl} ${
+              scoringRowPop.open ? styles.rowCtrlOpen : ''
+            }`}
           >
-            Lines breakdown
-          </button>
-          <button
-            type="button"
-            className={styles.columnMenuBtn}
-            onClick={() => {
-              closeAllPopovers();
-              setHandsOpen(true);
-            }}
-          >
-            Hand values
-          </button>
+            <button
+              type="button"
+              className={styles.rowCtrlBtn}
+              aria-label="Scoring"
+              {...scoringRowPop.toggleProps}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="17" x2="20" y2="17" />
+              </svg>
+              {!compactRowIcons && <span>Scoring</span>}
+            </button>
+            <div className={`${styles.rowPop} ${styles.rowScoringPop}`}>
+              <ScoringPanel
+                report={activeReport}
+                onLineTap={line => {
+                  // Open the line's breakdown AND close the popover.
+                  closeAllPopovers();
+                  setDetailLine(line);
+                }}
+                investBoost={investBoost}
+                bonusCards={state.bonusCards}
+                handBoost={state.handBoost}
+                endgame={endgame}
+                hideHandsInfo
+              />
+            </div>
+          </span>
         </div>
-      </span>
+      </div>
     );
   }, [
-    state.difficulty,
-    state.target,
-    navScore,
-    twist,
-    tuLevel,
-    columnPop,
+    navPill,
+    activeReport,
+    state.grid,
+    state.deck.length,
+    state.discards,
+    state.perkSpent,
+    state.bonusCards,
+    state.handBoost,
+    state.investHands,
+    compactRowIcons,
+    handsRowPop,
+    scoringRowPop,
     closeAllPopovers,
-    setLinesOpen,
-    setHandsOpen,
   ]);
-  useNavExtras(isDesk ? navPill : streamlined ? columnPill : null);
+
+  // Tier picks the streamlined presentation (decision B). The phone tier
+  // gets the second header row (gameRow); the tablet-portrait column tier
+  // has no second row, so it mounts the full desk pill cluster into the
+  // extras slot instead. Desk families always mount the cluster. Both
+  // hooks are unconditional; only one carries a node at a time.
+  const streamlinedPhone = streamlined && tier === 'phone';
+  const streamlinedTablet = streamlined && tier === 'tablet';
+  useNavExtras(isDesk || streamlinedTablet ? navPill : null);
+  useNavGameRow(streamlinedPhone ? gameDetailsRow : null);
 
   // Live per-card Shapley contribution, shown as a corner badge on each
   // held bonus card so the points it's adding are visible without opening
@@ -1401,6 +1435,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             <div className={streamlined ? styles.bonusRowDocked : styles.bonusRowSlot}>
               <BonusCardStrip
                 layout="row"
+                docked={streamlined}
                 cards={state.bonusCards}
                 values={liveShapley}
                 onSlotTap={

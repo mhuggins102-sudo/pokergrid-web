@@ -105,6 +105,9 @@ export interface BonusCardStripProps {
   liveContext?: (card: BonusCard) => string[];
   /** Drop the "(each)" suffix from each chip's mult (end-game cells). */
   hideEach?: boolean;
+  /** Streamlined docked strip (row layout): chips adopt the desk
+   *  bonus-panel entry look. Ignored by the panel layout. */
+  docked?: boolean;
 }
 
 /**
@@ -122,6 +125,7 @@ export function BonusCardStrip({
   onUse,
   liveContext,
   hideEach,
+  docked,
 }: BonusCardStripProps) {
   const [detail, setDetail] = useState<{ card: BonusCard; index: number } | null>(
     null
@@ -147,7 +151,10 @@ export function BonusCardStrip({
   if (layout === 'row') {
     const emptySlots = Math.max(0, 3 - cards.length);
     return (
-      <div className={styles.row} aria-label="Bonus cards">
+      <div
+        className={`${styles.row} ${docked ? styles.rowDocked : ''}`}
+        aria-label="Bonus cards"
+      >
         {cards.map((card, i) => (
           <BonusChip
             key={`${card.id}-${i}`}

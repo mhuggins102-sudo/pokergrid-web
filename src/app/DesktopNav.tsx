@@ -23,19 +23,29 @@ import styles from './DesktopNav.module.css';
  * driven; the dateline stays desk-only.
  */
 
-// Pages push transient nav content (score pill, etc.) through this
-// context; the slot empties itself when the page unmounts. Exported so
-// tests can supply a stable-value provider that captures the mounted
-// node without the real provider's per-set value churn (which, with a
-// fresh-identity pill node, act() amplifies into a render loop).
+// Pages push transient nav content through this context; each slot
+// empties itself when the page unmounts. Two slots:
+//   • extras  — the right-hand pill cluster (desk / tablet score pill).
+//   • gameRow — the streamlined game's in-game details row, which
+//     REPLACES the center nav as the phone header's second row (set only
+//     by the streamlined column GameScreen — see useNavGameRow).
+// Exported so tests can supply a stable-value provider that captures the
+// mounted node without the real provider's per-set value churn (which,
+// with a fresh-identity node, act() amplifies into a render loop).
 export const NavExtrasContext = createContext<{
   extras: ReactNode;
   setExtras: (n: ReactNode) => void;
+  gameRow: ReactNode;
+  setGameRow: (n: ReactNode) => void;
 } | null>(null);
 
 export function NavExtrasProvider({ children }: { children: ReactNode }) {
   const [extras, setExtras] = useState<ReactNode>(null);
-  const value = useMemo(() => ({ extras, setExtras }), [extras]);
+  const [gameRow, setGameRow] = useState<ReactNode>(null);
+  const value = useMemo(
+    () => ({ extras, setExtras, gameRow, setGameRow }),
+    [extras, gameRow]
+  );
   return (
     <NavExtrasContext.Provider value={value}>
       {children}
@@ -53,6 +63,25 @@ export function useNavExtras(node: ReactNode): void {
     setExtras(node);
     return () => setExtras(null);
   }, [node, setExtras]);
+}
+
+/** Mount `node` as the phone header's in-game details row (row 2, in
+ *  place of the center nav) for this component's lifetime. Mirrors
+ *  useNavExtras exactly. The row + its HOME icon are CSS-gated to the
+ *  phone tier (<768); at ≥768 the node is display:none and the center
+ *  nav shows normally.
+ *
+ *  ONLY the streamlined column GameScreen sets this — so every
+ *  non-game phone page keeps its Game Modes nav row exactly as-is (the
+ *  nav-row replacement is strictly in-game). */
+export function useNavGameRow(node: ReactNode): void {
+  const ctx = useContext(NavExtrasContext);
+  const setGameRow = ctx?.setGameRow;
+  useEffect(() => {
+    if (!setGameRow) return;
+    setGameRow(node);
+    return () => setGameRow(null);
+  }, [node, setGameRow]);
 }
 
 const MODES = [
@@ -97,6 +126,11 @@ export function DesktopNav() {
   const ctx = useContext(NavExtrasContext);
   const { pathname } = useLocation();
   const inGameMode = MODES.some(m => pathname.startsWith(m.to));
+  // The streamlined game's details row, if a running streamlined column
+  // game has pushed one. When present the phone header (<768) swaps its
+  // second row from the center nav to this row and shows a HOME icon;
+  // ≥768 both are display:none and the center nav shows normally.
+  const gameRow = ctx?.gameRow ?? null;
   // Selecting a menu item must CLOSE the dropdown even though the
   // pointer is still parked over it (and :focus-within would otherwise
   // pin it open) — suppressed until the pointer leaves the wrap.
@@ -120,7 +154,9 @@ export function DesktopNav() {
     });
 
   return (
-    <header className={styles.bar}>
+    <header
+      className={`${styles.bar} ${gameRow ? styles.gameRowActive : ''}`}
+    >
       <div className={styles.left}>
         <NavLink to="/" className={styles.wordmark}>
           PokerGrid
@@ -192,8 +228,29 @@ export function DesktopNav() {
           </NavLink>
         ))}
       </nav>
+      {/* Streamlined game details row — phone header row 2, in place of
+          the center nav (CSS-gated to <768; display:none ≥768). */}
+      {gameRow && <div className={styles.gameRow}>{gameRow}</div>}
       <div className={styles.right}>
         {ctx?.extras}
+        {gameRow && (
+          <NavLink to="/" className={styles.homeBtn} aria-label="Home">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 11l9-7 9 7" />
+              <path d="M5 10v10h14V10" />
+            </svg>
+          </NavLink>
+        )}
         <button
           type="button"
           className={styles.themeToggle}
