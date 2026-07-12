@@ -146,8 +146,11 @@ Program phases (this plan):
       only, dies in phase 5) + one responsive Settings page per decision D +
       color-blind glyphs on the desk game surfaces + `useIsDesktop` deleted.
       Shipped `6b1e988`.
-- [ ] **Phase 5** — Tablet game layout: column / desk-lite families keyed on
-      tier + orientation.
+- [x] **Phase 5** — Tablet game layout: column / desk-lite families keyed on
+      tier + orientation (`useGameFamily`; desk-lite = desk tree minus the
+      left rail; column tablet cap 600/630; classic header + classic-chrome
+      flag deleted; rotation e2e proves single-commit across the family
+      flip). Shipped `18e2769`.
 - [ ] **Phase 6** — Touch tap-equivalents (`TapPopover` primitive across the
       hover-only surfaces).
 
