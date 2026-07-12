@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { NavLink, useLocation } from 'react-router';
@@ -95,6 +96,37 @@ export function DesktopNav() {
   // pin it open) — suppressed until the pointer leaves the wrap.
   const [modesClosed, setModesClosed] = useState(false);
 
+  // Touch (coarse pointer): hover/:focus-within can't open the Game
+  // Modes menu, so tapping the trigger toggles it. Interim shim —
+  // phase 6's TapPopover primitive replaces this. Fine-pointer devices
+  // keep the pure hover/focus CSS untouched (coarse is false there).
+  const coarse =
+    typeof window !== 'undefined' &&
+    !!window.matchMedia?.('(pointer: coarse)').matches;
+  const [modesOpen, setModesOpen] = useState(false);
+  const modesWrapRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!modesOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (!modesWrapRef.current?.contains(e.target as Node)) {
+        setModesOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModesOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [modesOpen]);
+  // Close on navigation (item tap or any route change).
+  useEffect(() => {
+    setModesOpen(false);
+  }, [pathname]);
+
   // ◐ flips light↔dark within the chosen family. Explicit appearance
   // (not 'system') so the click always visibly does something.
   const settings = useSettingsStore();
@@ -114,14 +146,19 @@ export function DesktopNav() {
       </div>
       <nav className={styles.center} aria-label="Primary">
         <div
+          ref={modesWrapRef}
           className={`${styles.modesWrap} ${
             modesClosed ? styles.modesWrapClosed : ''
-          }`}
+          } ${modesOpen ? styles.modesWrapOpen : ''}`}
           tabIndex={0}
-          // Hover-only trigger: a mouse press must not FOCUS the wrap
-          // (that pinned the menu open via :focus-within until a click
-          // landed elsewhere) — keyboard Tab focus still opens it.
-          onMouseDown={e => e.preventDefault()}
+          // Hover-only trigger on fine pointers: a mouse press must not
+          // FOCUS the wrap (that pinned the menu open via :focus-within
+          // until a click landed elsewhere) — keyboard Tab focus still
+          // opens it. On coarse pointers the tap must fire a click, so
+          // the preventDefault is skipped there.
+          onMouseDown={e => {
+            if (!coarse) e.preventDefault();
+          }}
           onMouseLeave={() => setModesClosed(false)}
           onFocus={() => setModesClosed(false)}
         >
@@ -129,6 +166,9 @@ export function DesktopNav() {
             className={`${styles.link} ${styles.modesTrigger} ${
               inGameMode ? styles.on : ''
             }`}
+            // Touch: tap toggles the menu (hover can't). No-op on fine
+            // pointers, where hover/focus drive it.
+            onClick={coarse ? () => setModesOpen(o => !o) : undefined}
           >
             Game Modes <span className={styles.caret}>▾</span>
           </span>
@@ -147,6 +187,7 @@ export function DesktopNav() {
                   // under the parked cursor, and the trigger drops any
                   // focus tint. Route-based .on styling is untouched.
                   setModesClosed(true);
+                  setModesOpen(false);
                   (document.activeElement as HTMLElement | null)?.blur?.();
                 }}
               >

@@ -112,10 +112,16 @@
 }
 
 .modesWrap:hover .modesMenu,
-.modesWrap:focus-within .modesMenu {
+.modesWrap:focus-within .modesMenu,
+.modesWrap.modesWrapOpen .modesMenu {
   opacity: 1;
   pointer-events: auto;
   transform: translateX(-50%) translateY(0);
+}
+
+/* Touch tap-toggle (coarse pointers): the trigger becomes clickable. */
+.modesWrapOpen .modesTrigger {
+  cursor: pointer;
 }
 
 /* A mode was just selected: the menu closes and stays closed while the
@@ -178,4 +184,27 @@
 .themeToggle:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Tablet tier (768–1023): the nav condenses so the wordmark, five
+   center links, the in-game score/twist pills, and the toggle all fit
+   ~768px without overflow. Drop the dateline, tighten gaps, and step
+   the link font down a touch. The ≥1024 layout is unchanged. */
+@media (min-width: 768px) and (max-width: 1023px) { /* bp-tablet */
+  .bar {
+    gap: 16px;
+    padding: 14px var(--desk-gutter);
+  }
+
+  .dateline {
+    display: none;
+  }
+
+  .center {
+    gap: 16px;
+  }
+
+  .link {
+    font-size: 13.5px;
+  }
 }
