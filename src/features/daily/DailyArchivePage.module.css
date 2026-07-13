@@ -704,10 +704,4 @@
   .detailResult {
     flex-wrap: wrap;
   }
-
-  /* Toggle-off scrolls the panel top back up (block:'start'); clear the
-     sticky header so it doesn't tuck underneath. */
-  .detailPanel {
-    scroll-margin-top: 100px;
-  }
 }

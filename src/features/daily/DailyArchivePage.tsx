@@ -166,8 +166,8 @@ export function DailyArchivePage() {
 
   // Phone: keep the toggled section in view. Turning one ON grows the
   // panel below the fold → scroll its BOTTOM into view; turning the last
-  // one OFF → scroll its TOP back up ("back to the top"). Skip the first
-  // run so a fresh page load (detailView already null) doesn't jump.
+  // one OFF → scroll back to the top of the PAGE. Skip the first run so a
+  // fresh page load (detailView already null) doesn't jump.
   const detailScrollInit = useRef(false);
   useEffect(() => {
     if (!isPhone) return;
@@ -176,13 +176,13 @@ export function DailyArchivePage() {
       return;
     }
     const el = detailRef.current;
-    if (!el) return;
     requestAnimationFrame(() => {
       try {
-        el.scrollIntoView({
-          behavior: 'smooth',
-          block: detailView === null ? 'start' : 'end',
-        });
+        if (detailView === null) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
       } catch {
         /* jsdom / unsupported env — non-essential */
       }
