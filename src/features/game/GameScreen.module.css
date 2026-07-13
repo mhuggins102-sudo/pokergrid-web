@@ -85,19 +85,22 @@
   );
 }
 
-/* Phone: the header side of the board carries ~9px more fixed chrome than
-   the dock side (app-header gap + main padding-top vs the strip's small
-   margin), so a plain-centered board sits visually low — more blank space
-   above than below. The board is JS-measured (never CSS-sized), so this
-   only nudges its POSITION, not its size: a margin-bottom in the centered
-   .boardArea shifts the border-box up by half the margin (flex centers the
-   margin-box), splitting that difference so the blank space above and below
-   the grid reads equal. Phone-scoped (the column family below 768); the
-   desk tree uses .deskBoard, and the tablet-portrait column's chrome ratio
-   differs — both untouched. */
+/* Phone: center the grid in the VISIBLE window (header → bonus strip),
+   not just in .boardArea. .boardArea is flex-1 and its own flex centers
+   the board within it, but the window extends ~12px further below —
+   .boardArea stops short by the .layout gap + the docked strip's
+   breathing margin (a measured constant across every dock layout and
+   viewport, since it's fixed chrome). With nothing counterpart above,
+   a board centered in .boardArea reads high — more blank space below
+   the grid. A margin-top here shifts the board's border-box DOWN by
+   half the margin (flex centers the margin-box), and 12px splits that
+   12px window asymmetry exactly, so the blank space above and below the
+   grid reads equal in every dock layout. The board is JS-measured
+   (never CSS-sized) — this nudges POSITION only. Phone-scoped (column
+   family <768); the desk tree uses .deskBoard, untouched. */
 @media (max-width: 767px) {
   .boardFrame {
-    margin-bottom: 9px;
+    margin-top: 12px;
   }
 }
 
