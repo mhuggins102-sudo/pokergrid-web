@@ -85,22 +85,26 @@
   );
 }
 
-/* Phone: center the grid in the VISIBLE window (header → bonus strip),
-   not just in .boardArea. .boardArea is flex-1 and its own flex centers
-   the board within it, but the window extends ~12px further below —
-   .boardArea stops short by the .layout gap + the docked strip's
-   breathing margin (a measured constant across every dock layout and
-   viewport, since it's fixed chrome). With nothing counterpart above,
-   a board centered in .boardArea reads high — more blank space below
-   the grid. A margin-top here shifts the board's border-box DOWN by
-   half the margin (flex centers the margin-box), and 12px splits that
-   12px window asymmetry exactly, so the blank space above and below the
-   grid reads equal in every dock layout. The board is JS-measured
-   (never CSS-sized) — this nudges POSITION only. Phone-scoped (column
-   family <768); the desk tree uses .deskBoard, untouched. */
+/* Phone: center the grid in the VISIBLE window — from the header
+   separator down to the bonus strip. Two fixed-chrome asymmetries push
+   a plain-centered board off (both measured constant across every dock
+   layout and viewport):
+     • .boardArea stops ~12px SHORT of the bonus strip (the .layout gap
+       + the docked strip's breathing margin) — space below the area
+       that centering-within-the-area never sees → board reads low.
+     • .main adds ~8px padding-top ABOVE .boardArea, between the
+       separator and the area → board reads high from the separator.
+   Net window asymmetry = 12 − 8 = 4px more below than above once the
+   board is area-centered. A margin-top shifts the board's border-box
+   DOWN by half the margin (flex centers the margin-box), so 4px splits
+   that 4px exactly: the blank space from the separator to the grid and
+   from the grid to the bonus strip reads equal in every dock layout.
+   The board is JS-measured (never CSS-sized) — this nudges POSITION
+   only. Phone-scoped (column family <768); the desk tree uses
+   .deskBoard, untouched. */
 @media (max-width: 767px) {
   .boardFrame {
-    margin-top: 12px;
+    margin-top: 4px;
   }
 }
 
