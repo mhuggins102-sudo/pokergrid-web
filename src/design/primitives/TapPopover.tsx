@@ -161,13 +161,36 @@ export function useTapPopover(id: string): TapPopoverHandle {
   // set true there.
   useEffect(() => {
     if (!open) return;
+    let swallowArmed = false;
+    // The outside tap should ONLY dismiss the popover — nothing behind it
+    // (board cell, dock button, another trigger) may act on the same tap.
+    // A tap is pointerdown → click, so once an outside pointerdown closes
+    // the popover we swallow the click it produces, in the CAPTURE phase so
+    // it stops before reaching any target handler.
+    const swallowClick = (ce: Event) => {
+      ce.stopPropagation();
+      ce.preventDefault();
+      document.removeEventListener('click', swallowClick, true);
+      swallowArmed = false;
+    };
+    const disarm = () => {
+      if (!swallowArmed) return;
+      document.removeEventListener('click', swallowClick, true);
+      swallowArmed = false;
+    };
     const onDown = (e: PointerEvent) => {
       if (!wrapEl.current?.contains(e.target as Node)) {
-        // The same tap that dismisses this popover also lands on whatever
-        // is behind it (typically the game board). Stamp it so that tap's
-        // own handler (e.g. GameScreen's placement nudge) can bow out.
+        // Kept as a fallback for any pointerdown-driven handler; the click
+        // swallow below is the primary "outside tap only dismisses" guard.
         registry?.recordOutsideDismiss();
         close();
+        if (!swallowArmed) {
+          swallowArmed = true;
+          document.addEventListener('click', swallowClick, true);
+          // Drag / no-click safety: a pointerdown that never yields a click
+          // shouldn't leave the swallow armed for the next real click.
+          window.setTimeout(disarm, 700);
+        }
       }
     };
     const onKey = (e: KeyboardEvent) => {
@@ -178,6 +201,7 @@ export function useTapPopover(id: string): TapPopoverHandle {
     return () => {
       document.removeEventListener('pointerdown', onDown);
       document.removeEventListener('keydown', onKey);
+      document.removeEventListener('click', swallowClick, true);
     };
   }, [open, close, registry]);
 

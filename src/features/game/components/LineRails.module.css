@@ -160,6 +160,48 @@
   color: var(--danger);
 }
 
+/* Live-game potential tones — the desk edge-chip vocabulary
+   (DesktopRails .pillGold / .pillMade / .pillPotential / .pillWip /
+   .pillEmpty): a MADE hand fills solid; a FORMING hand shows a dashed
+   outline; a gold multiplier tints warn; wip / empty stay plain-bordered.
+   Each fully sets background + border + color so it overrides the base
+   chip's sunken fill + solid hairline. */
+.toneMade {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--on-accent, #fff);
+}
+
+.toneGold {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: var(--on-accent, #fff);
+}
+
+.tonePotential {
+  background: transparent;
+  border: 1px dashed var(--success);
+  color: var(--success);
+}
+
+.toneGoldPotential {
+  background: transparent;
+  border: 1px dashed var(--warn);
+  color: var(--warn);
+}
+
+.toneWip {
+  background: transparent;
+  border-color: var(--rule);
+  color: var(--ink-2);
+}
+
+.toneNone {
+  background: transparent;
+  border-color: var(--hairline);
+  color: var(--ink-3);
+}
+
 /* Corner spacer keeps the col rail from sliding under the row rail. */
 .corner {
   grid-column: 1;

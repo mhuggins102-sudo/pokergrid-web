@@ -1,7 +1,10 @@
 import { ReactNode } from 'react';
+import { BonusCard } from '../../../game/bonusCards';
 import { Grid } from '../../../game/grid';
+import { HandRank } from '../../../game/hands';
 import { ScoreReport, ScoredLine } from '../../../game/scoring';
 import { HAND_LABEL, lineLabel } from '../handLabels';
+import { ChipTone, linePotential } from '../lineInsights';
 import { GridBoard } from './GridBoard';
 import styles from './LineRails.module.css';
 
@@ -46,10 +49,31 @@ export interface LineRailsProps {
    * the streamlined column game. Column totals always sit underneath.
    */
   side?: 'left' | 'right';
+  /**
+   * Held bonus cards. When provided (the LIVE game), each chip is toned by
+   * its line's potential — the SAME made / gold / potential / wip / empty
+   * scheme (solid-filled, dashed, plain borders) the desk edge chips use.
+   * Omit (the result screen) to keep the plain sign-based tone + tally
+   * gold dressing.
+   */
+  bonusCards?: readonly BonusCard[];
+  handBoost?: Partial<Record<HandRank, number>>;
 }
 
 const toneOf = (line: ScoredLine): string =>
   line.total > 0 ? styles.pos : line.total < 0 ? styles.neg : styles.zero;
+
+// Desk edge-chip tone → LineRails chip class (mirrors DesktopRails
+// .pillGold / .pillMade / .pillPotential / .pillWip / .pillEmpty so the
+// phone rails read with the same coloring + dashed/solid borders).
+const POTENTIAL_TONE: Record<ChipTone, string> = {
+  gold: styles.toneGold,
+  goldPotential: styles.toneGoldPotential,
+  made: styles.toneMade,
+  potential: styles.tonePotential,
+  wip: styles.toneWip,
+  none: styles.toneNone,
+};
 
 const chipLabel = (line: ScoredLine): string => {
   const hand = line.hand ? HAND_LABEL[line.hand] : 'no hand';
@@ -78,6 +102,8 @@ export function LineRails({
   children,
   highlight = null,
   side = 'left',
+  bonusCards,
+  handBoost,
 }: LineRailsProps) {
   const rows = report.lines.filter(l => l.kind === 'row');
   const cols = report.lines.filter(l => l.kind === 'col');
@@ -96,13 +122,20 @@ export function LineRails({
     const text = showBase ? String(baseTotal) : chipText(line);
     // Gold dressing (and its re-pop) belongs to the boosted stage.
     const goldNow = boosted && tally?.stage === 'boosted';
+    // Live game: tone by the line's potential (desk edge-chip scheme).
+    // Result screen (no bonusCards): plain sign tone + the tally dressing.
+    const tone = bonusCards
+      ? POTENTIAL_TONE[
+          linePotential(line, bonusCards, report.lines, handBoost).tone
+        ]
+      : toneOf(line);
     return (
       <button
         key={`${line.kind}-${line.index}`}
         type="button"
         className={`${styles.chip} ${
           line.kind === 'row' ? styles.rowChip : ''
-        } ${toneOf(line)} ${stagger ? styles.tallyIn : ''} ${
+        } ${tone} ${stagger ? styles.tallyIn : ''} ${
           goldNow ? styles.chipGold : ''
         } ${goldNow && tally?.animate ? styles.chipGoldIn : ''} ${
           isLit(line) ? styles.chipLit : ''
