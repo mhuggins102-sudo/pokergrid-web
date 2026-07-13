@@ -83,11 +83,17 @@ export function ChallengesPage() {
                   </div>
                 </div>
               </div>
-              <span
-                className={`${styles.badge} ${isDone ? styles.badgeDone : ''}`}
-              >
-                {isDone ? '✓ Beaten' : 'Open'}
-              </span>
+              {/* Beaten cards keep their ✓ badge at every tier. The old
+                  "Open" badge (a relic of the retired unlock system) is
+                  dropped at phone so the synopsis can run full width;
+                  ≥768 still shows it. */}
+              {(isDone || !isPhone) && (
+                <span
+                  className={`${styles.badge} ${isDone ? styles.badgeDone : ''}`}
+                >
+                  {isDone ? '✓ Beaten' : 'Open'}
+                </span>
+              )}
             </div>
           );
 

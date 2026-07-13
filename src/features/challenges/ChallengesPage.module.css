@@ -282,6 +282,22 @@
     overflow: hidden;
   }
 
+  /* With the "Open" badge dropped (TSX fork), the name + synopsis
+     column takes the full card width, so the yellow synopsis line runs
+     to the same right margin as the goal copy below it. */
+  .cardId {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* The name/synopsis stack (the unclassed div beside the number tile)
+     fills the freed width so long synopses wrap at the card's right
+     margin rather than early. */
+  .cardId > div {
+    flex: 1;
+    min-width: 0;
+  }
+
   /* The whole collapsed header is the tap target. */
   .cardToggle {
     display: block;

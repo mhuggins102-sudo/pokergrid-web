@@ -122,6 +122,33 @@ export function DifficultyPicker() {
     );
   };
 
+  // The seeded-run toggle + Start button — shared by the desktop
+  // Starting bar and the phone in-card controls.
+  const seedToggle = (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={seeded}
+      className={styles.seedToggle}
+      onClick={() => setSeeded(s => !s)}
+    >
+      <span
+        className={`${styles.seedTrack} ${seeded ? styles.seedTrackOn : ''}`}
+        aria-hidden="true"
+      >
+        <span
+          className={`${styles.seedKnob} ${seeded ? styles.seedKnobOn : ''}`}
+        />
+      </span>
+      Seeded run
+    </button>
+  );
+  const startLink = (
+    <Link to={startTo} className={styles.startBtn}>
+      Start game <span aria-hidden="true">→</span>
+    </Link>
+  );
+
   return (
     <div className={styles.wrap}>
       {isPhone ? (
@@ -141,8 +168,19 @@ export function DifficultyPicker() {
               </button>
             ))}
           </div>
-          {/* One card, re-rendered for the current selection. */}
-          <div className={styles.singleCard}>{renderCard(sel)}</div>
+          {/* ONE card: the difficulty details, then the seeded toggle +
+              Start button folded in below them (the standalone Starting
+              bar is desktop-only). */}
+          <div
+            className={styles.singleCard}
+            style={{ '--tone': difficultyColors[sel] } as CSSProperties}
+          >
+            {renderCard(sel)}
+            <div className={styles.phoneStart}>
+              {seedToggle}
+              {startLink}
+            </div>
+          </div>
         </>
       ) : (
         <>
@@ -159,45 +197,27 @@ export function DifficultyPicker() {
           </div>
 
           <div className={styles.cards}>{DIFFICULTIES.map(renderCard)}</div>
+
+          <div className={styles.startBar}>
+            <div>
+              <div className={styles.startingLabel}>Starting</div>
+              <div
+                className={styles.startingName}
+                style={{ '--tone': difficultyColors[sel] } as CSSProperties}
+              >
+                {NAME[sel]}{' '}
+                <span className={styles.startingTarget}>
+                  · {TARGET_BY_DIFFICULTY[sel]} to clear
+                </span>
+              </div>
+            </div>
+            <div className={styles.startRight}>
+              {seedToggle}
+              {startLink}
+            </div>
+          </div>
         </>
       )}
-
-      <div className={styles.startBar}>
-        <div>
-          <div className={styles.startingLabel}>Starting</div>
-          <div
-            className={styles.startingName}
-            style={{ '--tone': difficultyColors[sel] } as CSSProperties}
-          >
-            {NAME[sel]}{' '}
-            <span className={styles.startingTarget}>
-              · {TARGET_BY_DIFFICULTY[sel]} to clear
-            </span>
-          </div>
-        </div>
-        <div className={styles.startRight}>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={seeded}
-            className={styles.seedToggle}
-            onClick={() => setSeeded(s => !s)}
-          >
-            <span
-              className={`${styles.seedTrack} ${seeded ? styles.seedTrackOn : ''}`}
-              aria-hidden="true"
-            >
-              <span
-                className={`${styles.seedKnob} ${seeded ? styles.seedKnobOn : ''}`}
-              />
-            </span>
-            Seeded run
-          </button>
-          <Link to={startTo} className={styles.startBtn}>
-            Start game <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

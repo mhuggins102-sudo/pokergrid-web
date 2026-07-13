@@ -338,40 +338,55 @@
   margin-top: 12px;
 }
 
-/* Phone (<768): the four cards stack and the start bar folds into a
-   column. Everything ≥768 is untouched. */
+/* Phone (<768): the header + four-card grid + standalone Starting bar
+   are all desktop-only now (TSX fork). Phone shows the segmented
+   selector over ONE card — .singleCard — that carries the difficulty
+   details AND the seeded toggle + Start button folded in below them.
+   Everything ≥768 is untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
-  .title {
-    font-size: 30px;
+  /* .singleCard becomes the card shell: the selected difficulty's tone
+     border (was carried by the inner .card's .cardSel border) plus the
+     paper/shadow the flattened inner card gives up. */
+  .singleCard {
+    border: 2px solid var(--tone);
+    border-radius: 14px;
+    background: var(--paper-raised);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
   }
 
-  .lede {
-    max-width: none;
+  /* The inner difficulty card flattens into the shell — no border,
+     radius, paper, shadow, or hover lift of its own. */
+  .singleCard .card {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 16px 18px;
+    width: 100%;
   }
 
-  .cards {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-top: 20px;
+  .singleCard .card:hover {
+    transform: none;
+    box-shadow: none;
   }
 
   .blurb {
     min-height: 0;
   }
 
-  .startBar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    margin-top: 24px;
-    padding: 16px;
-  }
-
-  .startRight {
+  /* Seeded toggle + Start button, folded into the card below its
+     content and split by a hairline. */
+  .phoneStart {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 14px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--hairline);
   }
 
-  .startBtn {
+  .phoneStart .startBtn {
     flex: 1;
     justify-content: center;
   }

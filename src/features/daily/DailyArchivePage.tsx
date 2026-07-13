@@ -6,6 +6,7 @@ import { findChallenge } from '../../game/challenges';
 import { Tier, tierForRun } from '../../lib/stats';
 import { difficultyColors } from '../../design/tokens';
 import { isBackendConfigured, type TopScoreEntry } from '../../lib/supabaseRpc';
+import { useTapPopover, useTapPopoverCloseAll } from '../../design/primitives';
 import { DAILY_LAUNCH_ISO, dayMs, toISO, toUTC } from './dailyDates';
 import { usePlaysStore } from './sync/playsStore';
 import {
@@ -102,7 +103,15 @@ export function DailyArchivePage() {
   const months = useMemo(() => publishedMonths(today), [today]);
   const [month, setMonth] = useState(() => monthOf(today));
   const [sel, setSel] = useState(today);
+  // Fine pointers open the month menu on hover / :focus-within (the JS
+  // state below). Touch can't hover, so the TapPopover primitive adds a
+  // tap-to-toggle on coarse pointers WITHOUT touching fine-pointer
+  // behavior (open stays false, toggleProps empty there — ≥768 render
+  // byte-identical). `monthMenu` is the union of both open sources.
   const [monthMenuOpen, setMonthMenuOpen] = useState(false);
+  const monthTap = useTapPopover('archive-month');
+  const closeAllPopovers = useTapPopoverCloseAll();
+  const monthMenu = monthMenuOpen || monthTap.open;
 
   const dates = useMemo(() => monthDates(month, today), [month, today]);
 
@@ -189,7 +198,11 @@ export function DailyArchivePage() {
     setMonth(m);
     const newest = monthDates(m, today)[0];
     if (newest) setSel(newest);
+    // Selecting is inside the wrap, so the outside-tap dismissal never
+    // fires — close the tap popover (and the hover state) explicitly so
+    // the menu doesn't stay pinned open on touch after a pick.
     setMonthMenuOpen(false);
+    closeAllPopovers();
   };
 
   return (
@@ -201,6 +214,7 @@ export function DailyArchivePage() {
         {/* ---- Archive list ---- */}
         <div className={styles.listPanel}>
           <div
+            ref={monthTap.wrapRef}
             className={styles.monthWrap}
             tabIndex={0}
             onMouseEnter={() => setMonthMenuOpen(true)}
@@ -212,13 +226,22 @@ export function DailyArchivePage() {
               }
             }}
           >
-            <span className={styles.monthLabel}>{monthLabel(month)}</span>
-            <span className={styles.monthCaret} aria-hidden="true">
+            {/* Touch: tap the label / caret to toggle the menu (hover
+                can't). Empty on fine pointers, where hover/focus drive
+                it. */}
+            <span className={styles.monthLabel} {...monthTap.toggleProps}>
+              {monthLabel(month)}
+            </span>
+            <span
+              className={styles.monthCaret}
+              aria-hidden="true"
+              {...monthTap.toggleProps}
+            >
               ▾
             </span>
             <div
               className={`${styles.monthMenu} ${
-                monthMenuOpen ? styles.monthMenuOpen : ''
+                monthMenu ? styles.monthMenuOpen : ''
               }`}
             >
               {months.map(m => (
