@@ -1457,6 +1457,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 // Streamlined puts the row chips on the RIGHT of the board
                 // (the desk edge-chip side); classic phone keeps them left.
                 side={streamlined ? 'right' : 'left'}
+                // Tone the chips by line potential — the desk edge-chip
+                // coloring + dashed/solid scheme (live game only).
+                bonusCards={state.bonusCards}
+                handBoost={state.investHands ? state.handBoost : undefined}
               >
                 {/* The pulsing next slot names its action, same as the desk
                     board's deskBoard call — GridBoard sizes the label down
