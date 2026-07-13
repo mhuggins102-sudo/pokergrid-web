@@ -53,15 +53,16 @@ describe('progression recording', () => {
       0
     );
     expect(tierTotal).toBe(1);
-    // The result hero shows the tier.
-    expect(screen.getByText(/tier (SS|S|A|B|C|D)/)).toBeInTheDocument();
+    // The streamlined result dialog is shown with the run's verdict.
+    expect(screen.getByText(/Target cleared|Just short/)).toBeInTheDocument();
   });
 
   it('does not double-record on re-render', () => {
     renderAt('/play?difficulty=easy&seed=42');
     placeToEnd();
-    // Open + close the lines sheet to force re-renders.
-    fireEvent.click(screen.getAllByRole('button', { name: /R1/ })[0]);
+    // Toggle the result dialog (View Grid → the finished board) to force a
+    // re-render; recording must not fire a second time.
+    fireEvent.click(screen.getByRole('button', { name: 'View Grid' }));
     const stats = useStatsStore.getState().stats;
     expect(stats.recent).toHaveLength(1);
   });
@@ -70,12 +71,14 @@ describe('progression recording', () => {
 describe('challenges', () => {
   it('runs a challenge on the hard ruleset with its own goal', () => {
     renderAt('/challenges/poker-purist?seed=5');
-    // Poker Purist: no bonus cards at all — strip absent.
+    // Poker Purist: no bonus cards at all — strip absent. (The 350 target
+    // lives in the header pill, mounted into the nav — not in this harness.)
     expect(screen.queryByLabelText('Bonus cards')).not.toBeInTheDocument();
-    expect(screen.getByText(/\/ 350/)).toBeInTheDocument();
     placeToEnd();
-    // Place-only never reaches 350 — the failed verdict shows.
-    expect(screen.getByText(/Poker Purist — failed/)).toBeInTheDocument();
+    // Place-only never reaches 350 — the failed verdict shows in the
+    // result dialog (verdict line + the ✦ challenge name).
+    expect(screen.getByText('Challenge missed')).toBeInTheDocument();
+    expect(screen.getByText(/Poker Purist/)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Retry challenge' })
     ).toBeInTheDocument();
@@ -114,12 +117,14 @@ describe('targets up', () => {
       .getState()
       .saveProgress(3, 2, [], [], null);
     renderAt('/targets/play?seed=11');
-    expect(screen.getByText(/\/ 450/)).toBeInTheDocument(); // L3 → 450
+    // L3 → target 450 (shown in the header pill, mounted into the nav —
+    // the verdict below confirms the level reached).
     placeToEnd();
-    expect(screen.getByText(/Run over at level 3/)).toBeInTheDocument();
+    expect(screen.getByText(/Run ended — level 3/)).toBeInTheDocument();
     expect(useTargetsStore.getState().save).toBeNull();
+    // The result dialog's quiet row links back to the Targets Up home.
     expect(
-      screen.getByRole('button', { name: 'Back to Targets Up' })
+      screen.getByRole('link', { name: 'Targets Up home' })
     ).toBeInTheDocument();
   });
 });

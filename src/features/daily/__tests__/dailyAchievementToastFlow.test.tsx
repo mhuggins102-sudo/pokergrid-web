@@ -76,10 +76,14 @@ describe('daily finish surfaces cumulative achievements (end-to-end)', () => {
     expect(screen.getByTestId('final-score')).toBeInTheDocument();
     expect(usePlaysStore.getState().plays['2026-03-02']?.won).toBe(true);
 
-    // ...and the LIVE result screen is still up (the entry-time
-    // snapshot keeps DailyDay from swapping to the static replay view)
-    // with the newly earned streak achievement in the 🏆 callout.
-    expect(screen.getByRole('button', { name: 'On a Roll' })).toBeInTheDocument();
+    // ...and the LIVE result dialog is still up (the entry-time snapshot
+    // keeps DailyDay from re-hydrating a view-only session mid-look) with
+    // the newly earned streak achievement in the 🏆 callout. The dialog's
+    // achievement button folds its description into the accessible name
+    // (hover/focus tooltip), so match the name loosely.
+    expect(
+      screen.getByRole('button', { name: /On a Roll/ })
+    ).toBeInTheDocument();
     // Daily Debut was already earned — it must not re-announce.
     expect(screen.queryByText('Daily Debut')).toBeNull();
     // Persisted too, exactly once.

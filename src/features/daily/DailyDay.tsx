@@ -7,9 +7,7 @@ import { markTwistSeen, twistSeen } from './twistSeen';
 import { GameSessionProvider } from '../game/GameSessionProvider';
 import { GameScreen } from '../game/GameScreen';
 import { usePlaysStore } from './sync/playsStore';
-import { DailyResultStatic } from './DailyResultStatic';
 import { DailyIntro } from './DailyIntro';
-import { useTier } from '../../app/useTier';
 
 /**
  * One daily date, end to end: already played → the stored result;
@@ -17,10 +15,6 @@ import { useTier } from '../../app/useTier';
  * seeded game. Every player worldwide gets the same deal for a date.
  */
 export function DailyDay({ dateISO }: { dateISO: string }) {
-  // The already-played view-only rehydrate stays DESKTOP-only: phone
-  // and tablet keep the static result page until phase 5's tablet game
-  // layout. The intro itself is one tree at every tier (phase 3).
-  const isDesktop = useTier() === 'desktop';
   const play = usePlaysStore(s => s.plays[dateISO]);
   // Entry-time snapshot, NOT a live check: finishing the puzzle during
   // this visit saves the play, and swapping to the static view then
@@ -34,23 +28,21 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
   const [started, setStarted] = useState(false);
 
   if (playedOnEntry && play) {
-    // Desktop: re-hydrate the stored final state into a view-only
-    // session so the archive's "View full result" opens the SAME
-    // three-column finished-game presentation a live finish leaves
-    // behind (board explorable, dock offers Show result, the result
-    // dialog one click away). viewOnly suppresses every recording
-    // side effect. Phone/tablet keep the static result page.
-    if (isDesktop) {
-      return (
-        <GameSessionProvider
-          mode={{ kind: 'daily', dateISO, recipe: play.recipe }}
-          initialState={play.state}
-        >
-          <GameScreen onReplay={() => {}} />
-        </GameSessionProvider>
-      );
-    }
-    return <DailyResultStatic play={play} />;
+    // Re-hydrate the stored final state into a view-only session at
+    // EVERY tier so "view result" opens the SAME finished-game
+    // presentation a live finish leaves behind: desktop lands on the
+    // three-column view, phone / tablet-portrait on the streamlined
+    // column (finished board explorable, dock offers Show result, the
+    // DesktopResultDialog one click away). viewOnly suppresses every
+    // recording side effect.
+    return (
+      <GameSessionProvider
+        mode={{ kind: 'daily', dateISO, recipe: play.recipe }}
+        initialState={play.state}
+      >
+        <GameScreen onReplay={() => {}} />
+      </GameSessionProvider>
+    );
   }
 
   const recipe = recipeFor(dateISO);

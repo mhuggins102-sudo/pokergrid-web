@@ -32,9 +32,11 @@ describe('free play', () => {
   it('plays a seeded easy game to completion with Place only', () => {
     renderPlay('?difficulty=easy&seed=42');
 
-    // Board + score chrome render.
+    // Board renders. The streamlined column game's score / target lives in
+    // the header pill (mounted into the app nav via useNavGameRow), so it's
+    // not present in this bare PlayPage harness — the score readout is
+    // covered by streamlinedColumn.test.tsx's captured game row.
     expect(screen.getByRole('grid', { name: 'Game board' })).toBeInTheDocument();
-    expect(screen.getByText(/\/ 400/)).toBeInTheDocument();
 
     // Place until the run ends. 25 slots − the pre-placed center card,
     // with jokers auto-placing, bounds the loop well under 30 clicks.
@@ -47,11 +49,13 @@ describe('free play', () => {
     const final = screen.getByTestId('final-score');
     expect(final).toBeInTheDocument();
     expect(Number(final.textContent)).not.toBeNaN();
-    expect(screen.getByText(/target beaten|target missed/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Play again' })).toBeInTheDocument();
-    // Result extras: score math + line breakdown panels.
-    expect(screen.getByText('Score math')).toBeInTheDocument();
-    expect(screen.getByText('Line breakdown')).toBeInTheDocument();
+    // The streamlined column game ends in the DesktopResultDialog overlay:
+    // the run's verdict, the score-math accordion, and the way back to the
+    // grid (the full-screen ResultView is no longer used for the column
+    // family).
+    expect(screen.getByText(/Target cleared|Just short/i)).toBeInTheDocument();
+    expect(screen.getByText('Lines subtotal')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View Grid' })).toBeInTheDocument();
   });
 
   it('is deterministic for a fixed seed', () => {

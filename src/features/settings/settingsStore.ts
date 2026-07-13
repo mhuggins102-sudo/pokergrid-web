@@ -35,11 +35,6 @@ export interface Settings {
   colorBlindAssist: boolean;
   // Classic two-color (red/black) card faces vs four-color suits.
   twoColorDeck: boolean;
-  // Streamlined in-game presentation for the phone / tablet-portrait
-  // column family (preview): score moves to the header pill, the
-  // ScoreBar row is dropped, and the bonus strip merges into the dock —
-  // matching the desk families' language. Off by default.
-  streamlinedColumn: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -62,12 +57,6 @@ export const DEFAULT_SETTINGS: Settings = {
   // Purists can switch back to classic red/black in Settings; players
   // with a stored preference keep it (persist merges storage over this).
   twoColorDeck: false,
-  // Streamlined column preview ships off — it re-homes the ScoreBar and
-  // bonus strip, so new players meet the established layout first.
-  // Migration-safe: persist merges stored keys over these defaults, so
-  // profiles saved before this key existed simply pick up `false` (no
-  // version bump).
-  streamlinedColumn: false,
 };
 
 interface SettingsStore extends Settings {

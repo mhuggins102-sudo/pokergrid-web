@@ -3,20 +3,18 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { TapPopoverProvider, ToastProvider } from '../../../design/primitives';
 import { NavExtrasContext } from '../../../app/DesktopNav';
-import {
-  DEFAULT_SETTINGS,
-  useSettingsStore,
-} from '../../settings/settingsStore';
+import { DEFAULT_SETTINGS, useSettingsStore } from '../../settings/settingsStore';
 import { PlayPage } from '../PlayPage';
 
 /*
- * The streamlined column preview (settingsStore.streamlinedColumn), v2.
- * The flag re-homes the ScoreBar: at the PHONE tier (jsdom's default —
- * matchMedia answers false to both width queries) score + difficulty →
- * the pill cluster in a second header row (mounted through
- * useNavGameRow, NOT useNavExtras), Hands / Scoring / Lines → that row's
- * tap-driven popovers, Undo → the dock. Off is a no-op — the ScoreBar
- * renders exactly as before, and NO game row is pushed.
+ * The streamlined column presentation is now the ONE column-family game
+ * screen (the former settingsStore.streamlinedColumn flag is gone). At
+ * the PHONE tier (jsdom's default — matchMedia answers false to both
+ * width queries and the orientation query, so useGameFamily resolves to
+ * 'column') the ScoreBar row is dropped: score + difficulty live in the
+ * pill cluster mounted through useNavGameRow (NOT useNavExtras), Hands /
+ * Scoring in that row's tap-driven popovers, Undo in the dock. This is
+ * unconditional now — there is no "off" state to assert.
  *
  * The real NavExtrasProvider re-provides a fresh context value on every
  * setter call, so a fresh-identity node feeds a re-render → re-set →
@@ -68,27 +66,15 @@ const renderGame = (captured: MutableRefObject<ReactNode>) =>
     </ToastProvider>
   );
 
-describe('streamlined column preview', () => {
+describe('streamlined column game', () => {
   beforeEach(() => {
-    // Reset to defaults so a prior test's toggle can't leak (persist
-    // reads jsdom localStorage).
     useSettingsStore.setState(DEFAULT_SETTINGS);
   });
   afterEach(() => {
     useSettingsStore.setState(DEFAULT_SETTINGS);
   });
 
-  it('keeps the ScoreBar by default (flag off)', () => {
-    const captured: MutableRefObject<ReactNode> = { current: null };
-    renderGame(captured);
-    // The ScoreBar's Lines button is the tell for the row being present.
-    expect(screen.getByRole('button', { name: 'Lines' })).toBeInTheDocument();
-    // Off pushes no game row.
-    expect(captured.current).toBeNull();
-  });
-
-  it('drops the ScoreBar and re-homes its controls into the game row when enabled', () => {
-    useSettingsStore.setState({ streamlinedColumn: true });
+  it('always drops the ScoreBar and re-homes its controls (phone tier)', () => {
     const captured: MutableRefObject<ReactNode> = { current: null };
     renderGame(captured);
 
@@ -110,8 +96,6 @@ describe('streamlined column preview', () => {
     expect(
       row.getByRole('button', { name: 'Hand values' })
     ).toBeInTheDocument();
-    expect(
-      row.getByRole('button', { name: 'Scoring' })
-    ).toBeInTheDocument();
+    expect(row.getByRole('button', { name: 'Scoring' })).toBeInTheDocument();
   });
 });

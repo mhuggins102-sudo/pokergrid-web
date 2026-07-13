@@ -167,12 +167,13 @@
   border: 1px solid var(--chip-tone, var(--rule));
   box-shadow: none;
   border-radius: var(--radius-md);
-  /* Comfortable but trim — v2's 46px/8-9 padding read too tall on device;
-     land between the original row chip and v2 so the board keeps the
-     reclaimed height. */
-  padding: 6px 10px 7px;
-  min-height: 40px;
-  gap: 3px;
+  /* Trim further — the docked chip still read a touch tall on device, so
+     tighten the vertical padding and drop the floor to ~34px, handing the
+     reclaimed height back to the board. Title / mult / value / Use stay
+     legible (font sizes unchanged). */
+  padding: 4px 10px 5px;
+  min-height: 34px;
+  gap: 2px;
 }
 
 .rowDocked .chipTitle {
@@ -191,7 +192,7 @@
    band reads as one set. */
 .rowDocked .emptySlot {
   border-radius: var(--radius-md);
-  min-height: 40px;
+  min-height: 34px;
 }
 
 .detailBody {

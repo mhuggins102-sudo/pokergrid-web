@@ -4,12 +4,12 @@ import { expect, test } from '@playwright/test';
  * Rotation across the in-game family flip (unification phase 5). At the
  * tablet tier a device rotation crosses the column ↔ desk boundary live,
  * the same class of change the 1024px crossing was before — and it can
- * happen right after a run ends, mounting BOTH result surfaces (the
- * column ResultView and the DesktopResultDialog) across the flip. The
- * result-recording and Targets-Up ladder commits are guarded to a
- * single owner (keyed on the final GameState); this walks a real run to
- * a loss and flips the viewport to prove the flip stays coherent and
- * the ladder commits exactly once.
+ * happen right after a run ends, re-mounting the game-over surface
+ * (the DesktopResultDialog, shared by the streamlined column and the
+ * desk tree) across the flip. The result-recording and Targets-Up
+ * ladder commits are guarded to a single owner (keyed on the final
+ * GameState); this walks a real run to a loss and flips the viewport to
+ * prove the flip stays coherent and the ladder commits exactly once.
  */
 
 // The Targets-Up L3 resume save. seed=11 is a known loss at level 3
@@ -46,16 +46,17 @@ test('family flip mid-result records once', async ({ page }, testInfo) => {
     await place.click();
   }
 
-  // At 820 (tablet portrait) the column family shows the full-screen
-  // ResultView verdict.
-  await expect(page.getByText(/Run over at level 3/i)).toBeVisible({
+  // At 820 (tablet portrait) the column family is the streamlined game,
+  // whose game-over surface is the DesktopResultDialog (opened by
+  // default on a live finish) — the same verdict copy as the desk tier.
+  await expect(page.getByText(/Run ended.*level 3/i)).toBeVisible({
     timeout: 10_000,
   });
 
   // Rotate into the desktop tier (1180 wide): the SAME GameScreen flips
-  // family live (column → desk), and the game-over surface becomes the
-  // DesktopResultDialog — the finished board behind a scrim + verdict
-  // card, opened by default. Its verdict names the same lost level.
+  // family live (column → desk) — the layout swaps to three columns but
+  // the game-over surface stays the DesktopResultDialog. Its verdict
+  // still names the same lost level; the run must NOT re-commit.
   await page.setViewportSize({ width: 1180, height: 820 });
   await expect(page.getByText(/Run ended.*level 3/i)).toBeVisible({
     timeout: 10_000,
@@ -74,10 +75,11 @@ test('family flip mid-result records once', async ({ page }, testInfo) => {
   // only) — a double-commit that mis-recorded it would surface here.
   expect(state.stats?.state?.stats?.recent ?? []).toHaveLength(0);
 
-  // Rotate back to portrait: the column ResultView returns — still one
-  // coherent result, no crash, no doubled surface.
+  // Rotate back to portrait: the streamlined column returns — still one
+  // coherent result (the same DesktopResultDialog verdict), no crash, no
+  // doubled surface.
   await page.setViewportSize({ width: 820, height: 1180 });
-  await expect(page.getByText(/Run over at level 3/i)).toBeVisible({
+  await expect(page.getByText(/Run ended.*level 3/i)).toBeVisible({
     timeout: 10_000,
   });
 });
