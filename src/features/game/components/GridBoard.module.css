@@ -103,7 +103,9 @@
   inset: 0;
 }
 
-/* Desktop: the pulsing next slot names its action (mockup line 746). */
+/* The pulsing next slot names its action (mockup line 746). Desk-tuned at
+   11px; the mobile column board now shows it too (GameScreen's column board
+   call passes nextSlotLabel), so a phone rule scales it down below. */
 .nextLabel {
   position: absolute;
   inset: 0;
@@ -115,6 +117,18 @@
   letter-spacing: 0.1em;
   color: var(--accent);
   pointer-events: none;
+}
+
+/* Phone (column family): cells are much smaller than the desk board's, so
+   scale the PLACE label down and trim its tracking to sit comfortably
+   inside the pulsing slot without crowding the cell edges. Scoped to
+   <768 — desktop (≥1024, the byte-identical sweep) and the larger
+   tablet-portrait / desk-lite boards keep the 11px label above. */
+@media (max-width: 767px) {
+  .nextLabel {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
 }
 
 /* Line completion: a solid ring flashes on each cell of the just-

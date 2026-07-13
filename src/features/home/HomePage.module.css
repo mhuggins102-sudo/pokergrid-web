@@ -458,4 +458,12 @@
     gap: 10px 14px;
     margin-top: auto;
   }
+
+  /* The quiet-variant "Read the rules →" is itself a link (unlike the
+     mode cards, where .modeLink is a span inside an anchor), so it needs
+     the underline stripped explicitly. Phone-scoped — the ≥768 footer
+     uses .footerLink, which already sets this. */
+  .footerCard .modeLink {
+    text-decoration: none;
+  }
 }

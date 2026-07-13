@@ -40,9 +40,12 @@
      margins only (not auto — see above). On wider column tiers the
      board is cap/height-bound, so the reclaimed width goes unused. The
      rails, when on, live INSIDE .boardFrame (its measured width caps
-     them), so a wider area never overflows the viewport. */
-  margin-left: calc(-1 * var(--space-md));
-  margin-right: calc(-1 * var(--space-md));
+     them), so a wider area never overflows the viewport. Bleed the FULL
+     --space-lg (matching the dock / bonus-strip edge bleed) so the square
+     board reaches the viewport width — on a width-bound phone that's the
+     only axis that enlarges it, and it now spans exactly the dock's width. */
+  margin-left: calc(-1 * var(--space-lg));
+  margin-right: calc(-1 * var(--space-lg));
 }
 
 .boardFrame {
@@ -80,6 +83,22 @@
     calc(var(--avail-h, 100cqh) - 12px),
     440px
   );
+}
+
+/* Phone: the header side of the board carries ~9px more fixed chrome than
+   the dock side (app-header gap + main padding-top vs the strip's small
+   margin), so a plain-centered board sits visually low — more blank space
+   above than below. The board is JS-measured (never CSS-sized), so this
+   only nudges its POSITION, not its size: a margin-bottom in the centered
+   .boardArea shifts the border-box up by half the margin (flex centers the
+   margin-box), splitting that difference so the blank space above and below
+   the grid reads equal. Phone-scoped (the column family below 768); the
+   desk tree uses .deskBoard, and the tablet-portrait column's chrome ratio
+   differs — both untouched. */
+@media (max-width: 767px) {
+  .boardFrame {
+    margin-bottom: 9px;
+  }
 }
 
 /* Tutorial coach: a floating card pinned OVER the app header + score
@@ -344,6 +363,23 @@
 .dockRow .dockUndo,
 .actionRow .dockUndo {
   flex: 0 0 44px;
+}
+
+/* Classic dock: the icon-only ↺ shares the center-aligned row with Discard
+   and the perk (Destroy). It's a `sm` button (32px), so lift its height to
+   the siblings' 44px — icon-only is fine here, only the height equalizes. */
+.dockRow .dockUndo {
+  min-height: 44px;
+}
+
+/* Hand-stack: the arrangement has horizontal room, so the ↺ carries the
+   "Undo" word. The labeled variant sizes to its text (glyph + label) rather
+   than the icon-only 44px square — it keeps the actionRow's 44px height. */
+.actionRow .dockUndoLabeled {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
 }
 
 /* Center-stage: sits under the right-flank action, small and centered. */
