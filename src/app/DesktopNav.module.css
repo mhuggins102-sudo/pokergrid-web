@@ -374,6 +374,24 @@
   }
 }
 
+/* Short phone viewports mid-game (Safari toolbars up → ~660px tall): pair
+   with the bonus-strip reclaim in GameScreen.module.css. Tighten the
+   in-game header's own vertical padding + row gap so the board area gains
+   height and the height-bound square board grows toward full width. Scoped
+   to .gameRowActive (in-game only) and height-gated at 780px, so every
+   non-game phone header and the full-height PWA case stay untouched. */
+@media (max-width: 767px) and (max-height: 780px) {
+  .bar.gameRowActive {
+    padding-top: 4px;
+    padding-bottom: 3px;
+    row-gap: 2px;
+  }
+
+  .bar.gameRowActive .gameRow {
+    min-height: 40px;
+  }
+}
+
 /* Narrow-device safety net (sub-~384px, where the fixed-width link row
    would overflow the viewport): let the ROW scroll instead of forcing
    horizontal PAGE scroll. overflow-x:auto forces overflow-y:auto, so the

@@ -354,6 +354,28 @@
   border-top: none;
 }
 
+/* Short phone viewports (Safari's toolbars stay up during a game — the
+   layout is dvh-locked with nothing to scroll — so the visible height is
+   ~660px, not the 844+ of an installed PWA). At that height the square
+   board is HEIGHT-bound: it can't reach the full viewport width and sits
+   inset with a ~28px gap on each side (the "grid could be wider" report).
+   Reclaim a little fixed vertical chrome (here the merged bonus strip's
+   internal padding + breathing margin; the header carries the rest in
+   DesktopNav.module.css) so the board area gains height and the board —
+   square — grows its WIDTH in step, closing about half that side gap. The
+   held-card chips keep their own min-height, so only whitespace is trimmed,
+   not the cards. Height-gated at 780px so the full-height case (installed
+   PWA / toolbar hidden), where the board is ALREADY full-width, stays
+   byte-untouched — reclaiming there would only add vertical band. Declared
+   AFTER .bonusRowDocked so the equal-specificity override lands. */
+@media (max-width: 767px) and (max-height: 780px) {
+  .bonusRowDocked {
+    margin-top: 0;
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+  }
+}
+
 /* The ScoreBar's Undo, relocated into the dock: a compact icon-only
    square that yields its width to the real actions (the desk-lite Undo
    sizing precedent, .deskLite .deskBtnRow > *:last-child). */
