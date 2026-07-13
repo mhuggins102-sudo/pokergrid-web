@@ -124,7 +124,26 @@ export function ChallengesPage() {
                   type="button"
                   className={styles.cardToggle}
                   aria-expanded={isOpen}
-                  onClick={() => toggle(challenge.id)}
+                  onClick={e => {
+                    const willOpen = !isOpen;
+                    const article = e.currentTarget.closest('article');
+                    toggle(challenge.id);
+                    // A card expanded near the bottom can run off-screen;
+                    // once the body has rendered, pull the whole card into
+                    // view. block:'nearest' is a no-op when it already fits.
+                    if (willOpen && article) {
+                      requestAnimationFrame(() => {
+                        try {
+                          article.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest',
+                          });
+                        } catch {
+                          /* jsdom / unsupported env — non-essential */
+                        }
+                      });
+                    }
+                  }}
                 >
                   {head}
                 </button>

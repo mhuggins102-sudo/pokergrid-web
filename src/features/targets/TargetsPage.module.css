@@ -321,6 +321,40 @@
   font-weight: 700;
 }
 
+/* Phone flip-card head: the explainer title with a green "read on" link
+   in the top-right that advances to the other face. */
+.explainHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.explainRead {
+  flex: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .explainRead:hover {
+    color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+  }
+}
+
+.explainRead:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Phone (<768): the ladder scrolls sideways instead of squeezing
    8–12 rungs into the column; the start bar and explainers stack.
    Everything ≥768 is untouched. */

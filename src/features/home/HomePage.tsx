@@ -6,6 +6,7 @@ import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
+import { useStatsStore } from '../progress/statsStore';
 import {
   bestDailyStreak,
   dailyStreak,
@@ -71,6 +72,12 @@ export function HomePage() {
   });
   const diffTone = difficultyColors[recipe.difficulty];
   const isPhone = useTier() === 'phone';
+  // Phone newcomer card: the tutorial callout gives way to the quiet
+  // "Rules" pointer once the player has either taken the tutorial OR
+  // finished at least one game — no manual dismiss needed. (Desktop keeps
+  // its own showIntro + "No thanks" strip below, untouched.)
+  const gamesPlayed = useStatsStore(s => s.stats.wins + s.stats.losses);
+  const phoneShowIntro = !tutorialSeen() && gamesPlayed === 0;
 
   // The three mode cards — identical at every tier; only their
   // container (the desk mode row vs the phone 2×2 grid) differs.
@@ -78,9 +85,11 @@ export function HomePage() {
     <>
       <Link to="/play" className={styles.modeCard}>
         <span className={styles.modeTitle}>Free Play</span>
+        {/* Phone trims the blurb (shorter cards → no vertical scroll). */}
         <span className={styles.modeBlurb}>
-          Pick any difficulty and play as many boards as you like.
-          Doesn&apos;t touch the daily leaderboard.
+          {isPhone
+            ? 'Pick any difficulty and play as many grids as you would like.'
+            : "Pick any difficulty and play as many boards as you like. Doesn't touch the daily leaderboard."}
         </span>
         <span className={styles.modeLink}>Choose a difficulty →</span>
       </Link>
@@ -88,7 +97,7 @@ export function HomePage() {
         <span className={styles.modeTitle}>Challenges</span>
         <span className={styles.modeBlurb}>
           Ten twisted rule sets — No Discards, Short Deck, Poker Purist and
-          more. Beat them all for the sweep.
+          more.{isPhone ? '' : ' Beat them all for the sweep.'}
         </span>
         <span className={styles.modeLink}>{CHALLENGES.length} modes to beat →</span>
       </Link>
@@ -170,32 +179,20 @@ export function HomePage() {
            the fourth card (both its first-visit and quiet variants). */
         <div className={styles.phoneGrid}>
           {modeCards}
-          {showIntro ? (
+          {phoneShowIntro ? (
             <div className={styles.footerCard}>
               <span className={styles.modeTitle}>First time here?</span>
               <span className={styles.modeBlurb}>
                 Learn by playing — a guided practice deal walks you through
                 every move in about three minutes.
               </span>
-              <span className={styles.footerCardActions}>
-                <Link to="/tutorial" className={styles.footerCta}>
-                  Start the tutorial
-                </Link>
-                <button
-                  type="button"
-                  className={styles.footerDismiss}
-                  onClick={() => {
-                    markTutorialSeen();
-                    setShowIntro(false);
-                  }}
-                >
-                  No thanks
-                </button>
-              </span>
+              <Link to="/tutorial" className={styles.modeLink}>
+                Start the tutorial →
+              </Link>
             </div>
           ) : (
             <div className={styles.footerCard}>
-              <span className={styles.modeTitle}>New here?</span>
+              <span className={styles.modeTitle}>Rules</span>
               <span className={styles.modeBlurb}>
                 The whole game is 25 cards, 10 poker hands, one target.
               </span>

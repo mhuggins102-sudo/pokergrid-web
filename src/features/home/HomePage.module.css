@@ -398,12 +398,18 @@
    the newcomer strip fold into a 2×2 grid (the strip is the 4th card,
    forked in the TSX). Everything ≥768 is untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
+  /* Density: trim the page's trailing dead space so the hero + the 2×2
+     card grid sit in one screen without scrolling. */
+  .wrap {
+    padding-bottom: 12px;
+  }
+
   .hero {
     flex-direction: column;
   }
 
   .heroBody {
-    padding: 22px 20px;
+    padding: 16px 20px;
   }
 
   /* Density pass: the hero keeps its eyebrow/chips/CTA only. */
@@ -412,23 +418,33 @@
     display: none;
   }
 
+  /* Tighter chip + CTA rhythm so the hero + grid clear one screen. */
+  .heroChips {
+    margin-top: 12px;
+  }
+
   .heroCtaRow {
     flex-wrap: wrap;
-    gap: 14px;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .heroCta {
+    padding: 12px 24px;
   }
 
   /* 2×2 grid of half-width cards (three modes + the strip-as-card). */
   .phoneGrid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 16px;
+    gap: 10px;
+    margin-top: 12px;
   }
 
   .phoneGrid .modeCard,
   .footerCard {
-    padding: 16px 16px 18px;
+    gap: 7px;
+    padding: 14px 14px 15px;
   }
 
   .phoneGrid .modeTitle {
@@ -451,18 +467,12 @@
     box-shadow: var(--shadow-sm);
   }
 
-  .footerCardActions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 14px;
-    margin-top: auto;
-  }
-
-  /* The quiet-variant "Read the rules →" is itself a link (unlike the
-     mode cards, where .modeLink is a span inside an anchor), so it needs
-     the underline stripped explicitly. Phone-scoped — the ≥768 footer
-     uses .footerLink, which already sets this. */
+  /* The newcomer card's action is a single link ("Start the tutorial →"
+     or "Read the rules →"), pushed to the card foot by the blurb's
+     flex:1 — same rhythm as the mode cards. Here .modeLink is itself the
+     anchor (not a span inside one, as in the mode cards), so the underline
+     needs stripping explicitly. Phone-scoped — the ≥768 footer uses
+     .footerLink, which already sets this. */
   .footerCard .modeLink {
     text-decoration: none;
   }
