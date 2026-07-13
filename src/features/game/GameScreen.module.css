@@ -374,6 +374,16 @@
     padding-top: var(--space-xs);
     padding-bottom: var(--space-xs);
   }
+
+  /* Re-center for the short viewport: the bonus reclaim above dropped the
+     strip's top margin, which trimmed the space BELOW the grid by ~4px, so
+     the base 4px board nudge (calibrated for the full-height geometry)
+     now overshoots and leaves the grid sitting a touch low. Zero it here
+     so the space above and below the grid reads equal again; the tall /
+     full-height case keeps the base nudge (still centered there). */
+  .boardFrame {
+    margin-top: 0;
+  }
 }
 
 /* The ScoreBar's Undo, relocated into the dock: a compact icon-only
@@ -403,16 +413,6 @@
    the siblings' 44px — icon-only is fine here, only the height equalizes. */
 .dockRow .dockUndo {
   min-height: 44px;
-}
-
-/* Hand-stack: the arrangement has horizontal room, so the ↺ carries the
-   "Undo" word. The labeled variant sizes to its text (glyph + label) rather
-   than the icon-only 44px square — it keeps the actionRow's 44px height. */
-.actionRow .dockUndoLabeled {
-  flex: 0 0 auto;
-  min-width: 0;
-  padding-left: var(--space-sm);
-  padding-right: var(--space-sm);
 }
 
 /* Center-stage: commit + the icon-only ↺ share the bottom row. Place
