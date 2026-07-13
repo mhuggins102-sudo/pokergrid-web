@@ -138,7 +138,7 @@ export function DailyIntro({
             </div>
           )}
 
-          {isToday && (
+          {isToday && !isPhone && (
             <div className={styles.streak}>
               <div className={styles.streakLeft}>
                 <span className={styles.streakFlame} aria-hidden="true">

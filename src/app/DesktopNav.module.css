@@ -306,7 +306,11 @@
     grid-row: 2;
     grid-column: 1 / -1;
     justify-self: stretch;
-    justify-content: flex-start;
+    /* Centered link row (phase 7 tweak): the second row's Game Modes +
+       page links sit centered under the wordmark rather than hugging the
+       left. The sub-384 scroll safety net below overrides back to a
+       flush-left scroll when the row can't fit. */
+    justify-content: center;
     align-items: center;
     gap: 10px;
     min-width: 0;
@@ -402,6 +406,9 @@
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    /* Back to flush-left here: a centered flex row that overflows pushes
+       its first item off the left edge where scrolling can't reach it. */
+    justify-content: flex-start;
     /* Bleed to the header edges so the row scrolls off the screen edge. */
     margin: 0 calc(-1 * var(--space-lg));
     padding: 0 var(--space-lg);

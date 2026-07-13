@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react';
+import { CSSProperties, useState } from 'react';
 import { Link } from 'react-router';
 import {
   TARGETS_UP_STEP,
@@ -7,6 +7,7 @@ import {
 } from '../../game/challenges';
 import { difficultyColors } from '../../design/tokens';
 import { targetsUpReached } from '../../lib/stats';
+import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from './targetsStore';
 import styles from './TargetsPage.module.css';
@@ -50,6 +51,10 @@ export function TargetsPage() {
   // Stored value = highest level BEATEN; every display shows the level
   // REACHED (beaten + 1) — beating L3 put you on L4.
   const best = targetsUpReached(useStatsStore(s => s.stats.targetsUpBest));
+  const isPhone = useTier() === 'phone';
+  // Phone: the two explainers collapse into one flip-card; this is which
+  // face shows (0 = How it works, 1 = Reward tiers).
+  const [explainSlide, setExplainSlide] = useState(0);
 
   const level = save?.level ?? 1;
   const target = targetForLevel(level);
@@ -67,11 +72,14 @@ export function TargetsPage() {
           <div className={styles.eyebrow}>Targets Up</div>
           <h1 className={styles.title}>Climb the ladder</h1>
         </div>
-        <p className={styles.lede}>
-          One long run of full games. Beat the target and the next level asks
-          for {TARGETS_UP_STEP} more — the ruleset stiffens as you climb. One
-          loss ends the run.
-        </p>
+        {/* Phone drops the lede (the ladder + explainers carry it). */}
+        {!isPhone && (
+          <p className={styles.lede}>
+            One long run of full games. Beat the target and the next level asks
+            for {TARGETS_UP_STEP} more — the ruleset stiffens as you climb. One
+            loss ends the run.
+          </p>
+        )}
       </div>
 
       <section className={styles.ladder} aria-label="The ladder">
@@ -175,26 +183,72 @@ export function TargetsPage() {
         </div>
       </div>
 
-      <div className={styles.explain}>
-        <section className={styles.explainCard}>
-          <h2 className={styles.explainTitle}>How it works</h2>
-          <p className={styles.explainBody}>
-            Each level is one full game. Beat the target to advance; the next
-            level&apos;s target is {TARGETS_UP_STEP} higher, and the ruleset
-            stiffens with it. Lose once — miss a single target — and the run
-            ends where it stands.
-          </p>
-        </section>
-        <section className={styles.explainCard}>
-          <h2 className={styles.explainTitle}>Reward tiers</h2>
-          <p className={styles.explainBody}>
-            Finish a level at <strong>S tier</strong> (1.3× the target) to
-            earn a reward: supercharge a card from your final board for the
-            next deck, or power up a held bonus card.{' '}
-            <strong>SS tier</strong> (1.6×) earns both.
-          </p>
-        </section>
-      </div>
+      {isPhone ? (
+        /* Phone: one card that flips between the two explainers via a
+           green "read on" link in the top-right (home-screen link style). */
+        <div className={styles.explain}>
+          <section className={styles.explainCard}>
+            <div className={styles.explainHead}>
+              <h2 className={styles.explainTitle}>
+                {explainSlide === 0 ? 'How it works' : 'Reward tiers'}
+              </h2>
+              <button
+                type="button"
+                className={styles.explainRead}
+                onClick={() => setExplainSlide(s => (s === 0 ? 1 : 0))}
+              >
+                {explainSlide === 0 ? (
+                  <>
+                    Reward tiers <span aria-hidden="true">→</span>
+                  </>
+                ) : (
+                  <>
+                    <span aria-hidden="true">←</span> How it works
+                  </>
+                )}
+              </button>
+            </div>
+            <p className={styles.explainBody}>
+              {explainSlide === 0 ? (
+                <>
+                  Each level is one full game. Beat the target to advance; the
+                  next level&apos;s target is {TARGETS_UP_STEP} higher, and the
+                  ruleset stiffens with it. Lose once — miss a single target —
+                  and the run ends where it stands.
+                </>
+              ) : (
+                <>
+                  Finish a level at <strong>S tier</strong> (1.3× the target)
+                  to earn a reward: supercharge a card from your final board
+                  for the next deck, or power up a held bonus card.{' '}
+                  <strong>SS tier</strong> (1.6×) earns both.
+                </>
+              )}
+            </p>
+          </section>
+        </div>
+      ) : (
+        <div className={styles.explain}>
+          <section className={styles.explainCard}>
+            <h2 className={styles.explainTitle}>How it works</h2>
+            <p className={styles.explainBody}>
+              Each level is one full game. Beat the target to advance; the next
+              level&apos;s target is {TARGETS_UP_STEP} higher, and the ruleset
+              stiffens with it. Lose once — miss a single target — and the run
+              ends where it stands.
+            </p>
+          </section>
+          <section className={styles.explainCard}>
+            <h2 className={styles.explainTitle}>Reward tiers</h2>
+            <p className={styles.explainBody}>
+              Finish a level at <strong>S tier</strong> (1.3× the target) to
+              earn a reward: supercharge a card from your final board for the
+              next deck, or power up a held bonus card.{' '}
+              <strong>SS tier</strong> (1.6×) earns both.
+            </p>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

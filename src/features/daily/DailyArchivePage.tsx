@@ -7,6 +7,7 @@ import { Tier, tierForRun } from '../../lib/stats';
 import { difficultyColors } from '../../design/tokens';
 import { isBackendConfigured, type TopScoreEntry } from '../../lib/supabaseRpc';
 import { useTapPopover, useTapPopoverCloseAll } from '../../design/primitives';
+import { useTier } from '../../app/useTier';
 import { DAILY_LAUNCH_ISO, dayMs, toISO, toUTC } from './dailyDates';
 import { usePlaysStore } from './sync/playsStore';
 import {
@@ -100,6 +101,11 @@ export function DailyArchivePage() {
   // Reactive — a rename elsewhere updates the synthesized own row.
   const handle = useHandle();
   const today = currentDateISO();
+  const isPhone = useTier() === 'phone';
+  // Phone: the score distribution + leaderboard are hidden by default and
+  // revealed one at a time by the two header icons (the DeskStatsPanel
+  // chart-toggle pattern). null = neither shown. ≥768 shows both inline.
+  const [detailView, setDetailView] = useState<'dist' | 'board' | null>(null);
   const months = useMemo(() => publishedMonths(today), [today]);
   const [month, setMonth] = useState(() => monthOf(today));
   const [sel, setSel] = useState(today);
@@ -391,6 +397,75 @@ export function DailyArchivePage() {
                 </div>
               )}
             </div>
+            {/* Phone: icon toggles reveal the distribution / leaderboard
+                one at a time (they're hidden inline here). The
+                DeskStatsPanel chart-toggle pattern. ≥768 shows both
+                sections below and renders no toggle. */}
+            {isPhone && backend && (
+              <div
+                className={styles.detailToggle}
+                role="group"
+                aria-label="Show details"
+              >
+                {bins.length > 0 && (
+                  <button
+                    type="button"
+                    className={`${styles.detailToggleBtn} ${
+                      detailView === 'dist' ? styles.detailToggleBtnOn : ''
+                    }`}
+                    aria-label="Score distribution"
+                    aria-pressed={detailView === 'dist'}
+                    onClick={() =>
+                      setDetailView(v => (v === 'dist' ? null : 'dist'))
+                    }
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="15"
+                      height="15"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      aria-hidden="true"
+                    >
+                      <line x1="6" y1="20" x2="6" y2="11" />
+                      <line x1="12" y1="20" x2="12" y2="5" />
+                      <line x1="18" y1="20" x2="18" y2="14" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={`${styles.detailToggleBtn} ${
+                    detailView === 'board' ? styles.detailToggleBtnOn : ''
+                  }`}
+                  aria-label="Top of the board"
+                  aria-pressed={detailView === 'board'}
+                  onClick={() =>
+                    setDetailView(v => (v === 'board' ? null : 'board'))
+                  }
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M8 21h8" />
+                    <path d="M12 17v4" />
+                    <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+                    <path d="M17 5h2a2 2 0 0 1-2 3" />
+                    <path d="M7 5H5a2 2 0 0 0 2 3" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
 
           {backend && (
@@ -424,7 +499,7 @@ export function DailyArchivePage() {
             </div>
           )}
 
-          {backend && bins.length > 0 && (
+          {backend && bins.length > 0 && (!isPhone || detailView === 'dist') && (
             <div className={styles.histSection}>
               <div className={styles.sectionTitle}>Score distribution</div>
               <div className={styles.histBars}>
@@ -470,7 +545,7 @@ export function DailyArchivePage() {
             </div>
           )}
 
-          {backend && (
+          {backend && (!isPhone || detailView === 'board') && (
             <div className={styles.leadersSection}>
               <div className={styles.sectionTitle}>Top of the board</div>
               {top5.length === 0 ? (
