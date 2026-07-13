@@ -123,7 +123,7 @@ export const CHALLENGES: Challenge[] = [
   {
     id: 'three-tricks',
     name: 'Three Tricks',
-    synopsis: 'Twist: One-time actions (green) replace bonus cards',
+    synopsis: 'Twist: Bonus slots locked to green only',
     goal: 'Score 500+ points with no bonus-card deck. Instead you start holding three green one-time action cards (the kind Mixed Bag\'s green slot draws), dealt at random from the full special deck — tap one to read it, tap Use to fire it; each is consumed on use.',
     scoreTarget: 500,
     // Enforced at newGame: noBonusCards strips the regular bonus deck,

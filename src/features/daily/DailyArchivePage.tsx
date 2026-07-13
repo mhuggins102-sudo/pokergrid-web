@@ -198,6 +198,10 @@ export function DailyArchivePage() {
     setMonth(m);
     const newest = monthDates(m, today)[0];
     if (newest) setSel(newest);
+    // Snap the day list back to the top so the month's newest date
+    // (just selected above) is visible — otherwise the list can stay
+    // scrolled down from the previous month.
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
     // Selecting is inside the wrap, so the outside-tap dismissal never
     // fires — close the tap popover (and the hover state) explicitly so
     // the menu doesn't stay pinned open on touch after a pick.
