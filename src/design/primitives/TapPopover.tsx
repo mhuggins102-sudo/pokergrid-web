@@ -74,6 +74,19 @@ export function TapPopoverProvider({ children }: { children: ReactNode }) {
   // Timestamp of the last outside-pointerdown dismissal — a plain ref, so
   // stamping it never re-renders the shell.
   const outsideDismissAt = useRef(0);
+  // Swallow-the-next-click arming, owned by the PROVIDER (not the per-
+  // popover open effect). When an outside pointerdown dismisses a popover
+  // it arms this; a persistent capture-phase click listener below then
+  // eats the click that same tap produces, so NOTHING behind the popover
+  // (board cell, dock button, nav link) acts on the dismissing tap.
+  //   Why here and not in useTapPopover's open effect: close() flips `open`
+  //   false, and that effect's cleanup runs (in a microtask) BEFORE the
+  //   click fires — so a listener armed inside it is gone by click time.
+  //   Only the board was ever protected, by its own wasRecentDismiss guard;
+  //   the dock / nav had none, so their click landed. A provider-scoped
+  //   listener outlives the popover's lifecycle and covers every surface.
+  const swallowArmed = useRef(false);
+  const swallowTimer = useRef<number | undefined>(undefined);
   const { pathname } = useLocation();
 
   const value = useMemo<TapPopoverRegistry>(
@@ -96,6 +109,13 @@ export function TapPopoverProvider({ children }: { children: ReactNode }) {
       },
       recordOutsideDismiss() {
         outsideDismissAt.current = Date.now();
+        // Arm the click swallow. A drag / no-click tap shouldn't leave it
+        // armed for the next real click, so disarm after 700ms.
+        swallowArmed.current = true;
+        window.clearTimeout(swallowTimer.current);
+        swallowTimer.current = window.setTimeout(() => {
+          swallowArmed.current = false;
+        }, 700);
       },
       wasRecentDismiss(withinMs = 400) {
         return Date.now() - outsideDismissAt.current < withinMs;
@@ -103,6 +123,25 @@ export function TapPopoverProvider({ children }: { children: ReactNode }) {
     }),
     []
   );
+
+  // The persistent swallow: one capture-phase click listener for the whole
+  // app. When armed by an outside dismissal, it eats exactly the next click
+  // — in the CAPTURE phase, on document, so it stops before reaching any
+  // target handler (React attaches at the root container, below document).
+  useEffect(() => {
+    const swallow = (e: MouseEvent) => {
+      if (!swallowArmed.current) return;
+      swallowArmed.current = false;
+      window.clearTimeout(swallowTimer.current);
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    document.addEventListener('click', swallow, true);
+    return () => {
+      document.removeEventListener('click', swallow, true);
+      window.clearTimeout(swallowTimer.current);
+    };
+  }, []);
 
   // Route change closes every open popover — menu-item taps navigate, and
   // so does any programmatic route change.
@@ -158,39 +197,18 @@ export function useTapPopover(id: string): TapPopoverHandle {
 
   // While open: outside pointerdown and Escape dismiss (lifted from the
   // DesktopNav phase-2 shim). Only ever attached on coarse — open is only
-  // set true there.
+  // set true there. The outside tap must ONLY dismiss — recordOutsideDismiss
+  // arms the provider's persistent click swallow (see TapPopoverProvider),
+  // which eats the click this same tap produces so nothing behind the
+  // popover acts on it. Arming happens here (on the pointerdown), but the
+  // swallow itself lives in the provider so it survives this effect's
+  // cleanup when close() flips `open` false.
   useEffect(() => {
     if (!open) return;
-    let swallowArmed = false;
-    // The outside tap should ONLY dismiss the popover — nothing behind it
-    // (board cell, dock button, another trigger) may act on the same tap.
-    // A tap is pointerdown → click, so once an outside pointerdown closes
-    // the popover we swallow the click it produces, in the CAPTURE phase so
-    // it stops before reaching any target handler.
-    const swallowClick = (ce: Event) => {
-      ce.stopPropagation();
-      ce.preventDefault();
-      document.removeEventListener('click', swallowClick, true);
-      swallowArmed = false;
-    };
-    const disarm = () => {
-      if (!swallowArmed) return;
-      document.removeEventListener('click', swallowClick, true);
-      swallowArmed = false;
-    };
     const onDown = (e: PointerEvent) => {
       if (!wrapEl.current?.contains(e.target as Node)) {
-        // Kept as a fallback for any pointerdown-driven handler; the click
-        // swallow below is the primary "outside tap only dismisses" guard.
         registry?.recordOutsideDismiss();
         close();
-        if (!swallowArmed) {
-          swallowArmed = true;
-          document.addEventListener('click', swallowClick, true);
-          // Drag / no-click safety: a pointerdown that never yields a click
-          // shouldn't leave the swallow armed for the next real click.
-          window.setTimeout(disarm, 700);
-        }
       }
     };
     const onKey = (e: KeyboardEvent) => {
@@ -201,7 +219,6 @@ export function useTapPopover(id: string): TapPopoverHandle {
     return () => {
       document.removeEventListener('pointerdown', onDown);
       document.removeEventListener('keydown', onKey);
-      document.removeEventListener('click', swallowClick, true);
     };
   }, [open, close, registry]);
 

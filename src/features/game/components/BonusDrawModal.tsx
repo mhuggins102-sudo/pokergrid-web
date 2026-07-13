@@ -28,6 +28,30 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
   // open (the modal unmounts between draws). Keyboard focus still
   // forces solid via the CSS :focus-within guard.
   const [hasHovered, setHasHovered] = useState(false);
+  // Touch parity for that hover dim: coarse pointers can't hover, so a
+  // TAP on the scrim (outside the card) fades the whole overlay down to
+  // peek at the board behind, and any tap while peeking brings it back.
+  // The scrim covers the screen, so both taps hit the scrim — never the
+  // board / dock / nav behind it — matching "the restore tap triggers
+  // nothing else." Resolved once at mount (stable).
+  const [coarse] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      !!window.matchMedia?.('(pointer: coarse)').matches
+  );
+  const [peek, setPeek] = useState(false);
+  const onScrimClick = coarse
+    ? (e: React.MouseEvent) => {
+        // While peeking the card is pointer-events:none (see the module
+        // CSS), so every tap lands here — restore, and only restore.
+        if (peek) {
+          setPeek(false);
+          return;
+        }
+        // Not peeking: a tap directly on the scrim (outside the card) dims.
+        if (e.target === e.currentTarget) setPeek(true);
+      }
+    : undefined;
 
   const pick = (idx: number) => {
     const card = ui.drawn[idx];
@@ -40,7 +64,10 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
 
   return (
     <div
-      className={`${styles.scrim} ${hasHovered ? styles.scrimDimmable : ''}`}
+      className={`${styles.scrim} ${hasHovered ? styles.scrimDimmable : ''} ${
+        peek ? styles.scrimPeek : ''
+      }`}
+      onClick={onScrimClick}
     >
       <div
         className={styles.card}
