@@ -127,7 +127,11 @@ export function RulesPage() {
           {/* Phone: a section heading in the Bonus-card-reference style
               leads the steps (the eyebrow + big page title are CSS-hidden
               here). ≥768 keeps the eyebrow + Fraunces title untouched. */}
-          {isPhone && <h2 className={styles.refTitle}>How to play</h2>}
+          {isPhone && (
+            <h2 className={`${styles.refTitle} ${styles.phoneRefTitle}`}>
+              How to play
+            </h2>
+          )}
           <div className={styles.eyebrow}>Rules</div>
           <h1 className={styles.title}>How PokerGrid works</h1>
           <div className={styles.steps}>
@@ -170,7 +174,13 @@ export function RulesPage() {
         {/* Phone: matching section heading above the table (the in-panel
             title below is dropped so it isn't shown twice). ≥768 keeps the
             in-panel handTitle and no outer heading. */}
-        {isPhone && <h2 className={styles.refTitle}>Hand values</h2>}
+        {isPhone && (
+          <h2
+            className={`${styles.refTitle} ${styles.phoneRefTitle} ${styles.phoneRefTitleBreak}`}
+          >
+            Hand values
+          </h2>
+        )}
         <div className={styles.handPanel}>
           {!isPhone && <h2 className={styles.handTitle}>Hand values</h2>}
           <div className={styles.handList}>

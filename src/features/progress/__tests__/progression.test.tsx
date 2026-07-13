@@ -93,14 +93,14 @@ describe('challenges', () => {
     // No lock gating anywhere.
     expect(screen.queryByText('Locked')).not.toBeInTheDocument();
     // Phone (jsdom default): cards collapse, so the Play footer lives
-    // behind a tap. Expand every card (names are unique), then confirm
-    // each still carries exactly one Play link.
+    // behind a tap, and expansion is single-open (opening one closes the
+    // rest). Open each card in turn and confirm it reveals exactly one
+    // Play link pointing at that challenge.
     CHALLENGES.forEach(c => {
       fireEvent.click(screen.getByRole('button', { name: new RegExp(c.name) }));
+      const play = screen.getByRole('link', { name: 'Play' });
+      expect(play).toHaveAttribute('href', `/challenges/${c.id}`);
     });
-    expect(screen.getAllByRole('link', { name: 'Play' })).toHaveLength(
-      CHALLENGES.length
-    );
   });
 
   it('three-tricks seeds three one-time specials', () => {
