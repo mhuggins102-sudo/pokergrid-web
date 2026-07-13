@@ -30,6 +30,22 @@
   }
 }
 
+/* Touch board-peek: the coarse-pointer tap equivalent of the hover dim
+   above (there's no hover to fade on, so a tap drives it). JS sets
+   .scrimPeek on a scrim tap outside the card; the whole overlay fades to
+   the same 0.15 so the board reads through, and the card goes inert so the
+   next tap ANYWHERE lands on the full-screen scrim and restores it —
+   nothing behind the overlay is ever reachable. Coarse-only in practice:
+   the class is only ever toggled on a coarse pointer (BonusDrawModal.tsx).
+   The scrim's opacity transition (above) carries the fade. */
+.scrim.scrimPeek {
+  opacity: 0.15;
+}
+
+.scrim.scrimPeek .card {
+  pointer-events: none;
+}
+
 @keyframes draw-fadein {
   from {
     opacity: 0;

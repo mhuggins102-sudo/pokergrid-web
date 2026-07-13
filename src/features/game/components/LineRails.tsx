@@ -4,7 +4,7 @@ import { Grid } from '../../../game/grid';
 import { HandRank } from '../../../game/hands';
 import { ScoreReport, ScoredLine } from '../../../game/scoring';
 import { HAND_LABEL, lineLabel } from '../handLabels';
-import { ChipTone, linePotential } from '../lineInsights';
+import { ChipTone, LinePotential, linePotential } from '../lineInsights';
 import { GridBoard } from './GridBoard';
 import styles from './LineRails.module.css';
 
@@ -75,7 +75,14 @@ const POTENTIAL_TONE: Record<ChipTone, string> = {
   none: styles.toneNone,
 };
 
-const chipLabel = (line: ScoredLine): string => {
+const chipLabel = (line: ScoredLine, p: LinePotential | null): string => {
+  // Live game: read the potential's hand name + anticipated label so a
+  // forming line announces what it WOULD pay (matches the desk edge chip).
+  if (p) {
+    return `${lineLabel(line.kind, line.index)}: ${p.name || 'no hand'}, ${
+      p.label === '–' ? 'no points yet' : `${p.label} points`
+    }`;
+  }
   const hand = line.hand ? HAND_LABEL[line.hand] : 'no hand';
   return `${lineLabel(line.kind, line.index)}: ${hand}, ${line.total} points`;
 };
@@ -119,16 +126,17 @@ export function LineRails({
     const baseTotal = tally?.baseTotals.get(key) ?? line.total;
     const boosted = tally !== undefined && baseTotal !== line.total;
     const showBase = tally?.stage === 'base';
-    const text = showBase ? String(baseTotal) : chipText(line);
     // Gold dressing (and its re-pop) belongs to the boosted stage.
     const goldNow = boosted && tally?.stage === 'boosted';
-    // Live game: tone by the line's potential (desk edge-chip scheme).
-    // Result screen (no bonusCards): plain sign tone + the tally dressing.
-    const tone = bonusCards
-      ? POTENTIAL_TONE[
-          linePotential(line, bonusCards, report.lines, handBoost).tone
-        ]
-      : toneOf(line);
+    // Live game: tone AND text come from the line's potential (the desk
+    // edge-chip scheme) — a forming line shows its ANTICIPATED score (+N,
+    // the partial hand's value with any gold mult), not a bare "·". Result
+    // screen (no bonusCards): plain sign tone + the numeric tally.
+    const p = bonusCards
+      ? linePotential(line, bonusCards, report.lines, handBoost)
+      : null;
+    const tone = p ? POTENTIAL_TONE[p.tone] : toneOf(line);
+    const text = p ? p.label : showBase ? String(baseTotal) : chipText(line);
     return (
       <button
         key={`${line.kind}-${line.index}`}
@@ -151,7 +159,7 @@ export function LineRails({
               : undefined
         }
         onClick={() => onLineTap?.(line)}
-        aria-label={chipLabel(line)}
+        aria-label={chipLabel(line, p)}
         aria-current={isLit(line) || undefined}
       >
         {text}
