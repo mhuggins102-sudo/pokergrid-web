@@ -687,4 +687,27 @@
   .detailUnplayed .startBtn {
     display: none;
   }
+
+  /* Keep the icon toggles pinned to the top-right for BOTH played and
+     unplayed days: don't let the head wrap the toggle onto its own line
+     (a played day's wide score row used to push it down-left). The result
+     row wraps WITHIN the flexible main column instead. */
+  .detailHead {
+    flex-wrap: nowrap;
+  }
+
+  .detailHeadMain {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .detailResult {
+    flex-wrap: wrap;
+  }
+
+  /* Toggle-off scrolls the panel top back up (block:'start'); clear the
+     sticky header so it doesn't tuck underneath. */
+  .detailPanel {
+    scroll-margin-top: 100px;
+  }
 }

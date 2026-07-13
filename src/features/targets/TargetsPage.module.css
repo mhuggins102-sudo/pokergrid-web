@@ -372,11 +372,11 @@
     display: none;
   }
 
-  .startBar {
+  /* Card order (phone): How it works → The Ladder → Starting. The
+     first-card top buffer + inter-card spacing live in the per-card rules
+     (.explain margin-top is set with its single-column layout below). */
+  .explain {
     order: 1;
-    /* Same top-card buffer as Challenges/Stats/Achievements/Settings
-       (their first element's 4px margin over the shared .main padding). */
-    margin-top: 4px;
   }
 
   .ladder {
@@ -384,8 +384,17 @@
     margin-top: 14px;
   }
 
-  .explain {
+  .startBar {
     order: 3;
+    margin-top: 14px;
+  }
+
+  /* The "Starting" label rendered a touch dimmer/smaller than the other
+     two subtitles (11px / --ink-3 vs 12px / --ink-2); match them so all
+     three section titles read identically. */
+  .startingLabel {
+    font-size: 12px;
+    color: var(--ink-2);
   }
 
   .lede {
@@ -426,6 +435,7 @@
   .explain {
     grid-template-columns: 1fr;
     gap: 12px;
-    margin-top: 14px;
+    /* Top card → same 4px buffer over .main padding as the other pages. */
+    margin-top: 4px;
   }
 }

@@ -164,16 +164,25 @@ export function DailyArchivePage() {
     };
   }, []);
 
-  // Phone: revealing the distribution / leaderboard grows the detail
-  // panel below the fold, so scroll its bottom into view (block:'end')
-  // once the section has rendered. Only when a section is actually shown.
+  // Phone: keep the toggled section in view. Turning one ON grows the
+  // panel below the fold → scroll its BOTTOM into view; turning the last
+  // one OFF → scroll its TOP back up ("back to the top"). Skip the first
+  // run so a fresh page load (detailView already null) doesn't jump.
+  const detailScrollInit = useRef(false);
   useEffect(() => {
-    if (!isPhone || detailView === null) return;
+    if (!isPhone) return;
+    if (!detailScrollInit.current) {
+      detailScrollInit.current = true;
+      return;
+    }
     const el = detailRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
       try {
-        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: detailView === null ? 'start' : 'end',
+        });
       } catch {
         /* jsdom / unsupported env — non-essential */
       }
@@ -384,7 +393,7 @@ export function DailyArchivePage() {
         {/* ---- Selected day result ---- */}
         <div className={styles.detailPanel} ref={detailRef}>
           <div className={styles.detailHead}>
-            <div>
+            <div className={styles.detailHeadMain}>
               <div className={styles.detailEyebrow}>
                 {weekdayOf(sel)}, {longDate(sel)}
               </div>
@@ -423,6 +432,35 @@ export function DailyArchivePage() {
                 role="group"
                 aria-label="Show details"
               >
+                <button
+                  type="button"
+                  className={`${styles.detailToggleBtn} ${
+                    detailView === 'board' ? styles.detailToggleBtnOn : ''
+                  }`}
+                  aria-label="Leaderboard"
+                  aria-pressed={detailView === 'board'}
+                  onClick={() =>
+                    setDetailView(v => (v === 'board' ? null : 'board'))
+                  }
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M8 21h8" />
+                    <path d="M12 17v4" />
+                    <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+                    <path d="M17 5h2a2 2 0 0 1-2 3" />
+                    <path d="M7 5H5a2 2 0 0 0 2 3" />
+                  </svg>
+                </button>
                 {bins.length > 0 && (
                   <button
                     type="button"
@@ -451,35 +489,6 @@ export function DailyArchivePage() {
                     </svg>
                   </button>
                 )}
-                <button
-                  type="button"
-                  className={`${styles.detailToggleBtn} ${
-                    detailView === 'board' ? styles.detailToggleBtnOn : ''
-                  }`}
-                  aria-label="Top of the board"
-                  aria-pressed={detailView === 'board'}
-                  onClick={() =>
-                    setDetailView(v => (v === 'board' ? null : 'board'))
-                  }
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="15"
-                    height="15"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M8 21h8" />
-                    <path d="M12 17v4" />
-                    <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
-                    <path d="M17 5h2a2 2 0 0 1-2 3" />
-                    <path d="M7 5H5a2 2 0 0 0 2 3" />
-                  </svg>
-                </button>
               </div>
             )}
           </div>
@@ -563,7 +572,7 @@ export function DailyArchivePage() {
 
           {backend && (!isPhone || detailView === 'board') && (
             <div className={styles.leadersSection}>
-              <div className={styles.sectionTitle}>Top of the board</div>
+              <div className={styles.sectionTitle}>Leaderboard</div>
               {top5.length === 0 ? (
                 <span className={styles.emptyNote}>
                   {stats.isLoading

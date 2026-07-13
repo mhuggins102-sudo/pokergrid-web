@@ -135,10 +135,13 @@ export function TargetsPage() {
             );
           })}
         </div>
-        <p className={styles.ladderFoot}>
-          Levels 1–2 play the Easy ruleset, 3–4 Medium, 5 and up Hard — the
-          target rises {TARGETS_UP_STEP} points every level, without end.
-        </p>
+        {/* Phone drops the ladder footnote (density). */}
+        {!isPhone && (
+          <p className={styles.ladderFoot}>
+            Levels 1–2 play the Easy ruleset, 3–4 Medium, 5 and up Hard — the
+            target rises {TARGETS_UP_STEP} points every level, without end.
+          </p>
+        )}
       </section>
 
       <div className={styles.startBar}>
