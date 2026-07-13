@@ -384,32 +384,89 @@
     gap: 8px;
   }
 
-  /* Four headline cards on ONE row — value font + padding shrink to
-     fit 390. */
+  /* Four compact square headline tiles, centered (the shortened
+     "Best"/"Played" labels let them shrink from the old wide cards). */
   .headline {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 7px;
+    grid-template-columns: repeat(4, 74px);
+    justify-content: center;
+    gap: 10px;
   }
 
   .headCard {
-    padding: 12px 9px;
-    /* Value + label centered inside each of the four headline tiles. */
+    aspect-ratio: 1 / 1;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
     text-align: center;
   }
 
   .headValue {
-    font-size: 21px;
+    font-size: 22px;
   }
 
   .headLabel {
-    font-size: 10px;
-    letter-spacing: 0.03em;
-    margin-top: 3px;
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+    margin-top: 0;
+    /* One line so every tile stays a uniform square (the widest label,
+       "Avg score", used to wrap and push that one tile taller). */
+    white-space: nowrap;
   }
 
   .chartRow {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  /* Rating-breakdown panel header: title + the two view-swap icons
+     (mirrors the archive detail-panel toggle). */
+  .panelHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .panelHead .panelTitle {
+    margin: 0;
+  }
+
+  .chartToggle {
+    display: inline-flex;
+    gap: 5px;
+    flex: none;
+  }
+
+  .chartBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease,
+      color 140ms ease;
+  }
+
+  .chartBtn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .chartBtnOn {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   /* Recent runs spans the full width like the other panels, and its
