@@ -677,11 +677,16 @@
 }
 
 /* Scoring popover: ~280px so it never clips at 390 (right-anchored). The
-   ScoringPanel inside supplies its own .panel chrome. */
+   ScoringPanel inside supplies its own .panel chrome. Height is variable —
+   it fits its content (10 lines, plus the subtotal + end-game/purple rows
+   when a grid multiplier is firing) and only caps at the space actually
+   left below the header. The old 72vh was smaller than that free space, so
+   a purple card pushed the total into a scroll; dvh (not vh) tracks the
+   Safari toolbar so the cap matches the VISIBLE viewport. */
 .rowScoringPop {
   width: 288px;
   max-width: calc(100vw - 2 * var(--space-lg));
-  max-height: 72vh;
+  max-height: calc(100dvh - 96px);
   overflow: auto;
 }
 
