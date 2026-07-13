@@ -350,9 +350,12 @@
     display: none;
   }
 
+  /* Stack the how-to spread; drop the grid gap so the phone section
+     headings below own their spacing via explicit margins (matching the
+     Bonus-card-reference rhythm). */
   .topGrid {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 0;
   }
 
   .refSection {
@@ -361,6 +364,19 @@
 
   .refTitle {
     font-size: 24px;
+  }
+
+  /* The two phone-only section headings ("How to play", "Hand values"):
+     18px underneath — the same gap "Bonus card reference" gets from its
+     .tabs margin — so all three subtitles read identically. */
+  .phoneRefTitle {
+    margin-bottom: 18px;
+  }
+
+  /* "Hand values" also opens a section, so it carries the same top break
+     as the "Bonus card reference" section (.refSection margin-top). */
+  .phoneRefTitleBreak {
+    margin-top: 34px;
   }
 
   .cardGrid {

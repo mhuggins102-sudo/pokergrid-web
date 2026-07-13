@@ -164,6 +164,22 @@ export function DailyArchivePage() {
     };
   }, []);
 
+  // Phone: revealing the distribution / leaderboard grows the detail
+  // panel below the fold, so scroll its bottom into view (block:'end')
+  // once the section has rendered. Only when a section is actually shown.
+  useEffect(() => {
+    if (!isPhone || detailView === null) return;
+    const el = detailRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } catch {
+        /* jsdom / unsupported env — non-essential */
+      }
+    });
+  }, [detailView, isPhone]);
+
   // Top of the board: top 5 with the player's own row seated AT its
   // rank (the leaderboard panel's splice pattern); ranks past #5
   // append below.

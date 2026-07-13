@@ -23,15 +23,11 @@ export function ChallengesPage() {
   const doneCount = CHALLENGES.filter(c => done.includes(c.id)).length;
   const pct = Math.round((doneCount / CHALLENGES.length) * 100);
   const isPhone = useTier() === 'phone';
-  // Phone-only per-card expansion (any number open at once).
-  const [expanded, setExpanded] = useState<Set<ChallengeId>>(new Set());
+  // Phone-only per-card expansion — single-open (opening one closes any
+  // other), so the list never grows into a long scroll of open cards.
+  const [openId, setOpenId] = useState<ChallengeId | null>(null);
   const toggle = (id: ChallengeId) =>
-    setExpanded(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setOpenId(cur => (cur === id ? null : id));
 
   return (
     <div className={styles.wrap}>
@@ -69,7 +65,7 @@ export function ChallengesPage() {
       <div className={styles.grid}>
         {CHALLENGES.map((challenge, i) => {
           const isDone = done.includes(challenge.id);
-          const isOpen = expanded.has(challenge.id);
+          const isOpen = openId === challenge.id;
 
           const head = (
             <div className={styles.cardTop}>

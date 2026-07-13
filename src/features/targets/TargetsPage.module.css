@@ -359,10 +359,33 @@
    8–12 rungs into the column; the start bar and explainers stack.
    Everything ≥768 is untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
-  /* Density pass: the eyebrow + title drop; the ladder leads. */
-  .eyebrow,
-  .title {
+  /* Density pass: the whole head (eyebrow + title; the lede isn't
+     rendered on phone) drops so the first card leads — matching the other
+     utility pages. The wrap becomes a flex column so the cards can be
+     reordered: Starting → The Ladder → How it works. */
+  .wrap {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .head {
     display: none;
+  }
+
+  .startBar {
+    order: 1;
+    /* Same top-card buffer as Challenges/Stats/Achievements/Settings
+       (their first element's 4px margin over the shared .main padding). */
+    margin-top: 4px;
+  }
+
+  .ladder {
+    order: 2;
+    margin-top: 14px;
+  }
+
+  .explain {
+    order: 3;
   }
 
   .lede {
@@ -403,5 +426,6 @@
   .explain {
     grid-template-columns: 1fr;
     gap: 12px;
+    margin-top: 14px;
   }
 }
