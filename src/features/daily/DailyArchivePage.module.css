@@ -688,20 +688,10 @@
     display: none;
   }
 
-  /* Keep the icon toggles pinned to the top-right for BOTH played and
-     unplayed days: don't let the head wrap the toggle onto its own line
-     (a played day's wide score row used to push it down-left). The result
-     row wraps WITHIN the flexible main column instead. */
+  /* The icon toggles ride the date line (their own row above the result),
+     pinned top-right for played and unplayed days alike — keep that line
+     from wrapping the toggle beneath the date. */
   .detailHead {
     flex-wrap: nowrap;
-  }
-
-  .detailHeadMain {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .detailResult {
-    flex-wrap: wrap;
   }
 }

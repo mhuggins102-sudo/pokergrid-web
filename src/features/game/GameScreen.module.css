@@ -678,6 +678,16 @@
   right: auto;
 }
 
+/* When a twist / Targets-Up pill widens the cluster, the score segment
+   (the rightmost) sits far enough right that its left-anchored menu runs
+   off the right edge of a 390 viewport. Flip JUST that menu to open
+   leftward (right-anchored) in the widened group; the narrow (no-twist)
+   group keeps the left-anchored menu, which already fits. */
+.gameDetailsRow .navPillGroupWide .navPillSplit .navPillSeg:last-child .navMenu {
+  left: auto;
+  right: 0;
+}
+
 /* Phone-row size trim: the desk pills are chunky for a 390 viewport, so
    compress their paddings / gaps / score type (the v1 columnPill did the
    same). Scoped to .gameDetailsRow, so the desk + tablet-extras cluster

@@ -3,6 +3,7 @@ import { CHALLENGES } from '../../game/challenges';
 import { Difficulty, TARGET_BY_DIFFICULTY } from '../../game/rules';
 import { TIER_ORDER, Tier, tierForRun } from '../../lib/stats';
 import { difficultyColors } from '../../design/tokens';
+import { useTier } from '../../app/useTier';
 import { usePlaysStore } from '../daily/sync/playsStore';
 import { useStatsStore } from '../progress/statsStore';
 import {
@@ -63,6 +64,11 @@ export function StatsPage() {
   // Independent single-select per row; 'all' = row unselected.
   const [mode, setMode] = useState<StatsMode | 'all'>('all');
   const [diff, setDiff] = useState<Difficulty | 'all'>('all');
+  const isPhone = useTier() === 'phone';
+  // Phone: the rating-breakdown panel hosts the recent-scores scatter and
+  // the recent-runs list behind two header icons (both off = the tier
+  // breakdown). ≥768 keeps the three panels laid out side by side.
+  const [statsView, setStatsView] = useState<'scatter' | 'runs' | null>(null);
 
   const data = useMemo(() => buildModeStats(stats, plays), [stats, plays]);
 
@@ -89,17 +95,19 @@ export function StatsPage() {
     scopedCell.totalRuns > 0
       ? `${Math.round((scopedCell.wins / scopedCell.totalRuns) * 100)}%`
       : '—';
+  // Phone shortens two labels ("Best" / "Played") so the four tiles shrink
+  // to squares; ≥768 keeps the full labels.
   const headline = [
     {
       value: scopedCell.best ?? '—',
-      label: 'Best score',
+      label: isPhone ? 'Best' : 'Best score',
       color: 'var(--accent)',
     },
     { value: avgOf(scopedCell) ?? '—', label: 'Avg score', color: 'var(--ink)' },
     { value: winPct, label: 'Win rate', color: 'var(--ink)' },
     {
       value: scopedCell.totalRuns,
-      label: 'Games played',
+      label: isPhone ? 'Played' : 'Games played',
       color: 'var(--ink)',
     },
   ];
@@ -136,6 +144,164 @@ export function StatsPage() {
     >
       {label}
     </button>
+  );
+
+  // The three panel bodies, extracted so the phone single-panel view and
+  // the desktop three-panel layout render the exact same content.
+  const tierBreakdown = (
+    <div className={styles.tierList}>
+      {TIER_ORDER.map(t => (
+        <div key={t} className={styles.tierRow}>
+          <span className={styles.tierKey} style={{ color: TIER_COLOR[t] }}>
+            {t}
+          </span>
+          <div className={styles.tierTrack}>
+            <div
+              className={styles.tierFill}
+              style={{
+                width: `${Math.round((scopedTiers[t] / tierMax) * 100)}%`,
+                background: TIER_COLOR[t],
+              }}
+            />
+          </div>
+          <span className={styles.tierCount}>{scopedTiers[t]}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  const scatterBody = (
+    <>
+      <div className={styles.scatterPlot}>
+        {target !== null && points.length > 0 && (
+          <>
+            <div
+              className={styles.targetLine}
+              style={{ top: `${yFor(target)}%` }}
+            />
+            <span
+              className={styles.targetLabel}
+              style={{ top: `${yFor(target)}%` }}
+            >
+              TARGET {target}
+            </span>
+          </>
+        )}
+        {points.length === 0 ? (
+          <span className={styles.empty}>No games recorded yet.</span>
+        ) : (
+          points.map((p, i) => (
+            <div
+              key={`${p.ts}-${i}`}
+              className={`${styles.dot} ${p.won ? styles.dotWon : ''}`}
+              style={{
+                left: `${
+                  points.length === 1 ? 50 : (i / (points.length - 1)) * 96 + 2
+                }%`,
+                top: `${yFor(p.score)}%`,
+              }}
+              title={`${p.score} · ${p.difficulty} · ${p.won ? 'won' : 'lost'}`}
+            />
+          ))
+        )}
+      </div>
+      <div className={styles.scatterAxis}>
+        <span>Older</span>
+        <span>Recent</span>
+      </div>
+    </>
+  );
+
+  const runsBody = (
+    <>
+      <div className={`${styles.runGrid} ${styles.runHead}`}>
+        <span>Date</span>
+        <span />
+        <span className={styles.runCenter}>Score</span>
+        <span className={styles.runCenter}>Target</span>
+        <span className={styles.runCenter}>Rating</span>
+      </div>
+      {scopedRuns.length === 0 ? (
+        <span className={styles.empty}>No games recorded yet.</span>
+      ) : (
+        scopedRuns.slice(0, 6).map((run, i) => {
+          const rt = tierForRun(run);
+          return (
+            <div key={`${run.ts}-${i}`} className={styles.runGrid}>
+              <span className={styles.runDate}>{fmtDate(run.ts)}</span>
+              <span>
+                {run.twist && (
+                  <span className={styles.twistPill}>
+                    <span aria-hidden="true">✦</span> {twistName(run.twist)}
+                  </span>
+                )}
+              </span>
+              <span className={styles.runScore}>{run.score}</span>
+              <span className={styles.runTarget}>{run.target}</span>
+              <span
+                className={styles.runBadge}
+                style={{ '--tier-tone': TIER_COLOR[rt] } as CSSProperties}
+              >
+                {rt}
+              </span>
+            </div>
+          );
+        })
+      )}
+    </>
+  );
+
+  // Phone: the two header icons that swap the panel body.
+  const statsToggle = (
+    <div className={styles.chartToggle} role="group" aria-label="Panel view">
+      <button
+        type="button"
+        className={`${styles.chartBtn} ${
+          statsView === 'scatter' ? styles.chartBtnOn : ''
+        }`}
+        aria-label="Recent scores"
+        aria-pressed={statsView === 'scatter'}
+        onClick={() => setStatsView(v => (v === 'scatter' ? null : 'scatter'))}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="15"
+          height="15"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="3 17 9 11 13 15 21 6" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className={`${styles.chartBtn} ${
+          statsView === 'runs' ? styles.chartBtnOn : ''
+        }`}
+        aria-label="Recent runs"
+        aria-pressed={statsView === 'runs'}
+        onClick={() => setStatsView(v => (v === 'runs' ? null : 'runs'))}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="15"
+          height="15"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
+      </button>
+    </div>
   );
 
   return (
@@ -183,133 +349,73 @@ export function StatsPage() {
         ))}
       </div>
 
-      <div className={styles.chartRow}>
-        <div className={styles.panel}>
-          <h2 className={styles.panelTitle}>Rating breakdown</h2>
-          <p className={styles.panelSub}>
-            How your {selName} finishes graded out.
-          </p>
-          <div className={styles.tierList}>
-            {TIER_ORDER.map(t => (
-              <div key={t} className={styles.tierRow}>
-                <span
-                  className={styles.tierKey}
-                  style={{ color: TIER_COLOR[t] }}
-                >
-                  {t}
-                </span>
-                <div className={styles.tierTrack}>
-                  <div
-                    className={styles.tierFill}
-                    style={{
-                      width: `${Math.round((scopedTiers[t] / tierMax) * 100)}%`,
-                      background: TIER_COLOR[t],
-                    }}
-                  />
-                </div>
-                <span className={styles.tierCount}>{scopedTiers[t]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.panel}>
-          <div className={styles.scatterHead}>
-            <h2 className={styles.panelTitle}>Recent scores</h2>
-            <span className={styles.scatterNote}>
-              last {points.length} game{points.length === 1 ? '' : 's'}
-            </span>
-          </div>
-          <div className={styles.scatterPlot}>
-            {target !== null && points.length > 0 && (
+      {isPhone ? (
+        /* Phone: ONE panel. The tier breakdown is the default; the two
+           header icons swap in the recent-scores scatter or the
+           recent-runs list (the separate panels are gone here). */
+        <div className={styles.chartRow}>
+          <div className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>
+                {statsView === 'scatter'
+                  ? 'Recent scores'
+                  : statsView === 'runs'
+                    ? 'Recent runs'
+                    : 'Rating breakdown'}
+              </h2>
+              {statsToggle}
+            </div>
+            {statsView === 'scatter' ? (
               <>
-                <div
-                  className={styles.targetLine}
-                  style={{ top: `${yFor(target)}%` }}
-                />
-                <span
-                  className={styles.targetLabel}
-                  style={{ top: `${yFor(target)}%` }}
-                >
-                  TARGET {target}
-                </span>
+                <p className={styles.panelSub}>
+                  last {points.length} game{points.length === 1 ? '' : 's'}
+                </p>
+                {scatterBody}
+              </>
+            ) : statsView === 'runs' ? (
+              runsBody
+            ) : (
+              <>
+                <p className={styles.panelSub}>
+                  How your {selName} finishes graded out.
+                </p>
+                {tierBreakdown}
               </>
             )}
-            {points.length === 0 ? (
-              <span className={styles.empty}>No games recorded yet.</span>
-            ) : (
-              points.map((p, i) => (
-                <div
-                  key={`${p.ts}-${i}`}
-                  className={`${styles.dot} ${p.won ? styles.dotWon : ''}`}
-                  style={{
-                    left: `${
-                      points.length === 1
-                        ? 50
-                        : (i / (points.length - 1)) * 96 + 2
-                    }%`,
-                    top: `${yFor(p.score)}%`,
-                  }}
-                  title={`${p.score} · ${p.difficulty} · ${
-                    p.won ? 'won' : 'lost'
-                  }`}
-                />
-              ))
-            )}
-          </div>
-          <div className={styles.scatterAxis}>
-            <span>Older</span>
-            <span>Recent</span>
           </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className={styles.chartRow}>
+            <div className={styles.panel}>
+              <h2 className={styles.panelTitle}>Rating breakdown</h2>
+              <p className={styles.panelSub}>
+                How your {selName} finishes graded out.
+              </p>
+              {tierBreakdown}
+            </div>
 
-      <div className={styles.runsRow}>
-        <div className={styles.panel}>
-          <h2 className={`${styles.panelTitle} ${styles.runsTitle}`}>
-            Recent runs
-          </h2>
-          <div className={`${styles.runGrid} ${styles.runHead}`}>
-            <span>Date</span>
-            <span />
-            <span className={styles.runCenter}>Score</span>
-            <span className={styles.runCenter}>Target</span>
-            <span className={styles.runCenter}>Rating</span>
+            <div className={styles.panel}>
+              <div className={styles.scatterHead}>
+                <h2 className={styles.panelTitle}>Recent scores</h2>
+                <span className={styles.scatterNote}>
+                  last {points.length} game{points.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              {scatterBody}
+            </div>
           </div>
-          {scopedRuns.length === 0 ? (
-            <span className={styles.empty}>No games recorded yet.</span>
-          ) : (
-            scopedRuns.slice(0, 6).map((run, i) => {
-              const rt = tierForRun(run);
-              return (
-                <div key={`${run.ts}-${i}`} className={styles.runGrid}>
-                  <span className={styles.runDate}>{fmtDate(run.ts)}</span>
-                  <span>
-                    {run.twist && (
-                      <span className={styles.twistPill}>
-                        <span aria-hidden="true">✦</span>{' '}
-                        {twistName(run.twist)}
-                      </span>
-                    )}
-                  </span>
-                  <span className={styles.runScore}>{run.score}</span>
-                  <span className={styles.runTarget}>{run.target}</span>
-                  <span
-                    className={styles.runBadge}
-                    style={
-                      {
-                        '--tier-tone': TIER_COLOR[rt],
-                      } as CSSProperties
-                    }
-                  >
-                    {rt}
-                  </span>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
+
+          <div className={styles.runsRow}>
+            <div className={styles.panel}>
+              <h2 className={`${styles.panelTitle} ${styles.runsTitle}`}>
+                Recent runs
+              </h2>
+              {runsBody}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

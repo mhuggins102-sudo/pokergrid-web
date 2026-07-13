@@ -367,7 +367,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       ['Target score', String(state.target)],
     ];
     return (
-      <span className={styles.navPillGroup}>
+      <span
+        className={`${styles.navPillGroup} ${
+          twist || tuLevel !== null ? styles.navPillGroupWide : ''
+        }`}
+      >
         {twist && (
           <span
             ref={twistPop.wrapRef}

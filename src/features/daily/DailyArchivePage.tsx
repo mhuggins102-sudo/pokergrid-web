@@ -393,34 +393,8 @@ export function DailyArchivePage() {
         {/* ---- Selected day result ---- */}
         <div className={styles.detailPanel} ref={detailRef}>
           <div className={styles.detailHead}>
-            <div className={styles.detailHeadMain}>
-              <div className={styles.detailEyebrow}>
-                {weekdayOf(sel)}, {longDate(sel)}
-              </div>
-              {selPlay && selTier ? (
-                <div className={styles.detailResult}>
-                  <span className={styles.detailScore}>{selPlay.score}</span>
-                  <span className={styles.detailTarget}>/ {selTarget}</span>
-                  <span
-                    className={styles.detailBadge}
-                    style={
-                      { '--tier-tone': TIER_TONE[selTier] } as React.CSSProperties
-                    }
-                  >
-                    {selTier}
-                  </span>
-                  <Link to={`/daily/${sel}`} className={styles.detailLink}>
-                    View full result →
-                  </Link>
-                </div>
-              ) : (
-                <div className={styles.detailUnplayed}>
-                  <span className={styles.detailNotPlayed}>Not played</span>
-                  <Link to={`/daily/${sel}`} className={styles.startBtn}>
-                    Start ▸
-                  </Link>
-                </div>
-              )}
+            <div className={styles.detailEyebrow}>
+              {weekdayOf(sel)}, {longDate(sel)}
             </div>
             {/* Phone: icon toggles reveal the distribution / leaderboard
                 one at a time (they're hidden inline here). The
@@ -492,6 +466,35 @@ export function DailyArchivePage() {
               </div>
             )}
           </div>
+
+          {/* Result row — a full-width line below the head, so the score /
+              rating and the "View full result" link sit on ONE line (the
+              toggle rides the date line above, never stealing this row's
+              width). */}
+          {selPlay && selTier ? (
+            <div className={styles.detailResult}>
+              <span className={styles.detailScore}>{selPlay.score}</span>
+              <span className={styles.detailTarget}>/ {selTarget}</span>
+              <span
+                className={styles.detailBadge}
+                style={
+                  { '--tier-tone': TIER_TONE[selTier] } as React.CSSProperties
+                }
+              >
+                {selTier}
+              </span>
+              <Link to={`/daily/${sel}`} className={styles.detailLink}>
+                View full result →
+              </Link>
+            </div>
+          ) : (
+            <div className={styles.detailUnplayed}>
+              <span className={styles.detailNotPlayed}>Not played</span>
+              <Link to={`/daily/${sel}`} className={styles.startBtn}>
+                Start ▸
+              </Link>
+            </div>
+          )}
 
           {backend && (
             <div
