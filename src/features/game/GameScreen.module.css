@@ -405,16 +405,6 @@
   min-height: 44px;
 }
 
-/* Hand-stack: the arrangement has horizontal room, so the ↺ carries the
-   "Undo" word. The labeled variant sizes to its text (glyph + label) rather
-   than the icon-only 44px square — it keeps the actionRow's 44px height. */
-.actionRow .dockUndoLabeled {
-  flex: 0 0 auto;
-  min-width: 0;
-  padding-left: var(--space-sm);
-  padding-right: var(--space-sm);
-}
-
 /* Center-stage: commit + the icon-only ↺ share the bottom row. Place
    flexes to fill; the ↺ is the same fixed 44px square as the other docks'
    undo, sitting to its right. */

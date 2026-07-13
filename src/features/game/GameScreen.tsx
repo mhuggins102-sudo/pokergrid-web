@@ -1386,24 +1386,20 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // instruction): the dock then leads with the banner + Cancel, and the ↺
   // squeezing in beside them reads as noise — the classic layout drops it
   // there too (canUndo is false mid-targeting).
-  // `labeled` renders "↺ Undo" (icon + word) where the arrangement has the
-  // horizontal room — the hand-stack action row. Center-stage and classic
-  // stay icon-only (space is tight); classic instead equalizes the button's
-  // height with its Discard/Destroy siblings via .dockUndo CSS.
-  const dockUndoBtn = (labeled = false) =>
+  // Icon-only (↺) in every arrangement — a compact 44px square that
+  // equalizes its height with the Discard / perk siblings via .dockUndo.
+  const dockUndoBtn = () =>
     streamlined && maxUndos > 0 && !ui.banner ? (
       <Button
         key="dock-undo"
         size="sm"
         variant="secondary"
-        className={`${styles.dockUndo}${
-          labeled ? ' ' + styles.dockUndoLabeled : ''
-        }`}
+        className={styles.dockUndo}
         disabled={!canUndo || flight !== null}
         onClick={() => dispatch({ type: 'UNDO' })}
         aria-label={`Undo (${Math.max(0, maxUndos - state.undoCount)} left)`}
       >
-        {labeled ? '↺ Undo' : '↺'}
+        ↺
       </Button>
     ) : null;
 
@@ -1622,10 +1618,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   {banner}
                   {commitAction?.id === 'place' && commitBtn()}
                   {(() => {
-                    // Hand-stack has horizontal room, so its ↺ carries the
-                    // "Undo" word (labeled); the row renders when there's any
-                    // action OR the (labeled) Undo to show.
-                    const undoNode = dockUndoBtn(true);
+                    // The row renders when there's any action OR the Undo to
+                    // show; the ↺ is the same icon-only square as the other
+                    // docks.
+                    const undoNode = dockUndoBtn();
                     return (
                       (rowActions.length > 0 || undoNode) && (
                         <div className={styles.actionRow}>
