@@ -35,13 +35,46 @@ export const isChunkLoadError = (error: unknown): boolean => {
 const RELOAD_KEY = 'pokergrid:chunk-reload-at';
 
 /**
+ * Drop the stale service worker (and its precache) before reloading.
+ *
+ * The chunk that failed to load is the OLD deploy's — but the page is
+ * still controlled by the OLD service worker, whose precache serves the
+ * stale index.html + evicted chunk map. A plain location.reload() fetches
+ * right back through that worker and hits the same missing chunk, so the
+ * heal never converges and the update card resurfaces once the reload
+ * rate-limit lapses. Unregistering the worker (and clearing the Cache
+ * Storage entries it was serving) means the reload navigates with NO
+ * controller and pulls the fresh index.html + live chunks straight from
+ * the network; vite-plugin-pwa then re-registers a worker that precaches
+ * the NEW build. Best-effort: any step can reject (private mode, denied
+ * storage) — we reload regardless, which is still better than the
+ * old-worker loop.
+ */
+const dropStaleWorkerAndReload = async (): Promise<void> => {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch {
+    // best effort — fall through to the reload
+  }
+  window.location.reload();
+};
+
+/**
  * Router-level error surface. Its main job is the stale-deploy
  * self-heal: chunk-load failures trigger ONE automatic hard reload
  * (rate-limited via sessionStorage so a persistently broken cache
- * can't reload-loop) — the fresh index.html references live chunks
- * and the app recovers without the player doing anything. Anything
- * else (or a failed heal) gets a friendly reload/home card instead
- * of React Router's developer error page.
+ * can't reload-loop) — the stale worker is dropped first so the fresh
+ * index.html references live chunks and the app recovers without the
+ * player doing anything. Anything else (or a failed heal) gets a
+ * friendly reload/home card instead of React Router's developer error
+ * page.
  *
  * Styled inline with token fallbacks: when this renders, the
  * stylesheet may be exactly what failed to load.
@@ -55,7 +88,7 @@ export function RouteError() {
     const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
     if (Date.now() - last < 15_000) return; // healed recently → show UI
     sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
-    window.location.reload();
+    void dropStaleWorkerAndReload();
   }, [stale]);
 
   const wrap: CSSProperties = {
@@ -104,7 +137,9 @@ export function RouteError() {
         <button
           type="button"
           style={button}
-          onClick={() => window.location.reload()}
+          onClick={() =>
+            stale ? void dropStaleWorkerAndReload() : window.location.reload()
+          }
         >
           Reload
         </button>
