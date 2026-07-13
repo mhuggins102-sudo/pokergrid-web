@@ -115,12 +115,17 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
 
   // ---- Invariants that must hold (symmetric-by-design spacing) ----
 
-  // 1. On the mobile flex column, every gap between stacked sections
-  //    equals the layout's own rowGap — one rhythm, no section spaced
-  //    differently from its neighbors. (Skipped for the desktop grid.)
+  // 1. The column game's between-section gaps are RECORDED, not asserted
+  //    uniform: the streamlined column (now the only column-family game)
+  //    is deliberately non-uniform — the bonus strip sits flush against
+  //    the dock (0 gap) and carries a small breathing gap above it, so a
+  //    single-rowGap rhythm no longer describes it. Board-centering (#3)
+  //    is the symmetric-by-design assertion; the gaps live in the logged
+  //    MEASUREMENTS block so a future edit that disturbs them shows up as
+  //    a diff there. Guard only that no gap is a runaway void.
   if (m.layout && m.layout.display === 'flex') {
     for (const g of m.layout.renderedGaps) {
-      expect(Math.abs(g - m.layout.rowGap)).toBeLessThanOrEqual(1);
+      expect(g).toBeLessThanOrEqual(m.layout.rowGap + 12);
     }
   }
 

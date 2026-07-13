@@ -250,15 +250,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // mockup's pg-rails default) so the phone rails choice stays
   // independent — see settingsStore.deskLineChips.
   const deskLineChips = useSettingsStore(s => s.deskLineChips);
-  // Streamlined column preview (Settings, default off): score → header
-  // pill, ScoreBar row dropped, bonus strip merged into the dock. Gated
-  // to the phone / tablet-portrait column family; never during the
-  // tutorial (coach pins the classic presentation its guided deal
-  // explains, same rationale as rails-off), and never on view-only
-  // archive revisits (no live undo to re-home into the dock).
-  const streamlinedColumn = useSettingsStore(s => s.streamlinedColumn);
-  const streamlined =
-    streamlinedColumn && family === 'column' && !coach && !viewOnly;
+  // Streamlined column presentation: score → header pill, ScoreBar row
+  // dropped, bonus strip merged into the dock. The one-and-only column
+  // (phone / tablet-portrait) game screen — never during the tutorial
+  // (coach pins the classic presentation its guided deal explains, same
+  // rationale as rails-off). View-only archive revisits ARE streamlined
+  // too: a finished daily "view result" mounts the finished board + the
+  // DesktopResultDialog path, matching the desk families.
+  const streamlined = family === 'column' && !coach;
 
   const liveReport = useMemo(
     () =>

@@ -6,10 +6,11 @@ import { Sheet, useToast } from '../../../design/primitives';
 import { buildShareUrl, shareUrl } from '../../../lib/share';
 import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { useGameSession } from '../GameSessionProvider';
+import { useGameFamily } from '../useGameFamily';
 import { useRecordResult } from '../../progress/useRecordResult';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
-import { HandleEditor } from '../../daily/RankPanel';
+import { HandleEditor, RankPanel } from '../../daily/RankPanel';
 import { useHandle } from '../../daily/sync/handleStore';
 import { LinesPanel } from './LinesPanel';
 import { TIER_RULES } from './TierBreakdownSheet';
@@ -91,6 +92,11 @@ export function DesktopResultDialog({
   const isDaily = mode.kind === 'daily';
   const isChallenge = mode.kind === 'challenge';
   const isTargets = mode.kind === 'targets';
+  // The daily rank row is a COLUMN-family (mobile) affordance only: the
+  // desk / desk-lite game surfaces already carry the leaderboard in the
+  // left rail, so showing it in their result popup would be redundant
+  // (and would change the desktop result — kept byte-identical).
+  const columnFamily = useGameFamily() === 'column';
   // Reactive: the claim box swaps to "Posted as …" the instant the
   // editor's save lands (and the leaderboard panel renames with it).
   const savedHandle = useHandle();
@@ -221,6 +227,19 @@ export function DesktopResultDialog({
               <span>{report.total}</span>
             </div>
           </div>
+          {/* Daily, mobile only: the player's standing for this date,
+              reusing the leaderboard bar (rank / of-total + the retryable
+              "submitting…" queue state) — the column game has no
+              leaderboard rail, so the result popup carries it. Free /
+              challenge / Targets-Up show no rank row (no per-date
+              leaderboard), and desk / desk-lite already show the rail.
+              RankPanel owns its own hooks, so gating its render here keeps
+              this component's hook order stable. */}
+          {mode.kind === 'daily' && columnFamily && isBackendConfigured() && (
+            <div className={styles.rankRow}>
+              <RankPanel dateISO={mode.dateISO} />
+            </div>
+          )}
           {/* Just-earned achievements — mobile's 🏆 callout at dialog
               weight: a warm callout box, each name tappable for its
               explainer. */}

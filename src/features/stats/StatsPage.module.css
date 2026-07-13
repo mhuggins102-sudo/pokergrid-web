@@ -42,7 +42,11 @@
   gap: 12px;
 }
 
-/* One container per axis: Daily/Free Play, then the four levels. */
+/* One container per axis: Daily/Free Play, then the four levels. Both
+   rows share this container + the same .tab metrics, so they render the
+   SAME height (measured 47.5px each at 390px — the mode row only *looks*
+   taller because it's narrower and wraps onto its own line). No
+   per-row height override is needed at any tier. */
 .filtGroup {
   display: inline-flex;
   gap: 4px;
@@ -389,6 +393,8 @@
 
   .headCard {
     padding: 12px 9px;
+    /* Value + label centered inside each of the four headline tiles. */
+    text-align: center;
   }
 
   .headValue {

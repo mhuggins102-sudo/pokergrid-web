@@ -67,7 +67,9 @@ describe('daily flow', () => {
       fireEvent.click(place);
     }
     expect(screen.getByTestId('final-score')).toBeInTheDocument();
-    expect(screen.getByText(/Daily solved|Daily missed/)).toBeInTheDocument();
+    // The streamlined column daily ends in the DesktopResultDialog overlay
+    // (verdict + the standing bar).
+    expect(screen.getByText(/Target cleared|Just short/)).toBeInTheDocument();
 
     // Local play is the source of truth…
     const play = usePlaysStore.getState().plays[DATE];
@@ -113,12 +115,14 @@ describe('daily flow', () => {
     view.unmount();
 
     renderAt(`/daily/${DATE}`);
-    // No intro CTA — straight to the stored result.
+    // No intro CTA — the played date re-hydrates a view-only streamlined
+    // game: the finished board with the result one tap away (the dialog
+    // opens closed on a revisit).
     expect(
       screen.queryByRole('button', { name: 'Play this puzzle' })
     ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show result' }));
     expect(screen.getByTestId('final-score')).toHaveTextContent(score ?? '');
-    expect(screen.getByText('Daily archive')).toBeInTheDocument();
   });
 
   it('archive lists the month and offers Start on unplayed days', () => {

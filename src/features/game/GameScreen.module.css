@@ -31,6 +31,18 @@
   /* NO margin:auto here — a cross-axis auto margin defeats flex
      stretch, and combined with contain:size that collapses this box
      to width 0. The inner flexbox does the centering instead. */
+  /* Bleed the board area toward the dock / bonus-strip edges (both
+     already span the column full-bleed). On width-bound phones the
+     square board is the smaller of the two axes, so widening the area
+     lets the board grow — which, being square, also grows its HEIGHT,
+     trimming the vertical centering slack above and below it (the
+     "too much empty space around the grid" report). Fixed negative
+     margins only (not auto — see above). On wider column tiers the
+     board is cap/height-bound, so the reclaimed width goes unused. The
+     rails, when on, live INSIDE .boardFrame (its measured width caps
+     them), so a wider area never overflows the viewport. */
+  margin-left: calc(-1 * var(--space-md));
+  margin-right: calc(-1 * var(--space-md));
 }
 
 .boardFrame {

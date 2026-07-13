@@ -239,6 +239,13 @@
     font-size: 30px;
   }
 
+  /* Match the Challenges phone progress bar's gap below the page/nav
+     divider (its .progress margin-top is 4px there) so the two pages'
+     bars sit the same distance from the rule above. */
+  .progress {
+    margin-top: 4px;
+  }
+
   .tallyCount {
     font-size: 26px;
   }

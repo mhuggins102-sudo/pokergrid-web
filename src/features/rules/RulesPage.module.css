@@ -343,19 +343,16 @@
    panel) and the reference grid goes single-column. Everything ≥768 is
    untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
-  /* Density pass: the RULES eyebrow drops; the page title stays. */
-  .eyebrow {
+  /* Density pass: the RULES eyebrow AND the "How PokerGrid works" page
+     title both drop (the how-to steps lead straight off). */
+  .eyebrow,
+  .title {
     display: none;
   }
 
   .topGrid {
     grid-template-columns: 1fr;
     gap: 24px;
-  }
-
-  .title {
-    font-size: 30px;
-    margin-bottom: 20px;
   }
 
   .refSection {
