@@ -165,10 +165,14 @@ the in-game screen render one responsive tree per surface; the tier
 system (`useTier`) + game families (`useGameFamily`) are the only forks;
 the classic header, `useIsDesktop`, and the classic-chrome flag are gone.
 
-Related deferred item (outside this program):
+Related deferred items (outside this program):
 
-- [ ] **Desktop tutorial rework** — user-deferred; do not start without a
-      direct go-ahead (see the coach panel from the desktop-redesign phase 6).
+- [ ] **Tutorial rework (desktop AND mobile)** — user-deferred; do not start
+      without a direct go-ahead (see the coach panel from the
+      desktop-redesign phase 6).
+- [ ] **Settings menu audit at all three widths** — confirm the Settings page
+      reads as desired at phone / tablet / desktop (accordion + ⓘ-sheet
+      density at phone, the two-column band ≥1200, etc.).
 
 Preceding shipped work (context — the desktop redesign and earlier feedback
 rounds that this program builds on) is complete and on the same branch.
