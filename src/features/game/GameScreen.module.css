@@ -384,6 +384,10 @@
   min-width: 44px;
   padding-left: 0;
   padding-right: 0;
+  /* Match the neighbouring full-size actions' corners — the `sm` button
+     defaults to the tighter --radius-sm, which read as a different shape
+     next to the Discard / perk buttons. */
+  border-radius: var(--radius-md);
 }
 
 /* In the classic row and hand-stack action row the neighbours flex to
@@ -411,12 +415,25 @@
   padding-right: var(--space-sm);
 }
 
-/* Center-stage: sits under the right-flank action, small and centered. */
-.stageSide .dockUndo {
+/* Center-stage: commit + the icon-only ↺ share the bottom row. Place
+   flexes to fill; the ↺ is the same fixed 44px square as the other docks'
+   undo, sitting to its right. */
+.stageCommitRow {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.stageCommitRow .commitButton {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.stageCommitRow .dockUndo {
+  flex: 0 0 44px;
   width: 44px;
   min-width: 44px;
-  max-width: 44px;
-  align-self: center;
+  min-height: 44px;
 }
 
 /* Streamlined dock only: the extra ↺ narrows the perk + Discard, so a long

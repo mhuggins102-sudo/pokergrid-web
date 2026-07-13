@@ -255,8 +255,11 @@
 @media (max-width: 767px) { /* below bp-tablet */
   .bar {
     grid-template-columns: 1fr auto;
-    gap: 4px 10px;
-    padding: 8px var(--space-lg) 6px;
+    /* Top row rides as high as the in-game header (was 8px padding-top);
+       the tighter row-gap then bumps the second row up a touch. Every
+       page now shares the in-game header's vertical rhythm. */
+    gap: 2px 10px;
+    padding: 4px var(--space-lg) 6px;
   }
 
   .wordmark {
@@ -381,10 +384,11 @@
    to .gameRowActive (in-game only) and height-gated at 780px, so every
    non-game phone header and the full-height PWA case stay untouched. */
 @media (max-width: 767px) and (max-height: 780px) {
+  /* The top padding + row-gap now match the base phone header, so only
+     the bottom padding (and the details-row height) tighten further here
+     to hand the short-viewport board its last few px. */
   .bar.gameRowActive {
-    padding-top: 4px;
     padding-bottom: 3px;
-    row-gap: 2px;
   }
 
   .bar.gameRowActive .gameRow {

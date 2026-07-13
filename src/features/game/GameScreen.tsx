@@ -1594,12 +1594,17 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </div>
                   <div className={styles.stageSide}>
                     {rowActions[1] && actionBtn(rowActions[1], styles.stageBtn)}
-                    {dockUndoBtn()}
                   </div>
                 </div>
-                {commitBtn(
-                  commitAction?.id === 'cancel' ? 'secondary' : undefined
-                )}
+                {/* Commit + the icon-only ↺ share the bottom row — Place
+                    flexes, Undo is a fixed 44px square matching the other
+                    docks' undo. */}
+                <div className={styles.stageCommitRow}>
+                  {commitBtn(
+                    commitAction?.id === 'cancel' ? 'secondary' : undefined
+                  )}
+                  {dockUndoBtn()}
+                </div>
               </div>
             ) : (
               // Hand stack (default): the drawn card is the hero, with

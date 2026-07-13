@@ -260,8 +260,63 @@
   }
 
   .sections {
-    gap: 26px;
+    gap: 12px;
     margin-top: 18px;
+  }
+
+  /* Each tier is its own accordion card: the head (title + count on row 1,
+     subtitle on row 2, caret at the right) is a full-width button; the
+     grid drops in below when open. */
+  .sectionCard {
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    padding: 14px 16px;
+    /* Clear the sticky header when an opened card auto-scrolls up. */
+    scroll-margin-top: 96px;
+  }
+
+  .sectionToggle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px 12px;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .sectionToggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  .sectionCaret {
+    order: 1;
+    align-self: center;
+    margin-left: 4px;
+    font-size: 11px;
+    color: var(--ink-3);
+    transition: transform 0.16s ease;
+  }
+
+  .sectionCardOpen .sectionCaret {
+    transform: rotate(180deg);
+  }
+
+  /* Divider between the head and the revealed grid (only when open). */
+  .sectionCardOpen .sectionToggle {
+    margin-bottom: 12px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--rule);
   }
 
   /* Uniform two-row section heads: title (+ per-tier count) on row 1,
