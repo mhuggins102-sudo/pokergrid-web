@@ -136,10 +136,17 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
 
   // 3. The board frame sits centered in its flexible area (equal slack
   //    above/below). Only meaningful when the area actually flexes around
-  //    it — the mobile column; the desktop grid gives the board its own
+  //    it — the column game; the desktop grid gives the board its own
   //    track, so skip when there's no vertical slack to split.
+  //    EXCEPTION: the phone (<768) streamlined column deliberately nudges
+  //    the board a few px within its area so it centers in the VISIBLE
+  //    window (equal blank space above/below the grid) against fixed
+  //    header vs dock chrome of unequal height — the user-facing goal.
+  //    There it gets only a runaway guard (the exact nudge is in the
+  //    logged MEASUREMENTS block); the tablet column keeps the tight ±2.
   if (m.boardCentering && m.layout?.display === 'flex') {
-    expect(Math.abs(m.boardCentering.above - m.boardCentering.below)).toBeLessThanOrEqual(2);
+    const bound = m.viewport.w < 768 ? 14 : 2;
+    expect(Math.abs(m.boardCentering.above - m.boardCentering.below)).toBeLessThanOrEqual(bound);
   }
 
   // 4. Tablet game families (unification phase 5 landed the split, phase

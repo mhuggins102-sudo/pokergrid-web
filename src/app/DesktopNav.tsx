@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 import { NavLink, useLocation } from 'react-router';
+import { currentDateISO } from '../game/daily/seed';
 import { useTapPopover } from '../design/primitives';
 import { useSettingsStore } from '../features/settings/settingsStore';
 import { useResolvedTheme } from '../features/settings/useTheme';
@@ -121,7 +122,13 @@ const dateline = (pathname: string): string => {
   if (pathname.startsWith('/play')) return 'Free Play';
   if (pathname.startsWith('/challenges')) return 'Challenges';
   if (pathname.startsWith('/targets')) return 'Targets Up';
-  return fmtDateline(new Date());
+  // "Today" must name the UTC date the daily is keyed on (seed.ts's
+  // currentDateISO), not the device-local date — near UTC midnight a
+  // local `new Date()` disagrees with the home "Today's Daily" date.
+  // Build from parts like the daily-date branch above (a bare
+  // new Date(iso) would re-introduce the UTC-parse day shift).
+  const [y, m, d] = currentDateISO().split('-').map(Number);
+  return fmtDateline(new Date(y, m - 1, d));
 };
 
 // The PHONE label beside the wordmark (the `.datelinePhone` span, shown

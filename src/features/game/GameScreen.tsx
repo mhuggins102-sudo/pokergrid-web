@@ -677,8 +677,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const lastNudgeRef = useRef(0);
   // A board tap that closed an open pill/Hands/Scoring popover (outside
   // pointerdown) also lands here as a cell tap — consult the dismiss stamp
-  // so dismissing a popover by tapping the board never also fires the nudge.
+  // so dismissing a popover by tapping the board never also fires the nudge
+  // (and, on touch, never also places / spotlights — see the onCellTap guard).
   const { wasRecentDismiss } = useTapPopoverDismissGuard();
+  // The dismiss stamp only ever arms on a COARSE outside-pointerdown (the
+  // tap-popover machine is coarse-gated), so this gate keeps the board-tap
+  // suppression to touch — mouse/desktop board behavior is unchanged.
+  const coarsePointer =
+    typeof window !== 'undefined' &&
+    !!window.matchMedia?.('(pointer: coarse)').matches;
 
   // Line spotlight: tapping a seated card (outside perk targeting)
   // lights up its row + column with their R/C names and live values —
@@ -970,6 +977,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         (spotlightEnabled && placeArmed && state.grid[idx] === null)
       }
       onCellTap={idx => {
+        // A board tap that just dismissed an open popover (outside
+        // pointerdown) also lands here — on touch, treat it purely as the
+        // dismissal: don't place a card on the active slot and don't toggle
+        // a seated card's spotlight, exactly as the nudge already bows out.
+        // Coarse-only, so mouse/desktop board taps are unaffected.
+        if (coarsePointer && wasRecentDismiss()) return;
         if (spotlightEnabled && state.grid[idx] !== null) {
           setSpotlight(s => (s === idx ? null : idx));
           return;
@@ -1369,19 +1382,26 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // instruction): the dock then leads with the banner + Cancel, and the ↺
   // squeezing in beside them reads as noise — the classic layout drops it
   // there too (canUndo is false mid-targeting).
-  const dockUndoBtn = streamlined && maxUndos > 0 && !ui.banner && (
-    <Button
-      key="dock-undo"
-      size="sm"
-      variant="secondary"
-      className={styles.dockUndo}
-      disabled={!canUndo || flight !== null}
-      onClick={() => dispatch({ type: 'UNDO' })}
-      aria-label={`Undo (${Math.max(0, maxUndos - state.undoCount)} left)`}
-    >
-      ↺
-    </Button>
-  );
+  // `labeled` renders "↺ Undo" (icon + word) where the arrangement has the
+  // horizontal room — the hand-stack action row. Center-stage and classic
+  // stay icon-only (space is tight); classic instead equalizes the button's
+  // height with its Discard/Destroy siblings via .dockUndo CSS.
+  const dockUndoBtn = (labeled = false) =>
+    streamlined && maxUndos > 0 && !ui.banner ? (
+      <Button
+        key="dock-undo"
+        size="sm"
+        variant="secondary"
+        className={`${styles.dockUndo}${
+          labeled ? ' ' + styles.dockUndoLabeled : ''
+        }`}
+        disabled={!canUndo || flight !== null}
+        onClick={() => dispatch({ type: 'UNDO' })}
+        aria-label={`Undo (${Math.max(0, maxUndos - state.undoCount)} left)`}
+      >
+        {labeled ? '↺ Undo' : '↺'}
+      </Button>
+    ) : null;
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
@@ -1438,7 +1458,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 // (the desk edge-chip side); classic phone keeps them left.
                 side={streamlined ? 'right' : 'left'}
               >
-                {board()}
+                {/* The pulsing next slot names its action, same as the desk
+                    board's deskBoard call — GridBoard sizes the label down
+                    for the smaller mobile cell (see .nextLabel phone rule). */}
+                {board({ nextSlotLabel: 'PLACE' })}
               </MaybeRails>
             </div>
           </div>
@@ -1533,7 +1556,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   />
                   {banner}
                   {rowActions.map(a => actionBtn(a))}
-                  {dockUndoBtn}
+                  {dockUndoBtn()}
                 </div>
                 {commitBtn(
                   commitAction?.id === 'cancel' ? 'secondary' : undefined
@@ -1567,7 +1590,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </div>
                   <div className={styles.stageSide}>
                     {rowActions[1] && actionBtn(rowActions[1], styles.stageBtn)}
-                    {dockUndoBtn}
+                    {dockUndoBtn()}
                   </div>
                 </div>
                 {commitBtn(
@@ -1589,12 +1612,20 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 <div className={styles.actionStack}>
                   {banner}
                   {commitAction?.id === 'place' && commitBtn()}
-                  {(rowActions.length > 0 || dockUndoBtn) && (
-                    <div className={styles.actionRow}>
-                      {rowActions.map(a => actionBtn(a))}
-                      {dockUndoBtn}
-                    </div>
-                  )}
+                  {(() => {
+                    // Hand-stack has horizontal room, so its ↺ carries the
+                    // "Undo" word (labeled); the row renders when there's any
+                    // action OR the (labeled) Undo to show.
+                    const undoNode = dockUndoBtn(true);
+                    return (
+                      (rowActions.length > 0 || undoNode) && (
+                        <div className={styles.actionRow}>
+                          {rowActions.map(a => actionBtn(a))}
+                          {undoNode}
+                        </div>
+                      )
+                    );
+                  })()}
                   {commitAction && commitAction.id !== 'place' && commitBtn('secondary')}
                 </div>
               </div>

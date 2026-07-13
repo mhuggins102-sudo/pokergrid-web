@@ -167,12 +167,11 @@
   border: 1px solid var(--chip-tone, var(--rule));
   box-shadow: none;
   border-radius: var(--radius-md);
-  /* Trim further — the docked chip still read a touch tall on device, so
-     tighten the vertical padding and drop the floor to ~34px, handing the
-     reclaimed height back to the board. Title / mult / value / Use stay
-     legible (font sizes unchanged). */
+  /* Tight vertical padding hands height back to the board. The floor is
+     the filled chip's own rendered height (title + mult ≈ 50px) so it and
+     the empty slots below agree — see the constant-row-height note there. */
   padding: 4px 10px 5px;
-  min-height: 34px;
+  min-height: 50px;
   gap: 2px;
 }
 
@@ -188,11 +187,16 @@
   padding-right: 30px;
 }
 
-/* Empty slots adopt the same rounder corners + height so the three-slot
-   band reads as one set. */
+/* Empty/placeholder slots adopt the same rounder corners AND the filled
+   chip's full min-height (48px). A filled docked chip is title + mult (two
+   lines) tall, while an empty slot is a single hint line — so at zero cards
+   the row used to sit short and JUMP taller the instant the first card
+   arrived. Matching the empty min-height to the filled chip keeps the docked
+   row's height constant from zero cards onward (no grow on the first draw).
+   Scoped to .rowDocked, so classic phone + the desk panel are untouched. */
 .rowDocked .emptySlot {
   border-radius: var(--radius-md);
-  min-height: 34px;
+  min-height: 50px;
 }
 
 .detailBody {
