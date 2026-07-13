@@ -229,7 +229,7 @@ export function StatsPage() {
           return (
             <div key={`${run.ts}-${i}`} className={styles.runGrid}>
               <span className={styles.runDate}>{fmtDate(run.ts)}</span>
-              <span>
+              <span className={styles.runTwistCell}>
                 {run.twist && (
                   <span className={styles.twistPill}>
                     <span aria-hidden="true">✦</span> {twistName(run.twist)}

@@ -328,6 +328,12 @@
     display: none;
   }
 
+  /* When an opened section auto-scrolls to the top, leave room for the
+     sticky header so its head isn't tucked underneath. */
+  .section {
+    scroll-margin-top: 96px;
+  }
+
   /* Accordion heads: the section head becomes a tappable summary with a
      caret; the marker is suppressed. */
   .section > .sectionHead {

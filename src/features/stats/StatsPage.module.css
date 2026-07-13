@@ -388,7 +388,7 @@
      "Best"/"Played" labels let them shrink from the old wide cards). */
   .headline {
     grid-template-columns: repeat(4, 74px);
-    justify-content: center;
+    justify-content: start;
     gap: 10px;
   }
 
@@ -480,6 +480,14 @@
   .runGrid {
     grid-template-columns: auto 1fr 46px 46px 42px;
     gap: 8px;
+  }
+
+  /* The twist-pill cell: center the pill on the row (the bare inline span
+     let its line-box leading push the pill ~3px high). */
+  .runTwistCell {
+    display: flex;
+    align-items: center;
+    min-width: 0;
   }
 
   .twistPill {

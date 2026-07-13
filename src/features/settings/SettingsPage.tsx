@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useNavigate } from 'react-router';
@@ -131,29 +132,44 @@ function Row({
 function Section({
   title,
   span = false,
-  defaultOpen = false,
+  open,
+  onToggle,
   children,
 }: {
   title: string;
   /** ≥1200px: span both columns of the sections grid (the Identity &
    *  data footer band; its rows then sit side by side). */
   span?: boolean;
-  /** Phone accordion: whether this section starts expanded. */
-  defaultOpen?: boolean;
+  /** Phone accordion open state (controlled by the parent for single-open). */
+  open: boolean;
+  onToggle: () => void;
   children: ReactNode;
 }) {
   const { phone } = useContext(SettingsUICtx);
-  // Controlled <details> so the open state survives parent re-renders
-  // (settings changes) instead of snapping back to defaultOpen.
-  const [open, setOpen] = useState(defaultOpen);
+  const ref = useRef<HTMLDetailsElement>(null);
+  // Phone: when this section opens, bring its head to just under the
+  // sticky nav so the revealed content is in view (others have closed, so
+  // the layout above just shifted). scroll-margin-top clears the header.
+  useEffect(() => {
+    if (!phone || !open) return;
+    const el = ref.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch {
+        /* jsdom / unsupported env */
+      }
+    });
+  }, [phone, open]);
   if (phone) {
     return (
-      <details className={styles.section} open={open}>
+      <details ref={ref} className={styles.section} open={open}>
         <summary
           className={styles.sectionHead}
           onClick={e => {
             e.preventDefault();
-            setOpen(o => !o);
+            onToggle();
           }}
         >
           <span>{title}</span>
@@ -183,6 +199,13 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
+  // Phone accordion: a single section open at a time (Gameplay leads).
+  // Ignored ≥768, where every section renders expanded.
+  const [openSection, setOpenSection] = useState('Gameplay');
+  const sectionProps = (name: string) => ({
+    open: openSection === name,
+    onToggle: () => setOpenSection(cur => (cur === name ? '' : name)),
+  });
   // Reactive handle (the save path notifies) — no local copy to stale.
   const handle = useHandle();
   const [editingHandle, setEditingHandle] = useState(false);
@@ -253,7 +276,7 @@ export function SettingsPage() {
 
       <SettingsUICtx.Provider value={uiCtx}>
       <div className={styles.sections}>
-      <Section title="Gameplay" defaultOpen>
+      <Section title="Gameplay" {...sectionProps('Gameplay')}>
         <Row
           title="Dock layout"
           hint="Where the drawn card and action buttons sit."
@@ -309,7 +332,7 @@ export function SettingsPage() {
         </Row>
       </Section>
 
-      <Section title="Presentation">
+      <Section title="Presentation" {...sectionProps('Presentation')}>
         <Row
           title="Theme"
           hint="Card Room felt or Morning Paper editorial, light or dark."
@@ -383,7 +406,7 @@ export function SettingsPage() {
         </div>
       </Section>
 
-      <Section title="Identity & data" span>
+      <Section title="Identity & data" span {...sectionProps('Identity & data')}>
         {/* ≥1200px the band's rows sit side by side (hairline divider);
             when the handle row is absent, Reset spans the band alone. */}
         <div className={styles.bandRows}>

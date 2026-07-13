@@ -1,3 +1,4 @@
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { ACHIEVEMENTS, AchievementTier } from '../../game/achievements';
 import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
@@ -34,6 +35,55 @@ const TIER_META: Array<{
 // SVG ring: r=15.5 → circumference ≈ 97.4.
 const RING = 97.4;
 
+// Phone: each tier is its own accordion container — the head (title +
+// subtitle + earned count) is the tappable summary; the card grid is
+// revealed on open. Single-open is driven by the parent; opening scrolls
+// the container's head under the sticky nav.
+function AchievementSection({
+  open,
+  onToggle,
+  head,
+  grid,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  head: ReactNode;
+  grid: ReactNode;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const el = ref.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch {
+        /* jsdom / unsupported env */
+      }
+    });
+  }, [open]);
+  return (
+    <section
+      ref={ref}
+      className={`${styles.sectionCard} ${open ? styles.sectionCardOpen : ''}`}
+    >
+      <button
+        type="button"
+        className={styles.sectionToggle}
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        {head}
+        <span className={styles.sectionCaret} aria-hidden="true">
+          ▾
+        </span>
+      </button>
+      {open && grid}
+    </section>
+  );
+}
+
 export function AchievementsPage() {
   const done = useStatsStore(s => s.stats.achievementsDone);
   const earned = new Set(done);
@@ -41,6 +91,8 @@ export function AchievementsPage() {
   const total = ACHIEVEMENTS.length;
   const pct = total ? doneCount / total : 0;
   const isPhone = useTier() === 'phone';
+  // Phone accordion: all four tiers closed on load, single-open.
+  const [openTier, setOpenTier] = useState<AchievementTier | null>(null);
 
   return (
     <div className={styles.wrap}>
@@ -109,36 +161,55 @@ export function AchievementsPage() {
         {TIER_META.map(({ tier, label, note }) => {
           const items = ACHIEVEMENTS.filter(a => a.tier === tier);
           const got = items.filter(a => earned.has(a.id)).length;
-          return (
-            <section key={tier}>
-              <div className={styles.sectionHead}>
-                <h2 className={styles.sectionTitle}>{label}</h2>
-                <span className={styles.sectionNote}>{note}</span>
-                <span className={styles.sectionProgress}>
-                  {got} / {items.length}
-                </span>
-              </div>
-              <div className={styles.grid}>
-                {items.map(a => {
-                  const on = earned.has(a.id);
-                  return (
-                    <div
-                      key={a.id}
-                      className={`${styles.card} ${on ? styles.cardOn : ''}`}
-                    >
-                      <div className={styles.cardInner}>
-                        <span className={styles.medal} aria-hidden="true">
-                          {on ? '★' : '○'}
-                        </span>
-                        <div className={styles.cardBody}>
-                          <div className={styles.cardName}>{a.name}</div>
-                          <div className={styles.cardDesc}>{a.description}</div>
-                        </div>
+          const head = (
+            <>
+              <h2 className={styles.sectionTitle}>{label}</h2>
+              <span className={styles.sectionNote}>{note}</span>
+              <span className={styles.sectionProgress}>
+                {got} / {items.length}
+              </span>
+            </>
+          );
+          const grid = (
+            <div className={styles.grid}>
+              {items.map(a => {
+                const on = earned.has(a.id);
+                return (
+                  <div
+                    key={a.id}
+                    className={`${styles.card} ${on ? styles.cardOn : ''}`}
+                  >
+                    <div className={styles.cardInner}>
+                      <span className={styles.medal} aria-hidden="true">
+                        {on ? '★' : '○'}
+                      </span>
+                      <div className={styles.cardBody}>
+                        <div className={styles.cardName}>{a.name}</div>
+                        <div className={styles.cardDesc}>{a.description}</div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+          if (isPhone) {
+            return (
+              <AchievementSection
+                key={tier}
+                open={openTier === tier}
+                onToggle={() =>
+                  setOpenTier(cur => (cur === tier ? null : tier))
+                }
+                head={head}
+                grid={grid}
+              />
+            );
+          }
+          return (
+            <section key={tier}>
+              <div className={styles.sectionHead}>{head}</div>
+              {grid}
             </section>
           );
         })}
