@@ -57,7 +57,6 @@ import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
 import { BonusCardStrip } from './components/BonusCardStrip';
 import { DeckPreviewDialog } from './components/DeckPreviewDialog';
-import { BonusResolvePanel } from './components/BonusResolveDialog';
 import {
   DailyLeaderboardPanel,
   DeskStatsPanel,
@@ -1542,12 +1541,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </Button>
                 )}
               </div>
-            ) : ui.bonusDialog ? (
-              // ♣ draw takes over the whole dock — the well hides so the
-              // board keeps as much room as possible. Safe to unmount:
-              // instantLayout strips every shared layoutId while the
-              // panel is open, so no FLIP pair gets stranded.
-              <BonusResolvePanel ui={ui.bonusDialog} />
             ) : dockLayout === 'classic' ? (
               // Classic: slim card + meta row with the secondary actions,
               // full-width commit beneath.
@@ -1663,6 +1656,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         </div>
       </LayoutGroup>
       {overlays}
+      {/* ♣ Bonus draw is a popup overlay (the desk modal, reused) rather
+          than taking over the dock — the board + dock stay put behind the
+          scrim while choosing, matching the desktop flow. */}
+      {ui.bonusDialog && <BonusDrawModal ui={ui.bonusDialog} />}
       {/* Streamlined game over shares the desk result surface: the dialog
           owns recording + the finished-dock reopen path. Mounted whenever
           finished so its one-shot recording effects always run. */}
