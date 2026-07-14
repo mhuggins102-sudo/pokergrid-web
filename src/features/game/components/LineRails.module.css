@@ -89,15 +89,21 @@
   line-height: 1;
 }
 
-/* Row chips: slim horizontal digits, stretched to exactly span their
-   row (grid align-stretch). The old vertical writing-mode sized the
-   chip to its text — chips visibly changed height when a dot became a
-   number — and rotated digits read worse anyway. */
+/* Row chips: the digits rotate 90° CCW to read vertically, so the chip
+   can be as THIN as the column chips are SHORT — the two rails now read
+   as one consistent thickness. Stretched to span their row (grid
+   align-stretch). */
 .rowChip {
-  min-width: 26px;
+  min-width: 24px;
+  width: 24px;
   min-height: 0;
-  padding: 0 2px;
+  padding: 2px 0;
   height: 100%;
+}
+
+.rowChip .chipVal {
+  display: inline-block;
+  transform: rotate(-90deg);
 }
 
 .chip:focus-visible {
