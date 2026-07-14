@@ -1411,6 +1411,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const dtExtraActions = ui.actions.filter(
     a => a !== commitAction && a.id !== 'perk' && a.id !== 'discard'
   );
+  // Split the suit-action banner ("♥ Swap — tap the first card") into the
+  // perk label + the instruction. The Desktop dock parks the label in the
+  // deck-well meta and shows the short instruction on its own, so it no
+  // longer wraps to a second line and resizes the board.
+  const bannerDash = ui.banner ? ui.banner.indexOf(' — ') : -1;
+  const dtPerkLabel =
+    bannerDash === -1 ? null : ui.banner!.slice(0, bannerDash);
+  const dtInstruction =
+    bannerDash === -1 ? ui.banner : ui.banner!.slice(bannerDash + 3);
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
@@ -1726,17 +1735,38 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       meta="deck"
                       peek="dialog"
                       flight={flight}
+                      // Suit-action targeting: the perk label ("♥ Swap")
+                      // rides the deck-well meta so the instruction below
+                      // stays short (and one line).
+                      metaExtra={
+                        dtPerkLabel ? (
+                          <span className={styles.dtPerkTag}>{dtPerkLabel}</span>
+                        ) : undefined
+                      }
                     />
                     <div className={styles.dtActions}>
-                      {banner}
+                      {dtInstruction && (
+                        <span
+                          className={styles.dtInstruction}
+                          role="status"
+                          aria-live="polite"
+                        >
+                          {dtInstruction}
+                        </span>
+                      )}
                       {/* Non-standard actions (Double Duty's Flip, ±
                           adjusters, a targeting Confirm) stack full-width
                           above the 2×2 grid. */}
                       {dtExtraActions.map(a => actionBtn(a, styles.dtStackBtn))}
                       {commitAction?.id === 'cancel' ? (
                         // Suit-perk targeting: only the Cancel button —
-                        // Discard / Undo don't apply mid-selection.
-                        commitBtn('secondary')
+                        // Discard / Undo don't apply mid-selection. Slim
+                        // (dtGridBtn, not the taller commitButton) so even a
+                        // two-line instruction fits the pinned dock height.
+                        actionBtn(
+                          { ...commitAction, variant: 'secondary' },
+                          styles.dtGridBtn
+                        )
                       ) : (
                         <div className={styles.dtGrid}>
                           {/* Row 1: Place (the active commit) + Discard.
@@ -1744,35 +1774,40 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                               taller .commitButton) so both rows are slim. */}
                           {commitAction &&
                             actionBtn(commitAction, styles.dtGridBtn)}
-                          <Button
-                            variant="secondary"
-                            className={styles.dtIconBtn}
-                            disabled={
-                              !discardAction ||
-                              discardAction.disabled ||
-                              flight !== null
-                            }
-                            onClick={discardAction?.onPress}
-                            aria-label="Discard"
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              width="17"
-                              height="17"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
+                          {/* Discard + Undo hide while the ♣ bonus modal is
+                              up — the draw choice owns the turn, so they'd
+                              only sit behind the scrim doing nothing. */}
+                          {!ui.bonusDialog && (
+                            <Button
+                              variant="secondary"
+                              className={styles.dtIconBtn}
+                              disabled={
+                                !discardAction ||
+                                discardAction.disabled ||
+                                flight !== null
+                              }
+                              onClick={discardAction?.onPress}
+                              aria-label="Discard"
                             >
-                              <path d="M3 6h18" />
-                              <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
-                              <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
-                              <line x1="10" y1="11" x2="10" y2="17" />
-                              <line x1="14" y1="11" x2="14" y2="17" />
-                            </svg>
-                          </Button>
+                              <svg
+                                viewBox="0 0 24 24"
+                                width="17"
+                                height="17"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                                <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+                                <line x1="10" y1="11" x2="10" y2="17" />
+                                <line x1="14" y1="11" x2="14" y2="17" />
+                              </svg>
+                            </Button>
+                          )}
                           {/* Row 2: the suit action + Undo (icon-only). */}
                           {perkAction ? (
                             actionBtn(
@@ -1782,6 +1817,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           ) : (
                             <span aria-hidden="true" />
                           )}
+                          {!ui.bonusDialog && (
                           <Button
                             variant="secondary"
                             className={styles.dtIconBtn}
@@ -1794,6 +1830,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           >
                             ↺
                           </Button>
+                          )}
                         </div>
                       )}
                     </div>
