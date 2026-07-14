@@ -507,7 +507,9 @@ export function DailyArchivePage() {
                   <div className={styles.rankValue}>
                     {rank.data ? `#${rank.data.rank}` : '—'}
                   </div>
-                  <div className={styles.rankLabel}>Your rank</div>
+                  <div className={styles.rankLabel}>
+                    {isPhone ? 'You' : 'Your rank'}
+                  </div>
                 </div>
               )}
               <div className={styles.rankCard}>
@@ -516,7 +518,9 @@ export function DailyArchivePage() {
                     ? `${stats.data.winRatePct}%`
                     : '—'}
                 </div>
-                <div className={styles.rankLabel}>Beat target</div>
+                <div className={styles.rankLabel}>
+                  {isPhone ? 'Won' : 'Beat target'}
+                </div>
               </div>
               <div className={styles.rankCard}>
                 <div className={styles.rankValue}>

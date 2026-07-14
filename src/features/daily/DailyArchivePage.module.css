@@ -694,4 +694,30 @@
   .detailHead {
     flex-wrap: nowrap;
   }
+
+  /* Score result: nudge the row up under the date, drop the "/ target",
+     enlarge the tier badge, and center the badge + "View full result"
+     link against the big score's midline. */
+  .detailResult {
+    align-items: center;
+    margin-top: 2px;
+  }
+
+  .detailTarget {
+    display: none;
+  }
+
+  .detailBadge {
+    font-size: 22px;
+    padding: 5px 14px;
+  }
+
+  /* Shorter labels ("You" / "Won") let the three rank cells shrink. */
+  .rankCard {
+    padding: 9px 12px;
+  }
+
+  .rankValue {
+    font-size: 21px;
+  }
 }
