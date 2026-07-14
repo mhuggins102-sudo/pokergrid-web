@@ -1402,12 +1402,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       </Button>
     ) : null;
 
-  // 'desktop' dock view (phone experiment): the desk center-stage dock's
-  // split of the actions — everything but Discard stacks full-width, and
-  // Discard rides a row with Undo. Mirrors the desk fork's derivation
-  // (which lives inside the isDesk block, out of this scope).
-  const stackActions = ui.actions.filter(a => a.id !== 'discard');
+  // 'desktop' dock view (phone) — its own 2×2 action grid: Place + Discard
+  // (trash, icon-only) on the top row, the suit action + Undo (icon-only)
+  // beneath. `perkAction` is the suit action; any OTHER action (Double
+  // Duty's Flip, ± adjusters, a targeting Confirm) stacks above the grid.
+  const perkAction = ui.actions.find(a => a.id === 'perk');
   const discardAction = ui.actions.find(a => a.id === 'discard');
+  const dtExtraActions = ui.actions.filter(
+    a => a !== commitAction && a.id !== 'perk' && a.id !== 'discard'
+  );
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
@@ -1713,24 +1716,56 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     />
                     <div className={styles.dtActions}>
                       {banner}
-                      {stackActions.map(a =>
-                        actionBtn(
-                          a,
-                          a.id === 'perk'
-                            ? `${styles.dtStackBtn} ${styles.dtPerkBtn}`
-                            : styles.dtStackBtn
-                        )
-                      )}
-                      <div className={styles.dtBtnRow}>
-                        {discardAction ? (
-                          actionBtn(discardAction)
-                        ) : (
-                          <Button variant="secondary" disabled>
-                            Discard
-                          </Button>
+                      {/* Non-standard actions (Double Duty's Flip, ±
+                          adjusters, a targeting Confirm) stack full-width
+                          above the 2×2 grid. */}
+                      {dtExtraActions.map(a => actionBtn(a, styles.dtStackBtn))}
+                      <div className={styles.dtGrid}>
+                        {/* Row 1: Place (the active commit) + Discard. */}
+                        {commitBtn(
+                          commitAction?.id === 'cancel' ? 'secondary' : undefined
                         )}
                         <Button
                           variant="secondary"
+                          className={styles.dtIconBtn}
+                          disabled={
+                            !discardAction ||
+                            discardAction.disabled ||
+                            flight !== null
+                          }
+                          onClick={discardAction?.onPress}
+                          aria-label="Discard"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="17"
+                            height="17"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                            <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
+                          </svg>
+                        </Button>
+                        {/* Row 2: the suit action + Undo (icon-only). */}
+                        {perkAction ? (
+                          actionBtn(
+                            perkAction,
+                            `${styles.dtGridBtn} ${styles.dtPerkBtn}`
+                          )
+                        ) : (
+                          <span aria-hidden="true" />
+                        )}
+                        <Button
+                          variant="secondary"
+                          className={styles.dtIconBtn}
                           disabled={!canUndo || flight !== null}
                           onClick={() => dispatch({ type: 'UNDO' })}
                           aria-label={`Undo (${Math.max(
@@ -1738,7 +1773,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                             maxUndos - state.undoCount
                           )} left)`}
                         >
-                          ↺ Undo
+                          ↺
                         </Button>
                       </div>
                     </div>
