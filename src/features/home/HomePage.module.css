@@ -471,6 +471,7 @@
      top-right slot (only one shows at a time). display:contents on the
      CTA row lets its children drop straight into the grid. */
   .heroBody {
+    position: relative;
     padding: 16px 20px;
     display: grid;
     /* Left column sizes to the title/date/pills; the right takes the rest
@@ -520,12 +521,17 @@
     display: contents;
   }
 
-  /* Played: score + tier + "View full result" combo, top-right. The
-     minmax(0,1fr) right column constrains it, so the link wraps under the
-     score+badge rather than trailing off in one wide line. */
+  /* Played: score + tier + "View full result" combo takes the exact spot
+     the "Play now" button holds — pinned to the top-right corner at the
+     same inset (16/20 = the hero padding). It's taken OUT of the grid
+     (absolute) so its taller height never grows the top row: the pills and
+     the archive link stay put whether or not the day is played. max-width
+     keeps the "View full result" wrapping under the score+badge. */
   .heroResult {
-    grid-area: cta;
-    justify-self: end;
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    max-width: 160px;
     justify-content: flex-end;
     align-items: center;
     flex-wrap: wrap;
