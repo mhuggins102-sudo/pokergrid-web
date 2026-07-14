@@ -974,9 +974,15 @@
   width: 100%;
 }
 
-/* Right column raised panel — mirrors .deskDock at phone scale. */
+/* Right column raised panel — mirrors .deskDock at phone scale. The
+   min-height matches the playing dock (deck well + 2×2 grid, a fixed-size
+   stack) so the SHORTER finished dock — "Show result" / "Play Again" — no
+   longer collapses the region: without it, at game end the dock shrank
+   ~100px, the board greedily grew into the freed height, and the whole
+   two-column row squished. Same idea as the other docks pinning .dock. */
 .dtDock {
   min-width: 0;
+  min-height: 210px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   border-radius: 14px;
@@ -985,12 +991,15 @@
   display: flex;
 }
 
-/* mirrors .deskDockStage */
+/* mirrors .deskDockStage. justify-content:center is a no-op during play
+   (content fills the height) and centers the finished buttons in the
+   pinned space. */
 .dtStage {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--space-sm);
 }
 

@@ -758,7 +758,10 @@ export function DesktopBonusPanel({
     return (
       <div
         key={`${card.id}-${i}`}
-        tabIndex={dimmed ? undefined : 0}
+        // The entry is focusable only for the desk hover model (focus →
+        // popover). The dock column has no popover, so drop tabIndex there
+        // — a focused entry div drew a ring on tap.
+        tabIndex={dockColumn || dimmed ? undefined : 0}
         className={[
           styles.bonusEntry,
           dockColumn ? styles.dockEntry : null,

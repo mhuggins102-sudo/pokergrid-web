@@ -1719,62 +1719,66 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           adjusters, a targeting Confirm) stack full-width
                           above the 2×2 grid. */}
                       {dtExtraActions.map(a => actionBtn(a, styles.dtStackBtn))}
-                      <div className={styles.dtGrid}>
-                        {/* Row 1: Place (the active commit) + Discard. */}
-                        {commitBtn(
-                          commitAction?.id === 'cancel' ? 'secondary' : undefined
-                        )}
-                        <Button
-                          variant="secondary"
-                          className={styles.dtIconBtn}
-                          disabled={
-                            !discardAction ||
-                            discardAction.disabled ||
-                            flight !== null
-                          }
-                          onClick={discardAction?.onPress}
-                          aria-label="Discard"
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            width="17"
-                            height="17"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
+                      {commitAction?.id === 'cancel' ? (
+                        // Suit-perk targeting: only the Cancel button —
+                        // Discard / Undo don't apply mid-selection.
+                        commitBtn('secondary')
+                      ) : (
+                        <div className={styles.dtGrid}>
+                          {/* Row 1: Place (the active commit) + Discard. */}
+                          {commitBtn()}
+                          <Button
+                            variant="secondary"
+                            className={styles.dtIconBtn}
+                            disabled={
+                              !discardAction ||
+                              discardAction.disabled ||
+                              flight !== null
+                            }
+                            onClick={discardAction?.onPress}
+                            aria-label="Discard"
                           >
-                            <path d="M3 6h18" />
-                            <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
-                            <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                          </svg>
-                        </Button>
-                        {/* Row 2: the suit action + Undo (icon-only). */}
-                        {perkAction ? (
-                          actionBtn(
-                            perkAction,
-                            `${styles.dtGridBtn} ${styles.dtPerkBtn}`
-                          )
-                        ) : (
-                          <span aria-hidden="true" />
-                        )}
-                        <Button
-                          variant="secondary"
-                          className={styles.dtIconBtn}
-                          disabled={!canUndo || flight !== null}
-                          onClick={() => dispatch({ type: 'UNDO' })}
-                          aria-label={`Undo (${Math.max(
-                            0,
-                            maxUndos - state.undoCount
-                          )} left)`}
-                        >
-                          ↺
-                        </Button>
-                      </div>
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="17"
+                              height="17"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                              <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+                              <line x1="10" y1="11" x2="10" y2="17" />
+                              <line x1="14" y1="11" x2="14" y2="17" />
+                            </svg>
+                          </Button>
+                          {/* Row 2: the suit action + Undo (icon-only). */}
+                          {perkAction ? (
+                            actionBtn(
+                              perkAction,
+                              `${styles.dtGridBtn} ${styles.dtPerkBtn}`
+                            )
+                          ) : (
+                            <span aria-hidden="true" />
+                          )}
+                          <Button
+                            variant="secondary"
+                            className={styles.dtIconBtn}
+                            disabled={!canUndo || flight !== null}
+                            onClick={() => dispatch({ type: 'UNDO' })}
+                            aria-label={`Undo (${Math.max(
+                              0,
+                              maxUndos - state.undoCount
+                            )} left)`}
+                          >
+                            ↺
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
