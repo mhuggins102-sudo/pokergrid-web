@@ -6,6 +6,7 @@ import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
+import { Tier, tierForRun } from '../../lib/stats';
 import { useStatsStore } from '../progress/statsStore';
 import {
   bestDailyStreak,
@@ -13,6 +14,17 @@ import {
   readPlayedDatesLite,
 } from '../daily/streak';
 import styles from './HomePage.module.css';
+
+// Tier badge tones — mirrors the daily archive's result row so a played
+// day reads identically on the Home hero and in the archive.
+const TIER_TONE: Record<Tier, string> = {
+  SS: 'var(--success)',
+  S: 'var(--success)',
+  A: 'var(--warn)',
+  B: 'var(--ink-2)',
+  C: 'var(--ink-3)',
+  D: 'var(--danger)',
+};
 
 /*
  * The landing page at every tier (phase 4 convergence), per
@@ -70,6 +82,18 @@ export function HomePage() {
     const s = dailyStreak(readPlayedDatesLite(), today);
     return { ...s, best: bestDailyStreak(s.best) };
   });
+  // Today's completed run, if any — the raw play carries score + won (just
+  // not the rehydrated bonus-card fns), so the hero can show the result
+  // without pulling the engine chunk in via playsStore.
+  const [todayResult] = useState(() => {
+    const raw = readPlayedDatesLite()[today] as
+      | { score: number; won: boolean }
+      | undefined;
+    return raw ? { score: raw.score, won: raw.won } : null;
+  });
+  const todayTier = todayResult
+    ? tierForRun({ score: todayResult.score, target, won: todayResult.won })
+    : null;
   const diffTone = difficultyColors[recipe.difficulty];
   const isPhone = useTier() === 'phone';
   // Phone newcomer card: the tutorial callout gives way to the quiet
@@ -151,9 +175,32 @@ export function HomePage() {
             )}
           </div>
           <div className={styles.heroCtaRow}>
-            <Link to="/daily" className={styles.heroCta}>
-              Play today&apos;s puzzle <span aria-hidden="true">→</span>
-            </Link>
+            {todayResult && todayTier ? (
+              // Already played today's grid — show the result (score /
+              // target + tier badge + link to the full stored result),
+              // exactly as a completed day reads in the archive.
+              <div className={styles.heroResult}>
+                <span className={styles.heroResultScore}>
+                  {todayResult.score}
+                </span>
+                <span className={styles.heroResultTarget}>/ {target}</span>
+                <span
+                  className={styles.heroResultBadge}
+                  style={
+                    { '--tier-tone': TIER_TONE[todayTier] } as CSSProperties
+                  }
+                >
+                  {todayTier}
+                </span>
+                <Link to={`/daily/${today}`} className={styles.heroResultLink}>
+                  View full result →
+                </Link>
+              </div>
+            ) : (
+              <Link to="/daily" className={styles.heroCta}>
+                Play today&apos;s puzzle <span aria-hidden="true">→</span>
+              </Link>
+            )}
             <Link to="/daily/archive" className={styles.heroArchive}>
               Browse the archive <span aria-hidden="true">→</span>
             </Link>
