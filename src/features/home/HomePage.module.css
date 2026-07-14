@@ -544,6 +544,14 @@
     display: none;
   }
 
+  /* Collapse the big display line-height so the digits hug the top of the
+     line box — otherwise ~10px of leading sits above them and the score
+     reads lower than the title. This lifts the visible top of "213" level
+     with the top of "THE DAILY GRID". */
+  .heroResultScore {
+    line-height: 1;
+  }
+
   .heroResultBadge {
     font-size: 22px;
     padding: 5px 14px;
