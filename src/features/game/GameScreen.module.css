@@ -1013,6 +1013,25 @@
   color: var(--on-accent);
 }
 
+/* Suit-action targeting: the perk label ("♥ Swap") parked in the deck-well
+   meta (under Deck · N / Peek), and the short instruction beneath the well.
+   Splitting the banner this way keeps the instruction on one or two lines
+   within the pinned dock height, so the board never resizes. */
+.dtPerkTag {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.dtInstruction {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--accent);
+  text-align: center;
+}
+
 /* The 'desktop' dock's own 2×2 action grid: wide action buttons (Place,
    suit action) fill the left column; icon-only Discard / Undo squares ride
    the right. Rows: [Place | 🗑] then [suit | ↺]. */
