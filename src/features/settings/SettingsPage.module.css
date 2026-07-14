@@ -134,6 +134,18 @@
   flex: none;
 }
 
+/* 4+ options: the strip goes full-width and wraps two-up (a single row
+   would overflow the phone). Each segment takes half the width. */
+.segWrap {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.segWrap .segBtn {
+  flex: 1 1 calc(50% - 2px);
+}
+
 .segBtn {
   padding: 7px 14px;
   border-radius: 7px;

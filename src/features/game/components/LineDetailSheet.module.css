@@ -77,6 +77,15 @@
   color: var(--ink-3);
 }
 
+/* Phone: drop the "Press ⓘ to view grid multiplier bonuses…" helper line
+   from the individual line popup — it reads as clutter on the small sheet.
+   CSS-scoped so the desktop line breakdown stays byte-identical. */
+@media (max-width: 767px) {
+  .gridNote {
+    display: none;
+  }
+}
+
 /* The inline ⓘ mirrors the result hero's info button — the glyph
    draws its own circle, so no border here. */
 .infoGlyph {

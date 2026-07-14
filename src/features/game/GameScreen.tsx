@@ -1402,6 +1402,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       </Button>
     ) : null;
 
+  // 'desktop' dock view (phone experiment): the desk center-stage dock's
+  // split of the actions — everything but Discard stacks full-width, and
+  // Discard rides a row with Undo. Mirrors the desk fork's derivation
+  // (which lives inside the isDesk block, out of this scope).
+  const stackActions = ui.actions.filter(a => a.id !== 'discard');
+  const discardAction = ui.actions.find(a => a.id === 'discard');
+
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
       <LayoutGroup>
@@ -1473,7 +1480,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               inside the dock's pinned height, so nothing needs to
               yield space — and the held cards staying visible is
               exactly what the swap decision wants. */}
-          {bonusRowShown && (
+          {dockLayout !== 'desktop' && bonusRowShown && (
             // Streamlined merges this strip onto the dock (shared surface,
             // one hairline divider) via .bonusRowDocked — see the CSS.
             // Off keeps the historical unstyled wrapper exactly.
@@ -1498,6 +1505,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           )}
 
+          {dockLayout !== 'desktop' && (
           <div
             className={`${styles.dock} ${
               dockLayout === 'hand-stack' ? styles.dockHandPad : ''
@@ -1633,6 +1641,110 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               </div>
             )}
           </div>
+          )}
+
+          {/* 'desktop' dock view (phone experiment): the bottom region
+              splits into two columns — held bonus cards on the LEFT (the
+              desk bonus panel, reused) and the deck + actions on the RIGHT
+              (the desk center-stage dock, replicated with phone-sized
+              classes). The board above measures the remaining height and
+              shrinks to fit, same as with the stacked docks. */}
+          {dockLayout === 'desktop' && (
+            <div className={styles.dtWrap}>
+              <div className={styles.dtBonusCol}>
+                {state.bonusCards.length > 0 || !state.noBonusCards ? (
+                  <DesktopBonusPanel
+                    cards={state.bonusCards}
+                    values={liveShapley}
+                    onSlotTap={
+                      ui.bonusSlotPick
+                        ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
+                        : undefined
+                    }
+                    onUse={
+                      ui.canActivateSpecials
+                        ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
+                        : undefined
+                    }
+                    liveContext={card => bonusCardLiveContext(card, state)}
+                  />
+                ) : state.investHands ? (
+                  <DeskHandValuesPanel handBoost={state.handBoost} />
+                ) : null}
+              </div>
+              <div className={styles.dtDock}>
+                {finished ? (
+                  <div className={styles.dtStage}>
+                    <div className={styles.dtActions}>
+                      <Button
+                        variant="primary"
+                        className={styles.dtStackBtn}
+                        onClick={() => setResultOpen(true)}
+                      >
+                        Show result
+                      </Button>
+                      {(mode.kind !== 'targets' ||
+                        activeReport.total < state.target) && (
+                        <Button
+                          variant="secondary"
+                          className={styles.dtStackBtn}
+                          onClick={() =>
+                            mode.kind === 'daily'
+                              ? navigate('/daily/archive')
+                              : onReplay()
+                          }
+                        >
+                          Play Again
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.dtStage}>
+                    <NextCardWell
+                      onPeekDeck={() => setPeekOpen(true)}
+                      instantLayout={instantLayout}
+                      stacked
+                      meta="deck"
+                      peek="dialog"
+                      flight={flight}
+                    />
+                    <div className={styles.dtActions}>
+                      {banner}
+                      {stackActions.map(a =>
+                        actionBtn(
+                          a,
+                          a.id === 'perk'
+                            ? `${styles.dtStackBtn} ${styles.dtPerkBtn}`
+                            : styles.dtStackBtn
+                        )
+                      )}
+                      <div className={styles.dtBtnRow}>
+                        {discardAction ? (
+                          actionBtn(discardAction)
+                        ) : (
+                          <Button variant="secondary" disabled>
+                            Discard
+                          </Button>
+                        )}
+                        <Button
+                          variant="secondary"
+                          disabled={!canUndo || flight !== null}
+                          onClick={() => dispatch({ type: 'UNDO' })}
+                          aria-label={`Undo (${Math.max(
+                            0,
+                            maxUndos - state.undoCount
+                          )} left)`}
+                        >
+                          ↺ Undo
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {(state.bonusCards.length > 0 || !state.noBonusCards) && (
             <div className={styles.bonusSlot}>

@@ -946,6 +946,85 @@
   letter-spacing: normal;
 }
 
+/* ===== 'desktop' dock view (phone experiment, dockLayout='desktop') =====
+   The bottom region splits into two columns — the desk bonus panel on the
+   left, the desk center-stage deck/dock on the right — fitted to the phone
+   column. These classes are column-fork ONLY (the desk fork uses its own
+   .desk* rules under @media min-width:768), so they live at top level and
+   apply at phone + tablet-portrait widths. Values mirror the desk dock at
+   a phone scale (smaller well + padding). ===== */
+.dtWrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-items: start;
+  margin-top: var(--space-xs);
+}
+
+.dtBonusCol {
+  min-width: 0;
+}
+
+/* Right column raised panel — mirrors .deskDock at phone scale. */
+.dtDock {
+  min-width: 0;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-sm);
+  display: flex;
+}
+
+/* mirrors .deskDockStage */
+.dtStage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.dtStage [class*='cardSlot'] {
+  width: 72px;
+}
+
+/* mirrors .deskActions */
+.dtActions {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  justify-content: center;
+}
+
+.dtStackBtn {
+  width: 100%;
+}
+
+/* The perk button wears the amber "spend" dressing (mirrors .deskPerkBtn). */
+.dtActions .dtPerkBtn:not(:disabled) {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: var(--on-accent);
+}
+
+/* mirrors .deskBtnRow */
+.dtBtnRow {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.dtBtnRow > * {
+  flex: 1;
+  min-width: 0;
+  padding-left: var(--space-xs);
+  padding-right: var(--space-xs);
+  white-space: nowrap;
+}
+
 /* ===== Desk families: the three-column redesign. GameScreen renders
    this tree (INSTEAD of the column flex layout) for the desk family
    (≥1024) and the desk-lite family (tablet-landscape) — the JSX gate

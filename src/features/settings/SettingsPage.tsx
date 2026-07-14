@@ -253,7 +253,12 @@ export function SettingsPage() {
     onPick: (v: T) => void,
     label: string
   ) => (
-    <div className={styles.seg} role="radiogroup" aria-label={label}>
+    <div
+      // 4+ options don't fit one phone row — let them flow 2-up.
+      className={`${styles.seg} ${options.length > 3 ? styles.segWrap : ''}`}
+      role="radiogroup"
+      aria-label={label}
+    >
       {options.map(([v, text]) => (
         <button
           key={v}
@@ -292,7 +297,9 @@ export function SettingsPage() {
                 'Dock layout'
               )
             : seg<DockLayout>(
-                (['classic', 'hand-stack', 'center-stage'] as const).map(
+                (
+                  ['classic', 'hand-stack', 'center-stage', 'desktop'] as const
+                ).map(
                   l => [l, DOCK_LAYOUT_LABEL[l]] as [DockLayout, string]
                 ),
                 settings.dockLayout,

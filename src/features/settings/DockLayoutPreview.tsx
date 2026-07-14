@@ -10,6 +10,7 @@ export const DOCK_LAYOUT_LABEL: Record<DockLayout, string> = {
   'hand-stack': 'Hand stack',
   'center-stage': 'Center stage',
   classic: 'Classic',
+  desktop: 'Desktop',
 };
 
 const meta = (
@@ -51,6 +52,35 @@ export function DockLayoutPreview({ layout }: { layout: DockLayout }) {
         <Button variant="primary" className={styles.full}>
           Place
         </Button>
+      </div>
+    );
+  }
+  if (layout === 'desktop') {
+    // Two columns: held bonus cards on the left, the deck + stacked
+    // actions (the desk center-stage dock) on the right.
+    return (
+      <div className={`${styles.frame} ${styles.desktopFrame}`}>
+        <div className={styles.desktopBonus}>
+          <span className={styles.desktopPanelTitle}>Bonus</span>
+          <span className={styles.desktopChip} />
+          <span className={styles.desktopChip} />
+        </div>
+        <div className={styles.desktopDock}>
+          <div className={`${styles.card} ${styles.cardMd}`}>
+            <CardFace card={DRAWN} />
+          </div>
+          <Button variant="primary" className={styles.full}>
+            Place
+          </Button>
+          <div className={styles.pair}>
+            <Button size="sm" variant="secondary" className={styles.half}>
+              Discard
+            </Button>
+            <Button size="sm" variant="secondary" className={styles.half}>
+              ↺
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
