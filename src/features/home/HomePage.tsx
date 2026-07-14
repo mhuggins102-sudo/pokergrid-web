@@ -202,7 +202,10 @@ export function HomePage() {
               </div>
             ) : (
               <Link to="/daily" className={styles.heroCta}>
-                Play today&apos;s puzzle <span aria-hidden="true">→</span>
+                {/* Phone shortens the label so the compact button stays on
+                    one line in the narrowed left column. */}
+                {isPhone ? 'Play now' : "Play today's puzzle"}{' '}
+                <span aria-hidden="true">→</span>
               </Link>
             )}
             <Link to="/daily/archive" className={styles.heroArchive}>
