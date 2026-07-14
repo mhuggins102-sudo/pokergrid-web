@@ -463,20 +463,26 @@
     flex-direction: column;
   }
 
-  /* Header restructure: "Today's Daily" title with the date stacked
-     underneath (left), the difficulty + variant pills pinned top-right.
-     The CTA / score sits in the LEFT column directly under the date
-     (the pills span both rows on the right), so the score reads tight
-     to the date rather than dropping below the taller pill stack. */
+  /* Header layout — a 2×2 within the hero:
+       title + date (top-left)      score / Play button (top-right)
+       difficulty + variant pills   Browse the archive (bottom-right)
+       (bottom-left)
+     The played score+tier+link and the unplayed Play button share the
+     top-right slot (only one shows at a time). display:contents on the
+     CTA row lets its children drop straight into the grid. */
   .heroBody {
     padding: 16px 20px;
     display: grid;
-    grid-template-columns: 1fr auto;
+    /* Left column sizes to the title/date/pills; the right takes the rest
+       (minmax(0,…) lets it shrink so the score block wraps instead of
+       ballooning the column and squeezing the pills). */
+    grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
-      'eyebrow chips'
-      'cta chips';
+      'eyebrow cta'
+      'chips archive';
     align-items: start;
     column-gap: 12px;
+    row-gap: 8px;
   }
 
   /* Density pass: the hero keeps its eyebrow/chips/CTA only. */
@@ -485,7 +491,7 @@
     display: none;
   }
 
-  /* Title over date (stacked), left column. */
+  /* Title over date (stacked), top-left. */
   .heroEyebrow {
     grid-area: eyebrow;
     flex-direction: column;
@@ -498,57 +504,34 @@
     display: none;
   }
 
-  /* Pills pinned to the top-right, stacked, and held at the top of the
-     two-row span so they clear the title. */
+  /* Pills below the date (bottom-left), left-aligned + stacked. */
   .heroChips {
     grid-area: chips;
     align-self: start;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 6px;
     margin-top: 0;
   }
 
-  /* The CTA / score rides tight under the date. */
+  /* Dissolve the CTA row so the score / Play button and the archive link
+     become their own grid items (top-right and bottom-right). */
   .heroCtaRow {
-    grid-area: cta;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 6px;
+    display: contents;
   }
 
-  .heroCtaRowResult {
-    margin-top: 4px;
-  }
-
-  /* Unplayed: the CTA row runs full-width along the bottom instead of
-     tucking under the date. The compact Play button pins bottom-right
-     (its right inset mirrors the pill's above it) with the archive link
-     at bottom-left. row-reverse puts the button (first in DOM) at the
-     right end and the archive link at the left. */
-  .heroBody.heroBodyUnplayed {
-    grid-template-areas:
-      'eyebrow chips'
-      'cta cta';
-  }
-
-  .heroBodyUnplayed .heroCtaRow {
-    flex-direction: row-reverse;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
-    margin-top: 14px;
-  }
-
-  /* Score result (played): drop the "/ target", enlarge the tier badge,
-     and center the badge against the big score. The "View full result"
-     link breaks to its own line directly beneath (flex-basis:100%), sitting
-     tight under the score rather than trailing off to the right. */
+  /* Played: score + tier + "View full result" combo, top-right. The
+     minmax(0,1fr) right column constrains it, so the link wraps under the
+     score+badge rather than trailing off in one wide line. */
   .heroResult {
-    flex-wrap: wrap;
+    grid-area: cta;
+    justify-self: end;
+    justify-content: flex-end;
     align-items: center;
+    flex-wrap: wrap;
     column-gap: 10px;
     row-gap: 2px;
+    text-align: right;
   }
 
   .heroResultTarget {
@@ -560,8 +543,29 @@
     padding: 5px 14px;
   }
 
+  /* "View full result" breaks to its own line directly under the score,
+     right-aligned within the top-right block. */
   .heroResultLink {
     flex-basis: 100%;
+    text-align: right;
+  }
+
+  /* Unplayed: a compact Play button in the same top-right slot. */
+  .heroCta {
+    grid-area: cta;
+    justify-self: end;
+    align-self: start;
+    padding: 9px 16px;
+    font-size: 14px;
+  }
+
+  /* Browse the archive: bottom-right, dropped to the foot of its row so it
+     lines up with the lower pill on the left (saving a row of height). */
+  .heroArchive {
+    grid-area: archive;
+    justify-self: end;
+    align-self: end;
+    font-size: 13px;
   }
 
   /* Twist/variant pill goes green to match the in-game nav's twist pill
@@ -569,13 +573,6 @@
   .twistChip {
     background: color-mix(in srgb, var(--accent) 13%, var(--paper-raised));
     color: var(--accent);
-  }
-
-  /* Unplayed: a compact Play button (narrower + a touch shorter) so it
-     sits in roughly the same spot the score occupies once played. */
-  .heroCta {
-    padding: 9px 16px;
-    font-size: 14px;
   }
 
   /* 2×2 grid of half-width cards (three modes + the strip-as-card). */

@@ -155,11 +155,7 @@ export function HomePage() {
           so the quiet archive link can sit beside the CTA without
           nesting anchors. */}
       <div className={styles.hero}>
-        <div
-          className={`${styles.heroBody} ${
-            todayResult && todayTier ? '' : styles.heroBodyUnplayed
-          }`}
-        >
+        <div className={styles.heroBody}>
           <div className={styles.heroEyebrow}>
             <span className={styles.heroKicker}>The Daily Grid</span>
             <span className={styles.heroDot} aria-hidden="true" />
