@@ -32,6 +32,12 @@ export interface BonusDialogUI {
   pickedNew?: number;
   atCap: boolean;
   canDecline: boolean;
+  /**
+   * replacing only: whether the player may step back to the card-select
+   * screen. True when declining the forced swap is allowed (easy mode) —
+   * so they can reach the decline option after picking a new card.
+   */
+  canGoBack?: boolean;
 }
 
 export interface PhaseUI {
@@ -376,6 +382,7 @@ export function usePhaseUI(): PhaseUI {
             pickedNew: phase.pickedNew,
             atCap: true,
             canDecline: false,
+            canGoBack: state.bonusDeclineAllowed,
           },
         };
 
