@@ -2,7 +2,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { safeJSONStorage } from '../../lib/safeStorage';
 
-export type DockLayout = 'hand-stack' | 'center-stage' | 'classic';
+export type DockLayout =
+  | 'hand-stack'
+  | 'center-stage'
+  | 'classic'
+  // Phone-only experiment: the desktop two-rail arrangement fitted to the
+  // phone column — held bonus cards in a left column, the deck + actions in
+  // a right column (the desk center-stage dock). Ignored by the desk/desk-
+  // lite forks, which pick their own arrangement from the same key.
+  | 'desktop';
 
 // Visual theme, two axes: the look (Card Room refresh vs the original
 // Morning Paper) and the appearance (light/dark/system). Both looks
