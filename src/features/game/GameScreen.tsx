@@ -1725,8 +1725,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         commitBtn('secondary')
                       ) : (
                         <div className={styles.dtGrid}>
-                          {/* Row 1: Place (the active commit) + Discard. */}
-                          {commitBtn()}
+                          {/* Row 1: Place (the active commit) + Discard.
+                              actionBtn with dtGridBtn (not commitBtn's
+                              taller .commitButton) so both rows are slim. */}
+                          {commitAction &&
+                            actionBtn(commitAction, styles.dtGridBtn)}
                           <Button
                             variant="secondary"
                             className={styles.dtIconBtn}

@@ -960,7 +960,9 @@
   /* stretch (not start): both columns take the taller one's height (the
      deck/actions dock), so the bonus column can flex its 3 slots to match. */
   align-items: stretch;
-  margin-top: var(--space-xs);
+  /* No top margin — it made the gap below the grid larger than the gap
+     above it; the board area's own spacing already sits the dock off the
+     grid, matching the other docks' small, symmetric gaps. */
 }
 
 .dtBonusCol {
@@ -982,7 +984,7 @@
    two-column row squished. Same idea as the other docks pinning .dock. */
 .dtDock {
   min-width: 0;
-  min-height: 210px;
+  min-height: 176px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   border-radius: 14px;
@@ -1004,7 +1006,7 @@
 }
 
 .dtStage [class*='cardSlot'] {
-  width: 72px;
+  width: 54px;
 }
 
 /* mirrors .deskActions */
@@ -1041,13 +1043,13 @@
 
 .dtGridBtn {
   width: 100%;
-  min-height: 44px;
+  min-height: 36px;
 }
 
 .dtIconBtn {
   width: 44px;
   min-width: 44px;
-  min-height: 44px;
+  min-height: 36px;
   padding-left: 0;
   padding-right: 0;
   display: inline-flex;
