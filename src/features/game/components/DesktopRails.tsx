@@ -713,13 +713,16 @@ export interface DesktopBonusPanelProps {
   onUse?: (index: number) => void;
   liveContext?: (card: BonusCard) => string[];
   hover?: BonusHoverProps;
-  /** Drop the whole "Bonus Cards · held/3" header (the phone "Desktop"
-   *  dock reuses this panel in a narrow column where it reads as redundant). */
-  hideHeader?: boolean;
-  /** Don't render the per-card hover/focus description popover. On touch it
-   *  would pop on the tap that focuses the card (the phone "Desktop" dock
-   *  relies on the tap-opened DetailSheet for the description instead). */
-  noHoverPopover?: boolean;
+  /**
+   * Phone "Desktop" dock mode. The panel becomes a fixed 3-slot column
+   * that fills its (stretched) container to match the deck/actions dock:
+   *   • no header, no hover/focus popover, no tap focus ring;
+   *   • held cards render as entries, missing slots as dotted placeholders
+   *     (the first "♣ draws fill these", mirroring the horizontal strip);
+   *   • the three slots flex equally so three held cards fit exactly.
+   * The desk/desk-lite fork leaves this off (its normal list behavior).
+   */
+  dockColumn?: boolean;
 }
 
 export function DesktopBonusPanel({
@@ -729,8 +732,7 @@ export function DesktopBonusPanel({
   onUse,
   liveContext,
   hover,
-  hideHeader = false,
-  noHoverPopover = false,
+  dockColumn = false,
 }: DesktopBonusPanelProps) {
   const [detail, setDetail] = useState<{
     card: BonusCard;
@@ -742,120 +744,148 @@ export function DesktopBonusPanel({
   const assist = useSettingsStore(s => s.colorBlindAssist);
   const held = cards.filter(c => !isPlaceholder(c)).length;
 
+  const renderEntry = (card: BonusCard, i: number) => {
+    const cat = styleFor(card);
+    const dimmed = card.used || isPlaceholder(card);
+    const usable =
+      onUse !== undefined &&
+      isSpecialCard(card) &&
+      !card.used &&
+      !isPlaceholder(card);
+    const active = !dimmed && (hover?.isActive(i) ?? false);
+    const hoverDim = hover?.isDim(i) ?? false;
+    const prog = dimmed ? null : (hover?.progress(i) ?? null);
+    return (
+      <div
+        key={`${card.id}-${i}`}
+        tabIndex={dimmed ? undefined : 0}
+        className={[
+          styles.bonusEntry,
+          dockColumn ? styles.dockEntry : null,
+          dimmed ? styles.bonusDim : null,
+          active ? styles.bonusActive : null,
+          hoverDim ? styles.bonusFaded : null,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        style={{ '--entry-tone': cat.borderColor } as CSSProperties}
+        onMouseEnter={hover && !dimmed ? () => hover.onEnter(i) : undefined}
+        onMouseLeave={hover && !dimmed ? hover.onLeave : undefined}
+      >
+        <button
+          type="button"
+          className={styles.bonusMain}
+          onClick={() =>
+            // Slot pick never targets a spent one-time slot — the
+            // used card blocks that position for the whole game.
+            onSlotTap && !isSpentSlot(card)
+              ? onSlotTap(i)
+              : setDetail({ card, index: i })
+          }
+          aria-label={`Bonus card: ${card.name}${card.used ? ' (used)' : ''}${
+            values?.[i] !== undefined
+              ? `, contributing ${values[i]} points`
+              : ''
+          }`}
+        >
+          <span className={styles.bonusTitle}>
+            {assist && (
+              <>
+                <span
+                  style={{
+                    color: cat.iconColor,
+                    ...categoryIconStyle(cat),
+                  }}
+                  aria-hidden="true"
+                >
+                  {cat.icon}
+                </span>{' '}
+              </>
+            )}
+            {card.title}
+            {card.used ? ' ✓' : ''}
+          </span>
+          <span className={styles.bonusMult}>
+            {card.mult}
+            {values?.[i] !== undefined && (
+              <span className={styles.bonusValue}>+{values[i]} pts</span>
+            )}
+          </span>
+        </button>
+        {usable && (
+          <Button
+            variant="primary"
+            size="sm"
+            className={styles.bonusUse}
+            onClick={() => onUse(i)}
+          >
+            Use
+          </Button>
+        )}
+        {/* Hover/focus popover: full description (+ purple progress).
+            Never renders for used/placeholder cards — or in dock mode,
+            where the tap focus would pop it open uninvited (the tap-opened
+            DetailSheet carries the description instead). */}
+        {!dimmed && !dockColumn && (
+          <div className={styles.bonusPop} role="tooltip">
+            {card.description}
+            {prog && (
+              <div
+                className={`${styles.bonusProg} ${
+                  prog.ok ? styles.bonusProgOk : ''
+                }`}
+              >
+                {prog.label}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Phone "Desktop" dock: a fixed 3-slot column (held entries + dotted
+  // placeholders) that flexes to fill the container.
+  if (dockColumn) {
+    return (
+      <section
+        className={`${styles.panel} ${styles.dockCol}`}
+        aria-label="Bonus cards"
+      >
+        <div className={`${styles.bonusList} ${styles.dockList}`}>
+          {Array.from({ length: 3 }, (_, i) => {
+            const card = cards[i];
+            if (card) return renderEntry(card, i);
+            // Dotted placeholder for a not-yet-held slot; the first one
+            // (only when nothing is held) names what fills them.
+            return (
+              <div key={`empty-${i}`} className={styles.dockEmpty}>
+                {cards.length === 0 && i === 0 ? '♣ draws fill these' : 'empty'}
+              </div>
+            );
+          })}
+        </div>
+        <DetailSheet
+          detail={detail}
+          onClose={() => setDetail(null)}
+          onUse={onUse}
+          liveContext={liveContext}
+        />
+      </section>
+    );
+  }
+
   return (
     <section className={styles.panel} aria-label="Bonus cards">
-      {!hideHeader && (
-        <header className={styles.head}>
-          <h2 className={styles.title}>Bonus Cards</h2>
-          <span className={styles.headNote}>{held} / 3</span>
-        </header>
-      )}
+      <header className={styles.head}>
+        <h2 className={styles.title}>Bonus Cards</h2>
+        <span className={styles.headNote}>{held} / 3</span>
+      </header>
       <div className={styles.bonusList}>
         {cards.length === 0 && (
           <span className={styles.emptyNote}>None held — a ♣ draw adds one.</span>
         )}
-        {cards.map((card, i) => {
-          const cat = styleFor(card);
-          const dimmed = card.used || isPlaceholder(card);
-          const usable =
-            onUse !== undefined &&
-            isSpecialCard(card) &&
-            !card.used &&
-            !isPlaceholder(card);
-          const active = !dimmed && (hover?.isActive(i) ?? false);
-          const hoverDim = hover?.isDim(i) ?? false;
-          const prog = dimmed ? null : (hover?.progress(i) ?? null);
-          return (
-            <div
-              key={`${card.id}-${i}`}
-              tabIndex={dimmed ? undefined : 0}
-              className={[
-                styles.bonusEntry,
-                dimmed ? styles.bonusDim : null,
-                active ? styles.bonusActive : null,
-                hoverDim ? styles.bonusFaded : null,
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              style={{ '--entry-tone': cat.borderColor } as CSSProperties}
-              onMouseEnter={
-                hover && !dimmed ? () => hover.onEnter(i) : undefined
-              }
-              onMouseLeave={hover && !dimmed ? hover.onLeave : undefined}
-            >
-              <button
-                type="button"
-                className={styles.bonusMain}
-                onClick={() =>
-                  // Slot pick never targets a spent one-time slot — the
-                  // used card blocks that position for the whole game.
-                  onSlotTap && !isSpentSlot(card)
-                    ? onSlotTap(i)
-                    : setDetail({ card, index: i })
-                }
-                aria-label={`Bonus card: ${card.name}${card.used ? ' (used)' : ''}${
-                  values?.[i] !== undefined
-                    ? `, contributing ${values[i]} points`
-                    : ''
-                }`}
-              >
-                <span className={styles.bonusTitle}>
-                  {assist && (
-                    <>
-                      <span
-                        style={{
-                          color: cat.iconColor,
-                          ...categoryIconStyle(cat),
-                        }}
-                        aria-hidden="true"
-                      >
-                        {cat.icon}
-                      </span>{' '}
-                    </>
-                  )}
-                  {card.title}
-                  {card.used ? ' ✓' : ''}
-                </span>
-                <span className={styles.bonusMult}>
-                  {card.mult}
-                  {values?.[i] !== undefined && (
-                    <span className={styles.bonusValue}>
-                      +{values[i]} pts
-                    </span>
-                  )}
-                </span>
-              </button>
-              {usable && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className={styles.bonusUse}
-                  onClick={() => onUse(i)}
-                >
-                  Use
-                </Button>
-              )}
-              {/* Hover/focus popover: full description (+ purple
-                  progress). Never renders for used/placeholder cards — or
-                  when the caller suppresses it (touch reuse, where the tap
-                  focus would pop it open uninvited). */}
-              {!dimmed && !noHoverPopover && (
-                <div className={styles.bonusPop} role="tooltip">
-                  {card.description}
-                  {prog && (
-                    <div
-                      className={`${styles.bonusProg} ${
-                        prog.ok ? styles.bonusProgOk : ''
-                      }`}
-                    >
-                      {prog.label}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {cards.map((card, i) => renderEntry(card, i))}
       </div>
       <DetailSheet
         detail={detail}

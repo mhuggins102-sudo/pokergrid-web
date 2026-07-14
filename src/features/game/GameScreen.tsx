@@ -1657,8 +1657,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <div className={styles.dtBonusCol}>
                 {state.bonusCards.length > 0 || !state.noBonusCards ? (
                   <DesktopBonusPanel
-                    hideHeader
-                    noHoverPopover
+                    dockColumn
                     cards={state.bonusCards}
                     values={liveShapley}
                     onSlotTap={

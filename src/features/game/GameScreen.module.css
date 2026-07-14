@@ -957,12 +957,21 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-sm);
-  align-items: start;
+  /* stretch (not start): both columns take the taller one's height (the
+     deck/actions dock), so the bonus column can flex its 3 slots to match. */
+  align-items: stretch;
   margin-top: var(--space-xs);
 }
 
 .dtBonusCol {
   min-width: 0;
+  display: flex;
+}
+
+/* The bonus panel fills the stretched cell so its 3 slots divide the dock
+   height. */
+.dtBonusCol > * {
+  width: 100%;
 }
 
 /* Right column raised panel — mirrors .deskDock at phone scale. */
