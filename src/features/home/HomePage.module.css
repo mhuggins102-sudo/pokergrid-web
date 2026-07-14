@@ -464,15 +464,17 @@
   }
 
   /* Header restructure: "Today's Daily" title with the date stacked
-     underneath (left), the difficulty + variant pills pinned top-right
-     of the container. The CTA row spans the full width beneath. */
+     underneath (left), the difficulty + variant pills pinned top-right.
+     The CTA / score sits in the LEFT column directly under the date
+     (the pills span both rows on the right), so the score reads tight
+     to the date rather than dropping below the taller pill stack. */
   .heroBody {
     padding: 16px 20px;
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-areas:
       'eyebrow chips'
-      'cta cta';
+      'cta chips';
     align-items: start;
     column-gap: 12px;
   }
@@ -496,33 +498,38 @@
     display: none;
   }
 
-  /* Pills pinned to the top-right, stacked so they clear the title. */
+  /* Pills pinned to the top-right, stacked, and held at the top of the
+     two-row span so they clear the title. */
   .heroChips {
     grid-area: chips;
+    align-self: start;
     flex-direction: column;
     align-items: flex-end;
     gap: 6px;
     margin-top: 0;
   }
 
+  /* The CTA / score rides tight under the date. */
   .heroCtaRow {
     grid-area: cta;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 14px;
-  }
-
-  /* Played state: the score row sits closer to the pills above than the
-     taller Play CTA does. */
-  .heroCtaRowResult {
+    gap: 10px;
     margin-top: 6px;
   }
 
+  .heroCtaRowResult {
+    margin-top: 4px;
+  }
+
   /* Score result (played): drop the "/ target", enlarge the tier badge,
-     and center everything against the big score so the badge and the
-     "View full result" link sit on the score's midline. */
+     and center the badge against the big score. The "View full result"
+     link breaks to its own line directly beneath (flex-basis:100%), sitting
+     tight under the score rather than trailing off to the right. */
   .heroResult {
+    flex-wrap: wrap;
     align-items: center;
+    column-gap: 10px;
+    row-gap: 2px;
   }
 
   .heroResultTarget {
@@ -534,6 +541,10 @@
     padding: 5px 14px;
   }
 
+  .heroResultLink {
+    flex-basis: 100%;
+  }
+
   /* Twist/variant pill goes green to match the in-game nav's twist pill
      (var(--accent)), rather than the amber it wears elsewhere. */
   .twistChip {
@@ -541,8 +552,11 @@
     color: var(--accent);
   }
 
+  /* Unplayed: a compact Play button (narrower + a touch shorter) so it
+     sits in roughly the same spot the score occupies once played. */
   .heroCta {
-    padding: 12px 24px;
+    padding: 9px 16px;
+    font-size: 14px;
   }
 
   /* 2×2 grid of half-width cards (three modes + the strip-as-card). */
