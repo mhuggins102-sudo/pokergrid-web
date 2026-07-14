@@ -1024,6 +1024,12 @@
   overflow: hidden;
 }
 
+/* No tap focus ring on the dock's bonus cards (the entry div is no longer
+   focusable; the button's ring is suppressed for both :focus and
+   :focus-visible so Safari's tap-focus outline doesn't show either). */
+.dockEntry:focus,
+.dockEntry:focus-visible,
+.dockEntry .bonusMain:focus,
 .dockEntry .bonusMain:focus-visible {
   outline: none;
 }
