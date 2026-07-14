@@ -1034,6 +1034,20 @@
   outline: none;
 }
 
+/* Long names (e.g. "Monochrome Border") fit as much as the narrow column
+   allows and then ellipsize, rather than wrapping to a second line. */
+.dockEntry .bonusMain {
+  min-width: 0;
+}
+
+.dockEntry .bonusTitle {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Dotted placeholder for a not-yet-held slot — mirrors the horizontal
    strip's .emptySlot look. */
 .dockEmpty {
