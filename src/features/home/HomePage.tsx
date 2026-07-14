@@ -140,8 +140,9 @@ export function HomePage() {
       <Link to="/stats" className={styles.modeCard}>
         <span className={styles.modeTitle}>Stats</span>
         <span className={styles.modeBlurb}>
-          Best scores, win rate, and tier ratings by difficulty, filtered by
-          mode and level.
+          {isPhone
+            ? 'Best scores, win rate, and tier ratings, filterable by difficulty and mode.'
+            : 'Best scores, win rate, and tier ratings by difficulty, filtered by mode and level.'}
         </span>
         <span className={styles.modeLink}>See your stats →</span>
       </Link>
@@ -251,10 +252,9 @@ export function HomePage() {
             {modeCards}
             {phoneShowIntro ? (
               <div className={styles.footerCard}>
-                <span className={styles.modeTitle}>First time here?</span>
+                <span className={styles.modeTitle}>First time?</span>
                 <span className={styles.modeBlurb}>
-                  Learn by playing — a guided practice deal walks you through
-                  every move.
+                  Play a guided practice deal that walks you through every move.
                 </span>
                 <Link to="/tutorial" className={styles.modeLink}>
                   Start the tutorial →
