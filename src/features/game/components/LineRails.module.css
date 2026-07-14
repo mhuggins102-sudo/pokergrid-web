@@ -78,7 +78,9 @@
   min-width: 38px;
   min-height: 24px;
   padding: 0 4px;
-  border-radius: var(--radius-xs);
+  /* Match the desk edge chips' pill radius (DesktopRails .chipPill, 6px)
+     — the phone chips were barely rounded at --radius-xs (2px). */
+  border-radius: var(--radius-sm);
   background: var(--paper-sunken);
   border: 1px solid var(--hairline);
   font-size: 11px;
