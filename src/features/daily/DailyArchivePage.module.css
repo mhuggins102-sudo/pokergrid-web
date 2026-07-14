@@ -717,11 +717,17 @@
     margin-top: 0;
     /* Keep the score clear of the floated toggle at the top-right. */
     padding-right: 76px;
+    /* Lift the score / tier / link block (only) so the top of the score +
+       badge sits level with the top of the toggle icons to its right. The
+       big display line-box leaves the glyph sitting ~10px low; a transform
+       moves it up without disturbing the rank cells below it. */
+    transform: translateY(-10px);
   }
 
   .detailUnplayed {
     margin-top: 0;
     padding-right: 76px;
+    transform: translateY(-10px);
   }
 
   .detailTarget {

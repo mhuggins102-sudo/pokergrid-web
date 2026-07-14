@@ -4,7 +4,7 @@ import { markTutorialSeen, tutorialSeen } from '../tutorial/tutorialSeen';
 import { CHALLENGES, findChallenge } from '../../game/challenges';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
-import { difficultyColors } from '../../design/tokens';
+import { Difficulty, difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
 import { Tier, tierForRun } from '../../lib/stats';
 import { useStatsStore } from '../progress/statsStore';
@@ -14,6 +14,17 @@ import {
   readPlayedDatesLite,
 } from '../daily/streak';
 import styles from './HomePage.module.css';
+
+// Quick Start row — one-tap Free Play at each difficulty (phone only).
+// Full names (not initials) so Easy/Extreme never collide; color coding
+// mirrors the difficulty tokens used everywhere else.
+const QUICK_DIFFS: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
+const DIFF_LABEL: Record<Difficulty, string> = {
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+  extreme: 'Extreme',
+};
 
 // Tier badge tones — mirrors the daily archive's result row so a played
 // day reads identically on the Home hero and in the archive.
@@ -144,9 +155,13 @@ export function HomePage() {
           so the quiet archive link can sit beside the CTA without
           nesting anchors. */}
       <div className={styles.hero}>
-        <div className={styles.heroBody}>
+        <div
+          className={`${styles.heroBody} ${
+            todayResult && todayTier ? '' : styles.heroBodyUnplayed
+          }`}
+        >
           <div className={styles.heroEyebrow}>
-            <span className={styles.heroKicker}>Today&apos;s Daily</span>
+            <span className={styles.heroKicker}>The Daily Grid</span>
             <span className={styles.heroDot} aria-hidden="true" />
             <span className={styles.heroDate}>{heroDate(today)}</span>
           </div>
@@ -233,32 +248,58 @@ export function HomePage() {
       {isPhone ? (
         /* Phone: the three mode cards + the newcomer strip become a
            2×2 grid of half-width cards — the strip's content rides as
-           the fourth card (both its first-visit and quiet variants). */
-        <div className={styles.phoneGrid}>
-          {modeCards}
-          {phoneShowIntro ? (
-            <div className={styles.footerCard}>
-              <span className={styles.modeTitle}>First time here?</span>
-              <span className={styles.modeBlurb}>
-                Learn by playing — a guided practice deal walks you through
-                every move.
+           the fourth card (both its first-visit and quiet variants) —
+           followed by the full-width Quick Start row. */
+        <>
+          <div className={styles.phoneGrid}>
+            {modeCards}
+            {phoneShowIntro ? (
+              <div className={styles.footerCard}>
+                <span className={styles.modeTitle}>First time here?</span>
+                <span className={styles.modeBlurb}>
+                  Learn by playing — a guided practice deal walks you through
+                  every move.
+                </span>
+                <Link to="/tutorial" className={styles.modeLink}>
+                  Start the tutorial →
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.footerCard}>
+                <span className={styles.modeTitle}>Rules</span>
+                <span className={styles.modeBlurb}>
+                  The whole game is 25 cards, 10 poker hands, one target.
+                </span>
+                <Link to="/rules" className={styles.modeLink}>
+                  Read the rules →
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Start: one-tap Free Play at any difficulty. Four
+              color-coded buttons on a single full-width row. */}
+          <div className={styles.quickStart}>
+            <div className={styles.quickStartHead}>
+              <span className={styles.quickStartTitle}>Quick Start</span>
+              <span className={styles.quickStartSub}>
+                Jump right into a Free Play game.
               </span>
-              <Link to="/tutorial" className={styles.modeLink}>
-                Start the tutorial →
-              </Link>
             </div>
-          ) : (
-            <div className={styles.footerCard}>
-              <span className={styles.modeTitle}>Rules</span>
-              <span className={styles.modeBlurb}>
-                The whole game is 25 cards, 10 poker hands, one target.
-              </span>
-              <Link to="/rules" className={styles.modeLink}>
-                Read the rules →
-              </Link>
+            <div className={styles.quickRow}>
+              {QUICK_DIFFS.map(d => (
+                <Link
+                  key={d}
+                  to={`/play?difficulty=${d}`}
+                  className={styles.quickBtn}
+                  style={{ '--tone': difficultyColors[d] } as CSSProperties}
+                >
+                  {DIFF_LABEL[d]}
+                </Link>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        </>
       ) : (
         <>
           {/* MODE ROW */}

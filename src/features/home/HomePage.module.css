@@ -521,6 +521,25 @@
     margin-top: 4px;
   }
 
+  /* Unplayed: the CTA row runs full-width along the bottom instead of
+     tucking under the date. The compact Play button pins bottom-right
+     (its right inset mirrors the pill's above it) with the archive link
+     at bottom-left. row-reverse puts the button (first in DOM) at the
+     right end and the archive link at the left. */
+  .heroBody.heroBodyUnplayed {
+    grid-template-areas:
+      'eyebrow chips'
+      'cta cta';
+  }
+
+  .heroBodyUnplayed .heroCtaRow {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-top: 14px;
+  }
+
   /* Score result (played): drop the "/ target", enlarge the tier badge,
      and center the badge against the big score. The "View full result"
      link breaks to its own line directly beneath (flex-basis:100%), sitting
@@ -603,5 +622,67 @@
      .footerLink, which already sets this. */
   .footerCard .modeLink {
     text-decoration: none;
+  }
+
+  /* ---- Quick Start (phone only) ---- */
+
+  /* Full-width container: a title + blurb, then a single row of four
+     color-coded difficulty buttons that jump straight into Free Play. */
+  .quickStart {
+    margin-top: 10px;
+    padding: 13px 15px 14px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
+    border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .quickStartHead {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin-bottom: 10px;
+  }
+
+  .quickStartTitle {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 680;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .quickStartSub {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+
+  /* Four equal buttons on one line. */
+  .quickRow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .quickBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 4px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    background: color-mix(in srgb, var(--tone) 15%, var(--paper-raised));
+    color: var(--tone);
+    border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
+  }
+
+  .quickBtn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 }
