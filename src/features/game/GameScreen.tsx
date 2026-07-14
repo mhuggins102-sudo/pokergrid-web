@@ -1571,22 +1571,36 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 )}
               </>
             ) : dockLayout === 'center-stage' ? (
-              // Center stage: the card front and center, its two "spend"
-              // fates flanking it, commit full-width beneath. The banner
-              // only takes space when a suit action is prompting — no
-              // reserved slot, so there's no empty gap during normal play;
-              // when it IS shown, the deck card shrinks to absorb the line
-              // so the dock height (and the board) stays put.
+              // Center stage: the card front and center, with two stacked
+              // buttons flanking it on each side — Discard + Undo on the
+              // left, Place + the suit perk on the right. No separate
+              // commit row, so the dock is shorter and the board grows.
+              // The banner only takes space when a suit action prompts;
+              // when shown, the deck card shrinks to absorb the line.
               <div
                 className={`${styles.stage} ${banner ? styles.stageHasBanner : ''}`}
               >
                 {banner}
                 <div className={styles.stageRow}>
                   <div className={styles.stageSide}>
-                    {/* A 3rd+ secondary action (Double Duty's Flip)
-                        stacks under the perk on the left side. */}
-                    {rowActions[0] && actionBtn(rowActions[0], styles.stageBtn)}
-                    {rowActions.slice(2).map(a => actionBtn(a, styles.stageBtn))}
+                    {discardAction &&
+                      actionBtn(discardAction, styles.stageBtn)}
+                    {maxUndos > 0 && (
+                      <Button
+                        variant="secondary"
+                        className={styles.stageBtn}
+                        disabled={!canUndo || flight !== null}
+                        onClick={() => dispatch({ type: 'UNDO' })}
+                        aria-label={`Undo (${Math.max(
+                          0,
+                          maxUndos - state.undoCount
+                        )} left)`}
+                      >
+                        Undo
+                      </Button>
+                    )}
+                    {/* Double Duty's Flip / any extra stacks under Undo. */}
+                    {dtExtraActions.map(a => actionBtn(a, styles.stageBtn))}
                   </div>
                   <div className={styles.stageWell}>
                     <NextCardWell
@@ -1597,17 +1611,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     />
                   </div>
                   <div className={styles.stageSide}>
-                    {rowActions[1] && actionBtn(rowActions[1], styles.stageBtn)}
+                    {commitAction &&
+                      actionBtn(
+                        commitAction.id === 'cancel'
+                          ? { ...commitAction, variant: 'secondary' }
+                          : commitAction,
+                        styles.stageBtn
+                      )}
+                    {perkAction && actionBtn(perkAction, styles.stageBtn)}
                   </div>
-                </div>
-                {/* Commit + the icon-only ↺ share the bottom row — Place
-                    flexes, Undo is a fixed 44px square matching the other
-                    docks' undo. */}
-                <div className={styles.stageCommitRow}>
-                  {commitBtn(
-                    commitAction?.id === 'cancel' ? 'secondary' : undefined
-                  )}
-                  {dockUndoBtn()}
                 </div>
               </div>
             ) : (
@@ -1725,8 +1737,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         commitBtn('secondary')
                       ) : (
                         <div className={styles.dtGrid}>
-                          {/* Row 1: Place (the active commit) + Discard. */}
-                          {commitBtn()}
+                          {/* Row 1: Place (the active commit) + Discard.
+                              actionBtn with dtGridBtn (not commitBtn's
+                              taller .commitButton) so both rows are slim. */}
+                          {commitAction &&
+                            actionBtn(commitAction, styles.dtGridBtn)}
                           <Button
                             variant="secondary"
                             className={styles.dtIconBtn}
