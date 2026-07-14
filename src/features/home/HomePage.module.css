@@ -484,6 +484,19 @@
     margin-top: 14px;
   }
 
+  /* Played state: the score row sits closer to the pills above than the
+     taller Play CTA does. */
+  .heroCtaRowResult {
+    margin-top: 6px;
+  }
+
+  /* Twist/variant pill goes green to match the in-game nav's twist pill
+     (var(--accent)), rather than the amber it wears elsewhere. */
+  .twistChip {
+    background: color-mix(in srgb, var(--accent) 13%, var(--paper-raised));
+    color: var(--accent);
+  }
+
   .heroCta {
     padding: 12px 24px;
   }
