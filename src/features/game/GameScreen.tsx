@@ -1717,10 +1717,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </div>
                 ) : (
                   <div className={styles.dtStage}>
+                    {/* Not `stacked`: the default well sits the deck card
+                        on the left with the "Deck · N" caption + Peek link
+                        stacked to its right. */}
                     <NextCardWell
                       onPeekDeck={() => setPeekOpen(true)}
                       instantLayout={instantLayout}
-                      stacked
                       meta="deck"
                       peek="dialog"
                       flight={flight}

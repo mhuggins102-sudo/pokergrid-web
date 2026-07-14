@@ -966,7 +966,7 @@
    two-column row squished. Same idea as the other docks pinning .dock. */
 .dtDock {
   min-width: 0;
-  min-height: 176px;
+  min-height: 177px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   border-radius: 14px;
@@ -988,7 +988,7 @@
 }
 
 .dtStage [class*='cardSlot'] {
-  width: 54px;
+  width: 76px;
 }
 
 /* mirrors .deskActions */
