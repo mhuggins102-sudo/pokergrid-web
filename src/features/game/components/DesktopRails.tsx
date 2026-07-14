@@ -713,6 +713,9 @@ export interface DesktopBonusPanelProps {
   onUse?: (index: number) => void;
   liveContext?: (card: BonusCard) => string[];
   hover?: BonusHoverProps;
+  /** Drop the "Bonus Cards" heading (the phone "Desktop" dock reuses this
+   *  panel in a narrow column where the title reads as redundant). */
+  hideTitle?: boolean;
 }
 
 export function DesktopBonusPanel({
@@ -722,6 +725,7 @@ export function DesktopBonusPanel({
   onUse,
   liveContext,
   hover,
+  hideTitle = false,
 }: DesktopBonusPanelProps) {
   const [detail, setDetail] = useState<{
     card: BonusCard;
@@ -736,7 +740,7 @@ export function DesktopBonusPanel({
   return (
     <section className={styles.panel} aria-label="Bonus cards">
       <header className={styles.head}>
-        <h2 className={styles.title}>Bonus Cards</h2>
+        {!hideTitle && <h2 className={styles.title}>Bonus Cards</h2>}
         <span className={styles.headNote}>{held} / 3</span>
       </header>
       <div className={styles.bonusList}>
