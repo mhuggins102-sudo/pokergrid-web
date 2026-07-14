@@ -162,7 +162,7 @@ export function LineRails({
         aria-label={chipLabel(line, p)}
         aria-current={isLit(line) || undefined}
       >
-        {text}
+        <span className={styles.chipVal}>{text}</span>
       </button>
     );
   };

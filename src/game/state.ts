@@ -371,6 +371,9 @@ export type Action =
   | { type: 'BONUS_SELECT_NEW'; idx: number }
   | { type: 'BONUS_REPLACE'; oldIdx: number }
   | { type: 'BONUS_DECLINE' }
+  // Back out of the "which held card to swap out?" step to the card-select
+  // popup (so an easy-mode player can reach the decline option instead).
+  | { type: 'BONUS_BACK' }
   // Mixed Bag: pick a slot to draw for after ♣ fires.
   | { type: 'BONUS_PICK_SLOT'; slot: number }
   // Bull Market: dismiss the invest wheel; applies the boost + draws next.
@@ -1654,6 +1657,23 @@ const handleBonusSelectNew = (s: GameState, idx: number): GameState => {
   };
 };
 
+// Inverse of BONUS_SELECT_NEW: step back from the "pick a held card to
+// swap out" screen to the card-select screen, so the player can pick a
+// different drawn card or (easy mode) decline the forced swap. The held
+// hand is untouched between the two steps, so restoring the resolving
+// phase is a faithful "undo" of the select.
+const handleBonusBack = (s: GameState): GameState => {
+  if (s.phase.kind !== 'bonus-card-replacing') return s;
+  return {
+    ...s,
+    phase: {
+      kind: 'bonus-card-resolving',
+      drawn: s.phase.drawn,
+      returnTo: s.phase.returnTo,
+    },
+  };
+};
+
 const handleBonusReplace = (
   s: GameState,
   oldIdx: number,
@@ -1920,6 +1940,9 @@ export const step = (
     case 'BONUS_DECLINE':
       next = handleBonusDecline(state, rng);
       break;
+    case 'BONUS_BACK':
+      next = handleBonusBack(state);
+      break;
     case 'BONUS_PICK_SLOT':
       next = handleBonusPickSlot(state, action.slot);
       break;
@@ -1999,7 +2022,25 @@ export const step = (
     next = { ...next, rngState: rngWord };
   }
   if (SNAP_ACTIONS.has(action.type) && state.phase.kind !== 'game-over') {
-    const snap: GameState = { ...state, past: [] };
+    // Undo after a forced swap (♣ at cap) should reopen the card-SELECT
+    // popup, not the discard popup — so the player can pick the other
+    // drawn card or (easy mode) decline. The swap ran through
+    // resolving -> BONUS_SELECT_NEW -> replacing without a snapshot, so
+    // capture the equivalent resolving phase here (the held hand is
+    // unchanged between the two steps).
+    const snapFrom: GameState =
+      action.type === 'BONUS_REPLACE' &&
+      state.phase.kind === 'bonus-card-replacing'
+        ? {
+            ...state,
+            phase: {
+              kind: 'bonus-card-resolving',
+              drawn: state.phase.drawn,
+              returnTo: state.phase.returnTo,
+            },
+          }
+        : state;
+    const snap: GameState = { ...snapFrom, past: [] };
     return { ...next, past: [...state.past, snap] };
   }
   return next;

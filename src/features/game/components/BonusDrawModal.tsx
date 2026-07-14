@@ -173,6 +173,17 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
                 );
               })}
             </div>
+            {ui.canGoBack && (
+              <div className={styles.declineRow}>
+                <button
+                  type="button"
+                  className={styles.decline}
+                  onClick={() => dispatch({ type: 'BONUS_BACK' })}
+                >
+                  ← Back to card select
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

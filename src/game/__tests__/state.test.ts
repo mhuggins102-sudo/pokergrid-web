@@ -250,6 +250,50 @@ describe('GameState — ♣ Cards bonus draw', () => {
     // swappedBonus is set so the No Swap challenge can detect it.
     expect(after.swappedBonus).toBe(true);
   });
+
+  test('BONUS_BACK steps replacing -> resolving with the held hand intact', () => {
+    const club = { kind: 'standard' as const, rank: 'K' as const, suit: 'C' as const };
+    const held = BONUS_DECK_POOL.slice(0, BONUS_HAND_LIMIT);
+    const state = baseState({
+      drawn: club,
+      bonusCards: held,
+      bonusDeck: BONUS_DECK_POOL.slice(BONUS_HAND_LIMIT),
+      bonusDeclineAllowed: true,
+    });
+    const begun = step(state, { type: 'BEGIN_SUIT_ACTION' });
+    if (begun.phase.kind !== 'bonus-card-resolving') return;
+    const drawn = begun.phase.drawn;
+    const selecting = step(begun, { type: 'BONUS_SELECT_NEW', idx: 0 });
+    expect(selecting.phase.kind).toBe('bonus-card-replacing');
+    const back = step(selecting, { type: 'BONUS_BACK' });
+    expect(back.phase.kind).toBe('bonus-card-resolving');
+    if (back.phase.kind !== 'bonus-card-resolving') return;
+    // Same drawn options, hand untouched — so declining is reachable again.
+    expect(back.phase.drawn).toEqual(drawn);
+    expect(back.bonusCards).toEqual(held);
+  });
+
+  test('UNDO after a forced swap reopens the card-select popup, not the discard popup', () => {
+    const club = { kind: 'standard' as const, rank: 'K' as const, suit: 'C' as const };
+    const held = BONUS_DECK_POOL.slice(0, BONUS_HAND_LIMIT);
+    const state = baseState({
+      drawn: club,
+      bonusCards: held,
+      bonusDeck: BONUS_DECK_POOL.slice(BONUS_HAND_LIMIT),
+    });
+    const begun = step(state, { type: 'BEGIN_SUIT_ACTION' });
+    if (begun.phase.kind !== 'bonus-card-resolving') return;
+    const drawn = begun.phase.drawn;
+    const selecting = step(begun, { type: 'BONUS_SELECT_NEW', idx: 0 });
+    const committed = step(selecting, { type: 'BONUS_REPLACE', oldIdx: 1 });
+    expect(committed.phase.kind).not.toBe('bonus-card-replacing');
+    const undone = step(committed, { type: 'UNDO' });
+    // Lands on the SELECT popup (resolving), not the discard popup.
+    expect(undone.phase.kind).toBe('bonus-card-resolving');
+    if (undone.phase.kind !== 'bonus-card-resolving') return;
+    expect(undone.phase.drawn).toEqual(drawn);
+    expect(undone.bonusCards).toEqual(held);
+  });
 });
 
 describe('GameState — joker auto-place', () => {

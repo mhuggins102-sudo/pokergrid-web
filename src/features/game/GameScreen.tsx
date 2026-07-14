@@ -1388,7 +1388,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Icon-only (↺) in every arrangement — a compact 44px square that
   // equalizes its height with the Discard / perk siblings via .dockUndo.
   const dockUndoBtn = () =>
-    streamlined && maxUndos > 0 && !ui.banner ? (
+    streamlined && maxUndos > 0 && !ui.banner && !ui.bonusDialog ? (
       <Button
         key="dock-undo"
         size="sm"
@@ -1411,15 +1411,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const dtExtraActions = ui.actions.filter(
     a => a !== commitAction && a.id !== 'perk' && a.id !== 'discard'
   );
-  // Split the suit-action banner ("♥ Swap — tap the first card") into the
-  // perk label + the instruction. The Desktop dock parks the label in the
-  // deck-well meta and shows the short instruction on its own, so it no
-  // longer wraps to a second line and resizes the board.
-  const bannerDash = ui.banner ? ui.banner.indexOf(' — ') : -1;
-  const dtPerkLabel =
-    bannerDash === -1 ? null : ui.banner!.slice(0, bannerDash);
-  const dtInstruction =
-    bannerDash === -1 ? ui.banner : ui.banner!.slice(bannerDash + 3);
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
@@ -1572,7 +1563,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     flight={flight}
                   />
                   {banner}
-                  {rowActions.map(a => actionBtn(a))}
+                  {rowActions.map(a =>
+                    actionBtn(a, a.id === 'perk' ? styles.perkAmber : undefined)
+                  )}
                   {dockUndoBtn()}
                 </div>
                 {commitBtn(
@@ -1594,7 +1587,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   <div className={styles.stageSide}>
                     {discardAction &&
                       actionBtn(discardAction, styles.stageBtn)}
-                    {maxUndos > 0 && (
+                    {/* Undo hides while a suit action is targeting or the ♣
+                        bonus modal is up — matching the other buttons. */}
+                    {maxUndos > 0 && !ui.banner && !ui.bonusDialog && (
                       <Button
                         variant="secondary"
                         className={styles.stageBtn}
@@ -1627,7 +1622,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           : commitAction,
                         styles.stageBtn
                       )}
-                    {perkAction && actionBtn(perkAction, styles.stageBtn)}
+                    {perkAction &&
+                      actionBtn(
+                        perkAction,
+                        `${styles.stageBtn} ${styles.perkAmber}`
+                      )}
                   </div>
                 </div>
               </div>
@@ -1654,7 +1653,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     return (
                       (rowActions.length > 0 || undoNode) && (
                         <div className={styles.actionRow}>
-                          {rowActions.map(a => actionBtn(a))}
+                          {rowActions.map(a =>
+                            actionBtn(
+                              a,
+                              a.id === 'perk' ? styles.perkAmber : undefined
+                            )
+                          )}
                           {undoNode}
                         </div>
                       )
@@ -1735,25 +1739,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       meta="deck"
                       peek="dialog"
                       flight={flight}
-                      // Suit-action targeting: the perk label ("♥ Swap")
-                      // rides the deck-well meta so the instruction below
-                      // stays short (and one line).
-                      metaExtra={
-                        dtPerkLabel ? (
-                          <span className={styles.dtPerkTag}>{dtPerkLabel}</span>
-                        ) : undefined
-                      }
                     />
                     <div className={styles.dtActions}>
-                      {dtInstruction && (
-                        <span
-                          className={styles.dtInstruction}
-                          role="status"
-                          aria-live="polite"
-                        >
-                          {dtInstruction}
-                        </span>
-                      )}
+                      {/* The full suit-action instruction, unified like the
+                          other docks. It reserves two lines (.dtActions
+                          .dockText) so a wrap doesn't grow the dock and
+                          resize the board. */}
+                      {banner}
                       {/* Non-standard actions (Double Duty's Flip, ±
                           adjusters, a targeting Confirm) stack full-width
                           above the 2×2 grid. */}
