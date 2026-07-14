@@ -96,8 +96,9 @@ export function HomePage() {
       <Link to="/challenges" className={styles.modeCard}>
         <span className={styles.modeTitle}>Challenges</span>
         <span className={styles.modeBlurb}>
-          Ten twisted rule sets — No Discards, Short Deck, Poker Purist and
-          more.{isPhone ? '' : ' Beat them all for the sweep.'}
+          {isPhone
+            ? 'Ten twisted rule sets — No Discards, Short Deck, Poker Purist, etc.'
+            : 'Ten twisted rule sets — No Discards, Short Deck, Poker Purist and more. Beat them all for the sweep.'}
         </span>
         <span className={styles.modeLink}>{CHALLENGES.length} modes to beat →</span>
       </Link>
@@ -141,7 +142,9 @@ export function HomePage() {
             {twist && (
               <span className={styles.twistChip}>✦ {twist.name}</span>
             )}
-            {streak.current > 0 && (
+            {/* Phone hides the streak chip — the hero stays compact above
+                the CTA. Desktop keeps it. */}
+            {!isPhone && streak.current > 0 && (
               <span className={styles.streakChip}>
                 🔥 {streak.current}-day streak
               </span>
@@ -184,7 +187,7 @@ export function HomePage() {
               <span className={styles.modeTitle}>First time here?</span>
               <span className={styles.modeBlurb}>
                 Learn by playing — a guided practice deal walks you through
-                every move in about three minutes.
+                every move.
               </span>
               <Link to="/tutorial" className={styles.modeLink}>
                 Start the tutorial →

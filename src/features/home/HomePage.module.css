@@ -443,8 +443,10 @@
 
   .phoneGrid .modeCard,
   .footerCard {
-    gap: 7px;
-    padding: 14px 14px 15px;
+    gap: 5px;
+    /* Tighter than before so all four cards read shorter (the streak
+       and blurb trims freed the room). */
+    padding: 11px 13px 12px;
   }
 
   .phoneGrid .modeTitle {
@@ -452,15 +454,15 @@
   }
 
   .phoneGrid .modeBlurb {
-    font-size: 12.5px;
-    line-height: 1.45;
+    font-size: 12px;
+    line-height: 1.35;
   }
 
   /* The strip's content styled as the fourth grid card. */
   .footerCard {
     display: flex;
     flex-direction: column;
-    gap: 9px;
+    gap: 5px;
     border-radius: 16px;
     background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
     border: 1px solid var(--hairline);

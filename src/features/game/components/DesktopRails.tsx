@@ -713,6 +713,13 @@ export interface DesktopBonusPanelProps {
   onUse?: (index: number) => void;
   liveContext?: (card: BonusCard) => string[];
   hover?: BonusHoverProps;
+  /** Drop the whole "Bonus Cards · held/3" header (the phone "Desktop"
+   *  dock reuses this panel in a narrow column where it reads as redundant). */
+  hideHeader?: boolean;
+  /** Don't render the per-card hover/focus description popover. On touch it
+   *  would pop on the tap that focuses the card (the phone "Desktop" dock
+   *  relies on the tap-opened DetailSheet for the description instead). */
+  noHoverPopover?: boolean;
 }
 
 export function DesktopBonusPanel({
@@ -722,6 +729,8 @@ export function DesktopBonusPanel({
   onUse,
   liveContext,
   hover,
+  hideHeader = false,
+  noHoverPopover = false,
 }: DesktopBonusPanelProps) {
   const [detail, setDetail] = useState<{
     card: BonusCard;
@@ -735,10 +744,12 @@ export function DesktopBonusPanel({
 
   return (
     <section className={styles.panel} aria-label="Bonus cards">
-      <header className={styles.head}>
-        <h2 className={styles.title}>Bonus Cards</h2>
-        <span className={styles.headNote}>{held} / 3</span>
-      </header>
+      {!hideHeader && (
+        <header className={styles.head}>
+          <h2 className={styles.title}>Bonus Cards</h2>
+          <span className={styles.headNote}>{held} / 3</span>
+        </header>
+      )}
       <div className={styles.bonusList}>
         {cards.length === 0 && (
           <span className={styles.emptyNote}>None held — a ♣ draw adds one.</span>
@@ -825,8 +836,10 @@ export function DesktopBonusPanel({
                 </Button>
               )}
               {/* Hover/focus popover: full description (+ purple
-                  progress). Never renders for used/placeholder cards. */}
-              {!dimmed && (
+                  progress). Never renders for used/placeholder cards — or
+                  when the caller suppresses it (touch reuse, where the tap
+                  focus would pop it open uninvited). */}
+              {!dimmed && !noHoverPopover && (
                 <div className={styles.bonusPop} role="tooltip">
                   {card.description}
                   {prog && (

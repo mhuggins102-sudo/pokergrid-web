@@ -1011,18 +1011,30 @@
   color: var(--on-accent);
 }
 
-/* mirrors .deskBtnRow */
-.dtBtnRow {
-  display: flex;
+/* The 'desktop' dock's own 2×2 action grid: wide action buttons (Place,
+   suit action) fill the left column; icon-only Discard / Undo squares ride
+   the right. Rows: [Place | 🗑] then [suit | ↺]. */
+.dtGrid {
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: var(--space-xs);
+  align-items: stretch;
 }
 
-.dtBtnRow > * {
-  flex: 1;
-  min-width: 0;
-  padding-left: var(--space-xs);
-  padding-right: var(--space-xs);
-  white-space: nowrap;
+.dtGridBtn {
+  width: 100%;
+  min-height: 44px;
+}
+
+.dtIconBtn {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding-left: 0;
+  padding-right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ===== Desk families: the three-column redesign. GameScreen renders
