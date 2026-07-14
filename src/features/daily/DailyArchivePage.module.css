@@ -688,23 +688,40 @@
     display: none;
   }
 
-  /* The icon toggles ride the date line (their own row above the result),
-     pinned top-right for played and unplayed days alike — keep that line
-     from wrapping the toggle beneath the date. */
-  .detailHead {
-    flex-wrap: nowrap;
+  /* Drop the date from the detail panel — the score (or "Not played")
+     takes the top slot instead. The reveal toggles float to the panel's
+     top-right corner so the head reserves no vertical space. */
+  .detailPanel {
+    position: relative;
   }
 
-  /* Score result: bump the row up tight under the date, drop the
-     "/ target", enlarge the tier badge, and center the badge against the
-     big score. The "View full result" link breaks to its own line
-     directly beneath (flex-basis:100%) rather than trailing to the right. */
+  .detailEyebrow {
+    display: none;
+  }
+
+  .detailToggle {
+    position: absolute;
+    top: 22px;
+    right: 24px;
+    z-index: 1;
+  }
+
+  /* Score result: sits at the very top now, tight. Drop the "/ target",
+     enlarge the tier badge, center the badge against the big score, and
+     break "View full result" to its own line directly beneath. */
   .detailResult {
     flex-wrap: wrap;
     align-items: center;
     column-gap: 10px;
     row-gap: 2px;
     margin-top: 0;
+    /* Keep the score clear of the floated toggle at the top-right. */
+    padding-right: 76px;
+  }
+
+  .detailUnplayed {
+    margin-top: 0;
+    padding-right: 76px;
   }
 
   .detailTarget {
