@@ -174,7 +174,11 @@ export function HomePage() {
               </span>
             )}
           </div>
-          <div className={styles.heroCtaRow}>
+          <div
+            className={`${styles.heroCtaRow} ${
+              todayResult && todayTier ? styles.heroCtaRowResult : ''
+            }`}
+          >
             {todayResult && todayTier ? (
               // Already played today's grid — show the result (score /
               // target + tier badge + link to the full stored result),
