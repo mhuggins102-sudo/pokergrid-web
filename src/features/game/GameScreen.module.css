@@ -180,9 +180,12 @@
   min-height: calc(118px + env(safe-area-inset-bottom));
 }
 
-/* Center stage: the large centered card sets the height. */
+/* Center stage: two stacked buttons flank the card and set the height.
+   Lower than before (no separate commit row now), so the board grows;
+   matched to the natural content so the finished dock — which has the
+   same 2-button stack — doesn't collapse and jump the board. */
 .dockStage .dock {
-  min-height: calc(159px + env(safe-area-inset-bottom));
+  min-height: calc(120px + env(safe-area-inset-bottom));
 }
 
 .dockRow {
@@ -412,27 +415,6 @@
    and the perk (Destroy). It's a `sm` button (32px), so lift its height to
    the siblings' 44px — icon-only is fine here, only the height equalizes. */
 .dockRow .dockUndo {
-  min-height: 44px;
-}
-
-/* Center-stage: commit + the icon-only ↺ share the bottom row. Place
-   flexes to fill; the ↺ is the same fixed 44px square as the other docks'
-   undo, sitting to its right. */
-.stageCommitRow {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-.stageCommitRow .commitButton {
-  width: auto;
-  flex: 1;
-  min-width: 0;
-}
-
-.stageCommitRow .dockUndo {
-  flex: 0 0 44px;
-  width: 44px;
-  min-width: 44px;
   min-height: 44px;
 }
 
