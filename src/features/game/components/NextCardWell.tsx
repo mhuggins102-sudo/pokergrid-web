@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from 'react';
+import { useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Card, Rank, Suit, isJoker, rankIndex } from '../../../game/cards';
 import { canPreviewDeck } from '../../../game/state';
@@ -77,10 +77,6 @@ export interface NextCardWellProps {
    * takes over its layoutId and the card visibly flies to its slot.
    */
   flight?: { card: Card; layoutId: string } | null;
-  /** Extra node rendered in the meta column, under the deck count + Peek
-   *  (the phone "Desktop" dock parks the active suit-perk label here so
-   *  its targeting instruction can sit — short and one line — elsewhere). */
-  metaExtra?: ReactNode;
 }
 
 /**
@@ -96,7 +92,6 @@ export function NextCardWell({
   meta = 'left',
   peek = 'dialog',
   flight = null,
-  metaExtra,
 }: NextCardWellProps) {
   const { state } = useGameSession();
   const drawn = state.drawn;
@@ -199,7 +194,6 @@ export function NextCardWell({
             Peek
           </button>
         )}
-        {metaExtra}
       </div>
       {hoverPeek && (
         <div className={styles.peekPop} role="tooltip">

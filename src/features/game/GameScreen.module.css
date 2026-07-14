@@ -1013,22 +1013,32 @@
   color: var(--on-accent);
 }
 
-/* Suit-action targeting: the perk label ("♥ Swap") parked in the deck-well
-   meta (under Deck · N / Peek), and the short instruction beneath the well.
-   Splitting the banner this way keeps the instruction on one or two lines
-   within the pinned dock height, so the board never resizes. */
-.dtPerkTag {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  white-space: nowrap;
+/* The suit-perk button's amber "spend" dressing, shared by the classic /
+   hand-stack / center-stage docks (matching the Desktop dock). :not()
+   lifts specificity over the Button primitive's .secondary. */
+.perkAmber:not(:disabled) {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: var(--on-accent);
 }
 
-.dtInstruction {
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.25;
-  color: var(--accent);
+@media (hover: hover) {
+  .perkAmber:not(:disabled):hover {
+    background: color-mix(in srgb, var(--warn) 88%, var(--ink));
+    border-color: color-mix(in srgb, var(--warn) 88%, var(--ink));
+  }
+}
+
+/* Suit-action instruction, unified like the other docks and centered
+   under the deck well. Reserve two lines so a wrap doesn't grow the dock
+   (and resize the board) — the Cancel below sits at a fixed position
+   whether the message is one or two lines. */
+.dtActions .dockText {
+  flex: none;
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
