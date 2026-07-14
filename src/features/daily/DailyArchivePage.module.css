@@ -695,12 +695,16 @@
     flex-wrap: nowrap;
   }
 
-  /* Score result: nudge the row up under the date, drop the "/ target",
-     enlarge the tier badge, and center the badge + "View full result"
-     link against the big score's midline. */
+  /* Score result: bump the row up tight under the date, drop the
+     "/ target", enlarge the tier badge, and center the badge against the
+     big score. The "View full result" link breaks to its own line
+     directly beneath (flex-basis:100%) rather than trailing to the right. */
   .detailResult {
+    flex-wrap: wrap;
     align-items: center;
-    margin-top: 2px;
+    column-gap: 10px;
+    row-gap: 2px;
+    margin-top: 0;
   }
 
   .detailTarget {
@@ -712,7 +716,16 @@
     padding: 5px 14px;
   }
 
-  /* Shorter labels ("You" / "Won") let the three rank cells shrink. */
+  .detailLink {
+    flex-basis: 100%;
+  }
+
+  /* Move the You / Won / Players cells up a touch, and let the shorter
+     labels shrink each cell. */
+  .rankStrip {
+    margin-top: 12px;
+  }
+
   .rankCard {
     padding: 9px 12px;
   }
