@@ -1,6 +1,8 @@
 import { CSSProperties, useState } from 'react';
 import { Link } from 'react-router';
 import {
+  BONUS_SWAP_AT_CAP_BY_DIFFICULTY,
+  BONUS_SWAP_LABEL,
   CAN_PREVIEW_DECK_BY_DIFFICULTY,
   Difficulty,
   JOKERS_BY_DIFFICULTY,
@@ -8,6 +10,7 @@ import {
   STARTER_BONUS_BY_DIFFICULTY,
   TARGET_BY_DIFFICULTY,
   UNDOS_BY_DIFFICULTY,
+  difficultySentence,
 } from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
@@ -35,16 +38,14 @@ const NAME: Record<Difficulty, string> = {
   extreme: 'Extreme',
 };
 
-// One-paragraph card blurbs — the same five-axis read-out the Daily
-// splash shows, but the undo clause reflects Free Play's real rule (Hard /
-// Extreme run with no undo, unlike the daily's one-undo-for-all).
-const BLURB: Record<Difficulty, string> = {
-  easy: 'Two jokers, one starter bonus card, may swap bonus cards, deck peek on, one undo.',
-  medium:
-    'One joker, one starter bonus card, must swap bonus cards, deck peek on, one undo.',
-  hard: 'One joker, no starter bonus, no bonus card swap, no deck peek, no undo.',
-  extreme:
-    'No jokers, no starter bonus, no bonus card swap, no deck peek, no undo.',
+// One-paragraph card blurb — the shared difficulty sentence, with the undo
+// clause reflecting Free Play's real rule (Hard / Extreme run with no undo,
+// unlike the daily's one-undo-for-all).
+const blurb = (d: Difficulty): string => {
+  const undos = UNDOS_BY_DIFFICULTY[d];
+  const undoClause =
+    undos === 0 ? 'no undo' : undos === 1 ? 'one undo' : `${undos} undos`;
+  return difficultySentence(d, undoClause);
 };
 
 interface Axis {
@@ -55,9 +56,12 @@ interface Axis {
   good: boolean;
 }
 
+// Same canonical order as the sentence + the in-game popup: jokers,
+// starter bonus, bonus swap, deck peek, discards, undo.
 const axesFor = (d: Difficulty): Axis[] => {
   const jokers = JOKERS_BY_DIFFICULTY[d];
   const starter = STARTER_BONUS_BY_DIFFICULTY[d];
+  const swap = BONUS_SWAP_AT_CAP_BY_DIFFICULTY[d];
   const undos = UNDOS_BY_DIFFICULTY[d];
   const peek = CAN_PREVIEW_DECK_BY_DIFFICULTY[d];
   const discards = !NO_DISCARDS_BY_DIFFICULTY[d];
@@ -68,9 +72,10 @@ const axesFor = (d: Difficulty): Axis[] => {
       value: starter ? String(starter) : '—',
       good: starter > 0,
     },
+    { label: 'Bonus swap', value: BONUS_SWAP_LABEL[swap], good: swap !== 'off' },
     { label: 'Deck peek', value: peek ? 'Yes' : '—', good: peek },
-    { label: 'Undo', value: undos ? String(undos) : '—', good: undos > 0 },
     { label: 'Discards', value: discards ? 'On' : 'Off', good: discards },
+    { label: 'Undo', value: undos ? String(undos) : '—', good: undos > 0 },
   ];
 };
 
@@ -107,7 +112,7 @@ export function DifficultyPicker() {
           <span className={styles.targetNum}>{TARGET_BY_DIFFICULTY[d]}</span>
           <span className={styles.targetLabel}>target</span>
         </span>
-        <span className={styles.blurb}>{BLURB[d]}</span>
+        <span className={styles.blurb}>{blurb(d)}</span>
         <span className={styles.axes}>
           {axesFor(d).map(ax => (
             <span key={ax.label} className={styles.axis}>

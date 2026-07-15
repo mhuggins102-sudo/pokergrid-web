@@ -2,14 +2,7 @@ import { Link } from 'react-router';
 import type { Challenge } from '../../game/challenges';
 import type { DailyRecipe } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
-import {
-  BONUS_SWAP_AT_CAP_BY_DIFFICULTY,
-  BonusSwapAtCap,
-  CAN_PREVIEW_DECK_BY_DIFFICULTY,
-  Difficulty,
-  JOKERS_BY_DIFFICULTY,
-  STARTER_BONUS_BY_DIFFICULTY,
-} from '../../game/rules';
+import { Difficulty, difficultySentence } from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
 import { DAILY_LAUNCH_ISO, dayMs, toUTC } from './dailyDates';
@@ -35,30 +28,11 @@ export interface DailyIntroProps {
   onPlay: () => void;
 }
 
-// Derived from the same rules tables the engine reads; every daily
-// additionally grants one free undo (modes.ts), so the undo clause reads
-// "one undo" for every difficulty here (unlike Free Play, where Hard /
-// Extreme run with no undo).
-const SWAP_CLAUSE: Record<BonusSwapAtCap, string> = {
-  available: 'may swap bonus cards',
-  must: 'must swap bonus cards',
-  off: 'no bonus card swap',
-};
-
-const diffDescription = (d: Difficulty): string => {
-  const jokers = JOKERS_BY_DIFFICULTY[d];
-  return (
-    [
-      jokers === 0 ? 'No jokers' : jokers === 1 ? 'One joker' : 'Two jokers',
-      STARTER_BONUS_BY_DIFFICULTY[d] > 0
-        ? 'one starter bonus card'
-        : 'no starter bonus',
-      SWAP_CLAUSE[BONUS_SWAP_AT_CAP_BY_DIFFICULTY[d]],
-      CAN_PREVIEW_DECK_BY_DIFFICULTY[d] ? 'deck peek on' : 'no deck peek',
-      'one undo',
-    ].join(', ') + '.'
-  );
-};
+// Every daily grants one free undo regardless of difficulty (modes.ts),
+// so the undo clause is "one undo" for all four here — unlike Free Play,
+// where Hard / Extreme run with no undo.
+const diffDescription = (d: Difficulty): string =>
+  difficultySentence(d, 'one undo');
 
 // "Thursday, July 9, 2026" — from ISO parts (timezone-safe).
 const longDate = (iso: string): string => {
