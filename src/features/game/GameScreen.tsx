@@ -362,14 +362,17 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           won: navScore >= state.target,
         })
       : null;
+    // Value formats are kept identical to the Free Play difficulty table
+    // (DifficultyPicker.axesFor): numerical jokers/starter, Must/Available/
+    // Off swap, On/Off peek + discards, "N per game" undos.
     const starter = STARTER_BONUS_BY_DIFFICULTY[state.difficulty];
     const rules: [string, string][] = [
       ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
-      ['Starter bonus', starter > 0 ? String(starter) : '—'],
+      ['Starter bonus', String(starter)],
       ['Bonus swap', BONUS_SWAP_LABEL[state.bonusSwapAtCap]],
-      ['Deck peek', canPreviewDeck(state.difficulty) ? 'Available' : '—'],
+      ['Deck peek', canPreviewDeck(state.difficulty) ? 'On' : 'Off'],
       ['Discards', state.noDiscards ? 'Off' : 'On'],
-      ['Undo', maxUndos > 0 ? `${maxUndos} per game` : '—'],
+      ['Undos', maxUndos > 0 ? `${maxUndos} per game` : '—'],
     ];
     return (
       <span
