@@ -1,31 +1,42 @@
 import { Sheet } from '../../design/primitives';
-import { DeckSkin, SKIN_CATALOG, SkinUnlock } from '../../design/deckSkins';
+import { SKINS } from '../../design/deckSkins';
+import { SKIN_CATALOG, SkinUnlock, skinName } from '../../design/skinCatalog';
+import { skinFace } from '../game/components/skinFace';
 import { usePlayerLevel } from '../progress/usePlayerLevel';
 import { useSettingsStore } from './settingsStore';
 import styles from './SkinStore.module.css';
 
-// A mini card preview painted with a skin's placeholder face (real art
-// will render as a full image here). A sample rank + pip sits on top so
-// the swatch reads as a card.
-function SkinSwatch({ skin }: { skin: DeckSkin }) {
+// A mini preview of a skin's real card face (Claude Design's token
+// renderer) — a fixed-size square so the container-query units resolve.
+function SkinPreview({ id, size = 58 }: { id: string; size?: number }) {
+  const four = !useSettingsStore(s => s.twoColorDeck);
+  const face = skinFace(id, 'A', 's', four);
   return (
     <span
-      className={styles.swatch}
-      style={{ background: skin.face, color: skin.ink ?? 'var(--card-black)' }}
+      className={styles.preview}
+      style={{ ...face.wrap, width: size, height: size }}
       aria-hidden="true"
     >
-      <span className={styles.swatchRank}>A</span>
-      <span className={styles.swatchPip}>♠</span>
+      {face.layers.map((l, i) => (
+        <span key={i} style={l.style}>
+          {l.glyph}
+          {l.kids.map((k, j) => (
+            <span key={j} style={k.style}>
+              {k.glyph}
+            </span>
+          ))}
+        </span>
+      ))}
     </span>
   );
 }
 
 function SkinTile({
-  skin,
+  id,
   selected,
   onSelect,
 }: {
-  skin: DeckSkin;
+  id: string;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -36,25 +47,20 @@ function SkinTile({
       aria-pressed={selected}
       onClick={onSelect}
     >
-      <SkinSwatch skin={skin} />
-      <span className={styles.tileName}>{skin.name}</span>
+      <SkinPreview id={id} />
+      <span className={styles.tileName}>{skinName(id)}</span>
       {selected && <span className={styles.tileCheck} aria-hidden="true">✓</span>}
     </button>
   );
 }
 
-// A locked unlock entry: its cover art is dimmed under a lock silhouette
-// with the level it unlocks at.
+// Locked entry — cover preview dimmed under a padlock + required level.
 function LockedEntry({ unlock }: { unlock: SkinUnlock }) {
   return (
     <div className={`${styles.entry} ${styles.entryLocked}`}>
-      <span
-        className={styles.cover}
-        style={{ background: unlock.skins[0].face }}
-        aria-hidden="true"
-      >
-        <span className={styles.lock} aria-hidden="true">
-          {/* padlock silhouette */}
+      <span className={styles.coverWrap} aria-hidden="true">
+        <SkinPreview id={unlock.skinIds[0]} size={54} />
+        <span className={styles.lock}>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
             <path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z" />
           </svg>
@@ -64,15 +70,14 @@ function LockedEntry({ unlock }: { unlock: SkinUnlock }) {
         <span className={styles.entryName}>{unlock.name}</span>
         <span className={styles.entryLevel}>
           Reach Level {unlock.level}
-          {unlock.skins.length > 1 ? ` · ${unlock.skins.length} designs` : ''}
+          {unlock.skinIds.length > 1 ? ` · ${unlock.skinIds.length} designs` : ''}
         </span>
       </div>
     </div>
   );
 }
 
-// An unlocked single-skin entry (one tile) or group entry (an expandable
-// details listing every variant, all usable).
+// Unlocked entry: a single tile, or a group that expands to its variants.
 function UnlockedEntry({
   unlock,
   selected,
@@ -82,40 +87,32 @@ function UnlockedEntry({
   selected: string | null;
   onSelect: (id: string) => void;
 }) {
-  if (unlock.skins.length === 1) {
-    const skin = unlock.skins[0];
+  if (unlock.skinIds.length === 1) {
+    const id = unlock.skinIds[0];
     return (
-      <SkinTile
-        skin={skin}
-        selected={selected === skin.id}
-        onSelect={() => onSelect(skin.id)}
-      />
+      <SkinTile id={id} selected={selected === id} onSelect={() => onSelect(id)} />
     );
   }
-  const anySelected = unlock.skins.some(s => s.id === selected);
+  const anySelected = unlock.skinIds.includes(selected ?? '');
   return (
     <details className={styles.group} open={anySelected}>
       <summary className={styles.groupHead}>
-        <span
-          className={styles.groupCover}
-          style={{ background: unlock.skins[0].face }}
-          aria-hidden="true"
-        />
+        <SkinPreview id={unlock.skinIds[0]} size={40} />
         <span className={styles.groupMeta}>
           <span className={styles.entryName}>{unlock.name}</span>
           <span className={styles.entryLevel}>
-            {unlock.skins.length} designs · tap to choose
+            {unlock.skinIds.length} designs · tap to choose
           </span>
         </span>
         <span className={styles.groupCaret} aria-hidden="true">▾</span>
       </summary>
       <div className={styles.groupGrid}>
-        {unlock.skins.map(skin => (
+        {unlock.skinIds.map(id => (
           <SkinTile
-            key={skin.id}
-            skin={skin}
-            selected={selected === skin.id}
-            onSelect={() => onSelect(skin.id)}
+            key={id}
+            id={id}
+            selected={selected === id}
+            onSelect={() => onSelect(id)}
           />
         ))}
       </div>
@@ -124,10 +121,9 @@ function UnlockedEntry({
 }
 
 /**
- * The deck-skin "store": a scrollable catalog of unlockable card-face
- * designs gated by player level. Locked entries show a padlock + the level
- * they unlock at; unlocked ones are tappable (groups expand to their
- * variants). Selecting one sets `deckSkin`.
+ * The deck-skin "store": Claude Design's card faces, gated by player level.
+ * Locked entries show a padlock + the level they unlock at; unlocked ones
+ * are tappable (groups expand to their variants). Selecting sets `deckSkin`.
  */
 export function SkinStore({
   open,
@@ -146,9 +142,7 @@ export function SkinStore({
         <div className={styles.levelRow}>
           <span className={styles.levelBadge}>Level {level}</span>
           <span className={styles.levelXp}>
-            {atMax
-              ? 'Max level'
-              : `${xpIntoLevel} / ${levelSpan} XP to next`}
+            {atMax ? 'Max level' : `${xpIntoLevel} / ${levelSpan} XP to next`}
           </span>
         </div>
         <div className={styles.track}>
@@ -157,21 +151,22 @@ export function SkinStore({
             style={{ width: `${Math.round(progress * 100)}%` }}
           />
         </div>
+        <span className={styles.count}>
+          {SKINS.length} designs · {SKIN_CATALOG.length} unlocks
+        </span>
       </div>
 
       <div className={styles.list}>
-        {/* Theme default (always available) — clears any override. */}
+        {/* Theme default (always available) — clears the override. */}
         <button
           type="button"
-          className={`${styles.tile} ${styles.defaultTile} ${
-            selected === null ? styles.tileSelected : ''
-          }`}
+          className={`${styles.tile} ${selected === null ? styles.tileSelected : ''}`}
           aria-pressed={selected === null}
           onClick={() => set({ deckSkin: null })}
         >
-          <span className={styles.defaultSwatch} aria-hidden="true">
-            <span className={styles.swatchRank}>A</span>
-            <span className={styles.swatchPip}>♠</span>
+          <span className={styles.defaultPreview} aria-hidden="true">
+            <span className={styles.defRank}>A</span>
+            <span className={styles.defPip}>♠</span>
           </span>
           <span className={styles.tileName}>Theme default</span>
           {selected === null && (
