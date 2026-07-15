@@ -65,17 +65,20 @@ const axesFor = (d: Difficulty): Axis[] => {
   const undos = UNDOS_BY_DIFFICULTY[d];
   const peek = CAN_PREVIEW_DECK_BY_DIFFICULTY[d];
   const discards = !NO_DISCARDS_BY_DIFFICULTY[d];
+  // Value formats kept identical to the in-game difficulty popup
+  // (GameScreen.navPill): numerical jokers/starter, Must/Available/Off
+  // swap, On/Off peek + discards, "N per game" undos.
   return [
     { label: 'Jokers in deck', value: String(jokers), good: jokers > 0 },
-    {
-      label: 'Starter bonus',
-      value: starter ? String(starter) : '—',
-      good: starter > 0,
-    },
+    { label: 'Starter bonus', value: String(starter), good: starter > 0 },
     { label: 'Bonus swap', value: BONUS_SWAP_LABEL[swap], good: swap !== 'off' },
-    { label: 'Deck peek', value: peek ? 'Yes' : '—', good: peek },
+    { label: 'Deck peek', value: peek ? 'On' : 'Off', good: peek },
     { label: 'Discards', value: discards ? 'On' : 'Off', good: discards },
-    { label: 'Undo', value: undos ? String(undos) : '—', good: undos > 0 },
+    {
+      label: 'Undos',
+      value: undos > 0 ? `${undos} per game` : '—',
+      good: undos > 0,
+    },
   ];
 };
 
