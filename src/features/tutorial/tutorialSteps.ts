@@ -232,8 +232,9 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'info',
     title: 'Your bonus hand',
     body:
-      'You can hold three bonus cards at most — at the cap, a ♣ draw forces a swap ' +
-      '(Easy lets you decline). Tap a held card any time for its full details.',
+      'You can hold three bonus cards at most. At the cap, ♣ forces a swap on ' +
+      'Medium, can be declined on Easy, and is disabled entirely on Hard and ' +
+      'Extreme. Tap a held card any time for its full details.',
   },
   {
     id: 'deck-watch',

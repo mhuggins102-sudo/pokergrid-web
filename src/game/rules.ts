@@ -45,14 +45,36 @@ export const STARTER_BONUS_BY_DIFFICULTY: Record<Difficulty, number> = {
   extreme: 0,
 };
 
+// How the ♣ Bonus perk behaves once the player already holds the full 3
+// bonus cards (the cap):
+//   'available' — may take the draw (swapping one out) OR decline it.
+//   'must'      — taking ♣ forces a swap; declining is not allowed.
+//   'off'       — ♣ is disabled entirely at the cap: no draw, no swap. The
+//                 player must decline earlier offers to save room, so a
+//                 full hand is a real commitment.
+export type BonusSwapAtCap = 'available' | 'must' | 'off';
+export const BONUS_SWAP_AT_CAP_BY_DIFFICULTY: Record<Difficulty, BonusSwapAtCap> = {
+  easy: 'available',
+  medium: 'must',
+  hard: 'off',
+  extreme: 'off',
+};
+
+// Human labels for the in-game / Free Play difficulty read-outs.
+export const BONUS_SWAP_LABEL: Record<BonusSwapAtCap, string> = {
+  available: 'Available',
+  must: 'Must',
+  off: 'Off',
+};
+
 // When true, the player can decline a ♣ Bonus draw even at the bonus-
-// hand cap (skip the forced swap). When false, hitting ♣ at cap forces
-// the player to swap one of their held cards out.
+// hand cap (skip the forced swap). Derived from the swap mode above:
+// only 'available' (Easy) lets the player keep their hand instead.
 export const BONUS_DECLINE_AT_CAP_BY_DIFFICULTY: Record<Difficulty, boolean> = {
-  easy: true,
-  medium: false,
-  hard: false,
-  extreme: false,
+  easy: BONUS_SWAP_AT_CAP_BY_DIFFICULTY.easy === 'available',
+  medium: BONUS_SWAP_AT_CAP_BY_DIFFICULTY.medium === 'available',
+  hard: BONUS_SWAP_AT_CAP_BY_DIFFICULTY.hard === 'available',
+  extreme: BONUS_SWAP_AT_CAP_BY_DIFFICULTY.extreme === 'available',
 };
 
 // When true, the Discard button is hidden and DISCARD_NONE is rejected

@@ -26,6 +26,7 @@ const baseState = (overrides: Partial<GameState>): GameState => ({
   noSwap: false,
   noDiscards: false,
   bonusDeclineAllowed: false,
+  bonusSwapAtCap: 'must',
   randomPerks: false,
   noBonusCards: false,
   scatter: false,
@@ -324,6 +325,49 @@ describe('GameState — spiral placement order', () => {
   });
 });
 
+describe('GameState — ♣ swap-at-cap by difficulty', () => {
+  test('newGame derives bonusSwapAtCap: easy=available, medium=must, hard/extreme=off', () => {
+    expect(newGame('easy', seededRng(1)).bonusSwapAtCap).toBe('available');
+    expect(newGame('medium', seededRng(1)).bonusSwapAtCap).toBe('must');
+    expect(newGame('hard', seededRng(1)).bonusSwapAtCap).toBe('off');
+    expect(newGame('extreme', seededRng(1)).bonusSwapAtCap).toBe('off');
+  });
+
+  test('Hard/Extreme (off): ♣ is a no-op at the cap — no draw, no swap', () => {
+    const club = { kind: 'standard' as const, rank: 'K' as const, suit: 'C' as const };
+    const held = BONUS_DECK_POOL.slice(0, BONUS_HAND_LIMIT);
+    for (const difficulty of ['hard', 'extreme'] as const) {
+      const state = baseState({
+        difficulty,
+        drawn: club,
+        bonusCards: held,
+        bonusDeck: BONUS_DECK_POOL.slice(BONUS_HAND_LIMIT),
+        bonusSwapAtCap: 'off',
+      });
+      const after = step(state, { type: 'BEGIN_SUIT_ACTION' });
+      expect(after.phase.kind).toBe('awaiting-action');
+      expect(after.bonusCards).toEqual(held);
+    }
+  });
+
+  test('off still allows a ♣ draw below the cap (decline to save room)', () => {
+    const club = { kind: 'standard' as const, rank: 'K' as const, suit: 'C' as const };
+    const held = BONUS_DECK_POOL.slice(0, BONUS_HAND_LIMIT - 1);
+    const state = baseState({
+      difficulty: 'hard',
+      drawn: club,
+      bonusCards: held,
+      bonusDeck: BONUS_DECK_POOL.slice(BONUS_HAND_LIMIT - 1),
+      bonusSwapAtCap: 'off',
+    });
+    const after = step(state, { type: 'BEGIN_SUIT_ACTION' });
+    expect(after.phase.kind).toBe('bonus-card-resolving');
+    // The draw can be declined to keep the slot open for a better card.
+    const declined = step(after, { type: 'BONUS_DECLINE' });
+    expect(declined.bonusCards).toEqual(held);
+  });
+});
+
 describe('GameState — No Swap challenge', () => {
   test('♣ BEGIN_SUIT_ACTION is a no-op at the bonus-hand cap when noSwap=true', () => {
     const club = { kind: 'standard' as const, rank: 'K' as const, suit: 'C' as const };
@@ -333,6 +377,7 @@ describe('GameState — No Swap challenge', () => {
       bonusCards: held,
       bonusDeck: BONUS_DECK_POOL.slice(BONUS_HAND_LIMIT),
       noSwap: true,
+      bonusSwapAtCap: 'off',
     });
     const after = step(state, { type: 'BEGIN_SUIT_ACTION' });
     // Phase unchanged — ♣ didn't open the bonus-draw flow.
@@ -348,6 +393,7 @@ describe('GameState — No Swap challenge', () => {
       bonusCards: held,
       bonusDeck: BONUS_DECK_POOL.slice(BONUS_HAND_LIMIT - 1),
       noSwap: true,
+      bonusSwapAtCap: 'off',
     });
     const after = step(state, { type: 'BEGIN_SUIT_ACTION' });
     expect(after.phase.kind).toBe('bonus-card-resolving');

@@ -15,7 +15,7 @@ import {
   bonusShapleyValues,
   scoreGrid,
 } from '../../game/scoring';
-import { JOKERS_BY_DIFFICULTY } from '../../game/rules';
+import { BONUS_SWAP_LABEL, JOKERS_BY_DIFFICULTY } from '../../game/rules';
 import { TARGETS_UP_STEP } from '../../game/challenges';
 import { canPreviewDeck } from '../../game/state';
 import { targetsUpReached, tierForRun } from '../../lib/stats';
@@ -360,10 +360,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       : null;
     const rules: [string, string][] = [
       ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
+      ['Bonus swap', BONUS_SWAP_LABEL[state.bonusSwapAtCap]],
       ['Deck peek', canPreviewDeck(state.difficulty) ? 'Available' : '—'],
-      ['Undo', maxUndos > 0 ? `${maxUndos} per game` : '—'],
       ['Discards', state.noDiscards ? 'Off' : 'On'],
-      ['Target score', String(state.target)],
+      ['Undo', maxUndos > 0 ? `${maxUndos} per game` : '—'],
     ];
     return (
       <span
@@ -1837,6 +1837,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <BonusCardStrip
                 cards={state.bonusCards}
                 values={liveShapley}
+                cornerValue
                 onSlotTap={
                   ui.bonusSlotPick
                     ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })

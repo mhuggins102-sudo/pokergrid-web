@@ -16,6 +16,7 @@ export function BonusChip({
   value,
   compact,
   hideEach,
+  cornerValue,
 }: {
   card: BonusCard;
   onClick?: () => void;
@@ -26,6 +27,10 @@ export function BonusChip({
   /** Drop the "(each)" suffix from the mult — the narrow end-game cells
    *  can't fit it next to the contribution. */
   hideEach?: boolean;
+  /** Panel-layout variant (the mobile "Desktop" dock): pin the "+x"
+   *  contribution to the chip's bottom-right corner (and drop " pts")
+   *  instead of letting it stack/wrap onto a new line. */
+  cornerValue?: boolean;
 }) {
   const cat = styleFor(card);
   // Colorblind assist: the chip's category is otherwise color-only
@@ -38,7 +43,11 @@ export function BonusChip({
   return (
     <button
       type="button"
-      className={[styles.chip, dimmed ? styles.chipDimmed : null]
+      className={[
+        styles.chip,
+        dimmed ? styles.chipDimmed : null,
+        cornerValue ? styles.chipCorner : null,
+      ]
         .filter(Boolean)
         .join(' ')}
       style={{ '--chip-tone': cat.borderColor } as CSSProperties}
@@ -66,7 +75,7 @@ export function BonusChip({
         <span className={styles.chipValue}>
           {value >= 0 ? '+' : ''}
           {value}
-          {compact ? '' : ' pts'}
+          {compact || cornerValue ? '' : ' pts'}
         </span>
       )}
     </button>
@@ -108,6 +117,9 @@ export interface BonusCardStripProps {
   /** Streamlined docked strip (row layout): chips adopt the desk
    *  bonus-panel entry look. Ignored by the panel layout. */
   docked?: boolean;
+  /** Panel layout only (the mobile "Desktop" dock): pin each chip's "+x"
+   *  contribution to the bottom-right corner instead of stacking it. */
+  cornerValue?: boolean;
 }
 
 /**
@@ -126,6 +138,7 @@ export function BonusCardStrip({
   liveContext,
   hideEach,
   docked,
+  cornerValue,
 }: BonusCardStripProps) {
   const [detail, setDetail] = useState<{ card: BonusCard; index: number } | null>(
     null
@@ -198,6 +211,7 @@ export function BonusCardStrip({
             card={card}
             value={values?.[i]}
             hideEach={hideEach}
+            cornerValue={cornerValue}
             onClick={() => tapChip(card, i)}
           />
         ))}

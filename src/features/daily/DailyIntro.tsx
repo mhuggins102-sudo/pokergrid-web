@@ -3,6 +3,8 @@ import type { Challenge } from '../../game/challenges';
 import type { DailyRecipe } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
 import {
+  BONUS_SWAP_AT_CAP_BY_DIFFICULTY,
+  BonusSwapAtCap,
   CAN_PREVIEW_DECK_BY_DIFFICULTY,
   Difficulty,
   JOKERS_BY_DIFFICULTY,
@@ -34,16 +36,26 @@ export interface DailyIntroProps {
 }
 
 // Derived from the same rules tables the engine reads; every daily
-// additionally grants one free undo (modes.ts), so the mockup's "no
-// undo" clause is corrected to the real rule.
+// additionally grants one free undo (modes.ts), so the undo clause reads
+// "one undo" for every difficulty here (unlike Free Play, where Hard /
+// Extreme run with no undo).
+const SWAP_CLAUSE: Record<BonusSwapAtCap, string> = {
+  available: 'may swap bonus cards',
+  must: 'must swap bonus cards',
+  off: 'no bonus card swap',
+};
+
 const diffDescription = (d: Difficulty): string => {
   const jokers = JOKERS_BY_DIFFICULTY[d];
   return (
     [
-      jokers === 0 ? 'No jokers' : jokers === 1 ? 'One joker' : `${jokers} jokers`,
-      STARTER_BONUS_BY_DIFFICULTY[d] > 0 ? 'a starter bonus card' : 'no starter card',
-      CAN_PREVIEW_DECK_BY_DIFFICULTY[d] ? 'deck peek allowed' : 'no peek',
-      'one free undo',
+      jokers === 0 ? 'No jokers' : jokers === 1 ? 'One joker' : 'Two jokers',
+      STARTER_BONUS_BY_DIFFICULTY[d] > 0
+        ? 'one starter bonus card'
+        : 'no starter bonus',
+      SWAP_CLAUSE[BONUS_SWAP_AT_CAP_BY_DIFFICULTY[d]],
+      CAN_PREVIEW_DECK_BY_DIFFICULTY[d] ? 'deck peek on' : 'no deck peek',
+      'one undo',
     ].join(', ') + '.'
   );
 };

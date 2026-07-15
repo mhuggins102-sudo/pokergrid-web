@@ -33,6 +33,8 @@ import {
 } from './bonusCards';
 import {
   BONUS_DECLINE_AT_CAP_BY_DIFFICULTY,
+  BONUS_SWAP_AT_CAP_BY_DIFFICULTY,
+  BonusSwapAtCap,
   CAN_PREVIEW_DECK_BY_DIFFICULTY,
   Difficulty,
   JOKERS_BY_DIFFICULTY,
@@ -294,9 +296,12 @@ export interface GameState {
   noDiscards: boolean;
   // True when the player is allowed to decline a ♣ Bonus draw even at
   // the bonus-hand cap (skip the forced swap). Easy difficulty sets
-  // this; Medium / Hard / Extreme leave it false so hitting ♣ at cap
-  // forces the swap.
+  // this; Medium / Hard / Extreme leave it false.
   bonusDeclineAllowed: boolean;
+  // How ♣ behaves at the bonus-hand cap: 'available' (Easy — swap or
+  // decline), 'must' (Medium — forced swap), or 'off' (Hard / Extreme /
+  // No Swap challenge — ♣ disabled entirely at the cap).
+  bonusSwapAtCap: BonusSwapAtCap;
   // True when the Short Circuit challenge is active. The drawn card's
   // suit no longer determines which perk fires — instead, on
   // BEGIN_SUIT_ACTION the reducer picks a uniformly-random perk from
@@ -679,6 +684,9 @@ export const newGame = (
     // difficulty; otherwise difficulty-based).
     noDiscards: noDiscards || NO_DISCARDS_BY_DIFFICULTY[difficulty],
     bonusDeclineAllowed: BONUS_DECLINE_AT_CAP_BY_DIFFICULTY[difficulty],
+    // The No Swap challenge forces ♣ off at the cap regardless of the
+    // difficulty's own rule (Hard / Extreme are already 'off').
+    bonusSwapAtCap: noSwap ? 'off' : BONUS_SWAP_AT_CAP_BY_DIFFICULTY[difficulty],
     randomPerks,
     noBonusCards,
     slotCategories,
@@ -795,7 +803,11 @@ const pickRandomAvailablePerk = (s: GameState, rng: () => number): Suit | null =
   if (canDestroy(s.grid)) candidates.push('D');
   if (
     canDrawBonus(s.bonusDeck.length) &&
-    !(s.noSwap && s.bonusCards.length >= BONUS_HAND_LIMIT)
+    !(
+      s.bonusSwapAtCap === 'off' &&
+      !s.slotCategories &&
+      s.bonusCards.length >= BONUS_HAND_LIMIT
+    )
   ) {
     candidates.push('C');
   }
@@ -872,14 +884,14 @@ const handleBeginSuitAction = (
         };
       }
       if (!canDrawBonus(s.bonusDeck.length)) return s;
-      // No Swap challenge: ♣ is unavailable at the cap (would force a swap).
-      if (s.noSwap && s.bonusCards.length >= BONUS_HAND_LIMIT) return s;
       // Mixed Bag: ♣ first asks which slot to draw for. The deck is
       // filtered to that slot's category once the player picks (see
       // handleBonusPickSlot). Skip this branch if no slot category
       // has any drawable cards left. A slot whose one-time action has
       // been used is spent for the whole game — it can't be drawn for
-      // again, so it doesn't count as drawable here.
+      // again, so it doesn't count as drawable here. Mixed Bag runs its
+      // own always-3-slots swap semantics, so it is NOT gated by the
+      // at-cap rule below.
       if (s.slotCategories) {
         const anySlotDrawable = s.slotCategories.some(
           (kind, i) =>
@@ -891,6 +903,11 @@ const handleBeginSuitAction = (
           ...s,
           phase: { kind: 'awaiting-bonus-slot-choice', returnTo: 'awaiting-action' },
         };
+      }
+      // ♣ is disabled at the cap for Hard / Extreme and the No Swap
+      // challenge (bonusSwapAtCap === 'off') — no draw, no forced swap.
+      if (s.bonusSwapAtCap === 'off' && s.bonusCards.length >= BONUS_HAND_LIMIT) {
+        return s;
       }
       // Draw up to 2 from the top of the bonus deck.
       const drawCount = Math.min(2, s.bonusDeck.length);
