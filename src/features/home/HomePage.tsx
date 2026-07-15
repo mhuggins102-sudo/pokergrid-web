@@ -141,7 +141,7 @@ export function HomePage() {
         <span className={styles.modeTitle}>Stats</span>
         <span className={styles.modeBlurb}>
           {isPhone
-            ? 'Best scores, win rate, and tier ratings, filterable by difficulty and mode.'
+            ? 'Scores, win rates, and tier ratings; filter by difficulty and mode.'
             : 'Best scores, win rate, and tier ratings by difficulty, filtered by mode and level.'}
         </span>
         <span className={styles.modeLink}>See your stats →</span>
