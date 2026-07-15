@@ -195,6 +195,21 @@
   justify-content: center;
 }
 
+/* "Level N reached" — an XP milestone crossed by this run (a new deck
+   skin may have unlocked). Accent-toned pill to read as a reward. */
+.levelUp {
+  margin-top: var(--space-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 /* Earned achievements are tappable — opens the explainer sheet. */
 .achievementBtn {
   background: none;

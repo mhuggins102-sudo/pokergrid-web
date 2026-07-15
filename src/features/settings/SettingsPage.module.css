@@ -234,6 +234,13 @@
   cursor: pointer;
 }
 
+/* Deck skins row: the toggle + a "Browse…" opener side by side. */
+.skinRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .quietAction:hover {
   text-decoration: underline;
 }

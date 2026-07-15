@@ -1,0 +1,241 @@
+/* Deck-skin store — a scrollable catalog inside the Settings Sheet. */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.levelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.levelBadge {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 680;
+  color: var(--ink);
+}
+
+.levelXp {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--paper-sunken);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 240ms ease;
+}
+
+/* One column of entries; groups expand within their own row. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+/* A card-face swatch (placeholder for real art). */
+.swatch,
+.defaultSwatch {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 62px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  box-shadow: var(--card-shadow, var(--shadow-sm));
+  overflow: hidden;
+}
+
+.defaultSwatch {
+  background: var(--card-face);
+  color: var(--card-black);
+}
+
+.swatchRank {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.swatchPip {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* A selectable design tile. */
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+@media (hover: hover) {
+  .tile:hover {
+    border-color: var(--rule);
+  }
+}
+
+.tileSelected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--paper));
+}
+
+.tileName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tileCheck {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* Locked entry — dimmed cover under a padlock, with the required level. */
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--paper-sunken);
+  border: 1px solid var(--hairline);
+}
+
+.entryLocked {
+  opacity: 0.85;
+}
+
+.cover {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 62px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  filter: grayscale(0.5) brightness(0.8);
+}
+
+.lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper-sunken) 55%, transparent);
+}
+
+.entryMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.entryName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.entryLevel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+/* Group entry (unlocked): an expandable list of variant tiles. */
+.group {
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.groupHead::-webkit-details-marker {
+  display: none;
+}
+
+.groupCover {
+  flex: none;
+  width: 34px;
+  height: 46px;
+  border-radius: 6px;
+  border: 1px solid var(--hairline);
+}
+
+.groupMeta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.groupCaret {
+  color: var(--ink-3);
+  transition: transform 160ms ease;
+}
+
+.group[open] .groupCaret {
+  transform: rotate(180deg);
+}
+
+.groupGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.groupGrid .tile {
+  background: var(--paper-raised);
+}

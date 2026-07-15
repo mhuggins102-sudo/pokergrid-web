@@ -26,6 +26,7 @@ import {
 } from './settingsStore';
 import { DOCK_LAYOUT_LABEL } from './DockLayoutPreview';
 import { DisplayPreview } from './DisplayPreview';
+import { SkinStore } from './SkinStore';
 import { useTier } from '../../app/useTier';
 import styles from './SettingsPage.module.css';
 
@@ -199,6 +200,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [skinStoreOpen, setSkinStoreOpen] = useState(false);
   // Phone accordion: a single section open at a time (Gameplay leads).
   // Ignored ≥768, where every section renders expanded.
   const [openSection, setOpenSection] = useState('Gameplay');
@@ -384,6 +386,27 @@ export function SettingsPage() {
           />
         </Row>
         <Row
+          title="Deck skins"
+          hint="Override the card design with an unlocked skin. Browse the store to pick one; earn more by leveling up."
+        >
+          <div className={styles.skinRow}>
+            <Toggle
+              label="Deck skins"
+              value={settings.deckSkinsEnabled}
+              onChange={v => patch({ deckSkinsEnabled: v })}
+            />
+            {settings.deckSkinsEnabled && (
+              <button
+                type="button"
+                className={styles.quietAction}
+                onClick={() => setSkinStoreOpen(true)}
+              >
+                Browse…
+              </button>
+            )}
+          </div>
+        </Row>
+        <Row
           title="Reduce motion"
           hint="Skip card-travel and celebration animations."
         >
@@ -470,6 +493,8 @@ export function SettingsPage() {
           <p className={styles.infoSheetBody}>{infoSheet?.hint}</p>
         </Sheet>
       )}
+
+      <SkinStore open={skinStoreOpen} onClose={() => setSkinStoreOpen(false)} />
 
       <p className={styles.buildId}>Build {__BUILD_ID__}</p>
 
