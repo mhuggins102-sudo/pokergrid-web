@@ -8,6 +8,7 @@ import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { useGameSession } from '../GameSessionProvider';
 import { useGameFamily } from '../useGameFamily';
 import { useRecordResult } from '../../progress/useRecordResult';
+import { useLevelUp } from '../../progress/usePlayerLevel';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { HandleEditor, RankPanel } from '../../daily/RankPanel';
@@ -63,6 +64,7 @@ export function DesktopResultDialog({
   }, [state]);
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
+  const levelUp = useLevelUp();
   // Targets-Up ladder lifecycle — the hook shared with mobile's
   // ResultView; its module-level guard keeps the advance/clear commit
   // single-owner even if both surfaces mount across a resize.
@@ -268,6 +270,12 @@ export function DesktopResultDialog({
                   </button>
                 ))}
               </span>
+            </div>
+          )}
+
+          {levelUp !== null && (
+            <div className={styles.levelUp} role="status">
+              <span aria-hidden="true">⬆</span> Level {levelUp} reached
             </div>
           )}
           {isDaily &&

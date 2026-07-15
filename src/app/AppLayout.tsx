@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { TapPopoverProvider, ToastProvider } from '../design/primitives';
 import { bootDailySync, queryClient } from '../features/daily/sync/sync';
 import { useSyncDailyAchievements } from '../features/progress/useSyncDailyAchievements';
+import { useSeedProgression } from '../features/progress/usePlayerLevel';
 import { useApplyTheme } from '../features/settings/useTheme';
 import { AutoUpdater } from './AutoUpdater';
 import { DesktopNav, NavExtrasProvider } from './DesktopNav';
@@ -18,6 +19,10 @@ export function AppLayout() {
 
   // Record Daily-Puzzle / combined-win achievements from local plays.
   useSyncDailyAchievements();
+
+  // Seed the level-up watermark to the current level on a fresh install,
+  // so an existing record doesn't replay old "Level X reached" banners.
+  useSeedProgression();
 
   // Stamp the selected theme onto <html> (and keep it live on OS
   // color-scheme changes).

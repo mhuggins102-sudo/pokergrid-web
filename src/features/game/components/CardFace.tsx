@@ -1,4 +1,5 @@
 import { Card, Suit, isJoker } from '../../../game/cards';
+import { findSkin } from '../../../design/deckSkins';
 import { useSettingsStore } from '../../settings/settingsStore';
 import styles from './CardFace.module.css';
 
@@ -59,9 +60,18 @@ const suitColor = (suit: Suit, twoColorDeck: boolean): string =>
 
 export function CardFace({ card }: { card: Card }) {
   const twoColorDeck = useSettingsStore(s => s.twoColorDeck);
+  // Deck skin override (see design/deckSkins.ts). When active it repaints
+  // the card face; its optional ink keeps the rank/pips legible. Real art
+  // will replace `face` with a full-face image (rank/pips baked in), at
+  // which point this becomes a background-image swap.
+  const skinsOn = useSettingsStore(s => s.deckSkinsEnabled);
+  const skinId = useSettingsStore(s => s.deckSkin);
+  const skin = skinsOn ? findSkin(skinId) : null;
+  const skinBg = skin ? { background: skin.face } : null;
+
   if (isJoker(card)) {
     return (
-      <div className={`${styles.card} ${styles.joker}`}>
+      <div className={`${styles.card} ${styles.joker}`} style={skinBg ?? undefined}>
         <span className={styles.jokerStar} aria-hidden="true">
           ★
         </span>
@@ -75,10 +85,10 @@ export function CardFace({ card }: { card: Card }) {
     // the flip identity bottom-right printed upside-down, so a 180°
     // rotation of the card reads correctly.
     return (
-      <div className={styles.card}>
+      <div className={styles.card} style={skinBg ?? undefined}>
         <span
           className={`${styles.dualHalf} ${styles.dualTop}`}
-          style={{ color: suitColor(card.suit, twoColorDeck) }}
+          style={{ color: skin?.ink ?? suitColor(card.suit, twoColorDeck) }}
           aria-hidden="true"
         >
           <span className={styles.dualRank}>{card.rank}</span>
@@ -87,7 +97,7 @@ export function CardFace({ card }: { card: Card }) {
         <span className={styles.dualDivider} aria-hidden="true" />
         <span
           className={`${styles.dualHalf} ${styles.dualBottom}`}
-          style={{ color: suitColor(card.dual.suit, twoColorDeck) }}
+          style={{ color: skin?.ink ?? suitColor(card.dual.suit, twoColorDeck) }}
           aria-hidden="true"
         >
           <span className={styles.dualRank}>{card.dual.rank}</span>
@@ -97,10 +107,11 @@ export function CardFace({ card }: { card: Card }) {
     );
   }
   const tone = card.suit === 'H' || card.suit === 'D' ? styles.red : styles.black;
+  const faceColor = skin?.ink ?? (twoColorDeck ? undefined : SUIT_COLOR[card.suit]);
   return (
     <div
       className={`${styles.card} ${tone}`}
-      style={twoColorDeck ? undefined : { color: SUIT_COLOR[card.suit] }}
+      style={{ ...skinBg, ...(faceColor ? { color: faceColor } : null) }}
     >
       {/* Low-opacity center pip: glanceable suit reading at small
           sizes without competing with the rank. Inherits the face's

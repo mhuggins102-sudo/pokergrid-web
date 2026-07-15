@@ -208,6 +208,22 @@
   text-align: center;
 }
 
+/* XP milestone crossed by this run — an accent-toned reward pill (a new
+   deck skin may have unlocked). */
+.levelUp {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--hairline));
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
 .achievementsLabel {
   font-size: 11px;
   font-weight: 700;

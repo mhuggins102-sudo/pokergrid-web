@@ -4,6 +4,7 @@ import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring
 import { Button, Chevron, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
+import { useLevelUp } from '../../progress/usePlayerLevel';
 import type { Achievement } from '../../../game/achievements';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
@@ -77,6 +78,8 @@ export function ResultView({ onReplay }: ResultViewProps) {
   }, [state]);
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
+  // Non-null only when THIS run crossed a new XP level (see useLevelUp).
+  const levelUp = useLevelUp();
 
   // Game-end tally, three beats told by the rail chips:
   //   1. 'assemble' — chips pop in with their BASE totals while the
@@ -365,6 +368,11 @@ export function ResultView({ onReplay }: ResultViewProps) {
                 {a.name}
               </button>
             ))}
+          </span>
+        )}
+        {levelUp !== null && (
+          <span className={styles.levelUp} role="status">
+            ⬆ Level {levelUp} reached
           </span>
         )}
       </section>

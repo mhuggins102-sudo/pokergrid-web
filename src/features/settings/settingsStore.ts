@@ -43,6 +43,12 @@ export interface Settings {
   colorBlindAssist: boolean;
   // Classic two-color (red/black) card faces vs four-color suits.
   twoColorDeck: boolean;
+  // Deck skins: when on, the card-face design is overridden by `deckSkin`
+  // (an unlocked skin id) instead of following the theme's default look.
+  // Off keeps the theme default. See design/deckSkins.ts + the SkinStore.
+  deckSkinsEnabled: boolean;
+  // The chosen skin id when deckSkinsEnabled (null = none picked yet).
+  deckSkin: string | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -65,6 +71,10 @@ export const DEFAULT_SETTINGS: Settings = {
   // Purists can switch back to classic red/black in Settings; players
   // with a stored preference keep it (persist merges storage over this).
   twoColorDeck: false,
+  // Deck skins off by default — cards follow the theme's default design
+  // until the player opts into a custom skin.
+  deckSkinsEnabled: false,
+  deckSkin: null,
 };
 
 interface SettingsStore extends Settings {
