@@ -70,6 +70,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Panel-layout "corner" variant (the mobile "Desktop" dock): pin the "+x"
+   contribution to the chip's bottom-right corner so it never stacks onto a
+   new line and wraps. The mult (bottom-left) keeps clear of it. Only the
+   Desktop dock passes cornerValue, so the result-screen panels are
+   untouched. */
+.chipCorner {
+  position: relative;
+}
+
+.chipCorner .chipValue {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  line-height: 1.2;
+}
+
+.chipCorner .chipMult {
+  padding-right: 34px;
+}
+
 .emptyNote {
   font-size: 13px;
   color: var(--ink-3);

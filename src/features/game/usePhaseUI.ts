@@ -211,7 +211,7 @@ export function usePhaseUI(): PhaseUI {
               state.grid,
               state.bonusDeck.length,
               state.bonusCards.length,
-              state.noSwap,
+              state.bonusSwapAtCap === 'off',
               state.investHands
             );
             const perkLabel = state.randomPerks

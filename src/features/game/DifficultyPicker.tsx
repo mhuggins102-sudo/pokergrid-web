@@ -35,14 +35,16 @@ const NAME: Record<Difficulty, string> = {
   extreme: 'Extreme',
 };
 
-// One-paragraph card blurbs, from the design mockup's data file.
+// One-paragraph card blurbs — the same five-axis read-out the Daily
+// splash shows, but the undo clause reflects Free Play's real rule (Hard /
+// Extreme run with no undo, unlike the daily's one-undo-for-all).
 const BLURB: Record<Difficulty, string> = {
-  easy: 'Two jokers in the deck, a starter bonus card, deck peek, and one undo. The gentlest way in.',
+  easy: 'Two jokers, one starter bonus card, may swap bonus cards, deck peek on, one undo.',
   medium:
-    'One joker, a starter bonus, deck peek, one undo — but a ♣ at the cap forces a swap.',
-  hard: 'One joker, no starter card, no deck peek, no undo. You build your whole hand from ♣ draws.',
+    'One joker, one starter bonus card, must swap bonus cards, deck peek on, one undo.',
+  hard: 'One joker, no starter bonus, no bonus card swap, no deck peek, no undo.',
   extreme:
-    'A pure 52-card deck — no jokers, no discards, no peek, no undo. Same 450 as Medium, none of the help.',
+    'No jokers, no starter bonus, no bonus card swap, no deck peek, no undo.',
 };
 
 interface Axis {
