@@ -1016,12 +1016,26 @@
 /* Held entry, dock variant: shorter, content vertically centered, and no
    tap focus ring (the blue outline the accent :focus-visible drew). */
 .dockEntry {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding-top: 6px;
   padding-bottom: 6px;
   overflow: hidden;
+}
+
+/* Phone "Desktop" dock: the "+N" contribution is pinned to the entry's
+   bottom-right corner (see bonusValueCorner in the TSX) so it never wraps.
+   The mult keeps clear of it. */
+.dockEntry .bonusValueCorner {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+}
+
+.dockEntry .bonusMult {
+  padding-right: 30px;
 }
 
 /* No tap focus ring on the dock's bonus cards (the entry div is no longer

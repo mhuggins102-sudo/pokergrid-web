@@ -811,7 +811,20 @@ export function DesktopBonusPanel({
           <span className={styles.bonusMult}>
             {card.mult}
             {values?.[i] !== undefined && (
-              <span className={styles.bonusValue}>+{values[i]} pts</span>
+              // Phone "Desktop" dock: pin the contribution to the entry's
+              // bottom-right corner and drop " pts" (just "+N") so it never
+              // wraps. The desk rail keeps its inline "+N pts".
+              <span
+                className={[
+                  styles.bonusValue,
+                  dockColumn ? styles.bonusValueCorner : null,
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                +{values[i]}
+                {dockColumn ? '' : ' pts'}
+              </span>
             )}
           </span>
         </button>

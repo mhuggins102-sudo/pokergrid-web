@@ -94,3 +94,33 @@ export const CAN_PREVIEW_DECK_BY_DIFFICULTY: Record<Difficulty, boolean> = {
   hard: false,
   extreme: false,
 };
+
+// Sentence fragment for the ♣-at-cap rule (used in the difficulty
+// briefing sentences on the Daily splash and Free Play cards).
+export const BONUS_SWAP_CLAUSE: Record<BonusSwapAtCap, string> = {
+  available: 'may swap bonus cards',
+  must: 'must swap bonus cards',
+  off: 'no bonus card swap',
+};
+
+// The five fixed difficulty axes as sentence fragments, in the ONE
+// canonical order shared by the Daily splash, the Free Play blurbs + card
+// table, and the in-game popup:
+//   jokers → starter bonus → bonus swap → deck peek → discards → (undo)
+// The undo clause is appended by the caller — the daily grants one undo to
+// every difficulty, while Free Play uses UNDOS_BY_DIFFICULTY.
+export const difficultyClauses = (d: Difficulty): string[] => {
+  const j = JOKERS_BY_DIFFICULTY[d];
+  return [
+    j === 0 ? 'No jokers' : j === 1 ? 'One joker' : 'Two jokers',
+    STARTER_BONUS_BY_DIFFICULTY[d] > 0
+      ? 'one starter bonus card'
+      : 'no starter bonus',
+    BONUS_SWAP_CLAUSE[BONUS_SWAP_AT_CAP_BY_DIFFICULTY[d]],
+    CAN_PREVIEW_DECK_BY_DIFFICULTY[d] ? 'deck peek on' : 'no deck peek',
+    NO_DISCARDS_BY_DIFFICULTY[d] ? 'no discards' : 'discards on',
+  ];
+};
+
+export const difficultySentence = (d: Difficulty, undoClause: string): string =>
+  [...difficultyClauses(d), undoClause].join(', ') + '.';
