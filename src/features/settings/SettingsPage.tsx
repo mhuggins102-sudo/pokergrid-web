@@ -4,7 +4,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { useNavigate } from 'react-router';
@@ -34,12 +33,12 @@ import styles from './SettingsPage.module.css';
 
 /*
  * The ONE settings page at every tier (phase 4, plan decision D), per
- * design-refs/desktop/Settings.dc.html: raised sections (Game screen /
- * Appearance / Sound & accessibility / Identity & data) of hairline-
- * separated rows with segmented pickers and pill toggles, plus the
- * live display preview behind the Game screen header's "Preview →".
- * All rows read/write the same persisted settings store — no key
- * migrations.
+ * design-refs/desktop/Settings.dc.html: raised sections (Appearance /
+ * Game screen / Sound & accessibility / Identity & data — a 2×2 grid
+ * ≥1200, one expanded column below) of hairline-separated rows with
+ * segmented pickers and pill toggles, plus the live display preview
+ * behind the Game screen header's "Preview". All rows read/write the
+ * same persisted settings store — no key migrations.
  *
  * Family-conditional rows — both key on useGameFamily (the game THIS
  * viewport would launch), so Settings always matches the gameplay
@@ -137,67 +136,19 @@ function Row({
 
 function Section({
   title,
-  span = false,
-  open,
-  onToggle,
   action,
   children,
 }: {
   title: string;
-  /** ≥1200px: span both columns of the sections grid (the Identity &
-   *  data footer band; its rows then sit side by side). */
-  span?: boolean;
-  /** Phone accordion open state (controlled by the parent for single-open). */
-  open: boolean;
-  onToggle: () => void;
   /** Optional control on the right end of the section's header bar
-   *  (e.g. Presentation's "Preview →" opener). */
+   *  (e.g. Game screen's "Preview" opener). */
   action?: ReactNode;
   children: ReactNode;
 }) {
-  const { phone } = useContext(SettingsUICtx);
-  const ref = useRef<HTMLDetailsElement>(null);
-  // Phone: when this section opens, bring its head to just under the
-  // sticky nav so the revealed content is in view (others have closed, so
-  // the layout above just shifted). scroll-margin-top clears the header.
-  useEffect(() => {
-    if (!phone || !open) return;
-    const el = ref.current;
-    if (!el) return;
-    requestAnimationFrame(() => {
-      try {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } catch {
-        /* jsdom / unsupported env */
-      }
-    });
-  }, [phone, open]);
-  if (phone) {
-    return (
-      <details ref={ref} className={styles.section} open={open}>
-        <summary
-          className={styles.sectionHead}
-          onClick={e => {
-            e.preventDefault();
-            onToggle();
-          }}
-        >
-          <span>{title}</span>
-          <span className={styles.headEnd}>
-            {action}
-            <span className={styles.sectionCaret} aria-hidden="true">
-              ▾
-            </span>
-          </span>
-        </summary>
-        {children}
-      </details>
-    );
-  }
+  // One expanded rendering at every width — the phone differences live
+  // in the Row component (compact rows, ⓘ hints), not the sections.
   return (
-    <section
-      className={span ? `${styles.section} ${styles.sectionSpan}` : styles.section}
-    >
+    <section className={styles.section}>
       <div className={styles.sectionHead}>
         <span>{title}</span>
         {action}
@@ -221,16 +172,9 @@ export function SettingsPage() {
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
   const [skinStoreOpen, setSkinStoreOpen] = useState(false);
-  // Live display sample, opened from the Presentation header's
-  // "Preview →" (a centered dialog ≥640, the bottom sheet on phones).
+  // Live display sample, opened from the Game screen header's
+  // "Preview" (a centered dialog >=640, the bottom sheet on phones).
   const [previewOpen, setPreviewOpen] = useState(false);
-  // Phone accordion: a single section open at a time (Game screen
-  // leads). Ignored ≥768, where every section renders expanded.
-  const [openSection, setOpenSection] = useState('Game screen');
-  const sectionProps = (name: string) => ({
-    open: openSection === name,
-    onToggle: () => setOpenSection(cur => (cur === name ? '' : name)),
-  });
   // Reactive handle (the save path notifies) — no local copy to stale.
   const handle = useHandle();
   const [editingHandle, setEditingHandle] = useState(false);
@@ -306,82 +250,7 @@ export function SettingsPage() {
 
       <SettingsUICtx.Provider value={uiCtx}>
       <div className={styles.sections}>
-      <Section
-        title="Game screen"
-        {...sectionProps('Game screen')}
-        action={
-          <button
-            type="button"
-            className={styles.headAction}
-            onClick={e => {
-              // Inside the phone accordion's <summary>: don't toggle it.
-              e.preventDefault();
-              e.stopPropagation();
-              setPreviewOpen(true);
-            }}
-          >
-            Preview <span aria-hidden="true">→</span>
-          </button>
-        }
-      >
-        <Row
-          title="Dock layout"
-          hint="Where the drawn card and action buttons sit."
-        >
-          {deskFamily
-            ? seg<'center-stage' | 'compact'>(
-                [
-                  ['center-stage', 'Center stage'],
-                  ['compact', 'Compact'],
-                ],
-                dockValue,
-                pickDock,
-                'Dock layout'
-              )
-            : seg<DockLayout>(
-                (
-                  ['classic', 'hand-stack', 'center-stage', 'desktop'] as const
-                ).map(
-                  l => [l, DOCK_LAYOUT_LABEL[l]] as [DockLayout, string]
-                ),
-                settings.dockLayout,
-                dockLayout => patch({ dockLayout }),
-                'Dock layout'
-              )}
-        </Row>
-        <Row
-          title="Line totals"
-          hint="Show each row and column's running total along the board edges during play."
-        >
-          {/* ONE row, two keys (decision D): the column family binds
-              lineRails (default off), the desk families bind
-              deskLineChips (default on per the mockup). The split
-              defaults predate this page; both keys persist unchanged. */}
-          <Toggle
-            label="Line totals"
-            value={deskFamily ? settings.deskLineChips : settings.lineRails}
-            onChange={v =>
-              patch(deskFamily ? { deskLineChips: v } : { lineRails: v })
-            }
-          />
-        </Row>
-        {/* Not in the mockup — keeps the guided tutorial reachable on
-            desktop (feature-reachability convention). */}
-        <Row
-          title="Replay tutorial"
-          hint="Re-run the guided practice deal that walks through every move."
-        >
-          <button
-            type="button"
-            className={styles.quietAction}
-            onClick={() => navigate('/tutorial')}
-          >
-            Replay
-          </button>
-        </Row>
-      </Section>
-
-      <Section title="Appearance" {...sectionProps('Appearance')}>
+      <Section title="Appearance">
         <Row
           title="Theme"
           hint="Card Room felt or Morning Paper editorial, light or dark."
@@ -442,9 +311,81 @@ export function SettingsPage() {
       </Section>
 
       <Section
-        title="Sound & accessibility"
-        {...sectionProps('Sound & accessibility')}
+        title="Game screen"
+       
+        action={
+          <button
+            type="button"
+            className={styles.headAction}
+            onClick={e => {
+              // Inside the phone accordion's <summary>: don't toggle it.
+              e.preventDefault();
+              e.stopPropagation();
+              setPreviewOpen(true);
+            }}
+          >
+            Preview
+          </button>
+        }
       >
+        <Row
+          title="Dock layout"
+          hint="Where the drawn card and action buttons sit."
+        >
+          {deskFamily
+            ? seg<'center-stage' | 'compact'>(
+                [
+                  ['center-stage', 'Center stage'],
+                  ['compact', 'Compact'],
+                ],
+                dockValue,
+                pickDock,
+                'Dock layout'
+              )
+            : seg<DockLayout>(
+                (
+                  ['classic', 'hand-stack', 'center-stage', 'desktop'] as const
+                ).map(
+                  l => [l, DOCK_LAYOUT_LABEL[l]] as [DockLayout, string]
+                ),
+                settings.dockLayout,
+                dockLayout => patch({ dockLayout }),
+                'Dock layout'
+              )}
+        </Row>
+        <Row
+          title="Line totals"
+          hint="Show each row and column's running total along the board edges during play."
+        >
+          {/* ONE row, two keys (decision D): the column family binds
+              lineRails (default off), the desk families bind
+              deskLineChips (default on per the mockup). The split
+              defaults predate this page; both keys persist unchanged. */}
+          <Toggle
+            label="Line totals"
+            value={deskFamily ? settings.deskLineChips : settings.lineRails}
+            onChange={v =>
+              patch(deskFamily ? { deskLineChips: v } : { lineRails: v })
+            }
+          />
+        </Row>
+        {/* Not in the mockup — keeps the guided tutorial reachable on
+            desktop (feature-reachability convention). */}
+        <Row
+          title="Replay tutorial"
+          hint="Re-run the guided practice deal that walks through every move."
+        >
+          <button
+            type="button"
+            className={styles.quietAction}
+            onClick={() => navigate('/tutorial')}
+          >
+            Replay
+          </button>
+        </Row>
+      </Section>
+
+      <Section title="Sound & accessibility">
         <Row title="Sound" hint="Place ticks, ♣ chime, and win / lose stings.">
           <Toggle
             label="Sound"
@@ -474,19 +415,17 @@ export function SettingsPage() {
         </Row>
       </Section>
 
-      <Section title="Identity & data" span {...sectionProps('Identity & data')}>
-        {/* ≥1200px the band's rows sit side by side (hairline divider);
-            when the handle row is absent, Reset spans the band alone. */}
-        <div className={styles.bandRows}>
+      <Section title="Identity & data">
           {isBackendConfigured() && (
             <Row
-              title="Leaderboard handle"
+              title={phone ? 'Handle' : 'Leaderboard handle'}
               hint="Shown on the daily leaderboard."
             >
               {editingHandle || !handle ? (
                 <div className={styles.handleEditor}>
                   <HandleEditor
                     heading={null}
+                    note={!phone}
                     onSaved={() => setEditingHandle(false)}
                   />
                 </div>
@@ -517,7 +456,6 @@ export function SettingsPage() {
               Reset…
             </button>
           </Row>
-        </div>
       </Section>
       </div>
       </SettingsUICtx.Provider>
