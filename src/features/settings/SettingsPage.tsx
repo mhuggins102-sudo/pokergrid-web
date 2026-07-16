@@ -29,28 +29,32 @@ import { DOCK_LAYOUT_LABEL } from './DockLayoutPreview';
 import { DisplayPreview } from './DisplayPreview';
 import { SkinStore } from './SkinStore';
 import { useTier } from '../../app/useTier';
+import { useGameFamily } from '../game/useGameFamily';
 import styles from './SettingsPage.module.css';
 
 /*
  * The ONE settings page at every tier (phase 4, plan decision D), per
- * design-refs/desktop/Settings.dc.html: three raised sections
- * (Gameplay / Presentation / Identity & data) of hairline-separated
- * rows with segmented pickers and pill toggles, plus the live display
- * preview. All rows read/write the same persisted settings store — no
- * key migrations.
+ * design-refs/desktop/Settings.dc.html: raised sections (Game screen /
+ * Appearance / Sound & accessibility / Identity & data) of hairline-
+ * separated rows with segmented pickers and pill toggles, plus the
+ * live display preview behind the Game screen header's "Preview →".
+ * All rows read/write the same persisted settings store — no key
+ * migrations.
  *
- * Tier-conditional rows:
- *  - Dock layout: phone/tablet offer the three phone-family layouts;
- *    desktop offers TWO — Center stage and Compact — because the
- *    desktop game dock only distinguishes center-stage vs the compact
- *    variant ('hand-stack' and 'classic' render identically there).
- *    Mapping (user directive, unchanged): Center stage writes
- *    'center-stage'; Compact writes 'hand-stack' only when coming FROM
- *    'center-stage', so a phone-side Classic choice survives desktop
- *    visits.
- *  - Line totals: ONE row binding the tier's key — phone → lineRails
- *    (the column game family reads it), tablet/desktop →
- *    deskLineChips (the desk family's chips). Both keys kept.
+ * Family-conditional rows — both key on useGameFamily (the game THIS
+ * viewport would launch), so Settings always matches the gameplay
+ * window, including tablet-landscape's desk-lite:
+ *  - Dock layout: the column family offers the four column-game
+ *    layouts; the desk families offer TWO — Center stage and Compact —
+ *    because the desk dock only distinguishes center-stage vs the
+ *    compact variant ('hand-stack', 'classic' and 'desktop' render
+ *    identically there). Mapping (user directive, unchanged): Center
+ *    stage writes 'center-stage'; Compact writes 'hand-stack' only
+ *    when coming FROM 'center-stage', so a phone-side Classic choice
+ *    survives desk visits.
+ *  - Line totals: ONE row binding the family's key — column →
+ *    lineRails (the rails the column game reads), desk →
+ *    deskLineChips (the desk families' edge chips). Both keys kept.
  */
 
 function Toggle({
@@ -205,6 +209,10 @@ function Section({
 
 export function SettingsPage() {
   const tier = useTier();
+  // The game family THIS viewport would launch (column vs desk/desk-
+  // lite) — the dock picker and Line totals bind to it so Settings
+  // always describes the gameplay window that actually appears.
+  const deskFamily = useGameFamily() !== 'column';
   const settings = useSettingsStore();
   const resetStats = useStatsStore(s => s.reset);
   const resetProgression = useProgressionStore(s => s.reset);
@@ -216,9 +224,9 @@ export function SettingsPage() {
   // Live display sample, opened from the Presentation header's
   // "Preview →" (a centered dialog ≥640, the bottom sheet on phones).
   const [previewOpen, setPreviewOpen] = useState(false);
-  // Phone accordion: a single section open at a time (Gameplay leads).
-  // Ignored ≥768, where every section renders expanded.
-  const [openSection, setOpenSection] = useState('Gameplay');
+  // Phone accordion: a single section open at a time (Game screen
+  // leads). Ignored ≥768, where every section renders expanded.
+  const [openSection, setOpenSection] = useState('Game screen');
   const sectionProps = (name: string) => ({
     open: openSection === name,
     onToggle: () => setOpenSection(cur => (cur === name ? '' : name)),
@@ -298,12 +306,29 @@ export function SettingsPage() {
 
       <SettingsUICtx.Provider value={uiCtx}>
       <div className={styles.sections}>
-      <Section title="Gameplay" {...sectionProps('Gameplay')}>
+      <Section
+        title="Game screen"
+        {...sectionProps('Game screen')}
+        action={
+          <button
+            type="button"
+            className={styles.headAction}
+            onClick={e => {
+              // Inside the phone accordion's <summary>: don't toggle it.
+              e.preventDefault();
+              e.stopPropagation();
+              setPreviewOpen(true);
+            }}
+          >
+            Preview <span aria-hidden="true">→</span>
+          </button>
+        }
+      >
         <Row
           title="Dock layout"
           hint="Where the drawn card and action buttons sit."
         >
-          {tier === 'desktop'
+          {deskFamily
             ? seg<'center-stage' | 'compact'>(
                 [
                   ['center-stage', 'Center stage'],
@@ -328,15 +353,15 @@ export function SettingsPage() {
           title="Line totals"
           hint="Show each row and column's running total along the board edges during play."
         >
-          {/* ONE row, two keys (decision D): phone binds lineRails
-              (default off), tablet/desktop bind deskLineChips (default
-              on per the mockup). The per-tier defaults predate this
-              page; both keys persist unchanged. */}
+          {/* ONE row, two keys (decision D): the column family binds
+              lineRails (default off), the desk families bind
+              deskLineChips (default on per the mockup). The split
+              defaults predate this page; both keys persist unchanged. */}
           <Toggle
             label="Line totals"
-            value={tier === 'phone' ? settings.lineRails : settings.deskLineChips}
+            value={deskFamily ? settings.deskLineChips : settings.lineRails}
             onChange={v =>
-              patch(tier === 'phone' ? { lineRails: v } : { deskLineChips: v })
+              patch(deskFamily ? { deskLineChips: v } : { lineRails: v })
             }
           />
         </Row>
@@ -356,24 +381,7 @@ export function SettingsPage() {
         </Row>
       </Section>
 
-      <Section
-        title="Presentation"
-        {...sectionProps('Presentation')}
-        action={
-          <button
-            type="button"
-            className={styles.headAction}
-            onClick={e => {
-              // Inside the phone accordion's <summary>: don't toggle it.
-              e.preventDefault();
-              e.stopPropagation();
-              setPreviewOpen(true);
-            }}
-          >
-            Preview <span aria-hidden="true">→</span>
-          </button>
-        }
-      >
+      <Section title="Appearance" {...sectionProps('Appearance')}>
         <Row
           title="Theme"
           hint="Card Room felt or Morning Paper editorial, light or dark."
@@ -388,7 +396,7 @@ export function SettingsPage() {
             'Theme'
           )}
         </Row>
-        <Row title="Appearance" hint="Light, dark, or follow the system.">
+        <Row title="Light / dark" hint="Light, dark, or follow the system.">
           {seg<Appearance>(
             [
               ['light', 'Light'],
@@ -397,15 +405,8 @@ export function SettingsPage() {
             ],
             settings.appearance,
             appearance => patch({ appearance }),
-            'Appearance'
+            'Light / dark'
           )}
-        </Row>
-        <Row title="Sound" hint="Place ticks, ♣ chime, and win / lose stings.">
-          <Toggle
-            label="Sound"
-            value={settings.sounds}
-            onChange={v => patch({ sounds: v })}
-          />
         </Row>
         <Row
           title="Two-color deck"
@@ -437,6 +438,19 @@ export function SettingsPage() {
               onChange={v => patch({ deckSkinsEnabled: v })}
             />
           </div>
+        </Row>
+      </Section>
+
+      <Section
+        title="Sound & accessibility"
+        {...sectionProps('Sound & accessibility')}
+      >
+        <Row title="Sound" hint="Place ticks, ♣ chime, and win / lose stings.">
+          <Toggle
+            label="Sound"
+            value={settings.sounds}
+            onChange={v => patch({ sounds: v })}
+          />
         </Row>
         <Row
           title="Reduce motion"

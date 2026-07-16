@@ -164,7 +164,7 @@ export function HomePage() {
           <h1 className={styles.heroTitle}>
             One grid.
             <br />
-            Everyone plays the same deal.
+            Same for everyone.
           </h1>
           <div className={styles.heroChips}>
             <span
@@ -273,7 +273,7 @@ export function HomePage() {
         {modeCards}
         {showIntroCard ? (
           <div className={styles.footerCard}>
-            <span className={styles.modeTitle}>First time?</span>
+            <span className={styles.modeTitle}>New here?</span>
             <span className={styles.modeBlurb}>
               Play a guided practice deal that walks you through every move.
             </span>
@@ -283,7 +283,7 @@ export function HomePage() {
           </div>
         ) : (
           <div className={styles.footerCard}>
-            <span className={styles.modeTitle}>New here?</span>
+            <span className={styles.modeTitle}>Rules</span>
             <span className={styles.modeBlurb}>
               The whole game is 25 cards, 10 poker hands, one target.
             </span>
