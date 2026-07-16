@@ -135,6 +135,7 @@ function Section({
   span = false,
   open,
   onToggle,
+  action,
   children,
 }: {
   title: string;
@@ -144,6 +145,9 @@ function Section({
   /** Phone accordion open state (controlled by the parent for single-open). */
   open: boolean;
   onToggle: () => void;
+  /** Optional control on the right end of the section's header bar
+   *  (e.g. Presentation's "Preview →" opener). */
+  action?: ReactNode;
   children: ReactNode;
 }) {
   const { phone } = useContext(SettingsUICtx);
@@ -174,8 +178,11 @@ function Section({
           }}
         >
           <span>{title}</span>
-          <span className={styles.sectionCaret} aria-hidden="true">
-            ▾
+          <span className={styles.headEnd}>
+            {action}
+            <span className={styles.sectionCaret} aria-hidden="true">
+              ▾
+            </span>
           </span>
         </summary>
         {children}
@@ -186,7 +193,10 @@ function Section({
     <section
       className={span ? `${styles.section} ${styles.sectionSpan}` : styles.section}
     >
-      <div className={styles.sectionHead}>{title}</div>
+      <div className={styles.sectionHead}>
+        <span>{title}</span>
+        {action}
+      </div>
       {children}
     </section>
   );
@@ -201,6 +211,9 @@ export function SettingsPage() {
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
   const [skinStoreOpen, setSkinStoreOpen] = useState(false);
+  // Live display sample, opened from the Presentation header's
+  // "Preview →" (a centered dialog ≥640, the bottom sheet on phones).
+  const [previewOpen, setPreviewOpen] = useState(false);
   // Phone accordion: a single section open at a time (Gameplay leads).
   // Ignored ≥768, where every section renders expanded.
   const [openSection, setOpenSection] = useState('Gameplay');
@@ -341,7 +354,24 @@ export function SettingsPage() {
         </Row>
       </Section>
 
-      <Section title="Presentation" {...sectionProps('Presentation')}>
+      <Section
+        title="Presentation"
+        {...sectionProps('Presentation')}
+        action={
+          <button
+            type="button"
+            className={styles.headAction}
+            onClick={e => {
+              // Inside the phone accordion's <summary>: don't toggle it.
+              e.preventDefault();
+              e.stopPropagation();
+              setPreviewOpen(true);
+            }}
+          >
+            Preview <span aria-hidden="true">→</span>
+          </button>
+        }
+      >
         <Row
           title="Theme"
           hint="Card Room felt or Morning Paper editorial, light or dark."
@@ -426,14 +456,6 @@ export function SettingsPage() {
             onChange={v => patch({ colorBlindAssist: v })}
           />
         </Row>
-        {/* Live sample (ported from the phone page): mini board + dock
-            arrangement following the current choices. Reads lineRails,
-            so it previews the phone rails on desk tiers too — it is a
-            picture of the setting, not of this viewport's game. */}
-        <div className={styles.previewSlot}>
-          <span className={styles.previewLabel}>Preview</span>
-          <DisplayPreview />
-        </div>
       </Section>
 
       <Section title="Identity & data" span {...sectionProps('Identity & data')}>
@@ -493,6 +515,17 @@ export function SettingsPage() {
           <p className={styles.infoSheetBody}>{infoSheet?.hint}</p>
         </Sheet>
       )}
+
+      {/* Live display sample: mini board + the picked dock arrangement,
+          following the current choices — a picture of the settings, not
+          of this viewport's game. */}
+      <Sheet
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title="Preview"
+      >
+        <DisplayPreview />
+      </Sheet>
 
       <SkinStore open={skinStoreOpen} onClose={() => setSkinStoreOpen(false)} />
 

@@ -1,5 +1,6 @@
 import { Card, Rank, Suit } from '../../game/cards';
 import { CardFace } from '../game/components/CardFace';
+import { useTier } from '../../app/useTier';
 import { useSettingsStore } from './settingsStore';
 import { useResolvedTheme } from './useTheme';
 import { DockLayoutPreview } from './DockLayoutPreview';
@@ -49,7 +50,13 @@ const COL_TOTALS = [4, 0, 8, 21, 2];
  */
 export function DisplayPreview() {
   const resolved = useResolvedTheme();
-  const lineRails = useSettingsStore(s => s.lineRails);
+  const tier = useTier();
+  // Mirror the Settings page's "Line totals" row: it binds the tier's
+  // key (phone → lineRails, tablet/desktop → deskLineChips), so the
+  // preview must follow the SAME key or the toggle looks inert here.
+  const lineRails = useSettingsStore(s =>
+    tier === 'phone' ? s.lineRails : s.deskLineChips
+  );
   const dockLayout = useSettingsStore(s => s.dockLayout);
 
   const chip = (total: number, key: string) => (
@@ -90,7 +97,10 @@ export function DisplayPreview() {
         )}
       </div>
       <div className={styles.dockPreview}>
-        <DockLayoutPreview layout={dockLayout} />
+        {/* Desktop previews the desk dock the ≥1024 game actually shows
+            (center-stage vs compact); phone/tablet preview the column-
+            family dock the picker's four options describe. */}
+        <DockLayoutPreview layout={dockLayout} desk={tier === 'desktop'} />
       </div>
     </div>
   );
