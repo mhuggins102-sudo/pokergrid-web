@@ -52,6 +52,8 @@
    resolve var()). Deliberately NOT a container query: inline-size
    containment would make .wrap the containing block for the
    position:fixed .confirmScrim below. */
+/* A clean 2×2 of sections: Appearance | Game screen over
+   Sound & accessibility | Identity & data. */
 @media (min-width: 1200px) {
   .wrap {
     max-width: 1080px;
@@ -60,26 +62,6 @@
   .sections {
     grid-template-columns: 1fr 1fr;
     gap: 20px 24px;
-  }
-
-  /* Identity & data: the full-width footer band; its rows sit side by
-     side (hairline divider), and a lone Reset row (no backend) spans. */
-  .sectionSpan {
-    grid-column: 1 / -1;
-  }
-
-  .sectionSpan .bandRows {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .sectionSpan .bandRows .row + .row {
-    border-top: none;
-    border-left: 1px solid var(--hairline);
-  }
-
-  .sectionSpan .bandRows .row:only-child {
-    grid-column: 1 / -1;
   }
 }
 
@@ -125,12 +107,6 @@
   border-radius: 4px;
 }
 
-/* Phone accordion: the action rides beside the caret. */
-.headEnd {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-}
 
 .row {
   display: flex;
@@ -175,16 +151,21 @@
 
 /* 4+ options (the dock picker): ≥768 the strip stays inline like any
    other segmented control — the row is wide enough for one line. The
-   phone block below lets it go full-width and wrap two-up instead. */
+   phone fits them as a compact 2×2 block on the RIGHT of the row
+   title, like every other control. */
 @media (max-width: 767px) { /* below bp-tablet */
   .segWrap {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Slightly tighter than the other phone segments — four labels must
+     share the row with the "Dock layout" title (the 2×2 block plus the
+     title need every pixel of a 390px row). */
   .segWrap .segBtn {
-    flex: 1 1 calc(50% - 2px);
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 12px;
   }
 }
 
@@ -371,37 +352,6 @@
     display: none;
   }
 
-  /* When an opened section auto-scrolls to the top, leave room for the
-     sticky header so its head isn't tucked underneath. */
-  .section {
-    scroll-margin-top: 96px;
-  }
-
-  /* Accordion heads: the section head becomes a tappable summary with a
-     caret; the marker is suppressed. */
-  .section > .sectionHead {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
-  }
-
-  .section > .sectionHead::-webkit-details-marker {
-    display: none;
-  }
-
-  .sectionCaret {
-    font-size: 11px;
-    color: var(--ink-3);
-    transition: transform 0.16s ease;
-  }
-
-  .section[open] > .sectionHead .sectionCaret {
-    transform: rotate(180deg);
-  }
-
   /* Compact rows: title (+ ⓘ) left, control right; wide controls wrap. */
   .row {
     flex-wrap: wrap;
@@ -445,5 +395,24 @@
     font-weight: 400;
     line-height: 1.5;
     color: var(--ink-2);
+  }
+
+  /* The handle editor rides the row, right of the title, shrinking its
+     input rather than wrapping below (the internal note is off here —
+     the row's ⓘ covers it, and the title compacts to "Handle"). */
+  .handleEditor {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .handleEditor input {
+    min-width: 120px;
+  }
+
+  /* Tighter segments so Theme / Light-dark / the 2×2 dock block sit
+     beside their titles instead of wrapping under them. */
+  .segBtn {
+    padding: 7px 10px;
+    font-size: 12.5px;
   }
 }

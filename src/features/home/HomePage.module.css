@@ -58,46 +58,6 @@
   padding: 34px 36px;
 }
 
-/* Desktop corner arrangement: metadata gathers on the top line —
-   kicker · date left, the difficulty/twist chips top-RIGHT — and the
-   CTA (or the played score + tier) anchors bottom-left, so the two
-   ends of the card carry one clear job each. Scoped ≥1200: below that
-   the hero body is too narrow for the eyebrow and the chips to share
-   its top line (they collide), so the chips stay under the title. */
-@media (min-width: 1200px) { /* desk two-column tier */
-  .heroBody {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto auto 1fr;
-    grid-template-areas:
-      'eyebrow chips'
-      'title   title'
-      'cta     cta';
-    column-gap: 16px;
-    align-items: start;
-  }
-
-  .heroEyebrow {
-    grid-area: eyebrow;
-    /* Midline-align with the (taller) chip pills sharing the row. */
-    align-self: center;
-  }
-
-  .heroChips {
-    grid-area: chips;
-    justify-content: flex-end;
-    margin-top: 0;
-  }
-
-  .heroTitle {
-    grid-area: title;
-  }
-
-  .heroCtaRow {
-    grid-area: cta;
-    align-self: end;
-  }
-}
 
 .heroEyebrow {
   display: flex;
@@ -603,23 +563,23 @@
   }
 
   /* Header layout — a 2×2 within the hero:
-       title + date (top-left)      score / Play button (top-right)
-       difficulty + variant pills   Browse the archive (bottom-right)
-       (bottom-left)
+       title + date (top-left)      difficulty + variant pills
+       score / Play button          (top-right)
+       (bottom-left)                Browse the archive (bottom-right)
      The played score+tier+link and the unplayed Play button share the
-     top-right slot (only one shows at a time). display:contents on the
-     CTA row lets its children drop straight into the grid. */
+     bottom-left slot (only one shows at a time). display:contents on
+     the CTA row lets its children drop straight into the grid. */
   .heroBody {
     position: relative;
     padding: 16px 20px;
     display: grid;
-    /* Left column sizes to the title/date/pills; the right takes the rest
-       (minmax(0,…) lets it shrink so the score block wraps instead of
-       ballooning the column and squeezing the pills). */
+    /* Left column sizes to the title/date/CTA; the right takes the rest
+       (minmax(0,…) lets it shrink so the pills wrap instead of
+       ballooning the column). */
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
-      'eyebrow cta'
-      'chips archive';
+      'eyebrow chips'
+      'cta archive';
     align-items: start;
     column-gap: 12px;
     row-gap: 8px;
@@ -644,12 +604,13 @@
     display: none;
   }
 
-  /* Pills below the date (bottom-left), left-aligned + stacked. */
+  /* Pills top-right, right-aligned + stacked. */
   .heroChips {
     grid-area: chips;
     align-self: start;
+    justify-self: end;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 6px;
     margin-top: 0;
   }
@@ -660,23 +621,27 @@
     display: contents;
   }
 
-  /* Played: score + tier + "View full result" combo takes the exact spot
-     the "Play now" button holds — pinned to the top-right corner at the
-     same inset (16/20 = the hero padding). It's taken OUT of the grid
-     (absolute) so its taller height never grows the top row: the pills and
-     the archive link stay put whether or not the day is played. max-width
-     keeps the "View full result" wrapping under the score+badge. */
+  /* Played: score + tier + "View full result" combo takes the exact
+     slot the "Play now" button holds — bottom-left. In-grid (not
+     absolute): growth at the bottom row just makes the hero taller,
+     without shoving the pills or the archive link around. */
   .heroResult {
-    position: absolute;
-    top: 16px;
-    right: 20px;
-    max-width: 160px;
-    justify-content: flex-end;
+    grid-area: cta;
+    justify-self: start;
+    align-self: end;
+    justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
     column-gap: 10px;
     row-gap: 2px;
-    text-align: right;
+    text-align: left;
+  }
+
+  /* Pills never break mid-label (the right column can get tight when a
+     played score sits across from them). */
+  .diffChip,
+  .twistChip {
+    white-space: nowrap;
   }
 
   .heroResultTarget {
@@ -697,17 +662,17 @@
   }
 
   /* "View full result" breaks to its own line directly under the score,
-     right-aligned within the top-right block. */
+     left-aligned within the bottom-left block. */
   .heroResultLink {
     flex-basis: 100%;
-    text-align: right;
+    text-align: left;
   }
 
-  /* Unplayed: a compact Play button in the same top-right slot. */
+  /* Unplayed: a compact Play button in the same bottom-left slot. */
   .heroCta {
     grid-area: cta;
-    justify-self: end;
-    align-self: start;
+    justify-self: start;
+    align-self: end;
     padding: 9px 16px;
     font-size: 14px;
   }
