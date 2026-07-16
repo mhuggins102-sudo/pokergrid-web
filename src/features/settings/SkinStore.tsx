@@ -1,5 +1,5 @@
+import { CSSProperties } from 'react';
 import { Sheet } from '../../design/primitives';
-import { SKINS } from '../../design/deckSkins';
 import { SKIN_CATALOG, SkinUnlock, skinName } from '../../design/skinCatalog';
 import { skinFace } from '../game/components/skinFace';
 import { usePlayerLevel } from '../progress/usePlayerLevel';
@@ -8,13 +8,25 @@ import styles from './SkinStore.module.css';
 
 // A mini preview of a skin's real card face (Claude Design's token
 // renderer) — a fixed-size square so the container-query units resolve.
-function SkinPreview({ id, size = 58 }: { id: string; size?: number }) {
+// `className`/`style` let callers layer extra styling on the wrap (e.g. the
+// desktop hover magnifier, which repositions it as a fixed overlay).
+function SkinPreview({
+  id,
+  size = 58,
+  className,
+  style,
+}: {
+  id: string;
+  size?: number;
+  className?: string;
+  style?: CSSProperties;
+}) {
   const four = !useSettingsStore(s => s.twoColorDeck);
   const face = skinFace(id, 'A', 's', four);
   return (
     <span
-      className={styles.preview}
-      style={{ ...face.wrap, width: size, height: size }}
+      className={className ? `${styles.preview} ${className}` : styles.preview}
+      style={{ ...face.wrap, width: size, height: size, ...style }}
       aria-hidden="true"
     >
       {face.layers.map((l, i) => (
@@ -50,6 +62,16 @@ function SkinTile({
       <SkinPreview id={id} />
       <span className={styles.tileName}>{skinName(id)}</span>
       {selected && <span className={styles.tileCheck} aria-hidden="true">✓</span>}
+      {/* Desktop-only: a large, centered copy of this face that appears a
+          layer above the sheet while the tile is hovered (position:fixed
+          overrides the wrap's relative positioning, escaping the list's
+          scroll clip). display:none until hover — see .magnify in the CSS. */}
+      <SkinPreview
+        id={id}
+        size={208}
+        className={styles.magnify}
+        style={{ position: 'fixed' }}
+      />
     </button>
   );
 }
@@ -151,9 +173,6 @@ export function SkinStore({
             style={{ width: `${Math.round(progress * 100)}%` }}
           />
         </div>
-        <span className={styles.count}>
-          {SKINS.length} designs · {SKIN_CATALOG.length} unlocks
-        </span>
       </div>
 
       <div className={styles.list}>
