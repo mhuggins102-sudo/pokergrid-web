@@ -3,6 +3,7 @@ import { Sheet } from '../../design/primitives';
 import { SuitKey } from '../../design/deckSkins';
 import { SKIN_CATALOG, SkinUnlock, skinName } from '../../design/skinCatalog';
 import { skinFace } from '../game/components/skinFace';
+import { useTier } from '../../app/useTier';
 import { usePlayerLevel } from '../progress/usePlayerLevel';
 import { useSettingsStore } from './settingsStore';
 import styles from './SkinStore.module.css';
@@ -58,7 +59,9 @@ function SkinPreview({
 }) {
   const four = !useSettingsStore(s => s.twoColorDeck);
   const suit = useContext(SampleSuitCtx);
-  const face = skinFace(id, 'A', suit, four);
+  // Preview the layout this device actually renders in-game (phone → mobile).
+  const mobile = useTier() === 'phone';
+  const face = skinFace(id, 'A', suit, four, mobile);
   return (
     <span
       className={className ? `${styles.preview} ${className}` : styles.preview}

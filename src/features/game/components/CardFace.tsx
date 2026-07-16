@@ -1,5 +1,6 @@
 import { Card, Suit, isJoker } from '../../../game/cards';
 import { SKIN_IDS, SuitKey } from '../../../design/deckSkins';
+import { useTier } from '../../../app/useTier';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { skinFace } from './skinFace';
 import styles from './CardFace.module.css';
@@ -64,6 +65,9 @@ const suitColor = (suit: Suit, twoColorDeck: boolean): string =>
 
 export function CardFace({ card }: { card: Card }) {
   const twoColorDeck = useSettingsStore(s => s.twoColorDeck);
+  // Phone tier gets a skin's mobile layout (bigger rank/suit) where one
+  // exists; tablet/desktop (≥768) keep the desktop layout unchanged.
+  const mobile = useTier() === 'phone';
   // Deck skin override (Claude Design's token-based faces, design/
   // deckSkins.ts). Active only for standard single-suit cards — jokers and
   // Double Duty two-way faces keep their dedicated rendering.
@@ -116,7 +120,13 @@ export function CardFace({ card }: { card: Card }) {
   // wrap fills the (parent-sized) cell — height:100% overrides its square
   // aspect-ratio so it tracks the grid cell exactly.
   if (activeSkin) {
-    const face = skinFace(activeSkin, card.rank, SUIT_KEY[card.suit], !twoColorDeck);
+    const face = skinFace(
+      activeSkin,
+      card.rank,
+      SUIT_KEY[card.suit],
+      !twoColorDeck,
+      mobile
+    );
     return (
       <div
         style={{ ...face.wrap, height: '100%', userSelect: 'none' }}
