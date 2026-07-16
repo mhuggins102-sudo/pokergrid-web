@@ -365,11 +365,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     // Value formats are kept identical to the Free Play difficulty table
     // (DifficultyPicker.axesFor): numerical jokers/starter, Must/Available/
     // Off swap, On/Off peek + discards, "N per game" undos.
+    // No-bonus-deck twists (Poker Purist / Three Tricks / Bull Market)
+    // skip the starter draw and have no swap rule — dash both rows
+    // rather than reporting the difficulty's values for a deck that
+    // doesn't exist in this run.
+    const noBonus = state.noBonusCards;
     const starter = STARTER_BONUS_BY_DIFFICULTY[state.difficulty];
     const rules: [string, string][] = [
       ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
-      ['Starter bonus', String(starter)],
-      ['Bonus swap', BONUS_SWAP_LABEL[state.bonusSwapAtCap]],
+      ['Starter bonus', noBonus ? '—' : String(starter)],
+      ['Bonus swap', noBonus ? '—' : BONUS_SWAP_LABEL[state.bonusSwapAtCap]],
       ['Deck peek', canPreviewDeck(state.difficulty) ? 'On' : 'Off'],
       ['Discards', state.noDiscards ? 'Off' : 'On'],
       ['Undos', maxUndos > 0 ? `${maxUndos} per game` : '—'],
@@ -502,6 +507,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     );
   }, [
     state.difficulty,
+    state.bonusSwapAtCap,
+    state.noBonusCards,
     navScore,
     state.target,
     state.noDiscards,

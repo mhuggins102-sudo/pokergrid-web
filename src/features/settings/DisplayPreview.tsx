@@ -1,6 +1,7 @@
 import { Card, Rank, Suit } from '../../game/cards';
 import { CardFace } from '../game/components/CardFace';
 import { useTier } from '../../app/useTier';
+import { useGameFamily } from '../game/useGameFamily';
 import { useSettingsStore } from './settingsStore';
 import { useResolvedTheme } from './useTheme';
 import { DockLayoutPreview } from './DockLayoutPreview';
@@ -51,6 +52,11 @@ const COL_TOTALS = [4, 0, 8, 21, 2];
 export function DisplayPreview() {
   const resolved = useResolvedTheme();
   const tier = useTier();
+  // The preview mirrors the game THIS viewport would launch: the desk
+  // families (desktop, tablet-landscape) put the dock in a right rail
+  // beside the board; the column family (phone, tablet-portrait) pins
+  // it below.
+  const desk = useGameFamily() !== 'column';
   // Mirror the Settings page's "Line totals" row: it binds the tier's
   // key (phone → lineRails, tablet/desktop → deskLineChips), so the
   // preview must follow the SAME key or the toggle looks inert here.
@@ -69,7 +75,11 @@ export function DisplayPreview() {
   );
 
   return (
-    <div data-theme={resolved} className={styles.preview} aria-hidden="true">
+    <div
+      data-theme={resolved}
+      className={`${styles.preview} ${desk ? styles.previewDesk : ''}`}
+      aria-hidden="true"
+    >
       <div
         className={`${styles.boardWrap} ${lineRails ? styles.withRails : ''}`}
       >
@@ -96,11 +106,12 @@ export function DisplayPreview() {
           </div>
         )}
       </div>
-      <div className={styles.dockPreview}>
-        {/* Desktop previews the desk dock the ≥1024 game actually shows
-            (center-stage vs compact); phone/tablet preview the column-
-            family dock the picker's four options describe. */}
-        <DockLayoutPreview layout={dockLayout} desk={tier === 'desktop'} />
+      <div className={desk ? styles.dockSide : styles.dockPreview}>
+        {/* Desk families preview the desk dock the game actually shows
+            (center-stage vs compact, in the right rail); the column
+            family previews the dock the picker's four options describe,
+            pinned below the board. */}
+        <DockLayoutPreview layout={dockLayout} desk={desk} />
       </div>
     </div>
   );

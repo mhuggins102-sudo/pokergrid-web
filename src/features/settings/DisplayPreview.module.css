@@ -108,9 +108,42 @@
   background: transparent;
 }
 
-/* The dock rides the preview's bottom edge, full-bleed, as in game. */
+/* The dock rides the preview's bottom edge, full-bleed, as in game
+   (the column family: phone, tablet-portrait). */
 .dockPreview {
   display: flex;
   flex-direction: column;
   margin: 0 calc(-1 * var(--space-md)) calc(-1 * var(--space-md));
+}
+
+/* Desk families (desktop, tablet-landscape): the dock sits in a right
+   rail beside the board, as in the real ≥1024 / desk-lite game. */
+.previewDesk {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.previewDesk .boardWrap {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The rail: full-bleed against the panel's top/right/bottom edges with
+   a hairline divider, dock pinned to its top like the game's right rail. */
+.dockSide {
+  flex: none;
+  width: 172px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin: calc(-1 * var(--space-md)) calc(-1 * var(--space-md))
+    calc(-1 * var(--space-md)) 0;
+  border-left: 1px solid var(--rule);
+}
+
+/* The dock frame draws its own top rule for the below-the-board case;
+   in the rail the divider is the border-left above. */
+.dockSide > * {
+  border-top: none;
+  height: 100%;
 }

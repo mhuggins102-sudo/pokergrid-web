@@ -9,6 +9,19 @@
   padding: 0 0 40px;
 }
 
+/* ---- TOP ROW: hero + Quick Start ---- */
+
+/* Desk widths: the hero takes the row with Quick Start as an equal-
+   height right column (its buttons stack vertically); the hero's card
+   art slides left with the hero's right edge. Below 1024 the row
+   dissolves — see the flex-order block near the foot of this file. */
+.topRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: stretch;
+}
+
 /* ---- HERO: today's daily ---- */
 
 .hero {
@@ -320,6 +333,31 @@
   .cardGrid {
     grid-template-columns: 1fr 1fr;
   }
+
+  /* The top row dissolves: hero and Quick Start become direct flex
+     items of .wrap, and order sends Quick Start below the card grid
+     (source order keeps it beside the hero for the desk grid). */
+  .wrap {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topRow {
+    display: contents;
+  }
+
+  .hero {
+    order: 1;
+  }
+
+  .cardGrid {
+    order: 2;
+  }
+
+  .quickStart {
+    order: 3;
+    margin-top: 16px;
+  }
 }
 
 .modeCard {
@@ -404,16 +442,17 @@
 
 /* ---- QUICK START ---- */
 
-/* Full-width container below the card grid: a title + blurb, then a
-   single row of four color-coded difficulty buttons that jump straight
-   into Free Play. */
+/* One-tap Free Play at each difficulty: the hero's right-hand column
+   on desk widths (title + blurb stacked, four buttons filling the
+   height), the full-width strip below the card grid otherwise. */
 .quickStart {
-  margin-top: 16px;
   padding: 16px 22px 18px;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
 }
 
 .quickStartHead {
@@ -423,6 +462,7 @@
   gap: 4px 10px;
   margin-bottom: 12px;
 }
+
 
 .quickStartTitle {
   font-family: var(--font-display);
@@ -473,6 +513,23 @@
 .quickBtn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Desk column variant: title over blurb, and the four buttons become
+   rows that stretch to share the hero's height evenly. (After the base
+   .quickRow/.quickBtn rules — same specificity, order decides.) */
+@media (min-width: 1024px) { /* bp-desktop */
+  .quickStartHead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .quickRow {
+    flex: 1;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+  }
 }
 
 /* Phone (<768): the hero drops its headline and card art (the eyebrow,
