@@ -621,10 +621,16 @@
     display: contents;
   }
 
+  /* Played: the hero keeps its UNPLAYED height — the bottom row is
+     pinned to the Play button's 39px, and the taller score block,
+     end-aligned, bleeds upward into the slack under the title/date
+     (the left column's top cell is shorter than the pills'). */
+  .heroBody:has(.heroResult) {
+    grid-template-rows: auto 39px;
+  }
+
   /* Played: score + tier + "View full result" combo takes the exact
-     slot the "Play now" button holds — bottom-left. In-grid (not
-     absolute): growth at the bottom row just makes the hero taller,
-     without shoving the pills or the archive link around. */
+     slot the "Play now" button holds — bottom-left. */
   .heroResult {
     grid-area: cta;
     justify-self: start;
