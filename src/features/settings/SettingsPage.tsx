@@ -390,11 +390,6 @@ export function SettingsPage() {
           hint="Override the card design with an unlocked skin. Browse the store to pick one; earn more by leveling up."
         >
           <div className={styles.skinRow}>
-            <Toggle
-              label="Deck skins"
-              value={settings.deckSkinsEnabled}
-              onChange={v => patch({ deckSkinsEnabled: v })}
-            />
             {settings.deckSkinsEnabled && (
               <button
                 type="button"
@@ -404,6 +399,11 @@ export function SettingsPage() {
                 Browse…
               </button>
             )}
+            <Toggle
+              label="Deck skins"
+              value={settings.deckSkinsEnabled}
+              onChange={v => patch({ deckSkinsEnabled: v })}
+            />
           </div>
         </Row>
         <Row

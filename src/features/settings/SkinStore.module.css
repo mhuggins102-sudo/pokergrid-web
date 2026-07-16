@@ -44,12 +44,6 @@
   transition: width 240ms ease;
 }
 
-.count {
-  font-size: 11.5px;
-  color: var(--faint, var(--ink-3));
-  letter-spacing: 0.02em;
-}
-
 /* One column of entries; groups expand within their own row. */
 .list {
   display: flex;
@@ -121,6 +115,33 @@
   }
 }
 
+/* Desktop hover magnifier: a blown-up copy of the tile's face, centered a
+   layer above the sheet. Hidden by default; shown only on hover-capable
+   pointers so touch (where every tile is briefly "hovered" on tap) never
+   triggers it. The wrap's inline position:fixed + these offsets pin it to
+   the viewport center, clear of the scrolling list. */
+.magnify {
+  display: none;
+}
+
+@media (hover: hover) {
+  .magnify {
+    top: 50%;
+    left: 50%;
+    z-index: 30;
+    transform: translate(-50%, -50%);
+    border-radius: 12px;
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.34),
+      0 4px 14px rgba(0, 0, 0, 0.22);
+    pointer-events: none;
+  }
+
+  .tile:hover .magnify {
+    display: inline-block;
+  }
+}
+
 .tileSelected {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, var(--paper));
@@ -186,12 +207,15 @@
   color: var(--ink-3);
 }
 
-/* Group entry (unlocked): an expandable list of variant tiles. */
+/* Group entry (unlocked): an expandable list of variant tiles.
+   NB: no `overflow: hidden` here — a <details> with a display:flex <summary>
+   and overflow:hidden collapses to its borders (~2px) in Chromium, hiding
+   the whole group. The summary/grid are inset by their own padding, so the
+   rounded corners read cleanly without clipping. */
 .group {
   border-radius: var(--radius-md);
   background: var(--paper);
   border: 1px solid var(--hairline);
-  overflow: hidden;
 }
 
 .groupHead {
