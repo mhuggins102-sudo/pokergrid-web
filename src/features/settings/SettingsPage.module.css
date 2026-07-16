@@ -352,6 +352,11 @@
     display: none;
   }
 
+  /* Section heads share the rows' 18px inset so their titles align. */
+  .sectionHead {
+    padding: 14px 18px;
+  }
+
   /* Compact rows: title (+ ⓘ) left, control right; wide controls wrap. */
   .row {
     flex-wrap: wrap;

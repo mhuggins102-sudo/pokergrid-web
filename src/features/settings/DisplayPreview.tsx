@@ -68,7 +68,7 @@ export function DisplayPreview() {
       key={key}
       className={`${styles.chip} ${total > 0 ? styles.chipPos : styles.chipZero}`}
     >
-      {total}
+      <span className={styles.chipVal}>{total}</span>
     </span>
   );
 
@@ -78,14 +78,15 @@ export function DisplayPreview() {
       className={`${styles.preview} ${desk ? styles.previewDesk : ''}`}
       aria-hidden="true"
     >
+      {/* Rails mirror the game: row totals down the RIGHT edge, column
+          totals underneath (LineRails .railsRight / the desk edge
+          chips). The column family additionally thins the row chips
+          and rotates their digits, exactly like the phone game. */}
       <div
-        className={`${styles.boardWrap} ${lineRails ? styles.withRails : ''}`}
+        className={`${styles.boardWrap} ${lineRails ? styles.withRails : ''} ${
+          desk ? '' : styles.colFamily
+        }`}
       >
-        {lineRails && (
-          <div className={styles.rowRail}>
-            {ROW_TOTALS.map((t, i) => chip(t, `r${i}`))}
-          </div>
-        )}
         <div className={styles.board}>
           <div className={styles.grid}>
             {SAMPLE.map((card, i) => (
@@ -98,6 +99,11 @@ export function DisplayPreview() {
             ))}
           </div>
         </div>
+        {lineRails && (
+          <div className={styles.rowRail}>
+            {ROW_TOTALS.map((t, i) => chip(t, `r${i}`))}
+          </div>
+        )}
         {lineRails && (
           <div className={styles.colRail}>
             {COL_TOTALS.map((t, i) => chip(t, `c${i}`))}

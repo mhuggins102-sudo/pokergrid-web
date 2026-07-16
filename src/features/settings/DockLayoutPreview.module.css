@@ -197,19 +197,27 @@
   background: var(--paper-raised);
 }
 
-.desktopPanelTitle {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-2);
+/* Sample held bonus cards — the game's amber-outlined cards at
+   postage-stamp scale. */
+.bonusCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 7px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--warn) 7%, var(--paper-raised));
+  color: var(--warn);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.desktopChip {
-  height: 16px;
-  border-radius: var(--radius-xs);
-  background: var(--paper-sunken);
-  border: 1px solid var(--hairline);
+.bonusCard b {
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .desktopDock {
