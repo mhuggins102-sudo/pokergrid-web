@@ -9,6 +9,8 @@ export interface SheetProps {
   children: ReactNode;
   hideHeader?: boolean;
   dismissible?: boolean;
+  /** Extra class on the underlying <dialog> (e.g. a wider desktop variant). */
+  className?: string;
 }
 
 /**
@@ -23,13 +25,14 @@ export function Sheet({
   children,
   hideHeader,
   dismissible,
+  className,
 }: SheetProps) {
   return (
     <Dialog
       open={open}
       onClose={onClose}
       title={title}
-      className={styles.sheet}
+      className={[styles.sheet, className].filter(Boolean).join(' ')}
       hideHeader={hideHeader}
       dismissible={dismissible}
       dragToClose={dismissible !== false}

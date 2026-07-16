@@ -151,7 +151,9 @@
    a hairline divider, dock pinned to its top like the game's right rail. */
 .dockSide {
   flex: none;
-  width: 172px;
+  /* Fits the desk dock mock's natural width (~207px) so its action buttons
+     aren't clipped by the panel's overflow:hidden. */
+  width: 212px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

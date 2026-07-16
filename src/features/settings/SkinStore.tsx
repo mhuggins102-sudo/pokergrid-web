@@ -2,6 +2,7 @@ import { CSSProperties, createContext, useContext, useState } from 'react';
 import { Sheet } from '../../design/primitives';
 import { SuitKey } from '../../design/deckSkins';
 import { SKIN_CATALOG, SkinUnlock, skinName } from '../../design/skinCatalog';
+import { LEVEL_XP, MAX_LEVEL } from '../../lib/xp';
 import { skinFace } from '../game/components/skinFace';
 import { useTier } from '../../app/useTier';
 import { usePlayerLevel } from '../progress/usePlayerLevel';
@@ -85,13 +86,25 @@ function SkinPreview({
 const LOCK_PATH =
   'M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z';
 
-// Desktop-only hover magnifier: a large copy of a face, centered a layer
-// above the sheet (position:fixed via .magFloat, shown only on hover-capable
-// pointers). Locked entries magnify their dimmed, padlocked cover.
-function Magnify({ id, locked = false }: { id: string; locked?: boolean }) {
+// A large copy of a face, centered a layer above the sheet (position:fixed
+// via .magFloat). Two triggers: on hover-capable pointers it appears while
+// the row is hovered (desktop, CSS-driven); `shown` force-shows it for the
+// tap-to-inspect overlay (touch, where there is no hover). Locked entries
+// magnify their dimmed, padlocked cover.
+function Magnify({
+  id,
+  locked = false,
+  shown = false,
+}: {
+  id: string;
+  locked?: boolean;
+  shown?: boolean;
+}) {
   return (
     <span
-      className={`${styles.magFloat}${locked ? ` ${styles.magFloatLocked}` : ''}`}
+      className={`${styles.magFloat}${locked ? ` ${styles.magFloatLocked}` : ''}${
+        shown ? ` ${styles.magShown}` : ''
+      }`}
       aria-hidden="true"
     >
       <SkinPreview
@@ -135,10 +148,23 @@ function SkinTile({
 }
 
 // Locked entry — cover preview dimmed under a padlock + required level.
-// Hovering it (desktop) magnifies the same padlocked cover.
-function LockedEntry({ unlock }: { unlock: SkinUnlock }) {
+// Hovering it (desktop) magnifies the same padlocked cover; tapping it
+// (any pointer) inspects it: the header previews the required level and,
+// where there is no hover, an enlarged padlocked cover appears.
+function LockedEntry({
+  unlock,
+  onInspect,
+}: {
+  unlock: SkinUnlock;
+  onInspect: () => void;
+}) {
   return (
-    <div className={`${styles.entry} ${styles.entryLocked}`}>
+    <button
+      type="button"
+      className={`${styles.entry} ${styles.entryLocked}`}
+      onClick={onInspect}
+      aria-label={`${unlock.name} — locked, reach level ${unlock.level}`}
+    >
       <span className={styles.coverWrap} aria-hidden="true">
         <SkinPreview id={unlock.skinIds[0]} />
         <span className={styles.lock}>
@@ -155,7 +181,7 @@ function LockedEntry({ unlock }: { unlock: SkinUnlock }) {
         </span>
       </div>
       <Magnify id={unlock.skinIds[0]} locked />
-    </div>
+    </button>
   );
 }
 
@@ -219,11 +245,40 @@ export function SkinStore({
   open: boolean;
   onClose: () => void;
 }) {
-  const { level, atMax, xpIntoLevel, levelSpan, progress } = usePlayerLevel();
+  const { level, xp, atMax, xpIntoLevel, levelSpan, progress } = usePlayerLevel();
   const selected = useSettingsStore(s => s.deckSkin);
   const twoColor = useSettingsStore(s => s.twoColorDeck);
   const set = useSettingsStore(s => s.set);
   const [sampleSuit, setSampleSuit] = useState<SuitKey>('h');
+  // A locked entry the player has tapped to inspect: the header previews
+  // that entry's required level (total XP earned / XP to reach it), and an
+  // enlarged padlocked cover floats above the sheet (the touch equivalent
+  // of the desktop hover magnifier). Cleared by tapping the backdrop.
+  const [inspect, setInspect] = useState<SkinUnlock | null>(null);
+
+  // Header shows the real level normally; while inspecting a locked entry it
+  // previews that level as cumulative progress toward unlocking it.
+  const inspectLevel = inspect?.level ?? null;
+  const inspectNeed =
+    inspectLevel !== null ? LEVEL_XP[Math.min(inspectLevel, MAX_LEVEL) - 1] : 0;
+  const headLevel = inspectLevel ?? level;
+  const headXp =
+    inspectLevel !== null
+      ? `${xp} / ${inspectNeed} XP`
+      : atMax
+        ? 'Max level'
+        : `${xpIntoLevel} / ${levelSpan} XP to next`;
+  const headProgress =
+    inspectLevel !== null
+      ? inspectNeed > 0
+        ? Math.min(1, xp / inspectNeed)
+        : 1
+      : progress;
+
+  const close = () => {
+    setInspect(null);
+    onClose();
+  };
 
   const title = (
     <span className={styles.titleRow}>
@@ -247,19 +302,19 @@ export function SkinStore({
   );
 
   return (
-    <Sheet open={open} onClose={onClose} title={title}>
+    <Sheet open={open} onClose={close} title={title}>
       <SampleSuitCtx.Provider value={sampleSuit}>
-        <div className={styles.head}>
+        <div
+          className={`${styles.head} ${inspect ? styles.headInspect : ''}`}
+        >
           <div className={styles.levelRow}>
-            <span className={styles.levelBadge}>Level {level}</span>
-            <span className={styles.levelXp}>
-              {atMax ? 'Max level' : `${xpIntoLevel} / ${levelSpan} XP to next`}
-            </span>
+            <span className={styles.levelBadge}>Level {headLevel}</span>
+            <span className={styles.levelXp}>{headXp}</span>
           </div>
           <div className={styles.track}>
             <div
               className={styles.fill}
-              style={{ width: `${Math.round(progress * 100)}%` }}
+              style={{ width: `${Math.round(headProgress * 100)}%` }}
             />
           </div>
         </div>
@@ -301,10 +356,26 @@ export function SkinStore({
                 onSelect={id => set({ deckSkin: id })}
               />
             ) : (
-              <LockedEntry key={unlock.id} unlock={unlock} />
+              <LockedEntry
+                key={unlock.id}
+                unlock={unlock}
+                onInspect={() => setInspect(unlock)}
+              />
             )
           )}
         </div>
+
+        {/* Tap-to-inspect overlay: an enlarged padlocked cover a layer above
+            the sheet, with a backdrop that dismisses on tap. This is the
+            touch path to the same enlargement desktop gets on hover. */}
+        {inspect && (
+          <div
+            className={styles.inspectBackdrop}
+            onClick={() => setInspect(null)}
+          >
+            <Magnify id={inspect.skinIds[0]} locked shown />
+          </div>
+        )}
       </SampleSuitCtx.Provider>
     </Sheet>
   );
