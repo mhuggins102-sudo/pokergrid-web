@@ -102,9 +102,55 @@
   gap: var(--space-md);
 }
 
-.side {
+/* Center stage's flanking columns: two stacked buttons per side. */
+.stageSide {
   flex: 1;
   max-width: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Icon-only square (the docks' compact ↺ / 🗑). */
+.iconBtn {
+  flex: none;
+  min-width: 34px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* The suit-perk button wears amber in every dock (GameScreen's
+   .perkAmber) — mirror it so the preview reads like the game. */
+.perkBtn {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: var(--on-accent);
+}
+
+/* Desk (≥1024) center-stage: card + meta over stacked actions. */
+.deskStage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+}
+
+/* The "Desktop" view's deck well: meta column beside the card. */
+.wellRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* The "Desktop" view's 2×2 action grid: Place + 🗑 over perk + ↺. */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-xs);
+  width: 100%;
 }
 
 .handRow {

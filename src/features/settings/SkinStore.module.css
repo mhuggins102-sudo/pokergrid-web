@@ -107,7 +107,7 @@
   flex: none;
   width: 58px;
   height: 58px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--hairline);
   background: var(--card-face);
   color: var(--card-black);
@@ -168,7 +168,8 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 30;
-  border-radius: 10px;
+  /* Match the preview card's own corner radius so the drop shadow hugs it. */
+  border-radius: var(--radius-sm);
   box-shadow:
     0 18px 48px rgba(0, 0, 0, 0.34),
     0 4px 14px rgba(0, 0, 0, 0.22);
@@ -229,7 +230,7 @@
   position: relative;
   flex: none;
   display: inline-block;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   filter: grayscale(0.5) brightness(0.82);
 }
