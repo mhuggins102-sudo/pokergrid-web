@@ -79,7 +79,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
   // Non-null only when THIS run crossed a new XP level (see useLevelUp).
-  const levelUp = useLevelUp();
+  const levelUp = useLevelUp(viewOnly);
 
   // Game-end tally, three beats told by the rail chips:
   //   1. 'assemble' — chips pop in with their BASE totals while the

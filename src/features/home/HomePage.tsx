@@ -146,6 +146,10 @@ export function HomePage() {
 
   return (
     <div className={styles.wrap}>
+      {/* TOP ROW — the hero + Quick Start share it on desk widths (the
+          hero's card art slides left as it narrows); below 1024 the row
+          dissolves and Quick Start drops to the page foot (flex order). */}
+      <div className={styles.topRow}>
       {/* HERO — today's daily. A <div> with a stretched primary link
           (the CTA's ::after covers the card) instead of one big <a>,
           so the quiet archive link can sit beside the CTA without
@@ -237,6 +241,31 @@ export function HomePage() {
         </div>
       </div>
 
+      {/* Quick Start: one-tap Free Play at any difficulty. The hero's
+          right-hand neighbor on desk widths (buttons stacked); the full-
+          width strip below the card grid everywhere else. */}
+      <div className={styles.quickStart}>
+        <div className={styles.quickStartHead}>
+          <span className={styles.quickStartTitle}>Quick Start</span>
+          <span className={styles.quickStartSub}>
+            Jump right into a Free Play game.
+          </span>
+        </div>
+        <div className={styles.quickRow}>
+          {QUICK_DIFFS.map(d => (
+            <Link
+              key={d}
+              to={`/play?difficulty=${d}`}
+              className={styles.quickBtn}
+              style={{ '--tone': difficultyColors[d] } as CSSProperties}
+            >
+              {DIFF_LABEL[d]}
+            </Link>
+          ))}
+        </div>
+      </div>
+      </div>
+
       {/* CARD GRID — the three mode cards + the newcomer card (the
           tutorial callout on a first visit, the quiet rules pointer
           ever after). One row of four on desk widths, 2×2 below. */}
@@ -263,29 +292,6 @@ export function HomePage() {
             </Link>
           </div>
         )}
-      </div>
-
-      {/* Quick Start: one-tap Free Play at any difficulty. Four
-          color-coded buttons on a single full-width row. */}
-      <div className={styles.quickStart}>
-        <div className={styles.quickStartHead}>
-          <span className={styles.quickStartTitle}>Quick Start</span>
-          <span className={styles.quickStartSub}>
-            Jump right into a Free Play game.
-          </span>
-        </div>
-        <div className={styles.quickRow}>
-          {QUICK_DIFFS.map(d => (
-            <Link
-              key={d}
-              to={`/play?difficulty=${d}`}
-              className={styles.quickBtn}
-              style={{ '--tone': difficultyColors[d] } as CSSProperties}
-            >
-              {DIFF_LABEL[d]}
-            </Link>
-          ))}
-        </div>
       </div>
     </div>
   );

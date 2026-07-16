@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { hydrateBonusCards } from '../../../game/bonusCards';
+import { BONUS_SWAP_AT_CAP_BY_DIFFICULTY } from '../../../game/rules';
 import { safeJSONStorage } from '../../../lib/safeStorage';
 import { PLAYS_STORE_NAME, PLAYS_STORE_VERSION } from './playsStoreKey';
 import type { GameState } from '../../../game/state';
@@ -38,6 +39,12 @@ const hydratePlay = (play: DailyPlay): DailyPlay => ({
   ...play,
   state: {
     ...slimState(play.state),
+    // Plays stored before bonusSwapAtCap existed: derive the difficulty's
+    // value, exactly as newGame does — otherwise the revisited game's
+    // difficulty popup renders a blank "Bonus swap" cell.
+    bonusSwapAtCap:
+      play.state.bonusSwapAtCap ??
+      BONUS_SWAP_AT_CAP_BY_DIFFICULTY[play.state.difficulty],
     bonusCards: hydrateBonusCards(play.state.bonusCards),
     bonusDeck: hydrateBonusCards(play.state.bonusDeck),
   },

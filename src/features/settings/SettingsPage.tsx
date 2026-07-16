@@ -14,6 +14,7 @@ import { useHandle } from '../daily/sync/handleStore';
 import { resetDailyProgress } from '../daily/sync/sync';
 import { clearTwistsSeen } from '../daily/twistSeen';
 import { isBackendConfigured } from '../../lib/supabaseRpc';
+import { useProgressionStore } from '../progress/progressionStore';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from '../targets/targetsStore';
 import { clearTutorialSeen } from '../tutorial/tutorialSeen';
@@ -206,6 +207,7 @@ export function SettingsPage() {
   const tier = useTier();
   const settings = useSettingsStore();
   const resetStats = useStatsStore(s => s.reset);
+  const resetProgression = useProgressionStore(s => s.reset);
   const clearTargets = useTargetsStore(s => s.clearProgress);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -564,6 +566,10 @@ export function SettingsPage() {
                 variant="danger"
                 onClick={() => {
                   resetStats();
+                  // Level-ack watermark back to unseeded — the AppLayout
+                  // seeder re-snaps it to the (now level-1) derived level,
+                  // so future level-ups announce themselves again.
+                  resetProgression();
                   clearTargets();
                   resetDailyProgress();
                   clearTwistsSeen();

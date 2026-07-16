@@ -96,10 +96,15 @@
 }
 
 /* Real card-face previews (Claude Design's renderer) get a fixed square so
-   their container-query units resolve. */
+   their container-query units resolve. display:block, NOT inline-block —
+   an inline-block span sits on its parent's text baseline, and inside the
+   span parents here (.coverWrap, .magFloat) the descender gap makes the
+   box ~6px taller than the card: the magnifier's drop shadow then traces
+   the taller box (a ledge under the enlarged face) and locked covers clip
+   the gap inside their rounded frame (an odd bottom border). */
 .preview {
   flex: none;
-  display: inline-block;
+  display: block;
 }
 
 .defaultPreview {

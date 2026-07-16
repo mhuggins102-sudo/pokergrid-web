@@ -10,7 +10,9 @@ export const DOCK_LAYOUT_LABEL: Record<DockLayout, string> = {
   'hand-stack': 'Hand stack',
   'center-stage': 'Center stage',
   classic: 'Classic',
-  desktop: 'Desktop',
+  // The stored key predates the rename — the phone two-column view
+  // shows as "Split" so it can't be confused with the desktop tier.
+  desktop: 'Split',
 };
 
 const meta = (

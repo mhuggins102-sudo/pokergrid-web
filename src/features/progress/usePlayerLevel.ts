@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DailyXpPlay, LevelInfo, levelInfoFor, xpForStats } from '../../lib/xp';
+import { skinUnlocked } from '../../design/skinCatalog';
 import { usePlaysStore } from '../daily/sync/playsStore';
+import { useSettingsStore } from '../settings/settingsStore';
 import { useProgressionStore } from './progressionStore';
 import { useStatsStore } from './statsStore';
 
@@ -49,17 +51,41 @@ export function useSeedProgression(): void {
  * watermark), else null. Fires once — it waits for the run's XP to land in
  * the stores (level is reactive), then bumps the watermark so a re-mount
  * (mobile↔desktop fork) doesn't replay it.
+ *
+ * `viewOnly` (a re-hydrated stored play, e.g. the daily archive) never
+ * celebrates or acks — the same guard every result-recording hook has,
+ * so an unrelated level crossing (say, the boot-time achievement sync)
+ * can't paint its banner over an old game.
  */
-export function useLevelUp(): number | null {
+export function useLevelUp(viewOnly: boolean = false): number | null {
   const { level } = usePlayerLevel();
   const levelAckd = useProgressionStore(s => s.levelAckd);
   const ackLevel = useProgressionStore(s => s.ackLevel);
   const [shown, setShown] = useState<number | null>(null);
   useEffect(() => {
+    if (viewOnly) return;
     if (shown === null && levelAckd !== null && level > levelAckd) {
       setShown(level);
       ackLevel(level);
     }
-  }, [level, levelAckd, shown, ackLevel]);
-  return shown;
+  }, [viewOnly, level, levelAckd, shown, ackLevel]);
+  return viewOnly ? null : shown;
+}
+
+/**
+ * Clears an equipped deck skin that has fallen back behind its unlock
+ * level — possible after "Reset all progress" drops the derived level.
+ * Without this the locked skin keeps rendering in-game while the store
+ * shows its entry padlocked, with no visible tile to un-pick it from.
+ * Mount once, high in the tree (beside useSeedProgression).
+ */
+export function useValidateEquippedSkin(): void {
+  const { level } = usePlayerLevel();
+  const deckSkin = useSettingsStore(s => s.deckSkin);
+  const set = useSettingsStore(s => s.set);
+  useEffect(() => {
+    if (deckSkin !== null && !skinUnlocked(deckSkin, level)) {
+      set({ deckSkin: null });
+    }
+  }, [deckSkin, level, set]);
 }

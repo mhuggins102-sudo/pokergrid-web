@@ -547,7 +547,14 @@ export const suitActionAvailable = (
   bonusHandSize: number = 0,
   noSwap: boolean = false,
   // Bull Market: ♣ always invests (no bonus deck needed).
-  investHands: boolean = false
+  investHands: boolean = false,
+  // Mixed Bag (slot categories): ♣ draws for a chosen slot and runs its
+  // own always-3-slots swap semantics, so the at-cap rule does NOT apply
+  // (mirrors handleBeginSuitAction — Mixed Bag seeds the hand full from
+  // turn 1, so the cap gate would kill the mechanic outright). Pass
+  // whether ANY slot is still drawable (unspent + a matching card left
+  // in the bonus deck); null = the run has no slot categories.
+  slotDrawable: boolean | null = null
 ): boolean => {
   if (!drawn || isJoker(drawn)) return false;
   switch (drawn.suit) {
@@ -559,6 +566,9 @@ export const suitActionAvailable = (
       return canDestroy(grid);
     case 'C':
       if (investHands) return true;
+      if (slotDrawable !== null) {
+        return canDrawBonus(bonusDeckSize) && slotDrawable;
+      }
       if (noSwap && bonusHandSize >= BONUS_HAND_LIMIT) return false;
       return canDrawBonus(bonusDeckSize);
   }
