@@ -102,9 +102,55 @@
   gap: var(--space-md);
 }
 
-.side {
+/* Center stage's flanking columns: two stacked buttons per side. */
+.stageSide {
   flex: 1;
   max-width: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Icon-only square (the docks' compact ↺ / 🗑). */
+.iconBtn {
+  flex: none;
+  min-width: 34px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* The suit-perk button wears amber in every dock (GameScreen's
+   .perkAmber) — mirror it so the preview reads like the game. */
+.perkBtn {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: var(--on-accent);
+}
+
+/* Desk (≥1024) center-stage: card + meta over stacked actions. */
+.deskStage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+}
+
+/* The "Desktop" view's deck well: meta column beside the card. */
+.wellRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* The "Desktop" view's 2×2 action grid: Place + 🗑 over perk + ↺. */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-xs);
+  width: 100%;
 }
 
 .handRow {
@@ -145,25 +191,70 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: var(--space-xs);
+  padding: 6px 8px;
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--paper-raised);
 }
 
-.desktopPanelTitle {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-2);
+/* The game's fixed 3-slot fill: every slot shares the height evenly. */
+.desktopBonus > * {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
-.desktopChip {
-  height: 16px;
-  border-radius: var(--radius-xs);
-  background: var(--paper-sunken);
-  border: 1px solid var(--hairline);
+/* Held entry — DesktopBonusPanel's dock card at mini scale: tone
+   border, 8% tone wash, tone title over the mult, the live "+N"
+   pinned to the bottom-right corner in accent. */
+.slotCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 3px 8px;
+  border: 1px solid var(--tone, var(--rule));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--tone, var(--rule)) 8%, var(--paper-raised));
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.slotTitle {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--tone, var(--ink));
+}
+
+.slotMult {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding-right: 20px;
+}
+
+.slotVal {
+  position: absolute;
+  right: 6px;
+  bottom: 3px;
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+/* Dotted not-yet-held slot, as in game. */
+.slotEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-md);
+  color: var(--ink-3);
+  font-size: 9px;
+  font-weight: 600;
 }
 
 .desktopDock {
@@ -175,6 +266,6 @@
   gap: var(--space-xs);
   padding: var(--space-xs);
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--paper-raised);
 }

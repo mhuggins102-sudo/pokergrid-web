@@ -1,5 +1,6 @@
 import { Card, Rank, Suit } from '../../game/cards';
 import { CardFace } from '../game/components/CardFace';
+import { useGameFamily } from '../game/useGameFamily';
 import { useSettingsStore } from './settingsStore';
 import { useResolvedTheme } from './useTheme';
 import { DockLayoutPreview } from './DockLayoutPreview';
@@ -49,7 +50,17 @@ const COL_TOTALS = [4, 0, 8, 21, 2];
  */
 export function DisplayPreview() {
   const resolved = useResolvedTheme();
-  const lineRails = useSettingsStore(s => s.lineRails);
+  // The preview mirrors the game THIS viewport would launch: the desk
+  // families (desktop, tablet-landscape) put the dock in a right rail
+  // beside the board; the column family (phone, tablet-portrait) pins
+  // it below.
+  const desk = useGameFamily() !== 'column';
+  // Mirror the Settings page's "Line totals" row: it binds the
+  // family's key (column → lineRails, desk → deskLineChips), so the
+  // preview must follow the SAME key or the toggle looks inert here.
+  const lineRails = useSettingsStore(s =>
+    desk ? s.deskLineChips : s.lineRails
+  );
   const dockLayout = useSettingsStore(s => s.dockLayout);
 
   const chip = (total: number, key: string) => (
@@ -57,20 +68,25 @@ export function DisplayPreview() {
       key={key}
       className={`${styles.chip} ${total > 0 ? styles.chipPos : styles.chipZero}`}
     >
-      {total}
+      <span className={styles.chipVal}>{total}</span>
     </span>
   );
 
   return (
-    <div data-theme={resolved} className={styles.preview} aria-hidden="true">
+    <div
+      data-theme={resolved}
+      className={`${styles.preview} ${desk ? styles.previewDesk : ''}`}
+      aria-hidden="true"
+    >
+      {/* Rails mirror the game: row totals down the RIGHT edge, column
+          totals underneath (LineRails .railsRight / the desk edge
+          chips). The column family additionally thins the row chips
+          and rotates their digits, exactly like the phone game. */}
       <div
-        className={`${styles.boardWrap} ${lineRails ? styles.withRails : ''}`}
+        className={`${styles.boardWrap} ${lineRails ? styles.withRails : ''} ${
+          desk ? '' : styles.colFamily
+        }`}
       >
-        {lineRails && (
-          <div className={styles.rowRail}>
-            {ROW_TOTALS.map((t, i) => chip(t, `r${i}`))}
-          </div>
-        )}
         <div className={styles.board}>
           <div className={styles.grid}>
             {SAMPLE.map((card, i) => (
@@ -84,13 +100,22 @@ export function DisplayPreview() {
           </div>
         </div>
         {lineRails && (
+          <div className={styles.rowRail}>
+            {ROW_TOTALS.map((t, i) => chip(t, `r${i}`))}
+          </div>
+        )}
+        {lineRails && (
           <div className={styles.colRail}>
             {COL_TOTALS.map((t, i) => chip(t, `c${i}`))}
           </div>
         )}
       </div>
-      <div className={styles.dockPreview}>
-        <DockLayoutPreview layout={dockLayout} />
+      <div className={desk ? styles.dockSide : styles.dockPreview}>
+        {/* Desk families preview the desk dock the game actually shows
+            (center-stage vs compact, in the right rail); the column
+            family previews the dock the picker's four options describe,
+            pinned below the board. */}
+        <DockLayoutPreview layout={dockLayout} desk={desk} />
       </div>
     </div>
   );

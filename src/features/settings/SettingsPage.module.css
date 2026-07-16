@@ -52,6 +52,8 @@
    resolve var()). Deliberately NOT a container query: inline-size
    containment would make .wrap the containing block for the
    position:fixed .confirmScrim below. */
+/* A clean 2×2 of sections: Appearance | Game screen over
+   Sound & accessibility | Identity & data. */
 @media (min-width: 1200px) {
   .wrap {
     max-width: 1080px;
@@ -61,29 +63,13 @@
     grid-template-columns: 1fr 1fr;
     gap: 20px 24px;
   }
-
-  /* Identity & data: the full-width footer band; its rows sit side by
-     side (hairline divider), and a lone Reset row (no backend) spans. */
-  .sectionSpan {
-    grid-column: 1 / -1;
-  }
-
-  .sectionSpan .bandRows {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .sectionSpan .bandRows .row + .row {
-    border-top: none;
-    border-left: 1px solid var(--hairline);
-  }
-
-  .sectionSpan .bandRows .row:only-child {
-    grid-column: 1 / -1;
-  }
 }
 
 .sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 14px 22px;
   border-bottom: 1px solid var(--hairline);
   font-size: 12px;
@@ -92,6 +78,35 @@
   letter-spacing: 0.09em;
   color: var(--ink-3);
 }
+
+/* Right-end header control (Presentation's "Preview →") — the Home
+   screen's quiet accent-link treatment. */
+.headAction {
+  flex: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .headAction:hover {
+    text-decoration: underline;
+  }
+}
+
+.headAction:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 
 .row {
   display: flex;
@@ -134,16 +149,24 @@
   flex: none;
 }
 
-/* 4+ options: the strip goes full-width and wraps two-up (a single row
-   would overflow the phone). Each segment takes half the width. */
-.segWrap {
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-}
+/* 4+ options (the dock picker): ≥768 the strip stays inline like any
+   other segmented control — the row is wide enough for one line. The
+   phone fits them as a compact 2×2 block on the RIGHT of the row
+   title, like every other control. */
+@media (max-width: 767px) { /* below bp-tablet */
+  .segWrap {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-.segWrap .segBtn {
-  flex: 1 1 calc(50% - 2px);
+  /* Slightly tighter than the other phone segments — four labels must
+     share the row with the "Dock layout" title (the 2×2 block plus the
+     title need every pixel of a 390px row). */
+  .segWrap .segBtn {
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 12px;
+  }
 }
 
 .segBtn {
@@ -317,24 +340,6 @@
   margin-top: 18px;
 }
 
-/* ---- Display preview (ported from the phone page) ---- */
-
-.previewSlot {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding: 14px 22px 18px;
-  border-top: 1px solid var(--hairline);
-}
-
-.previewLabel {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
-}
-
 /* Phone (<768): the eyebrow + title drop; the three sections become
    accordions (native <details>/<summary>, Gameplay open by default);
    rows go compact — the hint moves into a ⓘ button that opens a Sheet,
@@ -347,35 +352,9 @@
     display: none;
   }
 
-  /* When an opened section auto-scrolls to the top, leave room for the
-     sticky header so its head isn't tucked underneath. */
-  .section {
-    scroll-margin-top: 96px;
-  }
-
-  /* Accordion heads: the section head becomes a tappable summary with a
-     caret; the marker is suppressed. */
-  .section > .sectionHead {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
-  }
-
-  .section > .sectionHead::-webkit-details-marker {
-    display: none;
-  }
-
-  .sectionCaret {
-    font-size: 11px;
-    color: var(--ink-3);
-    transition: transform 0.16s ease;
-  }
-
-  .section[open] > .sectionHead .sectionCaret {
-    transform: rotate(180deg);
+  /* Section heads share the rows' 18px inset so their titles align. */
+  .sectionHead {
+    padding: 14px 18px;
   }
 
   /* Compact rows: title (+ ⓘ) left, control right; wide controls wrap. */
@@ -423,7 +402,22 @@
     color: var(--ink-2);
   }
 
-  .previewSlot {
-    padding: 12px 18px 16px;
+  /* The handle editor rides the row, right of the title, shrinking its
+     input rather than wrapping below (the internal note is off here —
+     the row's ⓘ covers it, and the title compacts to "Handle"). */
+  .handleEditor {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .handleEditor input {
+    min-width: 120px;
+  }
+
+  /* Tighter segments so Theme / Light-dark / the 2×2 dock block sit
+     beside their titles instead of wrapping under them. */
+  .segBtn {
+    padding: 7px 10px;
+    font-size: 12.5px;
   }
 }

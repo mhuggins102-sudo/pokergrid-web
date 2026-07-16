@@ -401,10 +401,15 @@ export function DayStatsSheet({
  */
 export function HandleEditor({
   heading = 'Screen name',
+  note = true,
   onSaved,
 }: {
   /** Section heading; null renders the editor without one. */
   heading?: string | null;
+  /** The explanatory note under the input — hosts whose row already
+   *  explains the handle (phone Settings' ⓘ) pass false. Errors always
+   *  render regardless. */
+  note?: boolean;
   /** Called after a successful save with the new handle (null = cleared). */
   onSaved?: (handle: string | null) => void;
 } = {}) {
@@ -457,11 +462,11 @@ export function HandleEditor({
       </div>
       {error ? (
         <span className={`${styles.handleNote} ${styles.error}`}>{error}</span>
-      ) : (
+      ) : note ? (
         <span className={styles.handleNote}>
           Shown on the top-scores list. Leave empty to stay anonymous.
         </span>
-      )}
+      ) : null}
     </div>
   );
 }

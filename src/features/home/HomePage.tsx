@@ -1,6 +1,6 @@
 import { CSSProperties, useState } from 'react';
 import { Link } from 'react-router';
-import { markTutorialSeen, tutorialSeen } from '../tutorial/tutorialSeen';
+import { tutorialSeen } from '../tutorial/tutorialSeen';
 import { CHALLENGES, findChallenge } from '../../game/challenges';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
@@ -15,7 +15,7 @@ import {
 } from '../daily/streak';
 import styles from './HomePage.module.css';
 
-// Quick Start row — one-tap Free Play at each difficulty (phone only).
+// Quick Start row — one-tap Free Play at each difficulty (every tier).
 // Full names (not initials) so Easy/Extreme never collide; color coding
 // mirrors the difficulty tokens used everywhere else.
 const QUICK_DIFFS: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
@@ -79,10 +79,6 @@ const heroDate = (iso: string): string => {
 };
 
 export function HomePage() {
-  // First-visit tutorial callout in the footer strip; "No thanks"
-  // suppresses it for good (the tutorial stays reachable from Rules
-  // and Settings).
-  const [showIntro, setShowIntro] = useState(() => !tutorialSeen());
   const today = currentDateISO();
   const recipe = recipeFor(today);
   const twist = recipe.twist ? findChallenge(recipe.twist) : null;
@@ -107,15 +103,14 @@ export function HomePage() {
     : null;
   const diffTone = difficultyColors[recipe.difficulty];
   const isPhone = useTier() === 'phone';
-  // Phone newcomer card: the tutorial callout gives way to the quiet
-  // "Rules" pointer once the player has either taken the tutorial OR
-  // finished at least one game — no manual dismiss needed. (Desktop keeps
-  // its own showIntro + "No thanks" strip below, untouched.)
+  // Newcomer card (every tier): the tutorial callout gives way to the
+  // quiet "Rules" pointer once the player has either taken the tutorial
+  // OR finished at least one game — no manual dismiss needed.
   const gamesPlayed = useStatsStore(s => s.stats.wins + s.stats.losses);
-  const phoneShowIntro = !tutorialSeen() && gamesPlayed === 0;
+  const showIntroCard = !tutorialSeen() && gamesPlayed === 0;
 
   // The three mode cards — identical at every tier; only their
-  // container (the desk mode row vs the phone 2×2 grid) differs.
+  // container's column count (4-across desk, 2×2 tablet/phone) differs.
   const modeCards = (
     <>
       <Link to="/play" className={styles.modeCard}>
@@ -151,6 +146,10 @@ export function HomePage() {
 
   return (
     <div className={styles.wrap}>
+      {/* TOP ROW — the hero + Quick Start share it on desk widths (the
+          hero's card art slides left as it narrows); below 1024 the row
+          dissolves and Quick Start drops to the page foot (flex order). */}
+      <div className={styles.topRow}>
       {/* HERO — today's daily. A <div> with a stretched primary link
           (the CTA's ::after covers the card) instead of one big <a>,
           so the quiet archive link can sit beside the CTA without
@@ -165,7 +164,7 @@ export function HomePage() {
           <h1 className={styles.heroTitle}>
             One grid.
             <br />
-            Everyone plays the same deal.
+            Same for everyone.
           </h1>
           <div className={styles.heroChips}>
             <span
@@ -242,103 +241,58 @@ export function HomePage() {
         </div>
       </div>
 
-      {isPhone ? (
-        /* Phone: the three mode cards + the newcomer strip become a
-           2×2 grid of half-width cards — the strip's content rides as
-           the fourth card (both its first-visit and quiet variants) —
-           followed by the full-width Quick Start row. */
-        <>
-          <div className={styles.phoneGrid}>
-            {modeCards}
-            {phoneShowIntro ? (
-              <div className={styles.footerCard}>
-                <span className={styles.modeTitle}>First time?</span>
-                <span className={styles.modeBlurb}>
-                  Play a guided practice deal that walks you through every move.
-                </span>
-                <Link to="/tutorial" className={styles.modeLink}>
-                  Start the tutorial →
-                </Link>
-              </div>
-            ) : (
-              <div className={styles.footerCard}>
-                <span className={styles.modeTitle}>Rules</span>
-                <span className={styles.modeBlurb}>
-                  The whole game is 25 cards, 10 poker hands, one target.
-                </span>
-                <Link to="/rules" className={styles.modeLink}>
-                  Read the rules →
-                </Link>
-              </div>
-            )}
-          </div>
+      {/* Quick Start: one-tap Free Play at any difficulty. The hero's
+          right-hand neighbor on desk widths (buttons stacked); the full-
+          width strip below the card grid everywhere else. */}
+      <div className={styles.quickStart}>
+        <div className={styles.quickStartHead}>
+          <span className={styles.quickStartTitle}>Quick Start</span>
+          <span className={styles.quickStartSub}>
+            Jump right into a Free Play game.
+          </span>
+        </div>
+        <div className={styles.quickRow}>
+          {QUICK_DIFFS.map(d => (
+            <Link
+              key={d}
+              to={`/play?difficulty=${d}`}
+              className={styles.quickBtn}
+              style={{ '--tone': difficultyColors[d] } as CSSProperties}
+            >
+              {DIFF_LABEL[d]}
+            </Link>
+          ))}
+        </div>
+      </div>
+      </div>
 
-          {/* Quick Start: one-tap Free Play at any difficulty. Four
-              color-coded buttons on a single full-width row. */}
-          <div className={styles.quickStart}>
-            <div className={styles.quickStartHead}>
-              <span className={styles.quickStartTitle}>Quick Start</span>
-              <span className={styles.quickStartSub}>
-                Jump right into a Free Play game.
-              </span>
-            </div>
-            <div className={styles.quickRow}>
-              {QUICK_DIFFS.map(d => (
-                <Link
-                  key={d}
-                  to={`/play?difficulty=${d}`}
-                  className={styles.quickBtn}
-                  style={{ '--tone': difficultyColors[d] } as CSSProperties}
-                >
-                  {DIFF_LABEL[d]}
-                </Link>
-              ))}
-            </div>
+      {/* CARD GRID — the three mode cards + the newcomer card (the
+          tutorial callout on a first visit, the quiet rules pointer
+          ever after). One row of four on desk widths, 2×2 below. */}
+      <div className={styles.cardGrid}>
+        {modeCards}
+        {showIntroCard ? (
+          <div className={styles.footerCard}>
+            <span className={styles.modeTitle}>New here?</span>
+            <span className={styles.modeBlurb}>
+              Play a guided practice deal that walks you through every move.
+            </span>
+            <Link to="/tutorial" className={styles.modeLink}>
+              Start the tutorial →
+            </Link>
           </div>
-        </>
-      ) : (
-        <>
-          {/* MODE ROW */}
-          <div className={styles.modeRow}>{modeCards}</div>
-
-          {/* FOOTER STRIP — the tutorial callout on a first visit, the
-              quiet rules pointer ever after. */}
-          {showIntro ? (
-            <div className={styles.footerStrip}>
-              <span className={styles.footerText}>
-                <span className={styles.footerLead}>First time here?</span> Learn
-                by playing — a guided practice deal walks you through every move
-                in about three minutes.
-              </span>
-              <span className={styles.footerActions}>
-                <Link to="/tutorial" className={styles.footerCta}>
-                  Start the tutorial
-                </Link>
-                <button
-                  type="button"
-                  className={styles.footerDismiss}
-                  onClick={() => {
-                    markTutorialSeen();
-                    setShowIntro(false);
-                  }}
-                >
-                  No thanks
-                </button>
-              </span>
-            </div>
-          ) : (
-            <div className={styles.footerStrip}>
-              <span className={styles.footerText}>
-                <span className={styles.footerLead}>New here?</span> The whole
-                game is 25 cards, 10 poker hands, one target.
-              </span>
-              <Link to="/rules" className={styles.footerLink}>
-                Read the rules →
-              </Link>
-            </div>
-          )}
-        </>
-      )}
+        ) : (
+          <div className={styles.footerCard}>
+            <span className={styles.modeTitle}>Rules</span>
+            <span className={styles.modeBlurb}>
+              The whole game is 25 cards, 10 poker hands, one target.
+            </span>
+            <Link to="/rules" className={styles.modeLink}>
+              Read the rules →
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

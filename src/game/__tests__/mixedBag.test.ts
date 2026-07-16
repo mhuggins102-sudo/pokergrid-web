@@ -1,11 +1,14 @@
 import { seededRng } from '../deck';
 import { findChallenge } from '../challenges';
+import { suitActionAvailable } from '../actions';
+import { Card } from '../cards';
 import {
   BonusCard,
   BONUS_DECK_POOL,
   cardMatchesSlot,
   DOUBLER_CARD,
   isPlaceholder,
+  isSpentSlot,
   SlotKind,
   SPOTLIGHT_ID,
 } from '../bonusCards';
@@ -40,6 +43,49 @@ describe('Mixed Bag challenge', () => {
     for (const kind of SLOT_KINDS) {
       expect(s.bonusDeck.some(c => cardMatchesSlot(c, kind))).toBe(true);
     }
+  });
+
+  it('♣ availability gate matches the reducer at the placeholder-filled cap', () => {
+    // Regression: Mixed Bag runs on the Hard ruleset (bonusSwapAtCap
+    // 'off') with all 3 slots seeded from turn 1, so the plain at-cap
+    // gate would disable the ♣ perk for the entire game even though
+    // handleBeginSuitAction accepts it. The slot-drawable context must
+    // exempt Mixed Bag, exactly like the reducer.
+    const s = mixedBag();
+    const club: Card = { kind: 'standard', rank: '2', suit: 'C' };
+    const slotDrawable = s.slotCategories!.some(
+      (kind, i) =>
+        !isSpentSlot(s.bonusCards[i]) &&
+        s.bonusDeck.some(c => cardMatchesSlot(c, kind))
+    );
+    expect(slotDrawable).toBe(true);
+    expect(
+      suitActionAvailable(
+        club,
+        s.grid,
+        s.bonusDeck.length,
+        s.bonusCards.length,
+        s.bonusSwapAtCap === 'off',
+        s.investHands,
+        slotDrawable
+      )
+    ).toBe(true);
+    // …and the reducer indeed accepts the action in the same state.
+    expect(step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' }).phase.kind).toBe(
+      'awaiting-bonus-slot-choice'
+    );
+    // No drawable slot left → the gate goes dark (reducer no-ops too).
+    expect(
+      suitActionAvailable(
+        club,
+        s.grid,
+        s.bonusDeck.length,
+        s.bonusCards.length,
+        s.bonusSwapAtCap === 'off',
+        s.investHands,
+        false
+      )
+    ).toBe(false);
   });
 
   it('♣ goes to awaiting-bonus-slot-choice instead of drawing directly', () => {

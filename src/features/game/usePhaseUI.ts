@@ -5,6 +5,7 @@ import {
   REWIND_PICK_MIN,
   SHUFFLE_PICK_MAX,
   SHUFFLE_PICK_MIN,
+  anyPerkAvailable,
   canDeselectSideSlideSlot,
   sideSlideChainExtensions,
   suitActionAvailable,
@@ -12,7 +13,7 @@ import {
 import { Suit, isJoker } from '../../game/cards';
 import { HandRank } from '../../game/hands';
 import { nextSpiralSlot } from '../../game/grid';
-import { BonusCard } from '../../game/bonusCards';
+import { BonusCard, cardMatchesSlot, isSpentSlot } from '../../game/bonusCards';
 import { useGameSession } from './GameSessionProvider';
 
 export type CellRole = 'next' | 'target' | 'selected' | null;
@@ -206,14 +207,35 @@ export function usePhaseUI(): PhaseUI {
             onPress: () => dispatch({ type: 'PLACE' }),
           });
           if (!isJoker(drawn)) {
-            const suitOK = suitActionAvailable(
-              drawn,
-              state.grid,
-              state.bonusDeck.length,
-              state.bonusCards.length,
-              state.bonusSwapAtCap === 'off',
-              state.investHands
-            );
+            // Mirror handleBeginSuitAction's availability exactly:
+            //  - Short Circuit fires a RANDOM available perk, so the button
+            //    stays live while ANY perk is legal (not just the drawn
+            //    suit's — anyPerkAvailable).
+            //  - Mixed Bag's ♣ is exempt from the at-cap rule (its hand is
+            //    full of placeholders from turn 1); it needs a drawable
+            //    slot instead.
+            const suitOK = state.randomPerks
+              ? anyPerkAvailable(
+                  state.grid,
+                  state.bonusDeck.length,
+                  state.bonusCards.length,
+                  state.bonusSwapAtCap === 'off'
+                )
+              : suitActionAvailable(
+                  drawn,
+                  state.grid,
+                  state.bonusDeck.length,
+                  state.bonusCards.length,
+                  state.bonusSwapAtCap === 'off',
+                  state.investHands,
+                  state.slotCategories
+                    ? state.slotCategories.some(
+                        (kind, i) =>
+                          !isSpentSlot(state.bonusCards[i]) &&
+                          state.bonusDeck.some(c => cardMatchesSlot(c, kind))
+                      )
+                    : null
+                );
             const perkLabel = state.randomPerks
               ? '? Perk'
               : state.investHands && drawn.suit === 'C'

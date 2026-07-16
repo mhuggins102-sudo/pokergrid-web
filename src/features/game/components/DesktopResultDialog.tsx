@@ -64,7 +64,7 @@ export function DesktopResultDialog({
   }, [state]);
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
-  const levelUp = useLevelUp();
+  const levelUp = useLevelUp(viewOnly);
   // Targets-Up ladder lifecycle — the hook shared with mobile's
   // ResultView; its module-level guard keeps the advance/clear commit
   // single-owner even if both surfaces mount across a resize.

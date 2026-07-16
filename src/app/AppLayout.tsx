@@ -4,7 +4,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { TapPopoverProvider, ToastProvider } from '../design/primitives';
 import { bootDailySync, queryClient } from '../features/daily/sync/sync';
 import { useSyncDailyAchievements } from '../features/progress/useSyncDailyAchievements';
-import { useSeedProgression } from '../features/progress/usePlayerLevel';
+import {
+  useSeedProgression,
+  useValidateEquippedSkin,
+} from '../features/progress/usePlayerLevel';
 import { useApplyTheme } from '../features/settings/useTheme';
 import { AutoUpdater } from './AutoUpdater';
 import { DesktopNav, NavExtrasProvider } from './DesktopNav';
@@ -23,6 +26,8 @@ export function AppLayout() {
   // Seed the level-up watermark to the current level on a fresh install,
   // so an existing record doesn't replay old "Level X reached" banners.
   useSeedProgression();
+  // A reset (or any level drop) may leave a now-locked skin equipped.
+  useValidateEquippedSkin();
 
   // Stamp the selected theme onto <html> (and keep it live on OS
   // color-scheme changes).

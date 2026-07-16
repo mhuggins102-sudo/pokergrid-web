@@ -9,6 +9,19 @@
   padding: 0 0 40px;
 }
 
+/* ---- TOP ROW: hero + Quick Start ---- */
+
+/* Desk widths: the hero takes the row with Quick Start as an equal-
+   height right column (its buttons stack vertically); the hero's card
+   art slides left with the hero's right edge. Below 1024 the row
+   dissolves — see the flex-order block near the foot of this file. */
+.topRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: stretch;
+}
+
 /* ---- HERO: today's daily ---- */
 
 .hero {
@@ -44,6 +57,7 @@
   flex: 1;
   padding: 34px 36px;
 }
+
 
 .heroEyebrow {
   display: flex;
@@ -305,13 +319,60 @@
   line-height: 1;
 }
 
-/* ---- MODE ROW ---- */
+/* ---- CARD GRID: the three mode cards + the newcomer card ---- */
 
-.modeRow {
+/* One row of four on desk widths; 2×2 on tablet (and phone, which
+   re-tunes the gaps in its block below). */
+.cardGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-top: 20px;
+}
+
+@media (max-width: 1023px) { /* below bp-desktop */
+  .cardGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Tablet (768–1023): Quick Start KEEPS the hero's right column — the
+   3×3 card art bows out to make the room instead. */
+@media (min-width: 768px) and (max-width: 1023px) { /* bp-tablet only */
+  .topRow {
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+
+  .heroArt {
+    display: none;
+  }
+}
+
+/* Phone (<768): the top row dissolves — hero and Quick Start become
+   direct flex items of .wrap, and order sends Quick Start below the
+   card grid (source order keeps it beside the hero in the row grid). */
+@media (max-width: 767px) { /* below bp-tablet */
+  .wrap {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topRow {
+    display: contents;
+  }
+
+  .hero {
+    order: 1;
+  }
+
+  .cardGrid {
+    order: 2;
+  }
+
+  .quickStart {
+    order: 3;
+    margin-top: 16px;
+  }
 }
 
 .modeCard {
@@ -366,92 +427,130 @@
   color: var(--accent);
 }
 
-/* ---- FOOTER STRIP ---- */
+/* ---- NEWCOMER CARD (the grid's fourth card) ---- */
 
-.footerStrip {
+/* The mode cards' chrome without the hover lift (the card itself isn't
+   a link — its .modeLink anchor is). Both variants: the first-visit
+   tutorial callout and the quiet "New here?" rules pointer. */
+.footerCard {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 16px;
-  padding: 18px 24px;
+  flex-direction: column;
+  gap: 9px;
+  padding: 22px;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
 }
 
-.footerText {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink-2);
+/* Here .modeLink is itself the anchor (not a span inside one, as in
+   the mode cards), so the underline needs stripping explicitly. */
+.footerCard .modeLink {
+  text-decoration: none;
 }
 
-.footerLead {
+.footerCard .modeLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- QUICK START ---- */
+
+/* One-tap Free Play at each difficulty: the hero's right-hand column
+   on desk widths (title + blurb stacked, four buttons filling the
+   height), the full-width strip below the card grid otherwise. */
+.quickStart {
+  padding: 16px 22px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.quickStartHead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-bottom: 12px;
+}
+
+
+.quickStartTitle {
   font-family: var(--font-display);
+  font-size: 20px;
   font-weight: 680;
+  letter-spacing: -0.01em;
   color: var(--ink);
 }
 
-.footerLink {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--accent);
-  white-space: nowrap;
-  text-decoration: none;
+.quickStartSub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
 }
 
-/* First-visit variant of the strip (phase 4 port of the phone
-   tutorial callout): a real CTA + a quiet dismiss. */
-.footerActions {
+/* Four equal buttons on one line. */
+.quickRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.quickBtn {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex: none;
-}
-
-.footerCta {
-  display: inline-flex;
-  align-items: center;
-  background: var(--accent);
-  color: var(--on-accent, #fff);
+  justify-content: center;
+  padding: 12px 4px;
   border-radius: 10px;
-  padding: 10px 18px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
   text-decoration: none;
-  box-shadow: var(--shadow-sm);
-  white-space: nowrap;
+  background: color-mix(in srgb, var(--tone) 15%, var(--paper-raised));
+  color: var(--tone);
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
 }
 
-.footerCta:focus-visible {
+@media (hover: hover) {
+  .quickBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.quickBtn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.footerDismiss {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-3);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  white-space: nowrap;
-}
+/* Hero-neighbor column variant (every width that keeps the top row —
+   tablet and up): title over blurb, and the four buttons become rows
+   that stretch to share the hero's height evenly. (After the base
+   .quickRow/.quickBtn rules — same specificity, order decides.) */
+@media (min-width: 768px) { /* bp-tablet */
+  .quickStartHead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
 
-@media (hover: hover) {
-  .footerDismiss:hover {
-    color: var(--ink);
+  .quickRow {
+    flex: 1;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
   }
 }
 
 /* Phone (<768): the hero drops its headline and card art (the eyebrow,
-   chips, CTA and archive link carry it), and the three mode cards +
-   the newcomer strip fold into a 2×2 grid (the strip is the 4th card,
-   forked in the TSX). Everything ≥768 is untouched. */
+   chips, CTA and archive link carry it), and the shared card grid /
+   Quick Start tighten up. Everything ≥768 is untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
   /* Density: trim the page's trailing dead space so the hero + the 2×2
      card grid sit in one screen without scrolling. */
@@ -464,23 +563,23 @@
   }
 
   /* Header layout — a 2×2 within the hero:
-       title + date (top-left)      score / Play button (top-right)
-       difficulty + variant pills   Browse the archive (bottom-right)
-       (bottom-left)
+       title + date (top-left)      difficulty + variant pills
+       score / Play button          (top-right)
+       (bottom-left)                Browse the archive (bottom-right)
      The played score+tier+link and the unplayed Play button share the
-     top-right slot (only one shows at a time). display:contents on the
-     CTA row lets its children drop straight into the grid. */
+     bottom-left slot (only one shows at a time). display:contents on
+     the CTA row lets its children drop straight into the grid. */
   .heroBody {
     position: relative;
     padding: 16px 20px;
     display: grid;
-    /* Left column sizes to the title/date/pills; the right takes the rest
-       (minmax(0,…) lets it shrink so the score block wraps instead of
-       ballooning the column and squeezing the pills). */
+    /* Left column sizes to the title/date/CTA; the right takes the rest
+       (minmax(0,…) lets it shrink so the pills wrap instead of
+       ballooning the column). */
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
-      'eyebrow cta'
-      'chips archive';
+      'eyebrow chips'
+      'cta archive';
     align-items: start;
     column-gap: 12px;
     row-gap: 8px;
@@ -505,12 +604,13 @@
     display: none;
   }
 
-  /* Pills below the date (bottom-left), left-aligned + stacked. */
+  /* Pills top-right, right-aligned + stacked. */
   .heroChips {
     grid-area: chips;
     align-self: start;
+    justify-self: end;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 6px;
     margin-top: 0;
   }
@@ -521,23 +621,33 @@
     display: contents;
   }
 
-  /* Played: score + tier + "View full result" combo takes the exact spot
-     the "Play now" button holds — pinned to the top-right corner at the
-     same inset (16/20 = the hero padding). It's taken OUT of the grid
-     (absolute) so its taller height never grows the top row: the pills and
-     the archive link stay put whether or not the day is played. max-width
-     keeps the "View full result" wrapping under the score+badge. */
+  /* Played: the hero keeps its UNPLAYED height — the bottom row is
+     pinned to the Play button's 39px, and the taller score block,
+     end-aligned, bleeds upward into the slack under the title/date
+     (the left column's top cell is shorter than the pills'). */
+  .heroBody:has(.heroResult) {
+    grid-template-rows: auto 39px;
+  }
+
+  /* Played: score + tier + "View full result" combo takes the exact
+     slot the "Play now" button holds — bottom-left. */
   .heroResult {
-    position: absolute;
-    top: 16px;
-    right: 20px;
-    max-width: 160px;
-    justify-content: flex-end;
+    grid-area: cta;
+    justify-self: start;
+    align-self: end;
+    justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
     column-gap: 10px;
     row-gap: 2px;
-    text-align: right;
+    text-align: left;
+  }
+
+  /* Pills never break mid-label (the right column can get tight when a
+     played score sits across from them). */
+  .diffChip,
+  .twistChip {
+    white-space: nowrap;
   }
 
   .heroResultTarget {
@@ -558,28 +668,30 @@
   }
 
   /* "View full result" breaks to its own line directly under the score,
-     right-aligned within the top-right block. */
+     left-aligned within the bottom-left block. */
   .heroResultLink {
     flex-basis: 100%;
-    text-align: right;
+    text-align: left;
   }
 
-  /* Unplayed: a compact Play button in the same top-right slot. */
+  /* Unplayed: a compact Play button in the same bottom-left slot. */
   .heroCta {
     grid-area: cta;
-    justify-self: end;
-    align-self: start;
+    justify-self: start;
+    align-self: end;
     padding: 9px 16px;
     font-size: 14px;
   }
 
-  /* Browse the archive: bottom-right, dropped to the foot of its row so it
-     lines up with the lower pill on the left (saving a row of height). */
+  /* Browse the archive: bottom-right, dropped to the foot of its row so
+     it lines up with the CTA/score on the left. Never wraps — the row
+     has the room once the score block's column stays content-sized. */
   .heroArchive {
     grid-area: archive;
     justify-self: end;
     align-self: end;
     font-size: 13px;
+    white-space: nowrap;
   }
 
   /* Twist/variant pill goes green to match the in-game nav's twist pill
@@ -589,15 +701,14 @@
     color: var(--accent);
   }
 
-  /* 2×2 grid of half-width cards (three modes + the strip-as-card). */
-  .phoneGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  /* 2×2 card grid (columns come from the ≤1023 rule): tighter gaps so
+     the hero + all four cards sit in one screen without scrolling. */
+  .cardGrid {
     gap: 10px;
     margin-top: 12px;
   }
 
-  .phoneGrid .modeCard,
+  .cardGrid .modeCard,
   .footerCard {
     gap: 5px;
     /* Tighter than before so all four cards read shorter (the streak
@@ -605,95 +716,41 @@
     padding: 11px 13px 12px;
   }
 
-  .phoneGrid .modeTitle {
+  .cardGrid .modeTitle {
     font-size: 18px;
   }
 
-  .phoneGrid .modeBlurb {
+  .cardGrid .modeBlurb {
     font-size: 12px;
     line-height: 1.35;
   }
 
-  /* The strip's content styled as the fourth grid card. */
-  .footerCard {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
-    border: 1px solid var(--hairline);
-    box-shadow: var(--shadow-sm);
-  }
+  /* ---- Quick Start (phone density) ---- */
 
-  /* The newcomer card's action is a single link ("Start the tutorial →"
-     or "Read the rules →"), pushed to the card foot by the blurb's
-     flex:1 — same rhythm as the mode cards. Here .modeLink is itself the
-     anchor (not a span inside one, as in the mode cards), so the underline
-     needs stripping explicitly. Phone-scoped — the ≥768 footer uses
-     .footerLink, which already sets this. */
-  .footerCard .modeLink {
-    text-decoration: none;
-  }
-
-  /* ---- Quick Start (phone only) ---- */
-
-  /* Full-width container: a title + blurb, then a single row of four
-     color-coded difficulty buttons that jump straight into Free Play. */
   .quickStart {
     margin-top: 10px;
     padding: 13px 15px 14px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
-    border: 1px solid var(--hairline);
-    box-shadow: var(--shadow-sm);
   }
 
   .quickStartHead {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
     gap: 4px 8px;
     margin-bottom: 10px;
   }
 
   .quickStartTitle {
-    font-family: var(--font-display);
     font-size: 18px;
-    font-weight: 680;
-    letter-spacing: -0.01em;
-    color: var(--ink);
   }
 
   .quickStartSub {
     font-size: 12px;
-    font-weight: 400;
-    color: var(--ink-2);
   }
 
-  /* Four equal buttons on one line. */
   .quickRow {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
   }
 
   .quickBtn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: 10px 4px;
-    border-radius: 10px;
     font-size: 13px;
-    font-weight: 700;
-    text-align: center;
-    text-decoration: none;
-    background: color-mix(in srgb, var(--tone) 15%, var(--paper-raised));
-    color: var(--tone);
-    border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
-  }
-
-  .quickBtn:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
   }
 }
