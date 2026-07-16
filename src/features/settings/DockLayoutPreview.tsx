@@ -136,9 +136,14 @@ export function DockLayoutPreview({
     return (
       <div className={`${styles.frame} ${styles.desktopFrame}`}>
         <div className={styles.desktopBonus}>
-          <span className={styles.desktopPanelTitle}>Bonus</span>
-          <span className={styles.desktopChip} />
-          <span className={styles.desktopChip} />
+          <span className={styles.bonusCard}>
+            <b>Straight</b>
+            <span>×2 (each)</span>
+          </span>
+          <span className={styles.bonusCard}>
+            <b>Col 3</b>
+            <span>×2</span>
+          </span>
         </div>
         <div className={styles.desktopDock}>
           <div className={styles.wellRow}>

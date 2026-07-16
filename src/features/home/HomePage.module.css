@@ -677,13 +677,15 @@
     font-size: 14px;
   }
 
-  /* Browse the archive: bottom-right, dropped to the foot of its row so it
-     lines up with the lower pill on the left (saving a row of height). */
+  /* Browse the archive: bottom-right, dropped to the foot of its row so
+     it lines up with the CTA/score on the left. Never wraps — the row
+     has the room once the score block's column stays content-sized. */
   .heroArchive {
     grid-area: archive;
     justify-self: end;
     align-self: end;
     font-size: 13px;
+    white-space: nowrap;
   }
 
   /* Twist/variant pill goes green to match the in-game nav's twist pill

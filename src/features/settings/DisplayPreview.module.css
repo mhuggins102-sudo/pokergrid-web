@@ -15,33 +15,52 @@
   overflow: hidden;
 }
 
-/* Board + rails, mirroring LineRails' grid shape at postage-stamp
-   scale: row chips left, column chips underneath. */
+/* Board + rails, mirroring the game's rails at postage-stamp scale
+   (LineRails .railsRight / the desk edge chips): row chips down the
+   RIGHT edge, column chips underneath. */
 .boardWrap {
   display: grid;
   gap: 6px;
 }
 
 .withRails {
-  grid-template-columns: auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.withRails .board {
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .rowRail {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
   grid-template-rows: repeat(5, 1fr);
   gap: 6px;
 }
 
 .colRail {
-  grid-column: 2;
+  grid-column: 1;
+  grid-row: 2;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
 }
 
-.withRails .board {
-  grid-column: 2;
-  grid-row: 1;
+/* Column family (phone / tablet-portrait): thin row chips with the
+   digits rotated 90° CCW — the game's LineRails .rowChip treatment. */
+.colFamily .rowRail .chip {
+  min-width: 0;
+  width: 16px;
+  min-height: 0;
+  padding: 2px 0;
+  height: 100%;
+}
+
+.colFamily .rowRail .chipVal {
+  display: inline-block;
+  transform: rotate(-90deg);
 }
 
 .chip {
