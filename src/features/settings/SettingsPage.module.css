@@ -421,3 +421,15 @@
     font-size: 12.5px;
   }
 }
+
+/* The "Preview" popup needs to be wider than the default 440px sheet on
+   larger screens, or the desk layout (board + 172px dock rail) squishes the
+   board down to a postage stamp. Doubled class beats the primitive's
+   `.sheet` width regardless of stylesheet order. Phones keep the full-width
+   bottom sheet. */
+@media (min-width: 640px) {
+  .previewSheet.previewSheet {
+    width: min(94vw, 720px);
+    max-width: min(94vw, 720px);
+  }
+}

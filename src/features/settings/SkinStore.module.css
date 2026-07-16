@@ -41,6 +41,21 @@
   background: color-mix(in srgb, var(--accent) 12%, var(--paper));
 }
 
+/* Phone: the toggles share the header with the title, so they read cramped
+   at desktop size — give them more room and a bigger tap target. */
+@media (max-width: 767px) {
+  .suitToggles {
+    gap: 6px;
+  }
+
+  .suitBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    font-size: 18px;
+  }
+}
+
 .head {
   display: flex;
   flex-direction: column;
@@ -83,6 +98,12 @@
   background: var(--accent);
   border-radius: inherit;
   transition: width 240ms ease;
+}
+
+/* While inspecting a locked entry, the header previews progress toward that
+   level — amber the bar so it doesn't read as current-level progress. */
+.headInspect .fill {
+  background: var(--warn);
 }
 
 /* One column of entries; groups expand within their own row. */
@@ -203,6 +224,22 @@
   }
 }
 
+/* Force-shown magnifier for the tap-to-inspect overlay (touch, no hover).
+   Defined after .magFloat so it wins the display without !important. */
+.magShown {
+  display: block;
+}
+
+/* Backdrop behind the tap-inspect enlargement: dims the sheet and catches
+   the dismiss tap. The .magFloat inside stays position:fixed-centered and
+   pointer-events:none, so a tap on the card falls through to here. */
+.inspectBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  background: color-mix(in srgb, var(--scrim) 45%, transparent);
+}
+
 .tileSelected {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, var(--paper));
@@ -220,15 +257,28 @@
   font-weight: 800;
 }
 
-/* Locked entry — dimmed cover under a padlock, with the required level. */
+/* Locked entry — dimmed cover under a padlock, with the required level.
+   It's a <button> (tap to inspect: preview its level in the header + an
+   enlarged cover), so reset the button chrome to the row look. */
 .entry {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 10px 12px;
   border-radius: var(--radius-md);
   background: var(--paper-sunken);
   border: 1px solid var(--hairline);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .entry:hover {
+    border-color: var(--rule);
+  }
 }
 
 .coverWrap {

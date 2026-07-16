@@ -477,6 +477,7 @@ export function SettingsPage() {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         title="Preview"
+        className={styles.previewSheet}
       >
         <DisplayPreview />
       </Sheet>
