@@ -1,3 +1,4 @@
+import { CSSProperties } from 'react';
 import { Button } from '../../design/primitives';
 import { CardFace } from '../game/components/CardFace';
 import { Card } from '../../game/cards';
@@ -131,19 +132,29 @@ export function DockLayoutPreview({
     );
   }
   if (layout === 'desktop') {
-    // Two columns: held bonus cards on the left, the deck (meta beside
-    // the card) + the 2×2 action grid on the right.
+    // Two equal columns, as in game: the bonus panel's fixed 3-slot
+    // fill on the left (held entries + a dotted placeholder,
+    // DesktopBonusPanel's dock column at mini scale), the deck (meta
+    // beside the card) + the 2×2 action grid on the right.
     return (
       <div className={`${styles.frame} ${styles.desktopFrame}`}>
         <div className={styles.desktopBonus}>
-          <span className={styles.bonusCard}>
-            <b>Straight</b>
-            <span>×2 (each)</span>
+          <span
+            className={styles.slotCard}
+            style={{ '--tone': 'var(--warn)' } as CSSProperties}
+          >
+            <b className={styles.slotTitle}>Straight</b>
+            <span className={styles.slotMult}>×2 (each)</span>
+            <i className={styles.slotVal}>+12</i>
           </span>
-          <span className={styles.bonusCard}>
-            <b>Col 3</b>
-            <span>×2</span>
+          <span
+            className={styles.slotCard}
+            style={{ '--tone': 'var(--warn)' } as CSSProperties}
+          >
+            <b className={styles.slotTitle}>Col 3</b>
+            <span className={styles.slotMult}>×2</span>
           </span>
+          <span className={styles.slotEmpty}>empty</span>
         </div>
         <div className={styles.desktopDock}>
           <div className={styles.wellRow}>
@@ -160,7 +171,24 @@ export function DockLayoutPreview({
               Place
             </Button>
             <Button size="sm" variant="secondary" className={styles.iconBtn}>
-              🗑
+              {/* The game's trash glyph (GameScreen's Discard icon). */}
+              <svg
+                viewBox="0 0 24 24"
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 6h18" />
+                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
             </Button>
             <Button
               size="sm"
