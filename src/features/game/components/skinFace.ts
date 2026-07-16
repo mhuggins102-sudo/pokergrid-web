@@ -32,17 +32,20 @@ export interface ParsedFace {
 
 const cache = new Map<string, ParsedFace>();
 
-/** Parsed, cached card face for a skin — ready to spread as React styles. */
+/** Parsed, cached card face for a skin — ready to spread as React styles.
+ *  `mobile` selects the small-screen layout for skins that ship one (the app
+ *  passes it on the phone tier); the desktop layout is the default. */
 export const skinFace = (
   id: string,
   rank: string,
   suit: SuitKey,
-  four: boolean
+  four: boolean,
+  mobile = false
 ): ParsedFace => {
-  const key = `${id}|${rank}|${suit}|${four ? 4 : 2}`;
+  const key = `${id}|${rank}|${suit}|${four ? 4 : 2}|${mobile ? 'm' : 'd'}`;
   let face = cache.get(key);
   if (!face) {
-    const { wrap, layers } = renderSkin(id, rank, suit, { four });
+    const { wrap, layers } = renderSkin(id, rank, suit, { four, mobile });
     face = {
       wrap: styleObj(wrap),
       layers: layers.map(l => ({

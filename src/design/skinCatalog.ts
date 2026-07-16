@@ -1,4 +1,4 @@
-// Unlock catalog — maps Claude Design's 27 card-face skins (deckSkins.ts)
+// Unlock catalog — maps Claude Design's card-face skins (deckSkins.ts)
 // onto the player-level progression + the store's group entries.
 //
 // Groupings and levels here are the product config for the deck-skin store;
@@ -23,9 +23,16 @@ const NAME_OVERRIDES: Record<string, string> = {
   D21: 'Keyline',
   D24: 'Ticket',
   D41c: 'Filigree',
-  D42: 'Emboss',
   D55b: 'Rope',
   D69c: 'Aurora',
+  EX13: 'Court',
+  // Emboss group
+  D42: 'Emboss',
+  D42a: 'Double ring',
+  // Neon group (fixed-palette fluorescents)
+  EX6: 'Lime',
+  EX16: 'Sunset',
+  EX17: 'Aqua',
   // Wash group
   D27b: 'Wash',
   D27c: 'Framed wash',
@@ -82,7 +89,7 @@ export const SKIN_CATALOG: SkinUnlock[] = [
   { id: 'keyline', name: nameOf('D21'), level: 4, skinIds: ['D21'] },
   { id: 'pastel', name: 'Pastel', level: 5, skinIds: ['P1', 'P3'] },
   { id: 'ticket', name: nameOf('D24'), level: 6, skinIds: ['D24'] },
-  { id: 'emboss', name: nameOf('D42'), level: 7, skinIds: ['D42'] },
+  { id: 'emboss', name: 'Emboss', level: 7, skinIds: ['D42', 'D42a'] },
   { id: 'bigpip', name: nameOf('D16'), level: 8, skinIds: ['D16'] },
   { id: 'aurora', name: nameOf('D69c'), level: 9, skinIds: ['D69c'] },
   {
@@ -94,12 +101,16 @@ export const SKIN_CATALOG: SkinUnlock[] = [
   { id: 'filigree', name: nameOf('D41c'), level: 11, skinIds: ['D41c'] },
   { id: 'rope', name: nameOf('D55b'), level: 13, skinIds: ['D55b'] },
   { id: 'bamboo', name: 'Bamboo', level: 14, skinIds: ['D62c', 'C2'] },
+  // New: single Old-timey court design (figures on J/Q/K, numerals otherwise).
+  { id: 'court', name: nameOf('EX13'), level: 15, skinIds: ['EX13'] },
   {
     id: 'terrain-2',
     name: 'Terrain · Set 2',
     level: 17,
     skinIds: ['L1', 'D69b', 'D70c'],
   },
+  // New: fixed-palette fluorescents — loud, off-theme, so a high unlock.
+  { id: 'neon', name: 'Neon', level: 19, skinIds: ['EX6', 'EX16', 'EX17'] },
   { id: 'wanted', name: 'Wanted', level: 20, skinIds: ['D51a', 'N1', 'N2'] },
 ];
 
