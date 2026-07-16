@@ -1,6 +1,5 @@
 import { Card, Rank, Suit } from '../../game/cards';
 import { CardFace } from '../game/components/CardFace';
-import { useTier } from '../../app/useTier';
 import { useGameFamily } from '../game/useGameFamily';
 import { useSettingsStore } from './settingsStore';
 import { useResolvedTheme } from './useTheme';
@@ -51,17 +50,16 @@ const COL_TOTALS = [4, 0, 8, 21, 2];
  */
 export function DisplayPreview() {
   const resolved = useResolvedTheme();
-  const tier = useTier();
   // The preview mirrors the game THIS viewport would launch: the desk
   // families (desktop, tablet-landscape) put the dock in a right rail
   // beside the board; the column family (phone, tablet-portrait) pins
   // it below.
   const desk = useGameFamily() !== 'column';
-  // Mirror the Settings page's "Line totals" row: it binds the tier's
-  // key (phone → lineRails, tablet/desktop → deskLineChips), so the
+  // Mirror the Settings page's "Line totals" row: it binds the
+  // family's key (column → lineRails, desk → deskLineChips), so the
   // preview must follow the SAME key or the toggle looks inert here.
   const lineRails = useSettingsStore(s =>
-    tier === 'phone' ? s.lineRails : s.deskLineChips
+    desk ? s.deskLineChips : s.lineRails
   );
   const dockLayout = useSettingsStore(s => s.dockLayout);
 

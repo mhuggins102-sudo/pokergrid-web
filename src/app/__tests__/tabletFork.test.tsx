@@ -67,7 +67,7 @@ describe('converged pages render one tree at every tier', () => {
   it('Home: the landing hero renders at the phone tier', () => {
     renderRoute('/', <HomePage />);
     expect(
-      screen.getByText(/Everyone plays the same deal/)
+      screen.getByText(/Same for everyone/)
     ).toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe('converged pages render one tree at every tier', () => {
     active = mockTier('tablet');
     renderRoute('/', <HomePage />);
     expect(
-      screen.getByText(/Everyone plays the same deal/)
+      screen.getByText(/Same for everyone/)
     ).toBeInTheDocument();
   });
 });

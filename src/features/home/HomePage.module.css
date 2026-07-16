@@ -58,6 +58,47 @@
   padding: 34px 36px;
 }
 
+/* Desktop corner arrangement: metadata gathers on the top line —
+   kicker · date left, the difficulty/twist chips top-RIGHT — and the
+   CTA (or the played score + tier) anchors bottom-left, so the two
+   ends of the card carry one clear job each. Scoped ≥1200: below that
+   the hero body is too narrow for the eyebrow and the chips to share
+   its top line (they collide), so the chips stay under the title. */
+@media (min-width: 1200px) { /* desk two-column tier */
+  .heroBody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      'eyebrow chips'
+      'title   title'
+      'cta     cta';
+    column-gap: 16px;
+    align-items: start;
+  }
+
+  .heroEyebrow {
+    grid-area: eyebrow;
+    /* Midline-align with the (taller) chip pills sharing the row. */
+    align-self: center;
+  }
+
+  .heroChips {
+    grid-area: chips;
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+
+  .heroTitle {
+    grid-area: title;
+  }
+
+  .heroCtaRow {
+    grid-area: cta;
+    align-self: end;
+  }
+}
+
 .heroEyebrow {
   display: flex;
   align-items: center;
@@ -333,10 +374,24 @@
   .cardGrid {
     grid-template-columns: 1fr 1fr;
   }
+}
 
-  /* The top row dissolves: hero and Quick Start become direct flex
-     items of .wrap, and order sends Quick Start below the card grid
-     (source order keeps it beside the hero for the desk grid). */
+/* Tablet (768–1023): Quick Start KEEPS the hero's right column — the
+   3×3 card art bows out to make the room instead. */
+@media (min-width: 768px) and (max-width: 1023px) { /* bp-tablet only */
+  .topRow {
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+
+  .heroArt {
+    display: none;
+  }
+}
+
+/* Phone (<768): the top row dissolves — hero and Quick Start become
+   direct flex items of .wrap, and order sends Quick Start below the
+   card grid (source order keeps it beside the hero in the row grid). */
+@media (max-width: 767px) { /* below bp-tablet */
   .wrap {
     display: flex;
     flex-direction: column;
@@ -515,10 +570,11 @@
   outline-offset: 2px;
 }
 
-/* Desk column variant: title over blurb, and the four buttons become
-   rows that stretch to share the hero's height evenly. (After the base
+/* Hero-neighbor column variant (every width that keeps the top row —
+   tablet and up): title over blurb, and the four buttons become rows
+   that stretch to share the hero's height evenly. (After the base
    .quickRow/.quickBtn rules — same specificity, order decides.) */
-@media (min-width: 1024px) { /* bp-desktop */
+@media (min-width: 768px) { /* bp-tablet */
   .quickStartHead {
     flex-direction: column;
     align-items: flex-start;
