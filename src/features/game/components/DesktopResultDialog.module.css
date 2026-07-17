@@ -24,13 +24,24 @@
   overflow-y: auto;
 }
 
+/* Slim header band: verdict + tier label on the left, the tier letter as
+   a compact badge on the right (the old centered block gave a third of
+   the dialog to one huge letter). */
 .head {
   color: var(--on-accent);
-  text-align: center;
-  padding: 26px 26px 24px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.headText {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
 }
 
 .headWin {
@@ -57,18 +68,26 @@
   opacity: 0.85;
 }
 
-.tier {
+.tierBadge {
+  flex: none;
+  min-width: 48px;
+  height: 48px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-display);
-  font-size: 64px;
+  font-size: 28px;
   font-weight: 680;
   line-height: 1;
-  margin-top: 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
 }
 
 .tierLabel {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 6px;
+  margin-top: 3px;
   opacity: 0.9;
 }
 
@@ -114,39 +133,301 @@
   color: var(--ink-3);
 }
 
-/* Key highlights — the run at a glance (no line-by-line table; the full
-   board is a tap away via View Grid). A few tinted bullet chips. */
-.highlights {
-  list-style: none;
-  margin: 16px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* ---- Progression module (desk families): level + XP bar with this
+   game's gain, and the next deck teased. Replaces the old highlights. */
+.xpModule {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--paper-sunken);
+  border: 1px solid var(--hairline);
 }
 
-.highlight {
+/* After the unlock celebration the module rides beneath it, tighter. */
+.xpModuleSlim {
+  margin-top: 12px;
+}
+
+.xpTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 22px;
+}
+
+.levelBadge {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* The "+N XP" chip doubles as the breakdown opener (the ledger sheet). */
+.xpGain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--warn);
+  cursor: pointer;
+}
+
+.xpGain:focus-visible {
+  outline: 2px solid var(--warn);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.xpTrack {
+  position: relative;
+  height: 10px;
+  margin-top: 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  overflow: hidden;
+}
+
+.xpFillOld {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  opacity: 0.55;
+}
+
+/* This game's gain — sweeps in after the dialog lands (width is set
+   inline; reduced motion renders the final width immediately). */
+.xpFillNew {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--warn);
+  transition: width 650ms ease;
+}
+
+.xpCaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Next-deck teaser — a real (dimmed) face of the deck waiting at the
+   next level, under a hairline rule inside the module. */
+.nextUnlock {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  background: var(--paper-sunken);
-  border: 1px solid var(--hairline);
-  font-size: 13.5px;
-  font-weight: 600;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+
+.nextFace {
+  filter: grayscale(0.35);
+  opacity: 0.8;
+}
+
+.nextText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.nextText b {
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--ink);
 }
 
-.highlightIcon {
-  flex: none;
-  width: 18px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--warn);
+.nextText i {
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-2);
 }
 
-/* Reward pills (XP earned + any level-up), centered on one wrapping row. */
+.lockGlyph {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+/* ---- Deck-unlock celebration (desk families, level-up runs) ---- */
+.unlock {
+  margin-top: 18px;
+  padding: 16px 16px 14px;
+  border-radius: 12px;
+  text-align: center;
+  background: color-mix(in srgb, var(--accent) 8%, var(--paper-sunken));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--hairline));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.unlockEyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+
+.unlockTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 650;
+  margin-top: 2px;
+  color: var(--ink);
+}
+
+.unlockName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* Fanned real faces of the unlocked designs. */
+.fan {
+  position: relative;
+  width: 100%;
+  height: 90px;
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.fanCard {
+  position: absolute;
+  top: 4px;
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-sm);
+}
+
+.fan0 {
+  transform: translateX(-64px) rotate(-9deg);
+}
+
+.fan1 {
+  transform: translateY(-4px);
+  z-index: 2;
+}
+
+.fan2 {
+  transform: translateX(64px) rotate(9deg);
+}
+
+/* Two-design groups fan a tighter pair. */
+.fanTwo .fan0 {
+  transform: translateX(-36px) rotate(-7deg);
+}
+
+.fanTwo .fan1 {
+  transform: translateX(36px) rotate(7deg);
+  z-index: 2;
+}
+
+.unlockActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.equipBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: 11px;
+  padding: 10px 22px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.equipBtn:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+.equipBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Column (mobile) level-up: the compact unlock row ---- */
+.unlockRow {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-align: left;
+  background: color-mix(in srgb, var(--accent) 8%, var(--paper-sunken));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--hairline));
+}
+
+.unlockRowText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.unlockRowText b {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.unlockRowText i {
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.equipMini {
+  flex: none;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--hairline));
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  background: var(--paper-raised);
+  cursor: pointer;
+}
+
+.equipMini:disabled {
+  cursor: default;
+}
+
+.equipMini:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The column family's XP pill row (the minimal mobile treatment). */
 .rewards {
   margin-top: 16px;
   display: flex;
@@ -203,10 +484,9 @@
   color: var(--warn);
 }
 
-/* Header context line — challenge runs name the challenge under the
-   tier, matching the ✦ twist-pill vocabulary. */
+/* Header context — challenge runs append the challenge name to the tier
+   label line, matching the ✦ twist-pill vocabulary. */
 .headContext {
-  margin-top: 10px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -227,21 +507,6 @@
   align-items: center;
   gap: 5px;
   text-align: center;
-}
-
-/* XP milestone crossed by this run — an accent-toned reward pill (a new
-   deck skin may have unlocked). Sits beside the XP pill in .rewards. */
-.levelUp {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--hairline));
-  color: var(--accent);
-  font-size: 13.5px;
-  font-weight: 700;
 }
 
 .achievementsLabel {
@@ -486,15 +751,18 @@
   }
 
   .head {
-    padding: 20px 20px 18px;
+    padding: 13px 16px;
   }
 
-  .tier {
-    font-size: 52px;
+  .tierBadge {
+    min-width: 42px;
+    height: 42px;
+    font-size: 23px;
+    border-radius: 10px;
   }
 
   .tierLabel {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .body {
