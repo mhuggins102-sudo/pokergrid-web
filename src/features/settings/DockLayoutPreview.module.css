@@ -134,7 +134,6 @@
   align-items: center;
   gap: var(--space-xs);
   width: 100%;
-  max-width: 220px;
   margin: 0 auto;
 }
 

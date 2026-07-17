@@ -422,7 +422,7 @@
    bottom sheet. */
 @media (min-width: 640px) {
   .previewSheet.previewSheet {
-    width: min(94vw, 720px);
-    max-width: min(94vw, 720px);
+    width: min(94vw, 820px);
+    max-width: min(94vw, 820px);
   }
 }

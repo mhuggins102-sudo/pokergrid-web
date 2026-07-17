@@ -151,9 +151,9 @@
 
 .dockSide {
   flex: none;
-  /* Fits the desk dock mock's natural width (~207px) so its action buttons
-     aren't clipped. */
-  width: 212px;
+  /* Proportional to the real desk dock column (~360px) at the board's preview
+     scale, so the action buttons read at the right width instead of cramped. */
+  width: 300px;
   display: flex;
   flex-direction: column;
 }
