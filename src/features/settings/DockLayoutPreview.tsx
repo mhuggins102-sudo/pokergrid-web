@@ -58,13 +58,12 @@ export function DockLayoutPreview({
   layout: DockLayout;
   desk?: boolean;
 }) {
-  // The desk dock's action stack (both variants): commit, the amber
-  // suit perk, then Discard + the icon ↺ two-up.
+  // The desk dock's action stack (both variants), a 1:1 copy of the real
+  // ≥1024 dock (GameScreen .deskActions): full-size Place + amber perk,
+  // then Discard + "↺ Undo" two-up at full button height — the sm /
+  // icon-only treatments are phone-dock things.
   const deskStack = (
     <>
-      {/* Place + the amber perk are the two tall primary actions (equal
-          height, as in the real desk dock); Discard + ↺ ride below as the
-          slim secondary pair. */}
       <Button variant="primary" className={styles.full}>
         Place
       </Button>
@@ -74,43 +73,43 @@ export function DockLayoutPreview({
       >
         ♥ Swap
       </Button>
-      {/* Discard + Undo ride below as equal-width text buttons, as in the
-          real desk dock (the icon-only ↺ is a phone/compact-column thing). */}
-      <div className={styles.pair}>
-        <Button size="sm" variant="secondary" className={styles.half}>
+      <div className={`${styles.pair} ${styles.deskPair}`}>
+        <Button variant="secondary" className={styles.half}>
           Discard
         </Button>
-        <Button size="sm" variant="secondary" className={styles.half}>
+        <Button variant="secondary" className={styles.half}>
           ↺ Undo
         </Button>
       </div>
     </>
   );
   if (desk) {
+    // The preview column is the real rail's 300px, so the desk mock can
+    // replicate the game's .deskDock panel byte-for-byte (padding, card
+    // width, gaps, full-size buttons) instead of approximating at a
+    // smaller scale.
     return layout === 'center-stage' ? (
-      <div className={styles.frame}>
+      <div className={`${styles.frame} ${styles.deskFrame}`}>
         <div className={styles.deskStage}>
           <div className={styles.cardCol}>
-            <div className={`${styles.card} ${styles.cardLg}`}>
+            <div className={`${styles.card} ${styles.cardStage}`}>
               <CardFace card={DRAWN} />
             </div>
             {deskMeta}
           </div>
-          {deskStack}
+          <div className={styles.deskActionsCol}>{deskStack}</div>
         </div>
       </div>
     ) : (
-      <div className={styles.frame}>
-        <div className={styles.handRow}>
+      <div className={`${styles.frame} ${styles.deskFrame}`}>
+        <div className={styles.deskCompactRow}>
           <div className={styles.cardCol}>
-            {/* Larger deck card to match the real desk dock's proportions
-                (the card reads about as tall as the two primary actions). */}
-            <div className={`${styles.card} ${styles.cardLg}`}>
+            <div className={`${styles.card} ${styles.cardCompact}`}>
               <CardFace card={DRAWN} />
             </div>
             {deskMeta}
           </div>
-          <div className={styles.stack}>{deskStack}</div>
+          <div className={styles.deskActionsCol}>{deskStack}</div>
         </div>
       </div>
     );
