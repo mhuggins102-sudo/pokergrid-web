@@ -337,6 +337,12 @@
      softened above. */
   --masthead-rule: 2px double #efe7d4;
 
+  /* Primary CTAs print their label in the newsprint cream (= --card-face,
+     the stock the cards are printed on) rather than near-black — crisper
+     on the deep brick accent, and it ties the button to the cards. Only
+     the primary buttons; gold/success pills keep --on-accent's dark ink. */
+  --on-primary: #f4eeda;
+
   --difficulty-easy: #4caf7d;
   --difficulty-medium: #d9a93e;
   --difficulty-hard: #e07a50;

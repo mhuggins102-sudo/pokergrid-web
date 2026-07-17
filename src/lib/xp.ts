@@ -59,6 +59,91 @@ export interface DailyXpPlay {
   twist?: ChallengeId;
 }
 
+// XP earning categories — the buckets a total splits into. Diffing two
+// bucket snapshots (before vs after a run) yields exactly what THIS game
+// earned per source, which drives the end-of-game "+N XP" breakdown.
+export type XpBucket =
+  | 'win'
+  | 'tier'
+  | 'firstWin'
+  | 'challenge'
+  | 'achievement'
+  | 'targets'
+  | 'daily';
+
+export const XP_BUCKET_LABEL: Record<XpBucket, string> = {
+  win: 'Win',
+  tier: 'Skill tier',
+  firstWin: 'First win',
+  challenge: 'Challenge cleared',
+  achievement: 'Achievement',
+  targets: 'Targets-Up level',
+  daily: 'Daily',
+};
+
+// Stable render order for the breakdown list.
+export const XP_BUCKET_ORDER: XpBucket[] = [
+  'win',
+  'tier',
+  'firstWin',
+  'daily',
+  'challenge',
+  'achievement',
+  'targets',
+];
+
+const emptyBuckets = (): Record<XpBucket, number> => ({
+  win: 0,
+  tier: 0,
+  firstWin: 0,
+  challenge: 0,
+  achievement: 0,
+  targets: 0,
+  daily: 0,
+});
+
+/**
+ * Lifetime XP split into its earning buckets. Same one-source-one-counter
+ * discipline as xpForStats (which is just the sum of these), so a before/
+ * after diff of the buckets attributes a single run's earnings exactly.
+ */
+export const xpBuckets = (
+  stats: Stats,
+  dailyPlays: readonly DailyXpPlay[]
+): Record<XpBucket, number> => {
+  const b = emptyBuckets();
+
+  // Free Play: base win value + first-win-per-difficulty milestone + the
+  // per-win tier kicker. tierCounts is free-play-only and, since every win
+  // is A/S/SS, its A/S/SS buckets ARE the win-by-tier counts.
+  for (const d of DIFFICULTIES) {
+    const wins = stats.byDifficulty[d].wins;
+    b.win += wins * BASE_WIN_XP[d];
+    if (wins > 0) b.firstWin += FIRST_WIN_PER_DIFFICULTY_XP;
+    const tc = stats.tierCounts[d];
+    b.tier +=
+      tc.SS * TIER_WIN_BONUS.SS + tc.S * TIER_WIN_BONUS.S + tc.A * TIER_WIN_BONUS.A;
+  }
+
+  // One-time collections.
+  b.challenge += stats.challengesDone.length * CHALLENGE_FIRST_CLEAR_XP;
+  b.achievement += stats.achievementsDone.length * ACHIEVEMENT_XP;
+  // Every Targets-Up level reached is worth its kicker once.
+  b.targets += stats.targetsUpBest * TARGETS_UP_LEVEL_XP;
+
+  // Dailies: show-up value, a beat bonus, and the same tier kicker.
+  for (const p of dailyPlays) {
+    b.daily += DAILY_PLAY_XP;
+    if (p.won) {
+      b.daily += DAILY_BEAT_XP;
+      const target = dailyTargetFor(p.difficulty, p.twist);
+      b.tier += TIER_WIN_BONUS[tierForRun({ score: p.score, target, won: true })];
+    }
+  }
+
+  return b;
+};
+
 /**
  * Total lifetime XP implied by the player's record. Pure — same inputs
  * always give the same number, and it counts each earning source exactly
@@ -68,37 +153,8 @@ export const xpForStats = (
   stats: Stats,
   dailyPlays: readonly DailyXpPlay[]
 ): number => {
-  let xp = 0;
-
-  // Free Play: base win value + first-win-per-difficulty milestone + the
-  // per-win tier kicker. tierCounts is free-play-only and, since every win
-  // is A/S/SS, its A/S/SS buckets ARE the win-by-tier counts.
-  for (const d of DIFFICULTIES) {
-    const wins = stats.byDifficulty[d].wins;
-    xp += wins * BASE_WIN_XP[d];
-    if (wins > 0) xp += FIRST_WIN_PER_DIFFICULTY_XP;
-    const tc = stats.tierCounts[d];
-    xp +=
-      tc.SS * TIER_WIN_BONUS.SS + tc.S * TIER_WIN_BONUS.S + tc.A * TIER_WIN_BONUS.A;
-  }
-
-  // One-time collections.
-  xp += stats.challengesDone.length * CHALLENGE_FIRST_CLEAR_XP;
-  xp += stats.achievementsDone.length * ACHIEVEMENT_XP;
-  // Every Targets-Up level reached is worth its kicker once.
-  xp += stats.targetsUpBest * TARGETS_UP_LEVEL_XP;
-
-  // Dailies: show-up value, a beat bonus, and the same tier kicker.
-  for (const p of dailyPlays) {
-    xp += DAILY_PLAY_XP;
-    if (p.won) {
-      xp += DAILY_BEAT_XP;
-      const target = dailyTargetFor(p.difficulty, p.twist);
-      xp += TIER_WIN_BONUS[tierForRun({ score: p.score, target, won: true })];
-    }
-  }
-
-  return xp;
+  const b = xpBuckets(stats, dailyPlays);
+  return XP_BUCKET_ORDER.reduce((sum, k) => sum + b[k], 0);
 };
 
 export interface LevelInfo {
