@@ -148,15 +148,17 @@ function SkinTile({
 }
 
 // Locked entry — cover preview dimmed under a padlock + required level.
-// Hovering it (desktop) magnifies the same padlocked cover; tapping it
-// (any pointer) inspects it: the header previews the required level and,
-// where there is no hover, an enlarged padlocked cover appears.
+// The card IMAGE enlarges (hover on desktop, tap on touch → onEnlarge);
+// tapping the rest of the row previews its required level in the header
+// (onInspect). Two separate targets, per the row-vs-image split.
 function LockedEntry({
   unlock,
   onInspect,
+  onEnlarge,
 }: {
   unlock: SkinUnlock;
   onInspect: () => void;
+  onEnlarge: () => void;
 }) {
   return (
     <button
@@ -165,7 +167,16 @@ function LockedEntry({
       onClick={onInspect}
       aria-label={`${unlock.name} — locked, reach level ${unlock.level}`}
     >
-      <span className={styles.coverWrap} aria-hidden="true">
+      <span
+        className={styles.coverWrap}
+        aria-hidden="true"
+        onClick={e => {
+          // The image is its own target: enlarge, don't fall through to the
+          // row's level-preview.
+          e.stopPropagation();
+          onEnlarge();
+        }}
+      >
         <SkinPreview id={unlock.skinIds[0]} />
         <span className={styles.lock}>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
@@ -250,11 +261,12 @@ export function SkinStore({
   const twoColor = useSettingsStore(s => s.twoColorDeck);
   const set = useSettingsStore(s => s.set);
   const [sampleSuit, setSampleSuit] = useState<SuitKey>('h');
-  // A locked entry the player has tapped to inspect: the header previews
-  // that entry's required level (total XP earned / XP to reach it), and an
-  // enlarged padlocked cover floats above the sheet (the touch equivalent
-  // of the desktop hover magnifier). Cleared by tapping the backdrop.
+  // Tapping a locked row previews its required level in the header (total XP
+  // earned / XP to reach it). Tapping its card image instead enlarges the
+  // padlocked cover a layer above the sheet (the touch path to the desktop
+  // hover magnifier), dismissed by tapping the backdrop.
   const [inspect, setInspect] = useState<SkinUnlock | null>(null);
+  const [enlarge, setEnlarge] = useState<SkinUnlock | null>(null);
 
   // Header shows the real level normally; while inspecting a locked entry it
   // previews that level as cumulative progress toward unlocking it.
@@ -277,7 +289,14 @@ export function SkinStore({
 
   const close = () => {
     setInspect(null);
+    setEnlarge(null);
     onClose();
+  };
+  // Picking a skin (or the theme default) clears a stale locked-level
+  // preview so the header snaps back to the real level.
+  const pick = (id: string | null) => {
+    setInspect(null);
+    set({ deckSkin: id });
   };
 
   const title = (
@@ -325,7 +344,7 @@ export function SkinStore({
             type="button"
             className={`${styles.tile} ${selected === null ? styles.tileSelected : ''}`}
             aria-pressed={selected === null}
-            onClick={() => set({ deckSkin: null })}
+            onClick={() => pick(null)}
           >
             <span className={styles.defaultPreview} aria-hidden="true">
               <span
@@ -353,27 +372,28 @@ export function SkinStore({
                 key={unlock.id}
                 unlock={unlock}
                 selected={selected}
-                onSelect={id => set({ deckSkin: id })}
+                onSelect={pick}
               />
             ) : (
               <LockedEntry
                 key={unlock.id}
                 unlock={unlock}
                 onInspect={() => setInspect(unlock)}
+                onEnlarge={() => setEnlarge(unlock)}
               />
             )
           )}
         </div>
 
-        {/* Tap-to-inspect overlay: an enlarged padlocked cover a layer above
-            the sheet, with a backdrop that dismisses on tap. This is the
-            touch path to the same enlargement desktop gets on hover. */}
-        {inspect && (
+        {/* Tap-to-enlarge overlay: the padlocked cover a layer above the
+            sheet, with a backdrop that dismisses on tap. The touch path to
+            the same enlargement desktop gets on hovering the image. */}
+        {enlarge && (
           <div
             className={styles.inspectBackdrop}
-            onClick={() => setInspect(null)}
+            onClick={() => setEnlarge(null)}
           >
-            <Magnify id={inspect.skinIds[0]} locked shown />
+            <Magnify id={enlarge.skinIds[0]} locked shown />
           </div>
         )}
       </SampleSuitCtx.Provider>

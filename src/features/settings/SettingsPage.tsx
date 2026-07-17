@@ -289,24 +289,15 @@ export function SettingsPage() {
         </Row>
         <Row
           title="Deck skins"
-          hint="Override the card design with an unlocked skin. Browse the store to pick one; earn more by leveling up."
+          hint="Pick a card-face design — the theme default or an unlocked skin. Earn more by leveling up."
         >
-          <div className={styles.skinRow}>
-            {settings.deckSkinsEnabled && (
-              <button
-                type="button"
-                className={styles.quietAction}
-                onClick={() => setSkinStoreOpen(true)}
-              >
-                Browse…
-              </button>
-            )}
-            <Toggle
-              label="Deck skins"
-              value={settings.deckSkinsEnabled}
-              onChange={v => patch({ deckSkinsEnabled: v })}
-            />
-          </div>
+          <button
+            type="button"
+            className={styles.quietAction}
+            onClick={() => setSkinStoreOpen(true)}
+          >
+            Browse…
+          </button>
         </Row>
       </Section>
 
@@ -317,6 +308,9 @@ export function SettingsPage() {
           <button
             type="button"
             className={styles.headAction}
+            // Opens on hover too (desktop pointers); touch fires click, not
+            // mouseenter, so phones/tablets still open it on tap.
+            onMouseEnter={() => setPreviewOpen(true)}
             onClick={e => {
               // Inside the phone accordion's <summary>: don't toggle it.
               e.preventDefault();
