@@ -78,9 +78,9 @@
   min-width: 38px;
   min-height: 24px;
   padding: 0 4px;
-  /* Match the desk edge chips' pill radius (DesktopRails .chipPill, 6px)
-     — the phone chips were barely rounded at --radius-xs (2px). */
-  border-radius: var(--radius-sm);
+  /* Theme corner language: pill in Card Room, squared in Morning Paper
+     (the desk edge chips, DesktopRails .chipPill, share --radius-chip). */
+  border-radius: var(--radius-chip);
   background: var(--paper-sunken);
   border: 1px solid var(--hairline);
   font-size: 11px;

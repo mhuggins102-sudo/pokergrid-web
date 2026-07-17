@@ -9,7 +9,7 @@
   position: relative;
   width: 56px;
   aspect-ratio: 1 / 1;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-card);
   background: var(--paper-sunken);
   border: 1px dashed var(--rule);
   flex-shrink: 0;
@@ -118,7 +118,7 @@ button.cardSlot:focus-visible {
   overflow: auto;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-lg);
   padding: 13px 14px;
   opacity: 0;

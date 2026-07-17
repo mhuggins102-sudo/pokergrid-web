@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: var(--space-md);
   padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-panel);
   background: var(--paper-raised);
   border: 1px solid var(--rule);
   box-shadow: var(--shadow-sm);

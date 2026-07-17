@@ -34,8 +34,11 @@ export const colors = {
 
   // Signals
   accent: '#7a1f2b',
-  // Text/glyphs on an accent/danger fill — white in every theme.
+  // Text/glyphs on an accent/warn fill — white here (Morning Paper
+  // light); the dark themes flip --on-accent to near-black in CSS.
   onAccent: '#ffffff',
+  // Text on a --danger fill — white in every theme (see --on-danger).
+  onDanger: '#ffffff',
   warn: '#9a7b1f',
   danger: '#8c2f2f',
   success: '#3f7a4a',

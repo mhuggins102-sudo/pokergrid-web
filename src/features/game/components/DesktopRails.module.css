@@ -9,7 +9,7 @@
   position: relative;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-sm);
   padding: 14px 16px;
 }
@@ -411,7 +411,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-chip);
   border: 1px solid transparent;
 }
 
@@ -523,7 +523,7 @@
   width: 300px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-lg);
   padding: 15px 16px;
   opacity: 0;
@@ -851,7 +851,7 @@
 .bonusEntry {
   position: relative;
   border: 1px solid var(--entry-tone, var(--rule));
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   background: color-mix(in srgb, var(--entry-tone, var(--rule)) 8%, var(--paper-raised));
   padding: 10px 13px 11px;
   cursor: default;
@@ -1069,7 +1069,7 @@
   align-items: center;
   justify-content: center;
   border: 1px dashed var(--rule);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   color: var(--ink-3);
   font-size: 12px;
   font-weight: 600;

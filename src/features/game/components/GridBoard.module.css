@@ -10,7 +10,7 @@
   gap: var(--board-gap);
   width: 100%;
   container-type: inline-size;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-panel);
 }
 
 /* Card Room's felt-tinted table panel: the board's own background
@@ -31,7 +31,7 @@
 .cell {
   position: relative;
   aspect-ratio: 1 / 1;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-card);
   background: var(--paper-sunken);
   border: 1px dashed var(--rule);
   padding: 0;
@@ -202,7 +202,7 @@
   pointer-events: none;
   white-space: nowrap;
   padding: 2px 8px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--ink);
   color: var(--paper-raised);
   font-size: 11px;
@@ -215,7 +215,7 @@
    flight from the well (useAutoPlaceFlights); this glow blooms as the
    card lands. */
 .jokerArrive {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-card);
   animation: joker-arrive-glow 1.1s ease-out 0.25s backwards;
 }
 
@@ -242,7 +242,7 @@
    normal placement's travel. The per-slot stagger comes from an inline
    animation-delay; backwards fill hides cards until their turn. */
 .dealIn {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-card);
   animation: card-deal-in 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) backwards;
   z-index: 2;
 }
