@@ -32,7 +32,11 @@
 
 .primary {
   background: var(--accent);
-  color: var(--on-accent);
+  /* Primary-CTA ink. Defaults to --on-accent; a theme can override just
+     the primary buttons (Morning Paper Dark prints them in its newsprint
+     cream) without touching the gold/success pills that also ride
+     --on-accent and need their own dark ink. */
+  color: var(--on-primary, var(--on-accent));
   box-shadow: var(--shadow-sm);
   /* Morning Paper sets its primary CTAs in tracked capitals (headline
      voice); Card Room resets both tokens to sentence case. */

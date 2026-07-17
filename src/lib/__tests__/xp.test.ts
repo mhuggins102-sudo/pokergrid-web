@@ -11,8 +11,10 @@ import {
   MAX_LEVEL,
   TARGETS_UP_LEVEL_XP,
   TIER_WIN_BONUS,
+  XP_BUCKET_ORDER,
   levelFromXp,
   levelInfoFor,
+  xpBuckets,
   xpForStats,
 } from '../xp';
 
@@ -94,6 +96,23 @@ describe('xp — earning', () => {
         1 * ACHIEVEMENT_XP +
         3 * TARGETS_UP_LEVEL_XP
     );
+  });
+
+  test('xpBuckets sums to xpForStats and a before/after diff attributes a run', () => {
+    const before = EMPTY_STATS;
+    const after = withDiff(EMPTY_STATS, 'medium', 1, { A: 1 });
+    const sum = (b: Record<string, number>) =>
+      XP_BUCKET_ORDER.reduce((s, k) => s + b[k], 0);
+
+    // Sum invariant: buckets always reconstruct the scalar total.
+    expect(sum(xpBuckets(after, []))).toBe(xpForStats(after, []));
+
+    // Per-source delta = exactly what this one run earned.
+    const bBefore = xpBuckets(before, []);
+    const bAfter = xpBuckets(after, []);
+    expect(bAfter.win - bBefore.win).toBe(BASE_WIN_XP.medium);
+    expect(bAfter.firstWin - bBefore.firstWin).toBe(FIRST_WIN_PER_DIFFICULTY_XP);
+    expect(bAfter.tier - bBefore.tier).toBe(TIER_WIN_BONUS.A);
   });
 
   test('daily plays: show-up + beat + tier bonus', () => {

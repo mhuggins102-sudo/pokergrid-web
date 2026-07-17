@@ -195,6 +195,58 @@
   justify-content: center;
 }
 
+/* "+N XP" earned this game — a gold reward pill, tappable to open the
+   per-source breakdown. Distinct warm tone from the accent level-up pill
+   so the two can sit together. */
+.xpEarned {
+  margin-top: var(--space-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.xpEarned:focus-visible {
+  outline: 2px solid var(--warn);
+  outline-offset: 2px;
+}
+
+.xpHint {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* XP breakdown sheet — one row per earning source, ledger style. */
+.xpBreakdown {
+  display: flex;
+  flex-direction: column;
+}
+
+.xpRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.xpTotal {
+  border-bottom: none;
+  border-top: 2px solid var(--ink);
+  margin-top: 4px;
+  font-weight: 700;
+  color: var(--warn);
+}
+
 /* "Level N reached" — an XP milestone crossed by this run (a new deck
    skin may have unlocked). Accent-toned pill to read as a reward. */
 .levelUp {

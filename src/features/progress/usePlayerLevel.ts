@@ -1,10 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DailyXpPlay, LevelInfo, levelInfoFor, xpForStats } from '../../lib/xp';
+import {
+  DailyXpPlay,
+  LevelInfo,
+  XP_BUCKET_LABEL,
+  XP_BUCKET_ORDER,
+  XpBucket,
+  levelInfoFor,
+  xpBuckets,
+  xpForStats,
+} from '../../lib/xp';
 import { skinUnlocked } from '../../design/skinCatalog';
 import { usePlaysStore } from '../daily/sync/playsStore';
 import { useSettingsStore } from '../settings/settingsStore';
+import { useGameSession } from '../game/GameSessionProvider';
+import { DailyPlaysMap } from '../daily/sync/playsStore';
 import { useProgressionStore } from './progressionStore';
 import { useStatsStore } from './statsStore';
+
+// Map the persisted plays store into the minimal shape the XP math wants.
+const toDailyXpPlays = (plays: DailyPlaysMap): DailyXpPlay[] =>
+  Object.values(plays).map(p => ({
+    score: p.score,
+    won: p.won,
+    difficulty: p.recipe.difficulty,
+    twist: p.recipe.twist,
+  }));
 
 /**
  * The player's derived XP + level, reactive to the stats and daily-plays
@@ -18,15 +38,63 @@ export function usePlayerLevel(): LevelInfo {
   const stats = useStatsStore(s => s.stats);
   const plays = usePlaysStore(s => s.plays);
 
-  return useMemo(() => {
-    const dailyPlays: DailyXpPlay[] = Object.values(plays).map(p => ({
-      score: p.score,
-      won: p.won,
-      difficulty: p.recipe.difficulty,
-      twist: p.recipe.twist,
-    }));
-    return levelInfoFor(xpForStats(stats, dailyPlays));
-  }, [stats, plays]);
+  return useMemo(
+    () => levelInfoFor(xpForStats(stats, toDailyXpPlays(plays))),
+    [stats, plays]
+  );
+}
+
+export interface XpEarned {
+  /** XP the run earned (sum of the positive per-source deltas). */
+  total: number;
+  /** Non-zero earning sources, in a stable display order. */
+  items: { bucket: XpBucket; label: string; xp: number }[];
+}
+
+// Pre-run bucket snapshot keyed by the final GameState, so the mobile
+// ResultView and the desktop dialog — the same run mounted across a
+// viewport fork — share ONE baseline captured before the result is
+// written to the stores. Mirrors useRecordResult's WeakSet guard.
+const preBucketsByState = new WeakMap<object, Record<XpBucket, number>>();
+
+/**
+ * XP this run earned, split by source — feeds the end-of-game "+N XP"
+ * line and its tap breakdown. Derived as the diff between a pre-result
+ * bucket snapshot (captured on this result view's first render, before
+ * useRecordResult's effect writes the run) and the live, post-write
+ * buckets. `viewOnly` (archive replay) earns nothing → null.
+ */
+export function useXpEarned(viewOnly: boolean = false): XpEarned | null {
+  const { state } = useGameSession();
+  const stats = useStatsStore(s => s.stats);
+  const plays = usePlaysStore(s => s.plays);
+
+  // Baseline: the first render for this GameState runs BEFORE the record
+  // effect, so getState() reads the pre-run record; the WeakMap makes it
+  // one-shot per game (shared across the fork's two result views).
+  const pre = useMemo(() => {
+    if (!preBucketsByState.has(state)) {
+      preBucketsByState.set(
+        state,
+        xpBuckets(
+          useStatsStore.getState().stats,
+          toDailyXpPlays(usePlaysStore.getState().plays)
+        )
+      );
+    }
+    return preBucketsByState.get(state)!;
+  }, [state]);
+
+  if (viewOnly) return null;
+
+  const after = xpBuckets(stats, toDailyXpPlays(plays));
+  const items = XP_BUCKET_ORDER.map(bucket => ({
+    bucket,
+    label: XP_BUCKET_LABEL[bucket],
+    xp: after[bucket] - pre[bucket],
+  })).filter(i => i.xp > 0);
+  const total = items.reduce((sum, i) => sum + i.xp, 0);
+  return { total, items };
 }
 
 /**

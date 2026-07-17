@@ -4,7 +4,7 @@ import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring
 import { Button, Chevron, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
-import { useLevelUp } from '../../progress/usePlayerLevel';
+import { useLevelUp, useXpEarned } from '../../progress/usePlayerLevel';
 import type { Achievement } from '../../../game/achievements';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
@@ -80,6 +80,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
   // Non-null only when THIS run crossed a new XP level (see useLevelUp).
   const levelUp = useLevelUp(viewOnly);
+  // XP this run earned, split by source (null in the archive view).
+  const xpEarned = useXpEarned(viewOnly);
+  const [xpOpen, setXpOpen] = useState(false);
 
   // Game-end tally, three beats told by the rail chips:
   //   1. 'assemble' — chips pop in with their BASE totals while the
@@ -370,6 +373,19 @@ export function ResultView({ onReplay }: ResultViewProps) {
             ))}
           </span>
         )}
+        {tallyDone && xpEarned && xpEarned.total > 0 && (
+          <button
+            type="button"
+            className={styles.xpEarned}
+            onClick={() => setXpOpen(true)}
+            aria-label={`Earned ${xpEarned.total} XP this game — show breakdown`}
+          >
+            +{xpEarned.total} XP
+            <span className={styles.xpHint} aria-hidden="true">
+              ⓘ
+            </span>
+          </button>
+        )}
         {levelUp !== null && (
           <span className={styles.levelUp} role="status">
             ⬆ Level {levelUp} reached
@@ -451,6 +467,23 @@ export function ResultView({ onReplay }: ResultViewProps) {
         onClose={() => setBuildOpen(false)}
         build={build}
       />
+
+      <Sheet open={xpOpen} onClose={() => setXpOpen(false)} title="XP earned">
+        {xpEarned && (
+          <div className={styles.xpBreakdown}>
+            {xpEarned.items.map(i => (
+              <div key={i.bucket} className={styles.xpRow}>
+                <span>{i.label}</span>
+                <span>+{i.xp}</span>
+              </div>
+            ))}
+            <div className={`${styles.xpRow} ${styles.xpTotal}`}>
+              <span>Total</span>
+              <span>+{xpEarned.total} XP</span>
+            </div>
+          </div>
+        )}
+      </Sheet>
 
       <TierBreakdownSheet
         open={tiersOpen}

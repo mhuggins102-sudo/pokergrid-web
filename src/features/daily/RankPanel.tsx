@@ -151,10 +151,10 @@ export function RankCorner({
     }
   };
 
-  // The queue/error states keep their retry affordance — the status
-  // line itself is the tap target here, the corner has no room for a
-  // separate button. The standing itself also opens the leaderboard,
-  // redundant with the podium icon above it.
+  // Just the placement — "rank / total" — as the corner's leaderboard
+  // presence (the old podium-icon link read as clunky leftover chrome).
+  // Still tappable to open the day stats, but it reads as a plain
+  // standing, not a button.
   const standing = rank.data ? (
     <button
       type="button"
@@ -162,7 +162,8 @@ export function RankCorner({
       aria-label={`Ranked ${rank.data.rank} of ${rank.data.total} — open the leaderboard`}
       onClick={() => setStatsOpen(true)}
     >
-      #{rank.data.rank} <span className={styles.sub}>of {rank.data.total}</span>
+      {rank.data.rank}
+      <span className={styles.sub}>/{rank.data.total}</span>
     </button>
   ) : pending || rank.isError ? (
     <button
@@ -187,27 +188,7 @@ export function RankCorner({
 
   return (
     <>
-      <span className={styles.cornerIcons}>
-        <button
-          type="button"
-          className={styles.cornerBtn}
-          aria-label="Leaderboard"
-          title="Leaderboard"
-          onClick={() => setStatsOpen(true)}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            aria-hidden="true"
-          >
-            <rect x="1" y="9" width="4" height="6" />
-            <rect x="6" y="4" width="4" height="11" />
-            <rect x="11" y="11" width="4" height="4" />
-          </svg>
-        </button>
-        {children}
-      </span>
+      <span className={styles.cornerIcons}>{children}</span>
       {standing}
 
       <DayStatsSheet
