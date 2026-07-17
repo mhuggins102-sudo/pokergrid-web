@@ -1,4 +1,18 @@
 /*
+ * ============================================================================
+ * ARCHIVED THEMES — the two "classic" pre-v2 themes (Morning Paper original
+ * and Card Room desktop-redesign), kept so we can always revert.
+ *
+ * This file is NOT imported anywhere — it is dormant reference only.
+ * To revert a theme: copy the desired `[data-theme=...]` block's token
+ * values back over the live ones in tokens.css (and the paper-light values
+ * back into tokens.ts). Or restore the whole set: `cp tokens.classic.css
+ * tokens.css` (this snapshot also carries the theme-independent tokens).
+ * Snapshot taken before applying Claude Design's theme handoff v2.
+ * ============================================================================
+ */
+
+/*
  * PokerGrid "Morning Paper" editorial tokens.
  *
  * Single source of truth for the visual system. The typed mirror in
@@ -43,54 +57,55 @@
 
 :root,
 [data-theme='paper'] {
-  /* ---- Surfaces (Broadsheet) ---- */
-  --paper: #f4f1e8;
-  --paper-raised: color-mix(in srgb, #fff 58%, #f4f1e8);
-  --paper-sunken: #e8e4d8;
+  /* ---- Surfaces ---- */
+  --paper: #faf7f1;
+  --paper-raised: #ffffff;
+  --paper-sunken: #f2ecdf;
   /* Board accent surface — use sparingly. */
   --felt: #1f5d43;
 
   /* ---- Ink ---- */
-  --ink: #1a1a16;
-  --ink-2: #66645a;
-  /* Darkened to clear AA ≥4.5:1 on --paper. */
-  --ink-3: #726e60;
-  --hairline: rgba(26, 26, 22, 0.18);
-  --scrim: rgba(26, 26, 22, 0.5);
-  /* Heavy newsprint divider (rendered 1px solid). */
-  --rule: rgba(26, 26, 22, 0.55);
+  --ink: #1a1a1a;
+  --ink-2: #5f5a51;
+  /* Darkened from #938c7d — that read ~3.1:1 on --paper, under the
+     4.5:1 AA floor for the many 11-13px labels that use it. */
+  --ink-3: #736c5c;
+  --hairline: rgba(26, 26, 26, 0.14);
+  --scrim: rgba(26, 26, 26, 0.4);
+  --rule: #d9d1c0;
 
   /* ---- Card faces ---- */
-  --card-face: #fffef9;
-  --card-red: #7a1f2b;
-  --card-black: #1a1a16;
-  /* Muted oxblood to match the newsprint red. */
-  --card-back: #5a3038;
+  --card-face: #fffdf8;
+  --card-red: #b3262e;
+  --card-black: #1f1f1f;
+  /* Engraved navy pattern base. */
+  --card-back: #28486e;
 
-  /* ---- Suit chips (UI glyphs) ---- */
-  --suit-h: #7a1f2b;
+  /* ---- Suit chips ---- */
+  --suit-h: #b3262e;
   --suit-d: #1d5fa0;
   --suit-c: #2f7d4f;
-  --suit-s: #1a1a16;
+  --suit-s: #1f2937;
   --joker: #6d4fa3;
 
-  /* Suit colors as printed ON card faces (hearts read as the spot red;
-     diamonds/clubs stay four-color; spades near-black). */
-  --face-suit-h: #7a1f2b;
-  --face-suit-d: #1d5fa0;
-  --face-suit-c: #2f7d4f;
-  --face-suit-s: #1a1a16;
+  /* Suit colors as printed ON card faces. Defaults chain to the UI suit
+     tokens; dark themes split them — card faces stay paper-light there,
+     so face inks must stay dark while UI glyphs (on dark surfaces)
+     brighten. */
+  --face-suit-h: var(--suit-h);
+  --face-suit-d: var(--suit-d);
+  --face-suit-c: var(--suit-c);
+  --face-suit-s: var(--suit-s);
 
   /* ---- Signals ---- */
-  --accent: #7a1f2b;
+  --accent: #1f5d43;
   /* Text/glyphs sitting ON an accent/danger fill — white in every
      theme (desktop-redesign decision; was --paper-raised, which went
      dark in dark themes). */
   --on-accent: #ffffff;
-  /* Muted gold — perks / +N gold / highlights, distinct from the red. */
-  --warn: #9a7b1f;
-  --danger: #8c2f2f;
-  --success: #3f7a4a;
+  --warn: #b07d2e;
+  --danger: #9a2433;
+  --success: #2f7d4f;
 
   /* ---- Difficulty ---- */
   --difficulty-easy: #2f7d4f;
@@ -131,13 +146,10 @@
      any theme can tune it without per-theme component CSS. */
   --wm-opacity: 0;
 
-  /* Card face shadow (Broadsheet keeps it flat/minimal). */
-  --card-shadow: 0 1px 2px rgba(26, 26, 22, 0.14);
-
   /* ---- Type families ---- */
-  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
-  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system,
-    'Segoe UI', sans-serif;
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI',
+    sans-serif;
 }
 
 /*
@@ -148,41 +160,33 @@
  * picks Card Room light/dark from the OS preference).
  */
 [data-theme='card-room'] {
-  --paper: #f4efe9;
-  --paper-raised: color-mix(in srgb, #fff 58%, #f4efe9);
-  --paper-sunken: #ece0dd;
-  --felt: #7a2233;
+  --paper: #faf8f2;
+  --paper-raised: #ffffff;
+  --paper-sunken: #f1ebdd;
+  --felt: #175a3d;
 
-  --ink: #2a1c1e;
-  --ink-2: #6e5a5c;
-  --ink-3: #7c676a;
-  --hairline: rgba(42, 28, 30, 0.14);
-  --scrim: rgba(42, 28, 30, 0.45);
-  --rule: rgba(42, 28, 30, 0.14);
+  --ink: #191712;
+  --ink-2: #575144;
+  --ink-3: #736c5c;
+  --hairline: rgba(25, 23, 18, 0.14);
+  --scrim: rgba(25, 23, 18, 0.4);
+  --rule: #e2daca;
 
-  --card-face: #fffdfb;
-  --card-red: #a3283a;
-  --card-black: #2a1c1e;
-  --card-back: #5c1f2c;
+  --card-face: #fffdf8;
+  --card-red: #c22f3a;
+  --card-black: #23272e;
+  --card-back: #28486e;
 
-  --suit-h: #a3283a;
-  --suit-d: #1d5fa0;
-  --suit-c: #2f7d4f;
-  --suit-s: #2a1c1e;
-  --joker: #6d4fa3;
+  --suit-h: #c22f3a;
+  --suit-d: #2465b3;
+  --suit-c: #2e7d4f;
+  --suit-s: #23272e;
+  --joker: #7a5bc0;
 
-  /* Printed on the card faces (four-color). Set explicitly — Morning
-     Paper's face-suit tokens are now explicit too, so there's no chain
-     to inherit. */
-  --face-suit-h: #a3283a;
-  --face-suit-d: #1d5fa0;
-  --face-suit-c: #2f7d4f;
-  --face-suit-s: #2a1c1e;
-
-  --accent: #7a2233;
-  --warn: #8a6212;
-  --danger: #a3283a;
-  --success: #1c6b46;
+  --accent: #175a3d;
+  --warn: #a87b1f;
+  --danger: #9a2433;
+  --success: #2e7d4f;
 
   /* Difficulty scale, re-tuned in the desktop redesign: easy/medium
      align with success/warn; hard warms up; extreme gets its own red
@@ -204,14 +208,9 @@
      cells, a crisper two-layer card shadow, and a larger rank. */
   --board-surface: color-mix(in srgb, var(--felt) 6%, var(--paper-sunken));
   --board-pad: 6px;
-  --card-shadow: 0 1px 2px rgba(42, 28, 30, 0.16),
-    0 3px 8px rgba(42, 28, 30, 0.08);
+  --card-shadow: 0 1px 2px rgba(25, 23, 18, 0.14),
+    0 3px 8px rgba(25, 23, 18, 0.07);
   --card-rank-size: 46cqh;
-
-  /* Card Room body font (Space Grotesk); display stays Fraunces. */
-  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
-  --font-body: 'Space Grotesk Variable', 'Space Grotesk', system-ui,
-    sans-serif;
 }
 
 /*
@@ -224,40 +223,39 @@
  * flat board and original faces in both appearances.
  */
 [data-theme='paper-dark'] {
-  --paper: #14120d;
-  --paper-raised: color-mix(in srgb, #fff 6%, #14120d);
-  --paper-sunken: #0d0b07;
+  --paper: #17150f;
+  --paper-raised: #211e17;
+  --paper-sunken: #100e09;
   --felt: #3a8f68;
 
-  --ink: #efe7d4;
-  --ink-2: #9a917c;
-  --ink-3: color-mix(in srgb, #efe7d4 46%, #14120d);
-  --hairline: rgba(239, 231, 212, 0.16);
+  --ink: #efe9d8;
+  --ink-2: #b7ae9b;
+  --ink-3: #948b77;
+  --hairline: rgba(239, 233, 216, 0.14);
   --scrim: rgba(0, 0, 0, 0.55);
-  /* Bright ink for the masthead's double-rule divider. */
-  --rule: #efe7d4;
+  --rule: #3a352a;
 
-  --card-face: #f4eeda;
-  --card-red: #cf4034;
-  --card-black: #241f16;
-  --card-back: #3a2016;
+  --card-face: #f6f1e4;
+  --card-red: #b3262e;
+  --card-black: #1f1f1f;
+  --card-back: #33507a;
 
   /* UI glyph suits (on dark surfaces). */
-  --suit-h: #d1493a;
+  --suit-h: #e0636c;
   --suit-d: #5b94db;
   --suit-c: #57a97c;
-  --suit-s: #cdc4ad;
+  --suit-s: #9aa5b1;
   --joker: #a78bdb;
 
-  /* Face suits (printed on the cream faces) — four-color. */
-  --face-suit-h: #cf4034;
-  --face-suit-d: #4c8fe0;
-  --face-suit-c: #43a873;
-  --face-suit-s: #241f16;
+  /* Face suits (printed on the cream faces) — the paper-light inks. */
+  --face-suit-h: #b3262e;
+  --face-suit-d: #1d5fa0;
+  --face-suit-c: #2f7d4f;
+  --face-suit-s: #1f2937;
 
-  --accent: #d1493a;
-  --warn: #d9a941;
-  --danger: #d0655a;
+  --accent: #3a8f68;
+  --warn: #c99b3f;
+  --danger: #c4586a;
   --success: #4caf7d;
 
   --difficulty-easy: #4caf7d;
@@ -268,10 +266,6 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-
-  /* No watermark in Morning Paper; a soft card shadow on the dark ground. */
-  --wm-opacity: 0;
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 /*
@@ -283,39 +277,39 @@
  * ground.
  */
 [data-theme='card-room-dark'] {
-  --paper: #0e1712;
-  --paper-raised: color-mix(in srgb, #fff 6%, #0e1712);
-  --paper-sunken: #081009;
-  --felt: #33a06a;
+  --paper: #131210;
+  --paper-raised: #1d1b17;
+  --paper-sunken: #0e0d0b;
+  --felt: #2e8b5e;
 
-  --ink: #e8efe6;
-  --ink-2: #8ea095;
-  --ink-3: color-mix(in srgb, #e8efe6 46%, #0e1712);
-  --hairline: rgba(232, 239, 230, 0.13);
+  --ink: #f0ebdf;
+  --ink-2: #b5ac99;
+  --ink-3: #9a937f;
+  --hairline: rgba(240, 235, 223, 0.14);
   --scrim: rgba(0, 0, 0, 0.55);
-  --rule: rgba(232, 239, 230, 0.13);
+  --rule: #33302a;
 
-  --card-face: #f4f0e4;
-  --card-red: #c62f3a;
-  --card-black: #1e2a33;
-  --card-back: #123027;
+  --card-face: #f5f0e4;
+  --card-red: #c22f3a;
+  --card-black: #23272e;
+  --card-back: #33507a;
 
   /* UI glyph suits (on dark surfaces). */
-  --suit-h: #c62f3a;
-  --suit-d: #4c8fe0;
-  --suit-c: #43a873;
-  --suit-s: #9fb0b6;
+  --suit-h: #e0636c;
+  --suit-d: #5b94db;
+  --suit-c: #57a97c;
+  --suit-s: #9aa5b1;
   --joker: #a78bdb;
 
-  /* Face suits (on the paper-light card faces) — four-color. */
-  --face-suit-h: #c62f3a;
-  --face-suit-d: #4c8fe0;
-  --face-suit-c: #43a873;
-  --face-suit-s: #1e2a33;
+  /* Face suits (on the paper-light card faces). */
+  --face-suit-h: #c22f3a;
+  --face-suit-d: #2465b3;
+  --face-suit-c: #2e7d4f;
+  --face-suit-s: #23272e;
 
-  --accent: #33a06a;
-  --warn: #e6bf5e;
-  --danger: #c62f3a;
+  --accent: #2e8b5e;
+  --warn: #d9a93e;
+  --danger: #d45a68;
   --success: #4caf7d;
 
   --difficulty-easy: #4caf7d;
@@ -332,11 +326,6 @@
   /* Card Room extras — felt reads stronger against the dark ground. */
   --board-surface: color-mix(in srgb, var(--felt) 16%, var(--paper-sunken));
   --board-pad: 6px;
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.35);
   --card-rank-size: 46cqh;
-
-  /* Card Room body font (Space Grotesk); display stays Fraunces. */
-  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
-  --font-body: 'Space Grotesk Variable', 'Space Grotesk', system-ui,
-    sans-serif;
 }

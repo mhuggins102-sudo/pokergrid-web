@@ -5,40 +5,40 @@
  */
 
 export const colors = {
-  // Surfaces
-  paper: '#faf7f1',
-  paperRaised: '#ffffff',
-  paperSunken: '#f2ecdf',
+  // Surfaces (Morning Paper light — Broadsheet)
+  paper: '#f4f1e8',
+  paperRaised: '#faf9f5', // = color-mix(#fff 58%, #f4f1e8)
+  paperSunken: '#e8e4d8',
   felt: '#1f5d43',
 
   // Ink
-  ink: '#1a1a1a',
-  ink2: '#5f5a51',
-  ink3: '#736c5c',
-  hairline: 'rgba(26, 26, 26, 0.14)',
-  scrim: 'rgba(26, 26, 26, 0.4)',
-  rule: '#d9d1c0',
+  ink: '#1a1a16',
+  ink2: '#66645a',
+  ink3: '#726e60',
+  hairline: 'rgba(26, 26, 22, 0.18)',
+  scrim: 'rgba(26, 26, 22, 0.5)',
+  rule: 'rgba(26, 26, 22, 0.55)',
 
   // Card faces
-  cardFace: '#fffdf8',
-  cardRed: '#b3262e',
-  cardBlack: '#1f1f1f',
-  cardBack: '#28486e',
+  cardFace: '#fffef9',
+  cardRed: '#7a1f2b',
+  cardBlack: '#1a1a16',
+  cardBack: '#5a3038',
 
   // Suit chips
-  suitH: '#b3262e',
+  suitH: '#7a1f2b',
   suitD: '#1d5fa0',
   suitC: '#2f7d4f',
-  suitS: '#1f2937',
+  suitS: '#1a1a16',
   joker: '#6d4fa3',
 
   // Signals
-  accent: '#1f5d43',
+  accent: '#7a1f2b',
   // Text/glyphs on an accent/danger fill — white in every theme.
   onAccent: '#ffffff',
-  warn: '#b07d2e',
-  danger: '#9a2433',
-  success: '#2f7d4f',
+  warn: '#9a7b1f',
+  danger: '#8c2f2f',
+  success: '#3f7a4a',
 } as const;
 
 // var() references so difficulty tones follow the active theme (dark
@@ -80,8 +80,9 @@ export const shadows = {
 } as const;
 
 export const fonts = {
-  display: "'Fraunces Variable', Georgia, 'Times New Roman', serif",
-  body: "'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif",
+  display: "'Fraunces Variable', 'Fraunces', Georgia, serif",
+  // Morning Paper body (Card Room uses Space Grotesk — see tokens.css).
+  body: "'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
 } as const;
 
 export type ColorToken = keyof typeof colors;
