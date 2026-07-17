@@ -103,6 +103,9 @@
      theme (desktop-redesign decision; was --paper-raised, which went
      dark in dark themes). */
   --on-accent: #ffffff;
+  /* Text on a --danger fill (added with the v2 personality pass so a
+     full-file revert to this archive keeps danger buttons legible). */
+  --on-danger: #ffffff;
   --warn: #b07d2e;
   --danger: #9a2433;
   --success: #2f7d4f;
@@ -128,6 +131,22 @@
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-pill: 999px;
+
+  /* ---- Personality radii + masthead (added with the v2 pass) ----
+     Components now consume these semantic names; this archive predates
+     the per-theme square/round split, so it defines one rounded,
+     lowercase set for every theme — a full-file revert then renders the
+     classic look coherently (no 0-radius corners, no uppercase
+     nameplate). */
+  --radius-card: 6px;
+  --radius-button: 10px;
+  --radius-chip: var(--radius-pill);
+  --radius-panel: 12px;
+  --masthead-rule: 1px solid var(--rule);
+  --wordmark-transform: none;
+  --wordmark-tracking: -0.01em;
+  --btn-primary-transform: none;
+  --btn-primary-tracking: normal;
 
   /* ---- Board geometry ----
      The 5×5 grid gap, shared verbatim by GridBoard and the LineRails

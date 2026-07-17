@@ -397,10 +397,10 @@
   min-width: 44px;
   padding-left: 0;
   padding-right: 0;
-  /* Match the neighbouring full-size actions' corners — the `sm` button
-     defaults to the tighter --radius-sm, which read as a different shape
-     next to the Discard / perk buttons. */
-  border-radius: var(--radius-md);
+  /* Match the neighbouring full-size actions' corners (all buttons now
+     share the theme's --radius-button; the `sm` size no longer needs a
+     one-off override — kept explicit so this stays pinned to them). */
+  border-radius: var(--radius-button);
 }
 
 /* In the classic row and hand-stack action row the neighbours flex to
@@ -510,7 +510,7 @@
   align-items: center;
   gap: 10px;
   padding: 5px 6px 5px 13px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
@@ -537,7 +537,7 @@
   align-items: baseline;
   gap: 4px;
   padding: 2px 10px 3px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   font-family: var(--font-display);
   font-size: 18px;
@@ -589,7 +589,7 @@
   align-items: center;
   gap: 5px;
   padding: 6px 10px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
@@ -653,7 +653,7 @@
   overflow: auto;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-lg);
   padding: 14px 15px;
 }
@@ -806,7 +806,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-chip);
   background: color-mix(in srgb, var(--accent) 12%, var(--paper-raised));
   color: var(--accent);
   font-size: 12px;
@@ -827,7 +827,7 @@
   right: 0;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-lg);
   padding: 11px 13px;
   width: 232px;
@@ -969,7 +969,7 @@
   min-height: 177px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-sm);
   padding: var(--space-sm);
   display: flex;
@@ -1154,7 +1154,7 @@
   .deskDock {
     background: var(--paper-raised);
     border: 1px solid var(--hairline);
-    border-radius: 14px;
+    border-radius: var(--radius-panel);
     box-shadow: var(--shadow-sm);
     padding: var(--space-lg);
     display: flex;

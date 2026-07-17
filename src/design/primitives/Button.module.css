@@ -5,7 +5,7 @@
   gap: var(--space-sm);
   min-height: 44px;
   padding: 0 var(--space-lg);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
@@ -34,6 +34,10 @@
   background: var(--accent);
   color: var(--on-accent);
   box-shadow: var(--shadow-sm);
+  /* Morning Paper sets its primary CTAs in tracked capitals (headline
+     voice); Card Room resets both tokens to sentence case. */
+  text-transform: var(--btn-primary-transform, none);
+  letter-spacing: var(--btn-primary-tracking, normal);
 }
 
 /* hover-capable pointers only — on touch, :hover sticks to the last
@@ -71,7 +75,10 @@
 
 .danger {
   background: var(--danger);
-  color: var(--on-accent);
+  /* Keeps white lettering in every theme (see --on-danger) — the dark
+     themes flip --on-accent to near-black, which would fail on the
+     saturated danger red. */
+  color: var(--on-danger);
   box-shadow: var(--shadow-sm);
 }
 
@@ -86,7 +93,7 @@
   min-height: 32px;
   padding: 0 var(--space-md);
   font-size: 13px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-button);
 }
 
 /* Invisible vertical hit-area extension: 32px visual, 44px touch

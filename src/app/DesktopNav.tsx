@@ -148,6 +148,28 @@ const phoneLabel = (pathname: string): string => {
   return dateline(pathname);
 };
 
+// ---- Morning Paper broadsheet strip (desk-only, CSS-gated to the paper
+// themes) — the decorative dateline above the nameplate. Always today's
+// date (the edition's own dateline), built from currentDateISO parts to
+// dodge the new Date('YYYY-MM-DD') UTC day-shift.
+const editionDate = (): string => {
+  const [y, m, d] = currentDateISO().split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+// A whimsical, date-derived issue number for the nameplate ("No. 563"),
+// so it ticks over daily instead of sitting on a magic literal.
+const editionNo = (): number => {
+  const [y, m, d] = currentDateISO().split('-').map(Number);
+  return (
+    Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(2025, 0, 1)) / 86400000) + 1
+  );
+};
+
 export function DesktopNav() {
   const ctx = useContext(NavExtrasContext);
   const { pathname } = useLocation();
@@ -179,10 +201,24 @@ export function DesktopNav() {
       appearance: resolved.endsWith('-dark') ? 'light' : 'dark',
     });
 
+  // Morning Paper's edition label follows the appearance; the strip that
+  // shows it is CSS-gated to the paper themes × desktop, so this string
+  // is inert in Card Room.
+  const editionLabel = resolved.endsWith('-dark')
+    ? 'Late Night'
+    : 'Morning Edition';
+
   return (
     <header
       className={`${styles.bar} ${gameRow ? styles.gameRowActive : ''}`}
     >
+      {/* Broadsheet dateline — desk-only, shown only in the Morning Paper
+          themes (DesktopNav.module.css). Decorative, so hidden from a11y. */}
+      <div className={styles.editionStrip} aria-hidden="true">
+        <span>No. {editionNo()}</span>
+        <span>{editionLabel}</span>
+        <span>{editionDate()}</span>
+      </div>
       <div className={styles.left}>
         <NavLink to="/" className={styles.wordmark}>
           PokerGrid

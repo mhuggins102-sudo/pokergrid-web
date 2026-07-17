@@ -83,10 +83,16 @@
 
   /* ---- Signals ---- */
   --accent: #7a1f2b;
-  /* Text/glyphs sitting ON an accent/danger fill — white in every
-     theme (desktop-redesign decision; was --paper-raised, which went
-     dark in dark themes). */
+  /* Text/glyphs sitting ON an accent/warn(gold) fill. White on the deep
+     light-theme reds/golds; the DARK themes flip this to near-black,
+     because their accent + gold lift bright enough that dark lettering
+     reads better (the Claude Design "Night edition / Midnight felt"
+     mockups — the Place button and every gold perk carry dark text). */
   --on-accent: #ffffff;
+  /* Text ON a --danger fill. Split from --on-accent so destructive
+     buttons keep WHITE lettering even in the dark themes (their danger
+     stays a saturated red where dark text would fail contrast). */
+  --on-danger: #ffffff;
   /* Muted gold — perks / +N gold / highlights, distinct from the red. */
   --warn: #9a7b1f;
   --danger: #8c2f2f;
@@ -107,12 +113,44 @@
   --space-xxl: 32px;
   --space-xxxl: 48px;
 
-  /* ---- Radius ---- */
+  /* ---- Radius ----
+     Theme-constant generic scale (chrome: dialogs, sheets, page cards).
+     The theme's square/round PERSONALITY is carried by the semantic
+     tokens below, scoped to the game board + its panels — the subject of
+     the Claude Design mockups. App chrome stays on this shared rounded
+     scale in every theme so it reads consistently across pages. */
   --radius-xs: 2px;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-pill: 999px;
+
+  /* ---- Personality radii (per-theme corner language) ----
+     The theme's "shape" lives here. Morning Paper is the SQUARE
+     broadsheet — near-sharp cards, boxy panels, rectangular chips and
+     badges (no pills anywhere). Card Room overrides all four to its
+     rounded / pill language. Components that carry the theme's corner
+     personality (cards, buttons, chips, panels) consume these semantic
+     names; the generic --radius-* scale above still backs everything
+     that must stay constant across themes — true pills (progress
+     tracks, toggles), circular controls, focus rings. paper-dark
+     inherits these squared defaults from :root; both Card Room blocks
+     override them. */
+  --radius-card: 4px;
+  --radius-button: 3px;
+  --radius-chip: 3px;
+  --radius-panel: 5px;
+
+  /* ---- Masthead + brand personality ----
+     Morning Paper wears an uppercase nameplate over a heavy rule and
+     sets its primary CTAs in tracked capitals (headline voice); the
+     dark edition doubles the rule. Card Room resets all of these to a
+     quiet lowercase wordmark, hairline rule, sentence-case buttons. */
+  --masthead-rule: 1px solid var(--rule);
+  --wordmark-transform: uppercase;
+  --wordmark-tracking: 0.02em;
+  --btn-primary-transform: uppercase;
+  --btn-primary-tracking: 0.04em;
 
   /* ---- Board geometry ----
      The 5×5 grid gap, shared verbatim by GridBoard and the LineRails
@@ -199,6 +237,21 @@
 
   --wm-opacity: 0.1;
 
+  /* Card Room corner language: rounded cards + panels, fully-pill chips
+     and badges (overrides Morning Paper's squared defaults). */
+  --radius-card: 6px;
+  --radius-button: 10px;
+  --radius-chip: var(--radius-pill);
+  --radius-panel: 12px;
+
+  /* Card Room masthead: quiet lowercase wordmark beside the inline date,
+     a hairline rule — no broadsheet nameplate, sentence-case CTAs. */
+  --masthead-rule: 1px solid var(--rule);
+  --wordmark-transform: none;
+  --wordmark-tracking: -0.01em;
+  --btn-primary-transform: none;
+  --btn-primary-tracking: normal;
+
   /* Card Room extras (unset in Morning Paper, so its board/faces stay
      exactly as they were): a faint felt-tinted panel behind the board
      cells, a crisper two-layer card shadow, and a larger rank. */
@@ -256,9 +309,17 @@
   --face-suit-s: #241f16;
 
   --accent: #d1493a;
+  /* Bright accent + gold → near-black lettering reads better than white
+     (the "Night edition" Place button + gold perks). Danger keeps white
+     via --on-danger. Squared corners + uppercase nameplate/CTAs inherit
+     from :root; only the divider + these ink flips are theme-local. */
+  --on-accent: #14120d;
   --warn: #d9a941;
   --danger: #d0655a;
   --success: #4caf7d;
+
+  /* The broadsheet's night nameplate doubles its rule (bright ink). */
+  --masthead-rule: 2px double var(--rule);
 
   --difficulty-easy: #4caf7d;
   --difficulty-medium: #d9a93e;
@@ -314,9 +375,24 @@
   --face-suit-s: #1e2a33;
 
   --accent: #33a06a;
+  /* Bright green accent + gold → dark lettering (the "Midnight felt"
+     Place button + gold perks). Danger keeps white via --on-danger. */
+  --on-accent: #0e1712;
   --warn: #e6bf5e;
   --danger: #c62f3a;
   --success: #4caf7d;
+
+  /* Card Room corner language (rounded / pill) + quiet lowercase
+     masthead — same overrides as the light table. */
+  --radius-card: 6px;
+  --radius-button: 10px;
+  --radius-chip: var(--radius-pill);
+  --radius-panel: 12px;
+  --masthead-rule: 1px solid var(--rule);
+  --wordmark-transform: none;
+  --wordmark-tracking: -0.01em;
+  --btn-primary-transform: none;
+  --btn-primary-tracking: normal;
 
   --difficulty-easy: #4caf7d;
   --difficulty-medium: #d9a93e;

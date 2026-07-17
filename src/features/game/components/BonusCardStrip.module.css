@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-lg);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-panel);
   background: var(--paper-raised);
   border: 1px solid var(--rule);
   box-shadow: var(--shadow-sm);
@@ -33,7 +33,7 @@
   align-items: flex-start;
   gap: 2px;
   padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-button);
   background: var(--paper);
   border: 1px solid var(--hairline);
   /* Tone ring — hairline + tint, never a glow. */
@@ -134,7 +134,7 @@
   min-width: 0;
   min-height: 36px;
   border: 1px dashed var(--rule);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-button);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +166,7 @@
   );
   border: 1px solid var(--chip-tone, var(--rule));
   box-shadow: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   /* Tight vertical padding hands height back to the board. The floor is
      the filled chip's own rendered height (title + mult ≈ 50px) so it and
      the empty slots below agree — see the constant-row-height note there. */
@@ -195,7 +195,7 @@
    row's height constant from zero cards onward (no grow on the first draw).
    Scoped to .rowDocked, so classic phone + the desk panel are untouched. */
 .rowDocked .emptySlot {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   min-height: 50px;
 }
 
