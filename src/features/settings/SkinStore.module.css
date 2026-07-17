@@ -216,10 +216,13 @@
   filter: grayscale(0.5) brightness(0.82);
 }
 
+/* The enlargement triggers off the card IMAGE only (its later-sibling
+   .magFloat), not the whole row — hovering the name/level does nothing, so
+   only the preview art pops. .preview covers tiles + group heads; .coverWrap
+   is the locked cover (its inner .preview isn't a sibling of .magFloat). */
 @media (hover: hover) {
-  .tile:hover > .magFloat,
-  .groupHead:hover > .magFloat,
-  .entry:hover > .magFloat {
+  .preview:hover ~ .magFloat,
+  .coverWrap:hover ~ .magFloat {
     display: block;
   }
 }

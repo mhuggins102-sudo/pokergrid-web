@@ -69,12 +69,12 @@ export function CardFace({ card }: { card: Card }) {
   // exists; tablet/desktop (≥768) keep the desktop layout unchanged.
   const mobile = useTier() === 'phone';
   // Deck skin override (Claude Design's token-based faces, design/
-  // deckSkins.ts). Active only for standard single-suit cards — jokers and
+  // deckSkins.ts). A non-null `deckSkin` is the skin; null follows the
+  // theme default. Active only for standard single-suit cards — jokers and
   // Double Duty two-way faces keep their dedicated rendering.
-  const skinsOn = useSettingsStore(s => s.deckSkinsEnabled);
   const skinId = useSettingsStore(s => s.deckSkin);
   const activeSkin =
-    skinsOn && skinId && SKIN_IDS.includes(skinId) ? skinId : null;
+    skinId && SKIN_IDS.includes(skinId) ? skinId : null;
 
   if (isJoker(card)) {
     return (

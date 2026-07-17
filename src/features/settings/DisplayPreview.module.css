@@ -135,11 +135,13 @@
   margin: 0 calc(-1 * var(--space-md)) calc(-1 * var(--space-md));
 }
 
-/* Desk families (desktop, tablet-landscape): the dock sits in a right
-   rail beside the board, as in the real ≥1024 / desk-lite game. */
+/* Desk families (desktop, tablet-landscape): the deck/dock sits in its own
+   contained panel beside the board, as in the real ≥1024 / desk-lite game —
+   a separate boxed card, not a rail bled to the edges behind a divider. */
 .previewDesk {
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
+  gap: var(--space-md);
 }
 
 .previewDesk .boardWrap {
@@ -147,24 +149,19 @@
   min-width: 0;
 }
 
-/* The rail: full-bleed against the panel's top/right/bottom edges with
-   a hairline divider, dock pinned to its top like the game's right rail. */
 .dockSide {
   flex: none;
   /* Fits the desk dock mock's natural width (~207px) so its action buttons
-     aren't clipped by the panel's overflow:hidden. */
+     aren't clipped. */
   width: 212px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  margin: calc(-1 * var(--space-md)) calc(-1 * var(--space-md))
-    calc(-1 * var(--space-md)) 0;
-  border-left: 1px solid var(--rule);
 }
 
-/* The dock frame draws its own top rule for the below-the-board case;
-   in the rail the divider is the border-left above. */
+/* The dock mock as its own bordered, rounded container (its frame already
+   carries the paper surface + padding), so it reads as the game's deck/dock
+   panel rather than content floating right of a divider. */
 .dockSide > * {
-  border-top: none;
-  height: 100%;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
 }
