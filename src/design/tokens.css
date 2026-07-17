@@ -191,9 +191,12 @@
  * picks Card Room light/dark from the OS preference).
  */
 [data-theme='card-room'] {
-  --paper: #f4efe9;
-  --paper-raised: color-mix(in srgb, #fff 58%, #f4efe9);
-  --paper-sunken: #ece0dd;
+  /* Warm ivory, de-pinked: the old paper + sunken carried a rosy cast
+     (sunken especially) that read as washed-out pink under the burgundy.
+     Shifted toward a neutral warm beige — same club warmth, no rose. */
+  --paper: #f4f1e9;
+  --paper-raised: color-mix(in srgb, #fff 58%, #f4f1e9);
+  --paper-sunken: #e9e2d3;
   --felt: #7a2233;
 
   --ink: #2a1c1e;
@@ -317,11 +320,13 @@
   --face-suit-c: #43a873;
   --face-suit-s: #241f16;
 
-  --accent: #d1493a;
-  /* Bright accent + gold → near-black lettering reads better than white
-     (the "Night edition" Place button + gold perks). Danger keeps white
-     via --on-danger. Squared corners + uppercase nameplate/CTAs inherit
-     from :root; only the divider + these ink flips are theme-local. */
+  /* A deep brick red — closer to printed newsprint ink than the earlier
+     vermilion, which read too "loud" for the broadsheet. */
+  --accent: #c0392b;
+  /* Accent + gold both lift bright enough here that near-black lettering
+     reads (the "Night edition" Place button + gold perks). Danger keeps
+     white via --on-danger. Squared corners + uppercase nameplate/CTAs
+     inherit from :root; only the divider + these ink flips are local. */
   --on-accent: #14120d;
   --warn: #d9a941;
   --danger: #d0655a;
