@@ -127,14 +127,76 @@
   color: var(--on-accent);
 }
 
-/* Desk (≥1024) center-stage: card + meta over stacked actions. */
+/* ---- Desk (≥1024) previews: 1:1 with GameScreen's .deskDock ----
+   The preview column is 300px — the real desk rail's width — so these
+   carry the game's exact panel recipe, card widths, gaps and full-size
+   buttons rather than a scaled-down approximation. */
+.deskFrame {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-lg);
+  min-height: 176px;
+  gap: 0;
+}
+
+/* Mirrors .deskDockStage: big centered card, action stack beneath. */
 .deskStage {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-md);
   width: 100%;
   margin: 0 auto;
+}
+
+/* Mirrors .deskDockCompact: card beside the action column, 15px gap. */
+.deskCompactRow {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Mirrors .deskActions. */
+.deskActionsCol {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+/* Mirrors .deskBtnRow: Discard + ↺ Undo two-up at full button height. */
+.deskPair {
+  gap: var(--space-sm);
+}
+
+.deskPair > * {
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+}
+
+/* The real desk card wells (.deskDockStage / .deskDockCompact cardSlot). */
+.cardStage {
+  width: 104px;
+  aspect-ratio: 1 / 1;
+}
+
+.cardCompact {
+  width: 82px;
+  aspect-ratio: 1 / 1;
+}
+
+/* NextCardWell's ≥640 deck caption is 13px over a 3px gap. */
+.deskFrame .cardCol {
+  gap: 3px;
+}
+
+.deskFrame .meta {
+  font-size: 13px;
 }
 
 /* The "Desktop" view's deck well: meta column beside the card. */

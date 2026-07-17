@@ -151,17 +151,11 @@
 
 .dockSide {
   flex: none;
-  /* Proportional to the real desk dock column (~360px) at the board's preview
-     scale, so the action buttons read at the right width instead of cramped. */
+  /* The real ≥1024 desk rail's exact width (GameScreen's grid third
+     column), so the dock mock renders 1:1 — same card widths, same
+     button sizes — with no scale fudging. The mock dresses itself as
+     the game's panel (DockLayoutPreview's .deskFrame). */
   width: 300px;
   display: flex;
   flex-direction: column;
-}
-
-/* The dock mock as its own bordered, rounded container (its frame already
-   carries the paper surface + padding), so it reads as the game's deck/dock
-   panel rather than content floating right of a divider. */
-.dockSide > * {
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-md);
 }
