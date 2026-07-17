@@ -1,4 +1,4 @@
-import { CSSProperties, useEffect } from 'react';
+import { CSSProperties, useEffect, useState } from 'react';
 import { Link, useRouteError } from 'react-router';
 
 // A redeploy replaces every hashed chunk; a tab holding the previous
@@ -35,6 +35,23 @@ export const isChunkLoadError = (error: unknown): boolean => {
 const RELOAD_KEY = 'pokergrid:chunk-reload-at';
 
 /**
+ * Recovery navigation with a unique cache-buster query. A plain
+ * location.reload() can be answered by an HTTP cache layer (browser,
+ * carrier proxy, CDN edge) with the SAME stale index.html that just
+ * failed — observed on iOS, where tapping Reload brought the update card
+ * straight back with nothing changed. A never-seen query string forces
+ * every layer to fetch the live document. main.tsx strips the parameter
+ * on boot so it doesn't linger in the address bar.
+ */
+export const CACHE_BUST_PARAM = 'pgu';
+
+const bustReload = (): void => {
+  const url = new URL(window.location.href);
+  url.searchParams.set(CACHE_BUST_PARAM, String(Date.now()));
+  window.location.replace(url.toString());
+};
+
+/**
  * Drop the stale service worker (and its precache) before reloading.
  *
  * The chunk that failed to load is the OLD deploy's — but the page is
@@ -63,7 +80,7 @@ const dropStaleWorkerAndReload = async (): Promise<void> => {
   } catch {
     // best effort — fall through to the reload
   }
-  window.location.reload();
+  bustReload();
 };
 
 /**
@@ -83,13 +100,29 @@ export function RouteError() {
   const error = useRouteError();
 
   const stale = isChunkLoadError(error);
-  useEffect(() => {
-    if (!stale) return;
+  // Heal or show the manual card? Decided synchronously so the FIRST
+  // paint already matches: a fresh stale-chunk failure auto-heals behind
+  // a quiet "Updating…" card; a failure landing within 15s of a heal
+  // (loop guard) gets the full card with the manual Reload.
+  const [healing] = useState(() => {
+    if (!stale) return false;
     const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
-    if (Date.now() - last < 15_000) return; // healed recently → show UI
+    return Date.now() - last >= 15_000;
+  });
+  useEffect(() => {
+    if (!healing) return;
     sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
     void dropStaleWorkerAndReload();
-  }, [stale]);
+  }, [healing]);
+  // If the heal hangs (offline, storage denied), reveal the manual
+  // controls instead of spinning forever.
+  const [healTimedOut, setHealTimedOut] = useState(false);
+  useEffect(() => {
+    if (!healing) return;
+    const t = window.setTimeout(() => setHealTimedOut(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [healing]);
+  const quiet = healing && !healTimedOut;
 
   const wrap: CSSProperties = {
     minHeight: '100dvh',
@@ -123,34 +156,63 @@ export function RouteError() {
     cursor: 'pointer',
   };
 
+  const spinner: CSSProperties = {
+    display: 'inline-block',
+    width: 22,
+    height: 22,
+    marginBottom: 14,
+    border: '3px solid var(--rule, #3a352a)',
+    borderTopColor: 'var(--accent, #3a8f68)',
+    borderRadius: '50%',
+    animation: 'pg-heal-spin 800ms linear infinite',
+  };
+
   return (
     <div style={wrap}>
+      {/* Inline keyframes: when this renders, the stylesheet may be
+          exactly what failed to load. */}
+      <style>{'@keyframes pg-heal-spin{to{transform:rotate(360deg)}}'}</style>
       <div style={card}>
+        {quiet && <span style={spinner} aria-hidden="true" />}
         <h1 style={{ fontSize: 18, margin: '0 0 8px' }}>
-          {stale ? 'PokerGrid just updated' : 'Something went wrong'}
+          {quiet
+            ? 'Updating PokerGrid…'
+            : stale
+              ? 'PokerGrid just updated'
+              : 'Something went wrong'}
         </h1>
         <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0, opacity: 0.8 }}>
-          {stale
-            ? 'A new version was deployed while this page was open. Reloading picks it up — your saved games and stats are safe.'
-            : 'An unexpected error interrupted the page. Reloading usually clears it — your saved games and stats are safe.'}
+          {quiet
+            ? 'Grabbing the newest version — one moment. Your saved games and stats are safe.'
+            : stale
+              ? 'A new version was deployed while this page was open. Reloading picks it up — your saved games and stats are safe.'
+              : 'An unexpected error interrupted the page. Reloading usually clears it — your saved games and stats are safe.'}
         </p>
-        <button
-          type="button"
-          style={button}
-          onClick={() =>
-            stale ? void dropStaleWorkerAndReload() : window.location.reload()
-          }
-        >
-          Reload
-        </button>
-        <p style={{ marginTop: 16, marginBottom: 0 }}>
-          <Link
-            to="/"
-            style={{ color: 'var(--accent, #3a8f68)', fontSize: 13 }}
-          >
-            Back to home
-          </Link>
-        </p>
+        {!quiet && (
+          <>
+            <button
+              type="button"
+              style={button}
+              onClick={() => {
+                // Stamp the guard so a still-broken reboot shows this
+                // card immediately instead of auto-heal flash-looping.
+                sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+                if (stale) void dropStaleWorkerAndReload();
+                else bustReload();
+              }}
+            >
+              Reload
+            </button>
+            <p style={{ marginTop: 16, marginBottom: 0 }}>
+              <Link
+                to="/"
+                style={{ color: 'var(--accent, #3a8f68)', fontSize: 13 }}
+              >
+                Back to home
+              </Link>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
