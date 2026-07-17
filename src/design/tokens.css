@@ -152,6 +152,11 @@
   --btn-primary-transform: uppercase;
   --btn-primary-tracking: 0.04em;
 
+  /* Home-page card surface. Flat by default — the diagonal sunken→raised
+     gradient read as muddy in every theme except the dark table, so ONLY
+     Card Room Dark opts back into it. */
+  --home-surface: var(--paper-raised);
+
   /* ---- Board geometry ----
      The 5×5 grid gap, shared verbatim by GridBoard and the LineRails
      row/column totals so every rail chip tracks its line exactly. Off
@@ -287,8 +292,12 @@
   --ink-3: color-mix(in srgb, #efe7d4 46%, #14120d);
   --hairline: rgba(239, 231, 212, 0.16);
   --scrim: rgba(0, 0, 0, 0.55);
-  /* Bright ink for the masthead's double-rule divider. */
-  --rule: #efe7d4;
+  /* In-game strokes ride --rule (dashed empty cells, secondary button
+     borders, panel edges). Keep it a SOFT cream here — a full-bright rule
+     made the dashed board borders glare. The masthead's double rule takes
+     its own bright ink (--masthead-rule below), so the nameplate divider
+     stays crisp while the board reads quiet. */
+  --rule: rgba(239, 231, 212, 0.32);
 
   --card-face: #f4eeda;
   --card-red: #cf4034;
@@ -318,8 +327,10 @@
   --danger: #d0655a;
   --success: #4caf7d;
 
-  /* The broadsheet's night nameplate doubles its rule (bright ink). */
-  --masthead-rule: 2px double var(--rule);
+  /* The broadsheet's night nameplate doubles its rule in bright ink —
+     hardcoded so it stays crisp even though --rule (in-game strokes) is
+     softened above. */
+  --masthead-rule: 2px double #efe7d4;
 
   --difficulty-easy: #4caf7d;
   --difficulty-medium: #d9a93e;
@@ -410,6 +421,14 @@
   --board-pad: 6px;
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   --card-rank-size: 46cqh;
+
+  /* The dark table is the one theme where the home cards' diagonal
+     gradient reads well — opt back into it (all others stay flat). */
+  --home-surface: linear-gradient(
+    135deg,
+    var(--paper-sunken),
+    var(--paper-raised)
+  );
 
   /* Card Room body font (Space Grotesk); display stays Fraunces. */
   --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
