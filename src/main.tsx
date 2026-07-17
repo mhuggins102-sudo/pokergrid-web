@@ -4,6 +4,8 @@ import { RouterProvider } from 'react-router/dom';
 
 import '@fontsource-variable/fraunces/index.css';
 import '@fontsource-variable/inter/index.css';
+// Card Room's body font (Morning Paper keeps Inter).
+import '@fontsource-variable/space-grotesk/index.css';
 import './design/reset.css';
 import './design/tokens.css';
 import './design/typography.css';
