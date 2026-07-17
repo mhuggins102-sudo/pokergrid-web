@@ -308,9 +308,6 @@ export function SettingsPage() {
           <button
             type="button"
             className={styles.headAction}
-            // Opens on hover too (desktop pointers); touch fires click, not
-            // mouseenter, so phones/tablets still open it on tap.
-            onMouseEnter={() => setPreviewOpen(true)}
             onClick={e => {
               // Inside the phone accordion's <summary>: don't toggle it.
               e.preventDefault();
