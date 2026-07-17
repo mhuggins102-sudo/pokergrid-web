@@ -5,15 +5,24 @@ import type { Achievement } from '../../../game/achievements';
 import { Sheet, useToast } from '../../../design/primitives';
 import { buildShareUrl, shareUrl } from '../../../lib/share';
 import { isBackendConfigured } from '../../../lib/supabaseRpc';
+import { SKIN_CATALOG, SkinUnlock } from '../../../design/skinCatalog';
+import { SuitKey } from '../../../design/deckSkins';
+import { useTier } from '../../../app/useTier';
 import { useGameSession } from '../GameSessionProvider';
 import { useGameFamily } from '../useGameFamily';
 import { useRecordResult } from '../../progress/useRecordResult';
-import { useLevelUp, useXpEarned } from '../../progress/usePlayerLevel';
+import {
+  useLevelUp,
+  usePlayerLevel,
+  useXpEarned,
+} from '../../progress/usePlayerLevel';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { HandleEditor, RankPanel } from '../../daily/RankPanel';
 import { useHandle } from '../../daily/sync/handleStore';
-import { HAND_LABEL, lineLabel } from '../handLabels';
+import { useSettingsStore } from '../../settings/settingsStore';
+import { prefersReducedMotion } from '../useAnimatedNumber';
+import { skinFace } from './skinFace';
 import { TIER_RULES } from './TierBreakdownSheet';
 import styles from './DesktopResultDialog.module.css';
 
@@ -31,6 +40,58 @@ export interface DesktopResultDialogProps {
 
 const tierLabel = (tier: string): string =>
   TIER_RULES.find(r => r.tier === tier)?.label ?? '';
+
+// A real card face at thumbnail size — the deck-unlock showcase and the
+// "next unlock" teaser render the actual skin (skinFace), not an icon.
+function MiniFace({
+  id,
+  rank,
+  suit,
+  size,
+  className,
+}: {
+  id: string;
+  rank: string;
+  suit: SuitKey;
+  size: number;
+  className?: string;
+}) {
+  const four = !useSettingsStore(s => s.twoColorDeck);
+  const mobile = useTier() === 'phone';
+  const face = skinFace(id, rank, suit, four, mobile);
+  return (
+    <span
+      className={className}
+      style={{ ...face.wrap, width: size, height: size, flex: 'none' }}
+      aria-hidden="true"
+    >
+      {face.layers.map((l, i) => (
+        <span key={i} style={l.style}>
+          {l.glyph}
+          {l.kids.map((k, j) => (
+            <span key={j} style={k.style}>
+              {k.glyph}
+            </span>
+          ))}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+// The unlock showcase fans A♥ / K♠ / Q♦ — one design each for a group,
+// three ranks of the same design for a single-skin entry.
+const FAN: { rank: string; suit: SuitKey }[] = [
+  { rank: 'A', suit: 'h' },
+  { rank: 'K', suit: 's' },
+  { rank: 'Q', suit: 'd' },
+];
+const fanSkinIds = (unlock: SkinUnlock): string[] =>
+  unlock.skinIds.length >= 3
+    ? unlock.skinIds.slice(0, 3)
+    : unlock.skinIds.length === 2
+      ? unlock.skinIds
+      : [unlock.skinIds[0], unlock.skinIds[0], unlock.skinIds[0]];
 
 /**
  * The ≥1024px game-over overlay (mockup lines 228–260): the finished
@@ -118,46 +179,51 @@ export function DesktopResultDialog({
         ? 'Target cleared'
         : 'Just short';
 
-  // Key highlights — the run at a glance, in place of the old line-by-line
-  // math table (the full board is one tap away via View Grid).
   const margin = report.total - state.target;
-  const scoringLines = report.lines.filter(
-    l => l.hand !== null && l.hand !== 'HIGH_CARD' && !l.incomplete
-  );
-  let bestLine: (typeof scoringLines)[number] | null = null;
-  for (const l of scoringLines) {
-    if (!bestLine || l.total > bestLine.total) bestLine = l;
-  }
-  const fmtMult = (m: number): string => `×${m.toFixed(2).replace(/\.?0+$/, '')}`;
-  const highlights: { icon: string; text: string }[] = [];
-  if (bestLine && bestLine.hand) {
-    highlights.push({
-      icon: '★',
-      text: `Best hand — ${HAND_LABEL[bestLine.hand]} (${lineLabel(
-        bestLine.kind,
-        bestLine.index
-      )}) +${bestLine.total}`,
-    });
-  }
-  highlights.push({
-    icon: '▦',
-    text: `${scoringLines.length} of 10 lines scored`,
-  });
-  if (report.gridMultiplier !== 1) {
-    highlights.push({
-      icon: '✦',
-      text: `Grid multiplier ${fmtMult(report.gridMultiplier)}`,
-    });
-  }
-  if (report.gridFlat !== 0) {
-    highlights.push({ icon: '✦', text: `Grid bonus +${report.gridFlat}` });
-  }
-  if (report.incompletePenalty !== 0) {
-    highlights.push({
-      icon: '⚠',
-      text: `${report.incompletePenalty} for unfinished lines`,
-    });
-  }
+
+  // ---- Progression module data (replaces the old highlights list) ----
+  // Every level unlocks a catalog entry, so a level-up always has a deck
+  // to celebrate and the everyday case always has a next deck to tease.
+  const levelInfo = usePlayerLevel();
+  const unlocked =
+    levelUp !== null ? (SKIN_CATALOG.find(u => u.level === levelUp) ?? null) : null;
+  const nextUnlock =
+    SKIN_CATALOG.find(u => u.level === levelInfo.level + 1) ?? null;
+  const earnedXp = xpEarned?.total ?? 0;
+
+  // Bar segments: the pre-run fill plus this game's gain. A level-up
+  // resets the bar to the fresh level (all-new sliver).
+  const span = levelInfo.levelSpan ?? 1;
+  const postPct = Math.round(levelInfo.progress * 100);
+  const prePct = levelInfo.atMax
+    ? 100
+    : levelUp !== null
+      ? 0
+      : Math.round(
+          (Math.max(0, levelInfo.xpIntoLevel - earnedXp) / span) * 100
+        );
+  const gainPct = Math.max(0, postPct - prePct);
+
+  // The gained segment sweeps in shortly after the dialog lands (skipped
+  // under reduced motion — final widths render immediately).
+  const reduceMotion =
+    useSettingsStore(s => s.reduceMotion) || prefersReducedMotion();
+  const [xpArmed, setXpArmed] = useState(false);
+  useEffect(() => {
+    if (!open || reduceMotion) return;
+    const t = window.setTimeout(() => setXpArmed(true), 400);
+    return () => window.clearTimeout(t);
+  }, [open, reduceMotion]);
+  const xpSettled = reduceMotion || xpArmed;
+
+  // Equip-from-the-popup: wears the unlocked entry's first design.
+  const deckSkin = useSettingsStore(s => s.deckSkin);
+  const setSettings = useSettingsStore(s => s.set);
+  const equipped =
+    unlocked !== null && deckSkin !== null && unlocked.skinIds.includes(deckSkin);
+  const equip = () => {
+    if (unlocked) setSettings({ deckSkin: unlocked.skinIds[0] });
+  };
 
   const onShare = async () => {
     const url = buildShareUrl({
@@ -212,15 +278,25 @@ export function DesktopResultDialog({
         aria-modal="true"
         aria-label="Game result"
       >
+        {/* Slim header band: verdict + tier label left, the tier letter as
+            a compact badge right — the old full-height tier block spent a
+            third of the dialog on one letter. */}
         <div className={`${styles.head} ${won ? styles.headWin : styles.headLoss}`}>
-          <span className={styles.verdict}>{verdict}</span>
-          <span className={styles.tier}>{tier}</span>
-          <span className={styles.tierLabel}>{tierLabel(tier)}</span>
-          {isChallenge && setup.challenge && (
-            <span className={styles.headContext}>
-              <span aria-hidden="true">✦</span> {setup.challenge.name}
+          <div className={styles.headText}>
+            <span className={styles.verdict}>{verdict}</span>
+            <span className={styles.tierLabel}>
+              {tierLabel(tier)}
+              {isChallenge && setup.challenge ? (
+                <span className={styles.headContext}>
+                  {' '}
+                  · <span aria-hidden="true">✦</span> {setup.challenge.name}
+                </span>
+              ) : null}
             </span>
-          )}
+          </div>
+          <span className={styles.tierBadge} aria-label={`Tier ${tier}`}>
+            {tier}
+          </span>
         </div>
         <div className={styles.body}>
           <div className={styles.scoreRow}>
@@ -239,41 +315,182 @@ export function DesktopResultDialog({
               : `${Math.abs(margin)} short of the target`}
           </div>
 
-          {/* The run at a glance — a few punchy highlights instead of a
-              line-by-line table (the full board is a tap away, View Grid). */}
-          <ul className={styles.highlights}>
-            {highlights.map((h, i) => (
-              <li key={i} className={styles.highlight}>
-                <span className={styles.highlightIcon} aria-hidden="true">
-                  {h.icon}
-                </span>
-                {h.text}
-              </li>
-            ))}
-          </ul>
-
-          {(xpEarned && xpEarned.total > 0) || levelUp !== null ? (
-            <div className={styles.rewards}>
-              {xpEarned && xpEarned.total > 0 && (
-                <button
-                  type="button"
-                  className={styles.xpEarned}
-                  onClick={() => setXpOpen(true)}
-                  aria-label={`Earned ${xpEarned.total} XP this game — show breakdown`}
-                >
-                  <span aria-hidden="true">✨</span> +{xpEarned.total} XP
-                  <span className={styles.xpHint} aria-hidden="true">
-                    ⓘ
+          {/* Progression — the popup's center of gravity (the old
+              fun-facts bullets are gone; the board itself is one tap away
+              via View Grid). Desk families get the full module: a deck
+              unlock celebration on level-up, plus the XP bar with this
+              game's gain and the next deck teased. The column (mobile)
+              game keeps it minimal: the XP pill, plus a compact unlock
+              row on level-up. Archive re-views (viewOnly) earn nothing
+              and show none of it. */}
+          {!viewOnly && unlocked !== null && (
+            <div className={columnFamily ? styles.unlockRow : styles.unlock} role="status">
+              {columnFamily ? (
+                <>
+                  <MiniFace
+                    id={unlocked.skinIds[0]}
+                    rank="A"
+                    suit="h"
+                    size={40}
+                  />
+                  <span className={styles.unlockRowText}>
+                    <b>
+                      Level {levelUp} — {unlocked.name} deck unlocked
+                    </b>
+                    <i>
+                      {unlocked.skinIds.length > 1
+                        ? `${unlocked.skinIds.length} designs added to your collection`
+                        : 'Added to your collection'}
+                    </i>
                   </span>
-                </button>
-              )}
-              {levelUp !== null && (
-                <span className={styles.levelUp} role="status">
-                  <span aria-hidden="true">⬆</span> Level {levelUp} reached
-                </span>
+                  <button
+                    type="button"
+                    className={styles.equipMini}
+                    onClick={equip}
+                    disabled={equipped}
+                    aria-label={`Equip the ${unlocked.name} deck`}
+                  >
+                    {equipped ? '✓' : 'Equip'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className={styles.unlockEyebrow}>
+                    <span aria-hidden="true">⬆</span> Level {levelUp} reached
+                  </span>
+                  <span className={styles.unlockTitle}>New deck unlocked</span>
+                  <span className={styles.unlockName}>
+                    {unlocked.name}
+                    {unlocked.skinIds.length > 1
+                      ? ` · ${unlocked.skinIds.length} designs`
+                      : ''}
+                  </span>
+                  <div
+                    className={`${styles.fan} ${
+                      fanSkinIds(unlocked).length === 2 ? styles.fanTwo : ''
+                    }`}
+                  >
+                    {fanSkinIds(unlocked).map((id, i) => (
+                      <MiniFace
+                        key={i}
+                        id={id}
+                        rank={FAN[i].rank}
+                        suit={FAN[i].suit}
+                        size={76}
+                        className={`${styles.fanCard} ${styles[`fan${i}`]}`}
+                      />
+                    ))}
+                  </div>
+                  <div className={styles.unlockActions}>
+                    <button
+                      type="button"
+                      className={styles.equipBtn}
+                      onClick={equip}
+                      disabled={equipped}
+                      aria-label={`Equip the ${unlocked.name} deck`}
+                    >
+                      {equipped ? '✓ Equipped' : 'Equip deck'}
+                    </button>
+                    <Link to="/settings?decks=1" className={styles.quietLink}>
+                      All decks
+                    </Link>
+                  </div>
+                </>
               )}
             </div>
-          ) : null}
+          )}
+          {!viewOnly && !columnFamily && (
+            <div
+              className={`${styles.xpModule} ${
+                unlocked !== null ? styles.xpModuleSlim : ''
+              }`}
+            >
+              <div className={styles.xpTop}>
+                <span className={styles.levelBadge}>Level {levelInfo.level}</span>
+                {earnedXp > 0 && (
+                  <button
+                    type="button"
+                    className={styles.xpGain}
+                    onClick={() => setXpOpen(true)}
+                    aria-label={`Earned ${earnedXp} XP this game — show breakdown`}
+                  >
+                    <span aria-hidden="true">✨</span> +{earnedXp} XP
+                    <span className={styles.xpHint} aria-hidden="true">
+                      ⓘ
+                    </span>
+                  </button>
+                )}
+              </div>
+              <div className={styles.xpTrack}>
+                {prePct > 0 && (
+                  <div className={styles.xpFillOld} style={{ width: `${prePct}%` }} />
+                )}
+                {gainPct > 0 && (
+                  <div
+                    className={styles.xpFillNew}
+                    style={{
+                      left: `${prePct}%`,
+                      width: xpSettled ? `${gainPct}%` : '0%',
+                    }}
+                  />
+                )}
+              </div>
+              <div className={styles.xpCaption}>
+                <span>
+                  {levelInfo.atMax
+                    ? `${levelInfo.xp.toLocaleString()} XP`
+                    : `${levelInfo.xpIntoLevel.toLocaleString()} / ${span.toLocaleString()} XP`}
+                </span>
+                <span>
+                  {levelInfo.atMax
+                    ? 'Max level'
+                    : unlocked !== null && nextUnlock
+                      ? `Next: ${nextUnlock.name} deck at Level ${nextUnlock.level}`
+                      : `${(span - levelInfo.xpIntoLevel).toLocaleString()} to Level ${
+                          levelInfo.level + 1
+                        }`}
+                </span>
+              </div>
+              {unlocked === null && nextUnlock && (
+                <div className={styles.nextUnlock}>
+                  <MiniFace
+                    id={nextUnlock.skinIds[0]}
+                    rank="J"
+                    suit="c"
+                    size={34}
+                    className={styles.nextFace}
+                  />
+                  <span className={styles.nextText}>
+                    <b>Next unlock — {nextUnlock.name} deck</b>
+                    <i>
+                      Reach Level {nextUnlock.level}
+                      {nextUnlock.skinIds.length > 1
+                        ? ` · ${nextUnlock.skinIds.length} designs`
+                        : ''}
+                    </i>
+                  </span>
+                  <span className={styles.lockGlyph} aria-hidden="true">
+                    🔒
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          {!viewOnly && columnFamily && earnedXp > 0 && (
+            <div className={styles.rewards}>
+              <button
+                type="button"
+                className={styles.xpEarned}
+                onClick={() => setXpOpen(true)}
+                aria-label={`Earned ${earnedXp} XP this game — show breakdown`}
+              >
+                <span aria-hidden="true">✨</span> +{earnedXp} XP
+                <span className={styles.xpHint} aria-hidden="true">
+                  ⓘ
+                </span>
+              </button>
+            </div>
+          )}
           {/* Daily, mobile only: the player's standing for this date,
               reusing the leaderboard bar (rank / of-total + the retryable
               "submitting…" queue state) — the column game has no

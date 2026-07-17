@@ -171,7 +171,11 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
-  const [skinStoreOpen, setSkinStoreOpen] = useState(false);
+  // ?decks=1 deep-links straight into the deck-skin store — the end-of-
+  // game popup's "All decks" link lands here on a fresh unlock.
+  const [skinStoreOpen, setSkinStoreOpen] = useState(
+    () => new URLSearchParams(window.location.search).has('decks')
+  );
   // Live display sample, opened from the Game screen header's
   // "Preview" (a centered dialog >=640, the bottom sheet on phones).
   const [previewOpen, setPreviewOpen] = useState(false);
