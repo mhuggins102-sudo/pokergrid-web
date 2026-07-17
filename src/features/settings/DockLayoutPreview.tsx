@@ -59,11 +59,13 @@ export function DockLayoutPreview({
   // suit perk, then Discard + the icon ↺ two-up.
   const deskStack = (
     <>
+      {/* Place + the amber perk are the two tall primary actions (equal
+          height, as in the real desk dock); Discard + ↺ ride below as the
+          slim secondary pair. */}
       <Button variant="primary" className={styles.full}>
         Place
       </Button>
       <Button
-        size="sm"
         variant="secondary"
         className={`${styles.full} ${styles.perkBtn}`}
       >
@@ -94,7 +96,9 @@ export function DockLayoutPreview({
       <div className={styles.frame}>
         <div className={styles.handRow}>
           <div className={styles.cardCol}>
-            <div className={`${styles.card} ${styles.cardSm}`}>
+            {/* Larger deck card to match the real desk dock's proportions
+                (the card reads about as tall as the two primary actions). */}
+            <div className={`${styles.card} ${styles.cardMd}`}>
               <CardFace card={DRAWN} />
             </div>
             {meta}
