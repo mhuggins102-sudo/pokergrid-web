@@ -22,6 +22,9 @@ const meta = (
   </span>
 );
 
+// Desk docks caption the deck count as the game does ("Deck · N").
+const deskMeta = <span className={styles.meta}>Deck · 52</span>;
+
 // Classic keeps the game's two-line meta column beside the card (the
 // stacked docks run it under the card as one line).
 const metaCol = (
@@ -71,11 +74,15 @@ export function DockLayoutPreview({
       >
         ♥ Swap
       </Button>
+      {/* Discard + Undo ride below as equal-width text buttons, as in the
+          real desk dock (the icon-only ↺ is a phone/compact-column thing). */}
       <div className={styles.pair}>
         <Button size="sm" variant="secondary" className={styles.half}>
           Discard
         </Button>
-        {undoBtn}
+        <Button size="sm" variant="secondary" className={styles.half}>
+          ↺ Undo
+        </Button>
       </div>
     </>
   );
@@ -84,10 +91,10 @@ export function DockLayoutPreview({
       <div className={styles.frame}>
         <div className={styles.deskStage}>
           <div className={styles.cardCol}>
-            <div className={`${styles.card} ${styles.cardMd}`}>
+            <div className={`${styles.card} ${styles.cardLg}`}>
               <CardFace card={DRAWN} />
             </div>
-            {meta}
+            {deskMeta}
           </div>
           {deskStack}
         </div>
@@ -98,10 +105,10 @@ export function DockLayoutPreview({
           <div className={styles.cardCol}>
             {/* Larger deck card to match the real desk dock's proportions
                 (the card reads about as tall as the two primary actions). */}
-            <div className={`${styles.card} ${styles.cardMd}`}>
+            <div className={`${styles.card} ${styles.cardLg}`}>
               <CardFace card={DRAWN} />
             </div>
-            {meta}
+            {deskMeta}
           </div>
           <div className={styles.stack}>{deskStack}</div>
         </div>
