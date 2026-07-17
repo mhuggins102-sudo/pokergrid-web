@@ -50,11 +50,11 @@ describe('free play', () => {
     expect(final).toBeInTheDocument();
     expect(Number(final.textContent)).not.toBeNaN();
     // The streamlined column game ends in the DesktopResultDialog overlay:
-    // the run's verdict, the score-math accordion, and the way back to the
-    // grid (the full-screen ResultView is no longer used for the column
-    // family).
+    // the run's verdict, the key highlights (the line-by-line accordion was
+    // retired for a few at-a-glance bullets), and the way back to the grid
+    // (the full-screen ResultView is no longer used for the column family).
     expect(screen.getByText(/Target cleared|Just short/i)).toBeInTheDocument();
-    expect(screen.getByText('Lines subtotal')).toBeInTheDocument();
+    expect(screen.getByText(/of 10 lines scored/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'View Grid' })).toBeInTheDocument();
   });
 

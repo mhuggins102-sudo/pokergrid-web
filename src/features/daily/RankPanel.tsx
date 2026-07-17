@@ -29,13 +29,64 @@ import styles from './RankPanel.module.css';
  * still pending it shows a retryable "submitting" state instead of
  * hanging.
  */
-export function RankPanel({ dateISO }: { dateISO: string }) {
+export function RankPanel({
+  dateISO,
+  placementOnly = false,
+}: {
+  dateISO: string;
+  /** End-of-game popup mode: render JUST the "rank / total" placement
+   *  (with the retry states), dropping the podium "Leaderboard" button +
+   *  the stats sheet — the old link read as clunky leftover chrome there.
+   *  The full bar (date + Leaderboard sheet) is unchanged everywhere else. */
+  placementOnly?: boolean;
+}) {
   const rank = useDailyRank(dateISO);
   const pending = useQueueStore(s =>
     s.pending.some(p => p.dateISO === dateISO)
   );
   const [statsOpen, setStatsOpen] = useState(false);
   const [retrying, setRetrying] = useState(false);
+
+  const retryPlacement = async () => {
+    setRetrying(true);
+    try {
+      await drainQueue();
+      await rank.refetch();
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  // Placement-only (end-of-game popup): a plain "Ranked N / total", or the
+  // retryable pending/error status — no Leaderboard link, no stats sheet.
+  if (placementOnly) {
+    if (!isBackendConfigured()) return null;
+    return (
+      <span className={styles.placement} aria-label="Daily standing">
+        {rank.data ? (
+          <>
+            Ranked <b>{rank.data.rank}</b>
+            <span className={styles.sub}> / {rank.data.total}</span>
+          </>
+        ) : pending || rank.isError ? (
+          <button
+            type="button"
+            className={styles.placementRetry}
+            disabled={retrying}
+            onClick={retryPlacement}
+          >
+            {retrying
+              ? 'Retrying…'
+              : pending
+                ? 'Submitting… · retry'
+                : 'No connection · retry'}
+          </button>
+        ) : (
+          <span>{rank.isLoading ? 'Fetching rank…' : 'Rank pending…'}</span>
+        )}
+      </span>
+    );
+  }
 
   // No leaderboard backend (local builds): the bar still owns showing
   // the date, since the verdict hero no longer carries it.
