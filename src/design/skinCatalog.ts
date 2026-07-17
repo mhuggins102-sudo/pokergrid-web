@@ -76,20 +76,19 @@ export interface SkinUnlock {
   skinIds: string[];
 }
 
-// Ordered by level. Groups collect a design family; singles stand alone.
+// Ordered by level — EVERY level 1…20 grants exactly one entry, so a
+// level-up always has a reward to show. Groups collect a design family;
+// singles stand alone. (The old catalog skipped 12/16/18; those gaps are
+// filled by splitting three former groups — Wash's W-variants, Pastel,
+// and Emboss — nothing an existing player had moved to a LOWER level.)
 export const SKIN_CATALOG: SkinUnlock[] = [
   { id: 'twin', name: nameOf('D05a'), level: 1, skinIds: ['D05a'] },
-  {
-    id: 'wash',
-    name: 'Wash',
-    level: 2,
-    skinIds: ['D27b', 'D27c', 'W1', 'W2', 'W3'],
-  },
+  { id: 'wash', name: 'Wash', level: 2, skinIds: ['D27b', 'D27c'] },
   { id: 'quad', name: nameOf('D06c'), level: 3, skinIds: ['D06c'] },
   { id: 'keyline', name: nameOf('D21'), level: 4, skinIds: ['D21'] },
-  { id: 'pastel', name: 'Pastel', level: 5, skinIds: ['P1', 'P3'] },
+  { id: 'mint', name: nameOf('P1'), level: 5, skinIds: ['P1'] },
   { id: 'ticket', name: nameOf('D24'), level: 6, skinIds: ['D24'] },
-  { id: 'emboss', name: 'Emboss', level: 7, skinIds: ['D42', 'D42a'] },
+  { id: 'emboss', name: nameOf('D42'), level: 7, skinIds: ['D42'] },
   { id: 'bigpip', name: nameOf('D16'), level: 8, skinIds: ['D16'] },
   { id: 'aurora', name: nameOf('D69c'), level: 9, skinIds: ['D69c'] },
   {
@@ -99,17 +98,24 @@ export const SKIN_CATALOG: SkinUnlock[] = [
     skinIds: ['D64', 'D65b', 'D67b'],
   },
   { id: 'filigree', name: nameOf('D41c'), level: 11, skinIds: ['D41c'] },
+  // The Wash group's directional-gradient variants, split out so level
+  // 12 has a reward.
+  { id: 'gradient', name: 'Gradient', level: 12, skinIds: ['W1', 'W2', 'W3'] },
   { id: 'rope', name: nameOf('D55b'), level: 13, skinIds: ['D55b'] },
   { id: 'bamboo', name: 'Bamboo', level: 14, skinIds: ['D62c', 'C2'] },
-  // New: single Old-timey court design (figures on J/Q/K, numerals otherwise).
+  // Single Old-timey court design (figures on J/Q/K, numerals otherwise).
   { id: 'court', name: nameOf('EX13'), level: 15, skinIds: ['EX13'] },
+  // Pastel's second wash, split from Mint so level 16 has a reward.
+  { id: 'rose', name: nameOf('P3'), level: 16, skinIds: ['P3'] },
   {
     id: 'terrain-2',
     name: 'Terrain · Set 2',
     level: 17,
     skinIds: ['L1', 'D69b', 'D70c'],
   },
-  // New: fixed-palette fluorescents — loud, off-theme, so a high unlock.
+  // Emboss's double-ring variant, split out so level 18 has a reward.
+  { id: 'double-ring', name: nameOf('D42a'), level: 18, skinIds: ['D42a'] },
+  // Fixed-palette fluorescents — loud, off-theme, so a high unlock.
   { id: 'neon', name: 'Neon', level: 19, skinIds: ['EX6', 'EX16', 'EX17'] },
   { id: 'wanted', name: 'Wanted', level: 20, skinIds: ['D51a', 'N1', 'N2'] },
 ];
