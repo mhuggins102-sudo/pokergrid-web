@@ -8,12 +8,12 @@ import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { useGameSession } from '../GameSessionProvider';
 import { useGameFamily } from '../useGameFamily';
 import { useRecordResult } from '../../progress/useRecordResult';
-import { useLevelUp } from '../../progress/usePlayerLevel';
+import { useLevelUp, useXpEarned } from '../../progress/usePlayerLevel';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
 import { HandleEditor, RankPanel } from '../../daily/RankPanel';
 import { useHandle } from '../../daily/sync/handleStore';
-import { LinesPanel } from './LinesPanel';
+import { HAND_LABEL, lineLabel } from '../handLabels';
 import { TIER_RULES } from './TierBreakdownSheet';
 import styles from './DesktopResultDialog.module.css';
 
@@ -65,6 +65,9 @@ export function DesktopResultDialog({
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
   const levelUp = useLevelUp(viewOnly);
+  // XP this run earned, split by source (null in the archive view).
+  const xpEarned = useXpEarned(viewOnly);
+  const [xpOpen, setXpOpen] = useState(false);
   // Targets-Up ladder lifecycle — the hook shared with mobile's
   // ResultView; its module-level guard keeps the advance/clear commit
   // single-owner even if both surfaces mount across a resize.
@@ -114,6 +117,47 @@ export function DesktopResultDialog({
       : won
         ? 'Target cleared'
         : 'Just short';
+
+  // Key highlights — the run at a glance, in place of the old line-by-line
+  // math table (the full board is one tap away via View Grid).
+  const margin = report.total - state.target;
+  const scoringLines = report.lines.filter(
+    l => l.hand !== null && l.hand !== 'HIGH_CARD' && !l.incomplete
+  );
+  let bestLine: (typeof scoringLines)[number] | null = null;
+  for (const l of scoringLines) {
+    if (!bestLine || l.total > bestLine.total) bestLine = l;
+  }
+  const fmtMult = (m: number): string => `×${m.toFixed(2).replace(/\.?0+$/, '')}`;
+  const highlights: { icon: string; text: string }[] = [];
+  if (bestLine && bestLine.hand) {
+    highlights.push({
+      icon: '★',
+      text: `Best hand — ${HAND_LABEL[bestLine.hand]} (${lineLabel(
+        bestLine.kind,
+        bestLine.index
+      )}) +${bestLine.total}`,
+    });
+  }
+  highlights.push({
+    icon: '▦',
+    text: `${scoringLines.length} of 10 lines scored`,
+  });
+  if (report.gridMultiplier !== 1) {
+    highlights.push({
+      icon: '✦',
+      text: `Grid multiplier ${fmtMult(report.gridMultiplier)}`,
+    });
+  }
+  if (report.gridFlat !== 0) {
+    highlights.push({ icon: '✦', text: `Grid bonus +${report.gridFlat}` });
+  }
+  if (report.incompletePenalty !== 0) {
+    highlights.push({
+      icon: '⚠',
+      text: `${report.incompletePenalty} for unfinished lines`,
+    });
+  }
 
   const onShare = async () => {
     const url = buildShareUrl({
@@ -185,50 +229,51 @@ export function DesktopResultDialog({
             </span>
             <span className={styles.target}>/ {state.target}</span>
           </div>
-          {/* Score math, mirroring ResultView's summary: the lines
-              subtotal expands into the full 10-line breakdown. */}
-          <div className={styles.rows}>
-            <details className={styles.linesDetails}>
-              <summary className={styles.linesSummary}>
-                <span className={styles.rowLabel}>
-                  <span className={styles.summaryCaret} aria-hidden="true">
-                    ▸
-                  </span>
-                  Lines subtotal
-                </span>
-                <span className={styles.rowValue}>{report.subtotal}</span>
-              </summary>
-              <div className={styles.linesBody}>
-                <LinesPanel report={report} bare />
-              </div>
-            </details>
-            {report.incompletePenalty !== 0 && (
-              <div className={styles.row}>
-                <span className={styles.rowLabel}>Unfinished lines</span>
-                <span className={`${styles.rowValue} ${styles.rowDanger}`}>
-                  {report.incompletePenalty}
-                </span>
-              </div>
-            )}
-            {report.gridMultiplier !== 1 && (
-              <div className={styles.row}>
-                <span className={styles.rowLabel}>Grid multiplier</span>
-                <span className={styles.rowValue}>
-                  ×{report.gridMultiplier.toFixed(2)}
-                </span>
-              </div>
-            )}
-            {report.gridFlat !== 0 && (
-              <div className={styles.row}>
-                <span className={styles.rowLabel}>Grid flat bonus</span>
-                <span className={styles.rowValue}>+{report.gridFlat}</span>
-              </div>
-            )}
-            <div className={`${styles.row} ${styles.rowTotal}`}>
-              <span>Total</span>
-              <span>{report.total}</span>
-            </div>
+          <div
+            className={`${styles.margin} ${
+              margin >= 0 ? styles.marginWin : styles.marginLoss
+            }`}
+          >
+            {margin >= 0
+              ? `Beat the target by +${margin}`
+              : `${Math.abs(margin)} short of the target`}
           </div>
+
+          {/* The run at a glance — a few punchy highlights instead of a
+              line-by-line table (the full board is a tap away, View Grid). */}
+          <ul className={styles.highlights}>
+            {highlights.map((h, i) => (
+              <li key={i} className={styles.highlight}>
+                <span className={styles.highlightIcon} aria-hidden="true">
+                  {h.icon}
+                </span>
+                {h.text}
+              </li>
+            ))}
+          </ul>
+
+          {(xpEarned && xpEarned.total > 0) || levelUp !== null ? (
+            <div className={styles.rewards}>
+              {xpEarned && xpEarned.total > 0 && (
+                <button
+                  type="button"
+                  className={styles.xpEarned}
+                  onClick={() => setXpOpen(true)}
+                  aria-label={`Earned ${xpEarned.total} XP this game — show breakdown`}
+                >
+                  <span aria-hidden="true">✨</span> +{xpEarned.total} XP
+                  <span className={styles.xpHint} aria-hidden="true">
+                    ⓘ
+                  </span>
+                </button>
+              )}
+              {levelUp !== null && (
+                <span className={styles.levelUp} role="status">
+                  <span aria-hidden="true">⬆</span> Level {levelUp} reached
+                </span>
+              )}
+            </div>
+          ) : null}
           {/* Daily, mobile only: the player's standing for this date,
               reusing the leaderboard bar (rank / of-total + the retryable
               "submitting…" queue state) — the column game has no
@@ -239,7 +284,7 @@ export function DesktopResultDialog({
               this component's hook order stable. */}
           {mode.kind === 'daily' && columnFamily && isBackendConfigured() && (
             <div className={styles.rankRow}>
-              <RankPanel dateISO={mode.dateISO} />
+              <RankPanel dateISO={mode.dateISO} placementOnly />
             </div>
           )}
           {/* Just-earned achievements — mobile's 🏆 callout at dialog
@@ -273,11 +318,6 @@ export function DesktopResultDialog({
             </div>
           )}
 
-          {levelUp !== null && (
-            <div className={styles.levelUp} role="status">
-              <span aria-hidden="true">⬆</span> Level {levelUp} reached
-            </div>
-          )}
           {isDaily &&
             isBackendConfigured() &&
             (savedHandle ? (
@@ -360,6 +400,22 @@ export function DesktopResultDialog({
         title={achInfo ? `🏆 ${achInfo.name}` : ''}
       >
         {achInfo && <p className="text-body">{achInfo.description}</p>}
+      </Sheet>
+      <Sheet open={xpOpen} onClose={() => setXpOpen(false)} title="XP earned">
+        {xpEarned && (
+          <div className={styles.xpBreakdown}>
+            {xpEarned.items.map(i => (
+              <div key={i.bucket} className={styles.xpBreakRow}>
+                <span>{i.label}</span>
+                <span>+{i.xp}</span>
+              </div>
+            ))}
+            <div className={`${styles.xpBreakRow} ${styles.xpBreakTotal}`}>
+              <span>Total</span>
+              <span>+{xpEarned.total} XP</span>
+            </div>
+          </div>
+        )}
       </Sheet>
       {targetsFlow.rewardsSheet}
     </div>
