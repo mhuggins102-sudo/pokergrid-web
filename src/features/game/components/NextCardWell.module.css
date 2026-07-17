@@ -16,6 +16,15 @@
   padding: 0;
 }
 
+/* A card IS drawn — it fills the slot, so the "empty slot" dashed ring
+   should not show around it (it read as a stray dotted border, glaring
+   where Morning Paper's rule is heavy). Keep the 1px border box so the
+   card doesn't shift; just make it invisible. */
+.cardSlot.filled {
+  border-color: transparent;
+  background: transparent;
+}
+
 button.cardSlot {
   cursor: pointer;
 }

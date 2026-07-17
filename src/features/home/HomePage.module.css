@@ -32,7 +32,7 @@
   overflow: hidden;
   border-radius: 20px;
   box-shadow: var(--shadow-md);
-  background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
+  background: var(--home-surface);
   border: 1px solid var(--hairline);
   color: inherit;
   text-decoration: none;
@@ -381,7 +381,7 @@
   gap: 9px;
   padding: 22px;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
+  background: var(--home-surface);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
   color: inherit;
@@ -438,7 +438,7 @@
   gap: 9px;
   padding: 22px;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
+  background: var(--home-surface);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
 }
@@ -463,7 +463,7 @@
 .quickStart {
   padding: 16px 22px 18px;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--paper-sunken), var(--paper-raised));
+  background: var(--home-surface);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
   display: flex;
@@ -577,6 +577,15 @@
        (minmax(0,…) lets it shrink so the pills wrap instead of
        ballooning the column). */
     grid-template-columns: auto minmax(0, 1fr);
+    /* Reserve a tall second row so the bottom-left slot fits the played
+       score (a big display numeral) without it bleeding up into the
+       date. Both states share this floor, so played and unplayed read
+       the same height; the row is 1fr + end-aligned content, so the
+       Play button and the score both sit on the same baseline. The floor
+       is sized to the played state's natural height so the unplayed card
+       matches it exactly (no per-state height jump). */
+    min-height: 146px;
+    grid-template-rows: auto 1fr;
     grid-template-areas:
       'eyebrow chips'
       'cta archive';
@@ -621,13 +630,10 @@
     display: contents;
   }
 
-  /* Played: the hero keeps its UNPLAYED height — the bottom row is
-     pinned to the Play button's 39px, and the taller score block,
-     end-aligned, bleeds upward into the slack under the title/date
-     (the left column's top cell is shorter than the pills'). */
-  .heroBody:has(.heroResult) {
-    grid-template-rows: auto 39px;
-  }
+  /* Played + unplayed share the .heroBody floor (min-height + auto 1fr),
+     so no per-state row override is needed — the score and the Play
+     button both sit end-aligned in the tall second row, clear of the
+     date above. */
 
   /* Played: score + tier + "View full result" combo takes the exact
      slot the "Play now" button holds — bottom-left. */

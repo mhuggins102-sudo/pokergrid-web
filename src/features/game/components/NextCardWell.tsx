@@ -153,7 +153,7 @@ export function NextCardWell({
     >
       <SlotTag
         {...(dialogPeek ? { type: 'button' as const, onClick: onPeekDeck } : {})}
-        className={styles.cardSlot}
+        className={`${styles.cardSlot} ${shown ? styles.filled : ''}`}
         aria-label={
           dialogPeek ? `${cardLabel}. Peek at the remaining deck` : cardLabel
         }
