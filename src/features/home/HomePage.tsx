@@ -208,7 +208,11 @@ export function HomePage() {
                   {todayTier}
                 </span>
                 <Link to={`/daily/${today}`} className={styles.heroResultLink}>
-                  View full result →
+                  {/* Phone shortens the label so the whole played line —
+                      score + tier + link — fits beside the archive link
+                      without wrapping (wrapping is what grew the hero
+                      past the unplayed height). */}
+                  {isPhone ? 'Full result' : 'View full result'} →
                 </Link>
               </div>
             ) : (

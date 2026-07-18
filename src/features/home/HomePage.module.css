@@ -660,24 +660,24 @@
     display: none;
   }
 
-  /* Collapse the big display line-height so the digits hug the top of the
-     line box — otherwise ~10px of leading sits above them and the score
-     reads lower than the title. This lifts the visible top of "213" level
-     with the top of "THE DAILY GRID". */
+  /* Played state must fit the SAME height the Play button gets, in every
+     chip configuration — on twist days the two stacked pills already eat
+     the .heroBody floor's slack, so a wrapped result block was the one
+     thing pushing the hero taller than the unplayed card. One compact
+     line (score · tier · link) stays inside the button row's height. */
+  .heroResult {
+    flex-wrap: nowrap;
+    column-gap: 8px;
+  }
+
   .heroResultScore {
+    font-size: 30px;
     line-height: 1;
   }
 
   .heroResultBadge {
-    font-size: 22px;
-    padding: 5px 14px;
-  }
-
-  /* "View full result" breaks to its own line directly under the score,
-     left-aligned within the bottom-left block. */
-  .heroResultLink {
-    flex-basis: 100%;
-    text-align: left;
+    font-size: 16px;
+    padding: 3px 10px;
   }
 
   /* Unplayed: a compact Play button in the same bottom-left slot. */
