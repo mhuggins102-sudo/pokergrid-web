@@ -613,9 +613,15 @@
     display: none;
   }
 
-  /* Pills top-right, right-aligned + stacked. */
+  /* Pills top-right, right-aligned + stacked. Spanning BOTH rows keeps
+     the tall twist-day pill stack from setting row 1's height — which
+     used to push the left column's score block down and grow the played
+     hero ~24px past the unplayed card. The pills just hang into the
+     right column's slack (the archive link sits well below), so row 1
+     stays the eyebrow's height and both states share the 146px floor. */
   .heroChips {
     grid-area: chips;
+    grid-row: 1 / span 2;
     align-self: start;
     justify-self: end;
     flex-direction: column;
@@ -660,24 +666,24 @@
     display: none;
   }
 
-  /* Played state must fit the SAME height the Play button gets, in every
-     chip configuration — on twist days the two stacked pills already eat
-     the .heroBody floor's slack, so a wrapped result block was the one
-     thing pushing the hero taller than the unplayed card. One compact
-     line (score · tier · link) stays inside the button row's height. */
-  .heroResult {
-    flex-wrap: nowrap;
-    column-gap: 8px;
-  }
-
+  /* Collapse the big display line-height so the digits hug the top of the
+     line box — otherwise ~10px of leading sits above them and the score
+     reads lower than the title. This lifts the visible top of "213" level
+     with the top of "THE DAILY GRID". */
   .heroResultScore {
-    font-size: 30px;
     line-height: 1;
   }
 
   .heroResultBadge {
-    font-size: 16px;
-    padding: 3px 10px;
+    font-size: 22px;
+    padding: 5px 14px;
+  }
+
+  /* "View full result" breaks to its own line directly under the score,
+     left-aligned within the bottom-left block. */
+  .heroResultLink {
+    flex-basis: 100%;
+    text-align: left;
   }
 
   /* Unplayed: a compact Play button in the same bottom-left slot. */
