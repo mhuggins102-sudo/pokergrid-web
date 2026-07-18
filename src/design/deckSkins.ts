@@ -427,10 +427,20 @@ const JOKER_DECOR: Record<string, (mobile: boolean) => Layer[]> = {
   EX17: () => [jStar('font-size:44cqh;color:#141414'), jCap('bottom:7cqh;color:#141414')],
   // Music: each keeps its stage lighting. Psych flies a peace sign
   // (U+FE0E pins text presentation so it can't fall back to emoji art).
-  MU1: () => [
-    jStar(`font-size:54cqh;-webkit-text-stroke:1cqmin #fff8e7;${MUSIC_GLOW.MU1}`, '☮︎'),
-    jCap(`bottom:7cqh;font:900 14cqh var(--font-body);letter-spacing:.14em;${MUSIC_GLOW.MU1}`),
-  ],
+  // Psych's peace sign is DRAWN (ring + three spokes), not a ☮ glyph —
+  // platform symbol fonts render ☮ anywhere from chunky-solid to hairline
+  // outline (iOS), so a font glyph can't look the same everywhere.
+  MU1: () => {
+    const ink = '#fff8e7';
+    const glow = 'filter:drop-shadow(0 .5cqmin 2cqmin rgba(36,23,52,.85))';
+    return [
+      L(`position:absolute;left:50%;top:42cqh;width:44cqmin;height:44cqmin;transform:translate(-50%,-50%);border:4.2cqmin solid ${ink};border-radius:50%;${glow}`),
+      L(`position:absolute;left:50%;top:42cqh;width:4.2cqmin;height:42cqmin;transform:translate(-50%,-50%);border-radius:2.1cqmin;background:${ink};${glow}`),
+      L(`position:absolute;left:50%;top:42cqh;width:4.2cqmin;height:19.5cqmin;transform-origin:top center;transform:translateX(-50%) rotate(45deg);border-radius:2.1cqmin;background:${ink};${glow}`),
+      L(`position:absolute;left:50%;top:42cqh;width:4.2cqmin;height:19.5cqmin;transform-origin:top center;transform:translateX(-50%) rotate(-45deg);border-radius:2.1cqmin;background:${ink};${glow}`),
+      jCap(`bottom:7cqh;font:900 14cqh var(--font-body);letter-spacing:.14em;${MUSIC_GLOW.MU1}`),
+    ];
+  },
   MU2: () => [
     L(`position:absolute;top:5cqh;left:7cqw;font-size:28cqh;line-height:1;${MUSIC_GLOW.MU2}`, '★'),
     jCap(`bottom:8cqh;font-size:9cqh;${MUSIC_GLOW.MU2}`),
