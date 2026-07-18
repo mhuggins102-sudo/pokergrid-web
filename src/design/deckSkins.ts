@@ -427,20 +427,16 @@ const JOKER_DECOR: Record<string, (mobile: boolean) => Layer[]> = {
   EX17: () => [jStar('font-size:44cqh;color:#141414'), jCap('bottom:7cqh;color:#141414')],
   // Music: each keeps its stage lighting. Psych flies a peace sign
   // (U+FE0E pins text presentation so it can't fall back to emoji art).
-  // Psych's peace sign is DRAWN (ring + three spokes), not a ☮ glyph —
+  // Psych's peace sign is DRAWN as one SVG data URI, not a ☮ glyph —
   // platform symbol fonts render ☮ anywhere from chunky-solid to hairline
-  // outline (iOS), so a font glyph can't look the same everywhere.
-  MU1: () => {
-    const ink = '#fff8e7';
-    const glow = 'filter:drop-shadow(0 .5cqmin 2cqmin rgba(36,23,52,.85))';
-    return [
-      L(`position:absolute;left:50%;top:42cqh;width:44cqmin;height:44cqmin;transform:translate(-50%,-50%);border:4.2cqmin solid ${ink};border-radius:50%;${glow}`),
-      L(`position:absolute;left:50%;top:42cqh;width:4.2cqmin;height:42cqmin;transform:translate(-50%,-50%);border-radius:2.1cqmin;background:${ink};${glow}`),
-      L(`position:absolute;left:50%;top:42cqh;width:4.2cqmin;height:19.5cqmin;transform-origin:top center;transform:translateX(-50%) rotate(45deg);border-radius:2.1cqmin;background:${ink};${glow}`),
-      L(`position:absolute;left:50%;top:42cqh;width:4.2cqmin;height:19.5cqmin;transform-origin:top center;transform:translateX(-50%) rotate(-45deg);border-radius:2.1cqmin;background:${ink};${glow}`),
-      jCap(`bottom:7cqh;font:900 14cqh var(--font-body);letter-spacing:.14em;${MUSIC_GLOW.MU1}`),
-    ];
-  },
+  // outline (iOS), and stacking CSS ring + spoke pieces let each piece's
+  // shadow fall on the others (read as loose sticks). One image = one
+  // solid sign with a single unified glow. (No semicolons in the URI:
+  // skinFace splits style strings on ';'.)
+  MU1: () => [
+    L(`position:absolute;left:50%;top:42cqh;width:46cqmin;height:46cqmin;transform:translate(-50%,-50%);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg stroke='%23fff8e7' stroke-width='9.5' stroke-linecap='round' fill='none'%3E%3Ccircle cx='50' cy='50' r='44'/%3E%3Cpath d='M50 6V94M50 50L18.9 81.1M50 50L81.1 81.1'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 .5cqmin 2cqmin rgba(36,23,52,.85))`),
+    jCap(`bottom:7cqh;font:900 14cqh var(--font-body);letter-spacing:.14em;${MUSIC_GLOW.MU1}`),
+  ],
   MU2: () => [
     L(`position:absolute;top:5cqh;left:7cqw;font-size:28cqh;line-height:1;${MUSIC_GLOW.MU2}`, '★'),
     jCap(`bottom:8cqh;font-size:9cqh;${MUSIC_GLOW.MU2}`),
