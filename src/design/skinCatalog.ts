@@ -64,7 +64,7 @@ const NAME_OVERRIDES: Record<string, string> = {
   PZ1: 'Facet',
   PZ2: 'Shard',
   // Music sets
-  MU1: 'Melt',
+  MU1: 'Psych',
   MU2: 'Synthwave',
   MU3: 'Equalizer',
   MU4: 'Disco',
