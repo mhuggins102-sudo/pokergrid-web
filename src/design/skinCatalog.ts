@@ -94,34 +94,37 @@ export interface SkinUnlock {
 }
 
 // Ordered by level — EVERY level 1…20 grants exactly one entry, so a
-// level-up always has a reward to show. Groups collect a design family
-// (the big families unlock as Sets at different levels, like Terrain);
-// singles stand alone.
+// level-up always has a reward to show. Two bands: classic designs first
+// (1–10, singles before families, sizes escalating to Wash's five-pack),
+// then the themed decks (11–20) building to the loud endgame trophies.
+// Families average later than singles by design.
 export const SKIN_CATALOG: SkinUnlock[] = [
   { id: 'twin', name: nameOf('D05a'), level: 1, skinIds: ['D05a'] },
+  { id: 'quad', name: nameOf('D06c'), level: 2, skinIds: ['D06c'] },
+  { id: 'ticket', name: nameOf('D24'), level: 3, skinIds: ['D24'] },
+  { id: 'bigpip', name: nameOf('D16'), level: 4, skinIds: ['D16'] },
+  { id: 'emboss', name: 'Emboss', level: 5, skinIds: ['D42', 'D42a'] },
+  { id: 'bamboo', name: 'Bamboo', level: 6, skinIds: ['D62c', 'C2'] },
+  { id: 'pastel', name: 'Pastel', level: 7, skinIds: ['P1', 'P3'] },
+  // Keyline / Filigree / Rope — the frame-led designs, together.
+  { id: 'bordered', name: 'Bordered', level: 8, skinIds: ['D21', 'D41c', 'D55b'] },
+  // The classic band's payoff: the five-design wash family.
   {
     id: 'wash',
     name: 'Wash',
-    level: 2,
+    level: 9,
     skinIds: ['D27b', 'D27c', 'W1', 'W2', 'W3'],
   },
-  { id: 'quad', name: nameOf('D06c'), level: 3, skinIds: ['D06c'] },
-  { id: 'pastel', name: 'Pastel', level: 4, skinIds: ['P1', 'P3'] },
-  { id: 'ticket', name: nameOf('D24'), level: 5, skinIds: ['D24'] },
-  { id: 'emboss', name: 'Emboss', level: 6, skinIds: ['D42', 'D42a'] },
-  { id: 'bigpip', name: nameOf('D16'), level: 7, skinIds: ['D16'] },
-  // Keyline / Filigree / Rope — the frame-led designs, together.
-  { id: 'bordered', name: 'Bordered', level: 8, skinIds: ['D21', 'D41c', 'D55b'] },
+  // Old-timey court (figures on J/Q/K) — the bridge into the themed band.
+  { id: 'court', name: nameOf('EX13'), level: 10, skinIds: ['EX13'] },
   {
     id: 'terrain-1',
     name: 'Terrain · Set 1',
-    level: 9,
+    level: 11,
     skinIds: ['D64', 'D65b', 'D67b'],
   },
-  { id: 'bamboo', name: 'Bamboo', level: 10, skinIds: ['D62c', 'C2'] },
   // Cosmos joins the existing Aurora ice — the night-sky pair.
-  { id: 'space', name: 'Space', level: 11, skinIds: ['SP1', 'D69c'] },
-  { id: 'music-1', name: 'Music · Set 1', level: 12, skinIds: ['MU1', 'MU4'] },
+  { id: 'space', name: 'Space', level: 12, skinIds: ['SP1', 'D69c'] },
   {
     id: 'terrain-2',
     name: 'Terrain · Set 2',
@@ -129,16 +132,15 @@ export const SKIN_CATALOG: SkinUnlock[] = [
     skinIds: ['L1', 'D69b', 'D70c'],
   },
   { id: 'prism', name: 'Prism', level: 14, skinIds: ['PZ1', 'PZ2'] },
-  // Single Old-timey court design (figures on J/Q/K, numerals otherwise).
-  { id: 'court', name: nameOf('EX13'), level: 15, skinIds: ['EX13'] },
-  { id: 'art-1', name: 'Art · Set 1', level: 16, skinIds: ['AR1', 'AR4'] },
-  { id: 'music-2', name: 'Music · Set 2', level: 17, skinIds: ['MU2', 'MU3'] },
+  { id: 'art-1', name: 'Art · Set 1', level: 15, skinIds: ['AR1', 'AR4'] },
+  { id: 'music-1', name: 'Music · Set 1', level: 16, skinIds: ['MU1', 'MU4'] },
   {
     id: 'art-2',
     name: 'Art · Set 2',
-    level: 18,
+    level: 17,
     skinIds: ['AR2', 'AR3', 'AR5'],
   },
+  { id: 'music-2', name: 'Music · Set 2', level: 18, skinIds: ['MU2', 'MU3'] },
   // Fixed-palette fluorescents — loud, off-theme, so a high unlock.
   { id: 'neon', name: 'Neon', level: 19, skinIds: ['EX6', 'EX16', 'EX17'] },
   { id: 'wanted', name: 'Wanted', level: 20, skinIds: ['D51a', 'N1', 'N2'] },
