@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react';
-import { SuitKey, renderSkin } from '../../../design/deckSkins';
+import { SuitKey, renderJoker, renderSkin } from '../../../design/deckSkins';
 
 // Claude Design's skins hand back inline-STYLE STRINGS (built for a
 // framework-agnostic gallery). Parse them into React style objects once
@@ -35,6 +35,15 @@ const cache = new Map<string, ParsedFace>();
 /** Parsed, cached card face for a skin — ready to spread as React styles.
  *  `mobile` selects the small-screen layout for skins that ship one (the app
  *  passes it on the phone tier); the desktop layout is the default. */
+const parse = (wrap: string, layers: { style: string; glyph: string; kids: { style: string; glyph: string }[] }[]): ParsedFace => ({
+  wrap: styleObj(wrap),
+  layers: layers.map(l => ({
+    style: styleObj(l.style),
+    glyph: l.glyph,
+    kids: l.kids.map(k => ({ style: styleObj(k.style), glyph: k.glyph })),
+  })),
+});
+
 export const skinFace = (
   id: string,
   rank: string,
@@ -46,15 +55,23 @@ export const skinFace = (
   let face = cache.get(key);
   if (!face) {
     const { wrap, layers } = renderSkin(id, rank, suit, { four, mobile });
-    face = {
-      wrap: styleObj(wrap),
-      layers: layers.map(l => ({
-        style: styleObj(l.style),
-        glyph: l.glyph,
-        kids: l.kids.map(k => ({ style: styleObj(k.style), glyph: k.glyph })),
-      })),
-    };
+    face = parse(wrap, layers);
     cache.set(key, face);
+  }
+  return face;
+};
+
+const jokerCache = new Map<string, ParsedFace | null>();
+
+/** Parsed, cached JOKER face for a skin — null when the skin has none
+ *  (the caller falls back to the app's default joker). */
+export const skinJokerFace = (id: string, mobile = false): ParsedFace | null => {
+  const key = `${id}|${mobile ? 'm' : 'd'}`;
+  let face = jokerCache.get(key);
+  if (face === undefined) {
+    const built = renderJoker(id, { mobile });
+    face = built ? parse(built.wrap, built.layers) : null;
+    jokerCache.set(key, face);
   }
   return face;
 };
