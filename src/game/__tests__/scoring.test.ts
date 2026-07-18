@@ -331,7 +331,7 @@ describe('new grid-wide bonuses', () => {
     const noFlushGrid = filledNonPair();
     const baseNoFlush = scoreGrid(noFlushGrid, []).total;
     const withCard = scoreGrid(noFlushGrid, [card]).total;
-    expect(withCard).toBe(Math.ceil(baseNoFlush * 1.25));
+    expect(withCard).toBe(Math.ceil(baseNoFlush * 1.5));
   });
 
   test('Outer Edge multiplies only edge lines (R1/R5/C1/C5)', () => {
@@ -372,7 +372,7 @@ describe('new grid-wide bonuses', () => {
     oneDiag[24] = C('9','H');
     const base1 = scoreGrid(oneDiag, []).total;
     const with1 = scoreGrid(oneDiag, [card]).total;
-    expect(with1).toBe(Math.ceil(base1 * 1.25));
+    expect(with1).toBe(Math.ceil(base1 * 1.5));
 
     // Anti diagonal slots (4,8,12,16,20): also a straight. The center (slot
     // 12) is shared with the main, but evaluateLine works on 5-card subsets
@@ -402,7 +402,7 @@ describe('new grid-wide bonuses', () => {
     twoDiag[20] = C('5','C');
     const base2 = scoreGrid(twoDiag, []).total;
     const with2 = scoreGrid(twoDiag, [card]).total;
-    expect(with2).toBe(Math.ceil(base2 * 1.25 * 1.25));
+    expect(with2).toBe(Math.ceil(base2 * 1.5 * 1.5));
   });
 
   test('Diagonal Run also triggers on Flush / Full House / better-than-Straight', () => {
@@ -419,7 +419,7 @@ describe('new grid-wide bonuses', () => {
     flushDiag[24] = C('J','H');
     const base = scoreGrid(flushDiag, []).total;
     const withCard = scoreGrid(flushDiag, [card]).total;
-    expect(withCard).toBe(Math.ceil(base * 1.25));
+    expect(withCard).toBe(Math.ceil(base * 1.5));
   });
 
   test('Symmetric Frame multiplies on matching row pairs / column pairs', () => {
