@@ -613,9 +613,15 @@
     display: none;
   }
 
-  /* Pills top-right, right-aligned + stacked. */
+  /* Pills top-right, right-aligned + stacked. Spanning BOTH rows keeps
+     the tall twist-day pill stack from setting row 1's height — which
+     used to push the left column's score block down and grow the played
+     hero ~24px past the unplayed card. The pills just hang into the
+     right column's slack (the archive link sits well below), so row 1
+     stays the eyebrow's height and both states share the 146px floor. */
   .heroChips {
     grid-area: chips;
+    grid-row: 1 / span 2;
     align-self: start;
     justify-self: end;
     flex-direction: column;
