@@ -826,35 +826,37 @@ const deckBank: BonusCard = {
   },
 };
 
+// (IDs keep the old x1_25 tag so saves with the cards in hand still
+// resolve — the multiplier in the name is display text.)
 const noFlushes: BonusCard = {
   id: 'no-flushes-x1_25',
-  name: 'No Flushes ×1.25',
+  name: 'No Flushes ×1.5',
   title: 'No Flushes',
-  mult: '×1.25',
+  mult: '×1.5',
   description: 'No line scores a flush of any kind.',
-  multValue: 1.25,
-  baseMultValue: 1.25,
+  multValue: 1.5,
+  baseMultValue: 1.5,
   gridEffect: ({ lines }, card) => {
     const anyFlush = lines.some(l =>
       l.hand === 'FLUSH' || l.hand === 'STRAIGHT_FLUSH' || l.hand === 'ROYAL_FLUSH'
     );
-    return anyFlush ? {} : { totalMultiplier: card.multValue ?? 1.25 };
+    return anyFlush ? {} : { totalMultiplier: card.multValue ?? 1.5 };
   },
 };
 
 const noStraights: BonusCard = {
   id: 'no-straights-x1_25',
-  name: 'No Straights ×1.25',
+  name: 'No Straights ×1.5',
   title: 'No Straights',
-  mult: '×1.25',
+  mult: '×1.5',
   description: 'No line scores a straight of any kind.',
-  multValue: 1.25,
-  baseMultValue: 1.25,
+  multValue: 1.5,
+  baseMultValue: 1.5,
   gridEffect: ({ lines }, card) => {
     const anyStraight = lines.some(l =>
       l.hand === 'STRAIGHT' || l.hand === 'STRAIGHT_FLUSH' || l.hand === 'ROYAL_FLUSH'
     );
-    return anyStraight ? {} : { totalMultiplier: card.multValue ?? 1.25 };
+    return anyStraight ? {} : { totalMultiplier: card.multValue ?? 1.5 };
   },
 };
 
@@ -951,16 +953,17 @@ const isStraightOrBetter = (cards: (Card | null)[]): boolean => {
   return h !== null && STRAIGHT_OR_HIGHER.has(h);
 };
 
+// (ID keeps the old x1_25 tag for save compatibility.)
 const diagonalRun: BonusCard = {
   id: 'diagonal-run-x1_25',
-  name: 'Diagonal ×1.25 (each)',
+  name: 'Diagonal ×1.5 (each)',
   title: 'Diagonal',
-  mult: '×1.25 (each)',
+  mult: '×1.5 (each)',
   description: 'Each grid diagonal that forms a Straight or higher.',
-  multValue: 1.25,
-  baseMultValue: 1.25,
+  multValue: 1.5,
+  baseMultValue: 1.5,
   gridEffect: ({ grid }, card) => {
-    const m = card.multValue ?? 1.25;
+    const m = card.multValue ?? 1.5;
     const main = [grid[0], grid[6], grid[12], grid[18], grid[24]];
     const anti = [grid[4], grid[8], grid[12], grid[16], grid[20]];
     let mult = 1;
@@ -1085,7 +1088,9 @@ export const BONUS_DECK_POOL: BonusCard[] = [
   // Hand-type (8) — Pair-through-Three of a Kind are big multipliers; the
   // higher-ranked hands are capped at ×1.5 so they don't trivially explode.
   handBoost('PAIR', 4),
-  handBoost('TWO_PAIR', 3),
+  // Two Pair plays at ×4 now; the id keeps the original x3 tag so saves
+  // holding the card still resolve.
+  { ...handBoost('TWO_PAIR', 4), id: 'hand-two_pair-x3' },
   handBoost('THREE_OF_A_KIND', 3),
   handBoost('STRAIGHT', 2),
   handBoost('FLUSH', 1.5),

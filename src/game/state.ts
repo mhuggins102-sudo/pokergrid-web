@@ -1507,25 +1507,32 @@ const handleResolvePlusMinus = (s: GameState, delta: 1 | -1): GameState => {
 // ---------- bonus card handlers ----------
 
 // Send `drawn` cards back to bottom of bonus deck (in the given order), then
-// retire the club to perkSpent, then advance.
+// retire the club, then advance. A club whose draw the player actually
+// resolved into a card counts as a spent perk (Burnout / Frugal read that
+// pile); a DECLINED draw retires the club to the discards instead — the
+// player got nothing from it, so it doesn't move the perk count.
 const finishBonusFlow = (
   s: GameState,
   returningDrawn: BonusCard[],
   newBonusCards: BonusCard[],
-  rng: () => number
+  rng: () => number,
+  tookCard = true
 ): GameState => {
   if (!s.drawn || isJoker(s.drawn)) return s;
+  const retire = tookCard ? pushPerkSpent : pushDiscard;
   return drawNext(
     log(
-      pushPerkSpent(
+      retire(
         {
           ...s,
           bonusDeck: [...s.bonusDeck, ...returningDrawn],
           bonusCards: newBonusCards,
         },
-        s.drawn
+        // pushPerkSpent strips Double Duty duals itself; the discard
+        // path takes the active half directly (same as plain Discard).
+        tookCard ? s.drawn : activeHalf(s.drawn)
       ),
-      'Bonus draw resolved'
+      tookCard ? 'Bonus draw resolved' : 'Bonus draw declined'
     ),
     rng
   );
@@ -1749,7 +1756,9 @@ const handleBonusDecline = (s: GameState, rng: () => number): GameState => {
   if (s.randomPerks && s.bonusCards.length < BONUS_HAND_LIMIT) {
     return s;
   }
-  return finishBonusFlow(s, s.phase.drawn, s.bonusCards, rng);
+  // Declined: no card taken, so the club retires to discards, not
+  // perkSpent (see finishBonusFlow).
+  return finishBonusFlow(s, s.phase.drawn, s.bonusCards, rng, false);
 };
 
 const handleCancelAction = (s: GameState): GameState => {

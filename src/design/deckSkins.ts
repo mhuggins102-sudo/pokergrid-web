@@ -410,8 +410,12 @@ const JOKER_DECOR: Record<string, (mobile: boolean) => Layer[]> = {
   ],
   // Terrain / scenic: star + caption in each scene's ink.
   D64: () => terrainJoker('#7a5321'),
-  // Pine rows: caption rides the sky — the treeline owns the bottom edge.
-  D67b: () => [jStar('font-size:38cqh;color:#e9f5db'), jCap('top:7cqh;color:#e9f5db')],
+  // Pine rows: caption rides the sky — the treeline owns the bottom edge;
+  // the star sits dead-center vertically (no -58% optical lift).
+  D67b: () => [
+    L('position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);line-height:1;font-size:38cqh;color:#e9f5db', '★'),
+    jCap('top:7cqh;color:#e9f5db'),
+  ],
   D69b: () => terrainJoker('#1864ab'),
   D65b: () => terrainJoker('#4a2513', ';text-shadow:0 .5cqmin 1.6cqmin rgba(70,35,15,.45)'),
   D70c: () => terrainJoker('#1b4332'),
@@ -424,8 +428,8 @@ const JOKER_DECOR: Record<string, (mobile: boolean) => Layer[]> = {
   // Music: each keeps its stage lighting. Psych flies a peace sign
   // (U+FE0E pins text presentation so it can't fall back to emoji art).
   MU1: () => [
-    jStar(`font-size:46cqh;${MUSIC_GLOW.MU1}`, '☮︎'),
-    jCap(`bottom:7cqh;${MUSIC_GLOW.MU1}`),
+    jStar(`font-size:54cqh;-webkit-text-stroke:1cqmin #fff8e7;${MUSIC_GLOW.MU1}`, '☮︎'),
+    jCap(`bottom:7cqh;font:900 14cqh var(--font-body);letter-spacing:.14em;${MUSIC_GLOW.MU1}`),
   ],
   MU2: () => [
     L(`position:absolute;top:5cqh;left:7cqw;font-size:28cqh;line-height:1;${MUSIC_GLOW.MU2}`, '★'),

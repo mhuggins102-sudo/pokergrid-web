@@ -220,6 +220,10 @@ describe('GameState — ♣ Cards bonus draw', () => {
     expect(after.bonusCards).toEqual([]);
     // Both drawn returned to the bottom in the order they came.
     expect(after.bonusDeck.slice(-2)).toEqual([a, b]);
+    // No card was taken, so the club retires to discards, NOT perkSpent —
+    // a declined ♣ draw doesn't move the Burnout / Frugal perk count.
+    expect(after.perkSpent).not.toContainEqual(club);
+    expect(after.discards).toContainEqual(club);
   });
 
   test('at the limit (3 held), SELECT_NEW then REPLACE swaps one out and trashes it conceptually', () => {
@@ -505,10 +509,13 @@ describe('GameState — Short Circuit challenge', () => {
     const revealed = step(state, { type: 'BEGIN_SUIT_ACTION' }, rngAlwaysZero);
     expect(revealed.phase.kind).toBe('bonus-card-resolving');
     const declined = step(revealed, { type: 'BONUS_DECLINE' }, rngAlwaysZero);
-    // Decline resolves the perk: the heart is spent, the hand is kept.
+    // Decline resolves the flow with the hand kept — but since no card was
+    // taken, the spent card retires to discards, NOT perkSpent (a declined
+    // draw doesn't move the Burnout / Frugal perk count).
     expect(declined.phase.kind).toBe('awaiting-action');
     expect(declined.bonusCards).toEqual(held);
-    expect(declined.perkSpent).toContainEqual(heart);
+    expect(declined.perkSpent).not.toContainEqual(heart);
+    expect(declined.discards).toContainEqual(heart);
   });
 
   test('randomPerks with no available perks is a no-op', () => {
