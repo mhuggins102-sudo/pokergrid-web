@@ -368,6 +368,36 @@ export const sideSlideDestinationsForChain = (
   return out;
 };
 
+/**
+ * Tap targets for the Slip & Slide destination phase: every cell the
+ * chain would NEWLY occupy across all legal moves — always currently
+ * empty cells (occupied destinations are only ever slots other chain
+ * members vacate) — each mapped to the SHORTEST path that covers it.
+ * Keyed this way, a plain 1-step slide is one tap on the cell just past
+ * the chain. The old "tap where the leader lands" mapping put that
+ * move's target INSIDE the chain (the leader vacates into a slot
+ * another member holds), so a simple slide-by-one was undiscoverable
+ * and untappable.
+ */
+export const sideSlideTapTargets = (
+  chain: readonly number[],
+  moves: readonly SideSlideMove[]
+): Map<number, Direction[]> => {
+  const chainSet = new Set(chain);
+  const targets = new Map<number, Direction[]>();
+  for (const m of moves) {
+    // Every member shifts by the same net offset as the leader.
+    const net = m.leadingDest - m.from;
+    for (const slot of chain) {
+      const dest = slot + net;
+      if (chainSet.has(dest)) continue;
+      const prev = targets.get(dest);
+      if (!prev || m.path.length < prev.length) targets.set(dest, m.path);
+    }
+  }
+  return targets;
+};
+
 export const executeSideSlide = (
   grid: Grid,
   chain: readonly number[],

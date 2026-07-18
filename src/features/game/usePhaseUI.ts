@@ -8,6 +8,7 @@ import {
   anyPerkAvailable,
   canDeselectSideSlideSlot,
   sideSlideChainExtensions,
+  sideSlideTapTargets,
   suitActionAvailable,
 } from '../../game/actions';
 import { Suit, isJoker } from '../../game/cards';
@@ -494,16 +495,23 @@ export function usePhaseUI(): PhaseUI {
         );
       }
 
-      case 'awaiting-special-side-slide-dest':
+      case 'awaiting-special-side-slide-dest': {
+        // Targets are the cells the chain would newly slide onto (always
+        // empty cells); a tap commits the shortest move covering that
+        // cell — so a plain 1-step slide is one tap on the cell just
+        // past the chain. (The old leader-destination mapping made a
+        // slide-by-one target a cell INSIDE the chain — unreachable.)
+        const targets = sideSlideTapTargets(phase.chain, phase.moves);
         return tapPhase(
-          'Slip & Slide — tap where the chain leader should land',
-          phase.moves.map(m => m.leadingDest),
+          'Slip & Slide — tap a cell the chain should slide onto',
+          [...targets.keys()],
           idx => {
-            const move = phase.moves.find(m => m.leadingDest === idx);
-            if (move) dispatch({ type: 'RESOLVE_SIDE_SLIDE', path: move.path });
+            const path = targets.get(idx);
+            if (path) dispatch({ type: 'RESOLVE_SIDE_SLIDE', path });
           },
           new Set(phase.chain)
         );
+      }
 
       case 'awaiting-special-jump-source':
         return tapPhase(
