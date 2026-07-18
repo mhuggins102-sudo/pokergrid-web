@@ -1,7 +1,12 @@
 import { CSSProperties, createContext, useContext, useState } from 'react';
 import { Sheet } from '../../design/primitives';
 import { SuitKey } from '../../design/deckSkins';
-import { SKIN_CATALOG, SkinUnlock, skinName } from '../../design/skinCatalog';
+import {
+  SKIN_CATALOG,
+  SkinUnlock,
+  UNLOCK_ALL_FOR_TESTING,
+  skinName,
+} from '../../design/skinCatalog';
 import { LEVEL_XP, MAX_LEVEL } from '../../lib/xp';
 import { skinFace } from '../game/components/skinFace';
 import { useTier } from '../../app/useTier';
@@ -367,7 +372,7 @@ export function SkinStore({
           </button>
 
           {SKIN_CATALOG.map(unlock =>
-            level >= unlock.level ? (
+            UNLOCK_ALL_FOR_TESTING || level >= unlock.level ? (
               <UnlockedEntry
                 key={unlock.id}
                 unlock={unlock}
