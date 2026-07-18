@@ -41,9 +41,10 @@
      board is cap/height-bound, so the reclaimed width goes unused. The
      rails, when on, live INSIDE .boardFrame (its measured width caps
      them), so a wider area never overflows the viewport. Bleed the FULL
-     --space-lg (matching the dock / bonus-strip edge bleed) so the square
-     board reaches the viewport width — on a width-bound phone that's the
-     only axis that enlarges it, and it now spans exactly the dock's width. */
+     --space-lg (matching the dock / bonus-strip edge bleed) so a
+     width-bound board can use nearly the whole viewport — .boardFrame
+     then holds back SIDE_GUTTER per side so the square grid never sits
+     flush against the screen edges. */
   margin-left: calc(-1 * var(--space-lg));
   margin-right: calc(-1 * var(--space-lg));
 }
@@ -68,9 +69,13 @@
      The -12px off the height axis reserves Card Room's felt bleed
      (--board-pad, 6px per side, painted beyond the cells) so a
      height-constrained board keeps its full layout gap to the score
-     bar and bonus row — mirrors FELT_BLEED in GameScreen.tsx. */
+     bar and bonus row — mirrors FELT_BLEED in GameScreen.tsx. The
+     -20px off the width axis keeps a 10px gutter per side when the
+     WIDTH is the binding axis (no-bonus-card games free enough height
+     for that) — the area bleeds to the viewport edges, and a square
+     grid flush against the screen read broken; mirrors SIDE_GUTTER. */
   width: min(
-    var(--avail-w, 100cqw),
+    calc(var(--avail-w, 100cqw) - 20px),
     calc(var(--avail-h, 100cqh) - 12px),
     470px
   );
@@ -79,7 +84,7 @@
 /* Line rails disabled (Settings): the plain board at its original cap. */
 .boardFrameBare {
   width: min(
-    var(--avail-w, 100cqw),
+    calc(var(--avail-w, 100cqw) - 20px),
     calc(var(--avail-h, 100cqh) - 12px),
     440px
   );

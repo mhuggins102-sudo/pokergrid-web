@@ -107,6 +107,14 @@ const NO_SWEEP: ReadonlyMap<number, number> = new Map();
 // Card Room's felt bleed — see the frame-width computation below and
 // the matching -12px in GameScreen.module.css's CSS fallbacks.
 const FELT_BLEED = 6;
+// Width-bound boards keep a visible gutter per side. .boardArea bleeds
+// to the viewport edges (so a height-bound board can use the full
+// width budget), but a game with no bonus strip — Poker Purist and the
+// other no-bonus-card challenges/dailies — frees enough height that
+// the WIDTH becomes the binding axis, and without this the square grid
+// butted flush against the screen edges. Mirrors the CSS fallback's
+// -20px on the --avail-w term.
+const SIDE_GUTTER = 10;
 
 // On-device layout forensics: any game URL + `?layoutdebug=1` paints a
 // live readout of every quantity in the board-sizing pipeline — the
@@ -790,7 +798,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       // lets the felt eat the layout gap to the score bar / bonus row.
       // Constant across themes (not read from the token) so switching
       // themes never resizes the grid.
-      frame.style.width = `${Math.min(w, h - FELT_BLEED * 2, cap)}px`;
+      frame.style.width = `${Math.min(
+        w - SIDE_GUTTER * 2,
+        h - FELT_BLEED * 2,
+        cap
+      )}px`;
       debugReport(el, frame);
     };
     const remeasure = () => {

@@ -1417,13 +1417,23 @@ const handleResolveRevive = (s: GameState, discardIdx: number): GameState => {
   const grid = placeAtSpiralNext(s.grid, card);
   const discards = s.discards.filter((_, i) => i !== discardIdx);
   const newHand = consumeSpecial(s, s.phase.cardIdx);
+  // Revive can fill the LAST empty slot — the game ends immediately,
+  // exactly as if the fill came from a placement (drawNext's full-grid
+  // branch): the still-in-hand drawn card is set aside unscored.
+  // Without this the run lingered in awaiting-action with a full board,
+  // where the drawn card's suit perk was still usable — a fun exploit,
+  // but it broke "the game ends the moment the board is full".
+  const phase: GameState['phase'] = isFull(grid)
+    ? { kind: 'game-over' }
+    : { kind: 'awaiting-action' };
   return log(
     {
       ...s,
       grid,
       discards,
       bonusCards: newHand,
-      phase: { kind: 'awaiting-action' },
+      ...(phase.kind === 'game-over' ? { drawn: null, scatterSlot: null } : {}),
+      phase,
     },
     `Revive discard #${discardIdx}`
   );

@@ -55,12 +55,14 @@ describe('Revive', () => {
     expect(s.bonusCards[0].used).toBe(true);
   });
 
-  it('filling the grid via Revive always leaves a legal out for the drawn card', () => {
-    // Regression for an implicit invariant: Revive can fill the grid
-    // while a card is still drawn (game-over only triggers in drawNext,
-    // which Revive doesn't call). The player must always have an escape
-    // — discard or a suit perk — that routes through drawNext and ends
-    // the game cleanly.
+  it('filling the grid via Revive ends the game immediately', () => {
+    // Revive is the only non-draw path that can fill the LAST slot, and
+    // the game must end the moment the board is full — the same rule a
+    // placement fill follows (drawNext's full-grid branch). The
+    // still-drawn card is set aside unscored. (Previously the run
+    // lingered in awaiting-action with a full board, where the drawn
+    // card's suit perk was still usable — a fun exploit, but it broke
+    // the "board full = game over" rule.)
     let s = stateWithSpecials();
     s = step(s, { type: 'DISCARD_NONE' }); // seed the discard pile
     expect(s.discards.length).toBe(1);
@@ -79,15 +81,8 @@ describe('Revive', () => {
     s = step(s, { type: 'ACTIVATE_SPECIAL_CARD', idx: 0 });
     s = step(s, { type: 'RESOLVE_REVIVE', discardIdx: 0 });
     expect(s.grid.every(c => c !== null)).toBe(true);
-    expect(s.phase.kind).toBe('awaiting-action');
-    expect(s.drawn).not.toBeNull();
-
-    // PLACE is impossible (grid full, rejected as a no-op)…
-    expect(step(s, { type: 'PLACE' })).toBe(s);
-    // …but discarding the drawn card still works and ends the game.
-    const out = step(s, { type: 'DISCARD_NONE' });
-    expect(out).not.toBe(s);
-    expect(out.phase.kind).toBe('game-over');
+    expect(s.phase.kind).toBe('game-over');
+    expect(s.drawn).toBeNull();
   });
 });
 
