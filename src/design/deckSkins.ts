@@ -317,6 +317,160 @@ export function renderSkin(id: string, rank: Rank | string, suit: SuitKey, opts:
   return { wrap: BASE(extra, C), layers };
 }
 
+// ── Jokers ──
+//
+// Every skin gets a matching joker: the skin's own dressing (background +
+// decorative art layers, harvested from its builder with the suit ink swapped
+// to the joker purple — so token-driven washes/frames recolor themselves)
+// under a per-skin star/JOKER composition. Skins whose identity lives in the
+// rank/pip placement echo it (Big pip's jumbo star, Emboss's star-in-ring,
+// Pop art's JOKER! sticker); the rest center the classic star + caption in
+// the skin's own inks.
+
+const jStar = (style: string) =>
+  L(`position:absolute;top:50%;left:50%;transform:translate(-50%,-58%);line-height:1;${style}`, '★');
+const jCap = (style: string) =>
+  L(`position:absolute;left:0;right:0;text-align:center;font:700 12cqh var(--font-body);letter-spacing:.14em;${style}`, 'JOKER');
+const jokerDefault = (): Layer[] => [
+  jStar('font-size:42cqh;color:var(--joker)'),
+  jCap('bottom:7cqh;color:var(--joker)'),
+];
+
+const MUSIC_GLOW: Record<string, string> = {
+  MU1: 'color:#fff8e7;text-shadow:0 .5cqmin 2.5cqmin rgba(36,23,52,.85)',
+  MU2: 'color:#ffe9f2;text-shadow:0 0 3cqmin #ff2975',
+  MU3: 'color:#f4f1ff;text-shadow:0 0 3cqmin rgba(255,41,117,.7)',
+  MU4: 'color:#fdeffa;text-shadow:0 0 3.5cqmin rgba(255,120,210,.75)',
+};
+const terrainJoker = (ink: string, glow = ''): Layer[] => [
+  jStar(`font-size:38cqh;color:${ink}${glow}`),
+  jCap(`bottom:7cqh;color:${ink}${glow}`),
+];
+const wantedJoker = (): Layer[] => [
+  L('position:absolute;top:5cqh;left:0;right:0;text-align:center;font:700 8cqh var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)', 'Wanted'),
+  L('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:38cqh;line-height:1;padding-top:4cqh;color:var(--card-black)', '★'),
+  L('position:absolute;bottom:7cqh;left:0;right:0;text-align:center;font:700 8cqh var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)', 'Joker'),
+];
+
+// Per-skin star/JOKER composition. Anything not listed gets jokerDefault.
+const JOKER_DECOR: Record<string, (mobile: boolean) => Layer[]> = {
+  // Twin / Quad: stars take the corner-index posts, wordmark through the middle.
+  D05a: () => [
+    L('position:absolute;top:5cqh;left:6cqw;font-size:24cqh;line-height:1;color:var(--joker)', '★'),
+    L('position:absolute;bottom:5cqh;right:6cqw;font-size:24cqh;line-height:1;transform:rotate(180deg);color:var(--joker)', '★'),
+    jCap('top:50%;transform:translateY(-50%);color:var(--joker)'),
+  ],
+  D06c: () => [
+    L('position:absolute;top:5cqh;left:6cqw;font-size:18cqh;line-height:1;color:var(--joker)', '★'),
+    L('position:absolute;top:5cqh;right:6cqw;font-size:18cqh;line-height:1;color:var(--joker)', '★'),
+    L('position:absolute;bottom:5cqh;left:6cqw;font-size:18cqh;line-height:1;transform:rotate(180deg);color:var(--joker)', '★'),
+    L('position:absolute;bottom:5cqh;right:6cqw;font-size:18cqh;line-height:1;transform:rotate(180deg);color:var(--joker)', '★'),
+    jCap('top:50%;transform:translateY(-50%);color:var(--joker)'),
+  ],
+  // Big pip: the jumbo pip IS the star.
+  D16: () => [
+    L('position:absolute;bottom:4cqh;right:4cqw;font-size:64cqh;line-height:1;opacity:.9;color:var(--joker)', '★'),
+    L('position:absolute;top:6cqh;left:8cqw;font:700 13cqh var(--font-body);letter-spacing:.14em;color:var(--joker)', 'JOKER'),
+  ],
+  // Ticket: star between the notches, caption above the straight bottom cut.
+  D24: () => [jStar('font-size:38cqh;color:var(--joker)'), jCap('bottom:8cqh;color:var(--joker)')],
+  // Emboss rings: the star sits stamped inside the offset ring (the ring
+  // itself survives the art harvest — its pip glyph resolves empty — so the
+  // decor only adds the star at the same spot, shadow-free).
+  D42: () => [
+    L('position:absolute;right:5cqw;bottom:5cqh;width:54cqmin;height:54cqmin;display:flex;align-items:center;justify-content:center;font-size:26cqh;line-height:1;color:var(--joker)', '★'),
+    L('position:absolute;top:6cqh;left:8cqw;font:700 13cqh var(--font-body);letter-spacing:.14em;color:var(--joker)', 'JOKER'),
+  ],
+  D42a: () => [
+    L('position:absolute;right:4cqw;bottom:4cqh;width:58cqmin;height:58cqmin;display:flex;align-items:center;justify-content:center;font-size:22cqh;line-height:1;color:var(--joker)', '★'),
+    L('position:absolute;top:6cqh;left:8cqw;font:700 13cqh var(--font-body);letter-spacing:.14em;color:var(--joker)', 'JOKER'),
+  ],
+  // Wanted posters: the outlaw is the Joker.
+  D51a: wantedJoker,
+  N1: wantedJoker,
+  N2: wantedJoker,
+  // Carved pair keeps its greens.
+  D62c: () => [jStar('font-size:40cqh;color:#2f7d4f'), jCap('bottom:8cqh;color:#2f7d4f')],
+  C2: () => [jStar('font-size:36cqh;color:#1e5a3a'), jCap('bottom:9cqh;color:#1e5a3a')],
+  // Old-timey court: a gilt star on the parchment, serif caption plate.
+  EX13: () => [
+    jStar('font-size:36cqh;color:var(--warn)'),
+    L('position:absolute;bottom:9cqh;left:0;right:0;text-align:center;font:680 10cqh var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)', 'Joker'),
+  ],
+  // Terrain / scenic: star + caption in each scene's ink.
+  D64: () => terrainJoker('#7a5321'),
+  D67b: () => terrainJoker('#e9f5db'),
+  D69b: () => terrainJoker('#1864ab'),
+  D65b: () => terrainJoker('#4a2513', ';text-shadow:0 .5cqmin 1.6cqmin rgba(70,35,15,.45)'),
+  D70c: () => terrainJoker('#1b4332'),
+  L1: () => terrainJoker('#ffe8c2', ';text-shadow:0 0 3cqmin rgba(255,186,8,.9)'),
+  D69c: () => terrainJoker('#1d4e6b'),
+  // Neon: big dark star on the fluoro wash.
+  EX6: () => [jStar('font-size:44cqh;color:#141414'), jCap('bottom:7cqh;color:#141414')],
+  EX16: () => [jStar('font-size:44cqh;color:#141414'), jCap('bottom:7cqh;color:#141414')],
+  EX17: () => [jStar('font-size:44cqh;color:#141414'), jCap('bottom:7cqh;color:#141414')],
+  // Music: each keeps its stage lighting.
+  MU1: () => [jStar(`font-size:44cqh;${MUSIC_GLOW.MU1}`), jCap(`bottom:7cqh;${MUSIC_GLOW.MU1}`)],
+  MU2: () => [
+    L(`position:absolute;top:5cqh;left:7cqw;font-size:28cqh;line-height:1;${MUSIC_GLOW.MU2}`, '★'),
+    jCap(`bottom:8cqh;font-size:9cqh;${MUSIC_GLOW.MU2}`),
+  ],
+  MU3: () => [jStar(`font-size:40cqh;${MUSIC_GLOW.MU3}`), jCap(`top:8cqh;${MUSIC_GLOW.MU3}`)],
+  MU4: () => [
+    L(`position:absolute;bottom:5cqh;left:8cqw;font-size:30cqh;line-height:1;${MUSIC_GLOW.MU4}`, '★'),
+    L(`position:absolute;bottom:6cqh;right:8cqw;font:700 9cqh var(--font-body);letter-spacing:.14em;${MUSIC_GLOW.MU4}`, 'JOKER'),
+  ],
+  // Cosmos: the joker is the brightest star in the sky.
+  SP1: () => [
+    L('position:absolute;top:6cqh;left:8cqw;font-size:34cqh;line-height:1;color:#ffd479;text-shadow:0 0 4cqmin rgba(255,212,121,.8)', '★'),
+    L('position:absolute;bottom:5cqh;left:8cqw;font:700 10cqh var(--font-body);letter-spacing:.14em;color:#e9edff', 'JOKER'),
+  ],
+  // Art set: each in its own idiom.
+  AR1: () => [
+    jStar('font-size:34cqh;color:#b08a1e'),
+    L('position:absolute;bottom:8cqh;left:0;right:0;text-align:center;font:680 10cqh var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:#a4243b', 'Joker'),
+  ],
+  AR2: () => [
+    L('position:absolute;top:6cqh;left:8cqw;font-size:34cqh;line-height:1;color:#1c1a17', '★'),
+    L('position:absolute;left:66%;right:0;top:26cqh;text-align:center;font:700 7cqh var(--font-body);letter-spacing:.14em;color:#f8f7f2', 'JOKER'),
+  ],
+  AR3: () => [
+    L('position:absolute;top:7cqh;right:6cqw;font-size:26cqh;line-height:1;color:#fdf6ec', '★'),
+    L('position:absolute;bottom:4cqh;right:7cqw;font:700 10cqh var(--font-body);letter-spacing:.12em;color:#1c1a17', 'JOKER'),
+  ],
+  AR4: () => [
+    jStar(`font-size:38cqh;color:#5d4c63;text-shadow:0 0 1.2cqmin ${IMPRESSION_HALO}`),
+    L(`position:absolute;bottom:6cqh;left:0;right:0;text-align:center;font:540 11cqh var(--font-display);letter-spacing:.14em;color:#5d4c63;text-shadow:0 0 1.2cqmin ${IMPRESSION_HALO}`, 'JOKER'),
+  ],
+  // Pop art: the sticker shouts it, the badge stars it.
+  AR5: mobile =>
+    mobile
+      ? [
+          L('position:absolute;left:10cqw;top:14cqh;font:800 14cqh var(--font-body);letter-spacing:.02em;color:#d23a2e;text-shadow:.6cqmin .6cqmin 0 #1c1a17;transform:rotate(-3deg)', 'JOKER!'),
+          L('position:absolute;right:13cqw;bottom:12cqh;font-size:17cqh;line-height:1;color:#1f4bb8;transform:rotate(4deg)', '★'),
+        ]
+      : [
+          L('position:absolute;left:9cqw;top:12cqh;font:800 11cqh var(--font-body);letter-spacing:.02em;color:#d23a2e;text-shadow:.6cqmin .6cqmin 0 #1c1a17;transform:rotate(-3deg)', 'JOKER!'),
+          L('position:absolute;right:12cqw;bottom:11cqh;font-size:13cqh;line-height:1;color:#1f4bb8;transform:rotate(4deg)', '★'),
+        ],
+};
+
+/**
+ * Build the joker face for a skin. Pure. The skin renders with empty rank
+ * and pip, so its decorative layers (frames, rings, patterns, scenery)
+ * survive as art with the suit ink resolved to the joker purple; layers
+ * carrying fixed text (the Wanted eyebrow) or corner-index kids drop out,
+ * and the skin's JOKER_DECOR (or the classic centered star) goes on top.
+ */
+export function renderJoker(id: string, opts: RenderOpts = {}): CardFace | null {
+  const build = (opts.mobile && MOBILE[id]) || DESKTOP[id];
+  if (!build) return null;
+  const { extra, layers } = build({ C: 'var(--joker)', G: '', R: '', k: 's', four: opts.four !== false });
+  const art = layers.filter(l => !l.glyph && l.kids.length === 0);
+  const decor = (JOKER_DECOR[id] ?? jokerDefault)(!!opts.mobile);
+  return { wrap: BASE(extra, 'var(--joker)'), layers: [...art, ...decor] };
+}
+
 /* Optional React helper:
  *
  * import React from 'react';

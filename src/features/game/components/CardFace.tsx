@@ -1,8 +1,9 @@
+import { ReactNode } from 'react';
 import { Card, Suit, isJoker } from '../../../game/cards';
 import { SKIN_IDS, SuitKey } from '../../../design/deckSkins';
 import { useTier } from '../../../app/useTier';
 import { useSettingsStore } from '../../settings/settingsStore';
-import { skinFace } from './skinFace';
+import { ParsedFace, skinFace, skinJokerFace } from './skinFace';
 import styles from './CardFace.module.css';
 
 // Suit key mapping for the skin renderer (it takes lowercase 'h'|'d'|'c'|'s').
@@ -63,6 +64,37 @@ const suitColor = (suit: Suit, twoColorDeck: boolean): string =>
       : 'var(--card-black)'
     : SUIT_COLOR[suit];
 
+// Shared renderer for a parsed skin face (standard card or joker): the wrap
+// carries the face background, border, radius and container-type; each layer
+// is an absolutely-positioned span (some with nested corner-index spans).
+// The wrap fills the (parent-sized) cell — height:100% overrides its square
+// aspect-ratio so it tracks the grid cell exactly.
+function SkinnedFace({
+  face,
+  skin,
+  children,
+}: {
+  face: ParsedFace;
+  skin: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div style={{ ...face.wrap, height: '100%', userSelect: 'none' }} data-skin={skin}>
+      {face.layers.map((l, i) => (
+        <span key={i} style={l.style}>
+          {l.glyph}
+          {l.kids.map((k, j) => (
+            <span key={j} style={k.style}>
+              {k.glyph}
+            </span>
+          ))}
+        </span>
+      ))}
+      {children}
+    </div>
+  );
+}
+
 export function CardFace({ card }: { card: Card }) {
   const twoColorDeck = useSettingsStore(s => s.twoColorDeck);
   // Phone tier gets a skin's mobile layout (bigger rank/suit) where one
@@ -77,6 +109,12 @@ export function CardFace({ card }: { card: Card }) {
     skinId && SKIN_IDS.includes(skinId) ? skinId : null;
 
   if (isJoker(card)) {
+    // Skinned decks bring their own joker (design/deckSkins.ts renderJoker);
+    // the theme default keeps the classic purple star.
+    const jokerFace = activeSkin ? skinJokerFace(activeSkin, mobile) : null;
+    if (jokerFace) {
+      return <SkinnedFace face={jokerFace} skin={activeSkin!} />;
+    }
     return (
       <div className={`${styles.card} ${styles.joker}`}>
         <span className={styles.jokerStar} aria-hidden="true">
@@ -114,11 +152,7 @@ export function CardFace({ card }: { card: Card }) {
     );
   }
 
-  // Active skin: render Claude Design's wrap + layers. The wrap carries the
-  // face background, border, radius and container-type; each layer is an
-  // absolutely-positioned span (some with nested corner-index spans). The
-  // wrap fills the (parent-sized) cell — height:100% overrides its square
-  // aspect-ratio so it tracks the grid cell exactly.
+  // Active skin: render Claude Design's wrap + layers via SkinnedFace.
   if (activeSkin) {
     const face = skinFace(
       activeSkin,
@@ -128,20 +162,7 @@ export function CardFace({ card }: { card: Card }) {
       mobile
     );
     return (
-      <div
-        style={{ ...face.wrap, height: '100%', userSelect: 'none' }}
-        data-skin={activeSkin}
-      >
-        {face.layers.map((l, i) => (
-          <span key={i} style={l.style}>
-            {l.glyph}
-            {l.kids.map((k, j) => (
-              <span key={j} style={k.style}>
-                {k.glyph}
-              </span>
-            ))}
-          </span>
-        ))}
+      <SkinnedFace face={face} skin={activeSkin}>
         {card.supercharge && (
           <span
             className={`${styles.charge} ${
@@ -151,7 +172,7 @@ export function CardFace({ card }: { card: Card }) {
             {card.supercharge === 'wild' ? 'W' : '×2'}
           </span>
         )}
-      </div>
+      </SkinnedFace>
     );
   }
 
