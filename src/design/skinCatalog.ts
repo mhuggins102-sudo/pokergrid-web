@@ -33,12 +33,12 @@ const NAME_OVERRIDES: Record<string, string> = {
   EX6: 'Lime',
   EX16: 'Sunset',
   EX17: 'Aqua',
-  // Wash group
+  // Gradient group
   D27b: 'Wash',
-  D27c: 'Framed wash',
-  W1: 'Corner fade',
-  W2: 'Deep sweep',
-  W3: 'Radial glow',
+  D27c: 'Framed',
+  W1: 'Fade',
+  W2: 'Deep',
+  W3: 'Radial',
   // Wanted group
   D51a: 'Wanted',
   N1: 'Roped',
@@ -108,10 +108,10 @@ export const SKIN_CATALOG: SkinUnlock[] = [
   { id: 'pastel', name: 'Pastel', level: 7, skinIds: ['P1', 'P3'] },
   // Keyline / Filigree / Rope — the frame-led designs, together.
   { id: 'bordered', name: 'Bordered', level: 8, skinIds: ['D21', 'D41c', 'D55b'] },
-  // The classic band's payoff: the five-design wash family.
+  // The classic band's payoff: the five-design gradient family.
   {
     id: 'wash',
-    name: 'Wash',
+    name: 'Gradient',
     level: 9,
     skinIds: ['D27b', 'D27c', 'W1', 'W2', 'W3'],
   },
