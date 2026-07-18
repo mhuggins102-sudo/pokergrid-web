@@ -68,6 +68,32 @@
   opacity: 0.85;
 }
 
+.headRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+}
+
+/* The final score, up in the header beside the tier badge. */
+.headScore {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 680;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.headTarget {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
 .tierBadge {
   flex: none;
   min-width: 48px;
@@ -92,78 +118,26 @@
 }
 
 .body {
-  padding: 22px 26px 26px;
+  padding: 16px 22px 24px;
 }
 
-.scoreRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 10px;
-}
-
-.score {
-  font-family: var(--font-display);
-  font-size: 44px;
-  font-weight: 680;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
-.target {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--ink-3);
-}
-
-/* Margin vs target — the headline takeaway under the score. */
-.margin {
-  margin-top: 10px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.marginWin {
-  color: var(--success);
-}
-
-.marginLoss {
-  color: var(--ink-3);
-}
-
-/* ---- Progression module (desk families): level + XP bar with this
-   game's gain, and the next deck teased. Replaces the old highlights. */
-.xpModule {
-  margin-top: 18px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--paper-sunken);
-  border: 1px solid var(--hairline);
-}
-
-/* After the unlock celebration the module rides beneath it, tighter. */
-.xpModuleSlim {
-  margin-top: 12px;
-}
-
-.xpTop {
+/* ---- Meta row: this game's XP (with the mini level bar) on the left,
+   the daily standing + posted-as handle right-aligned opposite. ---- */
+.metaRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  min-height: 22px;
+  align-items: flex-start;
+  gap: 16px;
 }
 
-.levelBadge {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
+.metaXp {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
-/* The "+N XP" chip doubles as the breakdown opener (the ledger sheet). */
+/* The "+N XP" line doubles as the breakdown opener (the ledger sheet). */
 .xpGain {
   display: inline-flex;
   align-items: center;
@@ -184,10 +158,10 @@
   border-radius: 4px;
 }
 
-.xpTrack {
+.miniTrack {
   position: relative;
-  height: 10px;
-  margin-top: 10px;
+  width: 132px;
+  height: 7px;
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--ink) 10%, transparent);
   overflow: hidden;
@@ -210,26 +184,39 @@
   transition: width 650ms ease;
 }
 
-.xpCaption {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 8px;
-  font-size: 12px;
+.miniCap {
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
-/* Next-deck teaser — a real (dimmed) face of the deck waiting at the
-   next level, under a hairline rule inside the module. */
-.nextUnlock {
+.metaRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  text-align: right;
+  flex: none;
+}
+
+.postedLine {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Next-deck teaser — everyday games' stand-in for the celebration: a
+   real (dimmed) face of the deck waiting at the next level. */
+.teaser {
+  margin-top: 16px;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--hairline);
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--paper-sunken);
+  border: 1px solid var(--hairline);
 }
 
 .nextFace {
@@ -265,7 +252,7 @@
 
 /* ---- Deck-unlock celebration (desk families, level-up runs) ---- */
 .unlock {
-  margin-top: 18px;
+  margin-top: 20px;
   padding: 16px 16px 14px;
   border-radius: 12px;
   text-align: center;
@@ -371,9 +358,11 @@
   outline-offset: 2px;
 }
 
-/* ---- Column (mobile) level-up: the compact unlock row ---- */
+/* ---- Column (mobile) celebrations: compact unlock + achievement rows
+   in the shared accent dress. ---- */
 .unlockRow {
-  margin-top: 12px;
+  margin-top: 16px;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -382,6 +371,26 @@
   text-align: left;
   background: color-mix(in srgb, var(--accent) 8%, var(--paper-sunken));
   border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--hairline));
+}
+
+/* Achievement as the unlock row's sibling — whole row taps through to
+   the explainer sheet. */
+.achRow {
+  margin-top: 12px;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.achRow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.achRowIcon {
+  font-size: 22px;
+  width: 40px;
+  text-align: center;
+  flex: none;
 }
 
 .unlockRowText {
@@ -427,34 +436,6 @@
   outline-offset: 2px;
 }
 
-/* The column family's XP pill row (the minimal mobile treatment). */
-.rewards {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
-
-.xpEarned {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border: 1px solid color-mix(in srgb, var(--warn) 34%, var(--hairline));
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--warn) 14%, transparent);
-  color: var(--warn);
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.xpEarned:focus-visible {
-  outline: 2px solid var(--warn);
-  outline-offset: 2px;
-}
-
 .xpHint {
   font-size: 11px;
   opacity: 0.75;
@@ -493,39 +474,39 @@
   opacity: 0.85;
 }
 
-/* Just-earned achievements — mobile ResultView's 🏆 callout at dialog
-   weight: a warm tinted box in the dialog's panel language, each name
-   a tappable dotted-underline button opening its explainer sheet. */
-.achievements {
-  margin-top: 16px;
-  padding: 12px 14px;
+/* Just-earned achievements (desk) — the level-up container's sibling:
+   same accent-tinted dress, eyebrow + serif name(s), inline description
+   for a single achievement. Names tap through to the explainer sheet. */
+.achBox {
+  margin-top: 12px;
+  padding: 13px 16px 14px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--warn) 10%, var(--paper-sunken));
-  border: 1px solid color-mix(in srgb, var(--warn) 34%, var(--hairline));
+  text-align: center;
+  background: color-mix(in srgb, var(--accent) 8%, var(--paper-sunken));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--hairline));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  text-align: center;
+  gap: 3px;
 }
 
-.achievementsLabel {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warn);
-}
-
-.achievementsList {
+.achNames {
   display: inline-flex;
   align-items: baseline;
   justify-content: center;
-  gap: 10px;
+  gap: 14px;
   flex-wrap: wrap;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--warn);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--ink);
+  margin-top: 1px;
+}
+
+.achDesc {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
 }
 
 .achievementBtn {
@@ -618,26 +599,6 @@
   line-height: 1.5;
   color: var(--ink-2);
   margin-bottom: 8px;
-}
-
-.posted {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-/* Daily standing row — the leaderboard bar (RankPanel) centered under
-   the score math. RankPanel is width:fit-content, margin:auto, so this
-   only needs the vertical rhythm. */
-.rankRow {
-  margin-top: 16px;
-  display: flex;
-  justify-content: center;
 }
 
 .footer {
@@ -766,11 +727,11 @@
   }
 
   .body {
-    padding: 18px 18px 20px;
+    padding: 14px 16px 20px;
   }
 
-  .score {
-    font-size: 38px;
+  .headScore {
+    font-size: 25px;
   }
 
   .footer {

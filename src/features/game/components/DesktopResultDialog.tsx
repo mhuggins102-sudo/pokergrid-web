@@ -179,8 +179,6 @@ export function DesktopResultDialog({
         ? 'Target cleared'
         : 'Just short';
 
-  const margin = report.total - state.target;
-
   // ---- Progression module data (replaces the old highlights list) ----
   // Every level unlocks a catalog entry, so a level-up always has a deck
   // to celebrate and the everyday case always has a next deck to tease.
@@ -278,9 +276,9 @@ export function DesktopResultDialog({
         aria-modal="true"
         aria-label="Game result"
       >
-        {/* Slim header band: verdict + tier label left, the tier letter as
-            a compact badge right — the old full-height tier block spent a
-            third of the dialog on one letter. */}
+        {/* Slim header band: verdict + tier label left; the score (vs its
+            target) and the tier badge right — the score lives up here now,
+            so the body opens straight into progression. */}
         <div className={`${styles.head} ${won ? styles.headWin : styles.headLoss}`}>
           <div className={styles.headText}>
             <span className={styles.verdict}>{verdict}</span>
@@ -294,35 +292,110 @@ export function DesktopResultDialog({
               ) : null}
             </span>
           </div>
-          <span className={styles.tierBadge} aria-label={`Tier ${tier}`}>
-            {tier}
-          </span>
+          <div className={styles.headRight}>
+            <span
+              className={styles.headScore}
+              aria-label={`Score ${report.total} of target ${state.target}`}
+            >
+              <span data-testid="final-score">{report.total}</span>
+              <span className={styles.headTarget}>/ {state.target}</span>
+            </span>
+            <span className={styles.tierBadge} aria-label={`Tier ${tier}`}>
+              {tier}
+            </span>
+          </div>
         </div>
         <div className={styles.body}>
-          <div className={styles.scoreRow}>
-            <span className={styles.score} data-testid="final-score">
-              {report.total}
-            </span>
-            <span className={styles.target}>/ {state.target}</span>
-          </div>
-          <div
-            className={`${styles.margin} ${
-              margin >= 0 ? styles.marginWin : styles.marginLoss
-            }`}
-          >
-            {margin >= 0
-              ? `Beat the target by +${margin}`
-              : `${Math.abs(margin)} short of the target`}
-          </div>
+          {/* Meta row, straight under the header: this game's XP (with
+              the mini progress bar to the next level) on the left, the
+              daily standing + posted-as handle right-aligned opposite.
+              Archive re-views (viewOnly) earn nothing and skip it. */}
+          {!viewOnly && (
+            <div className={styles.metaRow}>
+              <div className={styles.metaXp}>
+                {earnedXp > 0 && (
+                  <button
+                    type="button"
+                    className={styles.xpGain}
+                    onClick={() => setXpOpen(true)}
+                    aria-label={`Earned ${earnedXp} XP this game — show breakdown`}
+                  >
+                    <span aria-hidden="true">✨</span> +{earnedXp} XP
+                    <span className={styles.xpHint} aria-hidden="true">
+                      ⓘ
+                    </span>
+                  </button>
+                )}
+                <div className={styles.miniTrack}>
+                  {prePct > 0 && (
+                    <div
+                      className={styles.xpFillOld}
+                      style={{ width: `${prePct}%` }}
+                    />
+                  )}
+                  {gainPct > 0 && (
+                    <div
+                      className={styles.xpFillNew}
+                      style={{
+                        left: `${prePct}%`,
+                        width: xpSettled ? `${gainPct}%` : '0%',
+                      }}
+                    />
+                  )}
+                </div>
+                <span className={styles.miniCap}>
+                  {levelInfo.atMax
+                    ? `Level ${levelInfo.level} · Max level`
+                    : levelUp !== null
+                      ? `Level ${levelInfo.level} · ${levelInfo.xpIntoLevel.toLocaleString()} / ${span.toLocaleString()} XP`
+                      : `Level ${levelInfo.level} · ${(
+                          span - levelInfo.xpIntoLevel
+                        ).toLocaleString()} to Level ${levelInfo.level + 1}`}
+                </span>
+              </div>
+              {mode.kind === 'daily' && isBackendConfigured() && (
+                <div className={styles.metaRight}>
+                  <RankPanel dateISO={mode.dateISO} placementOnly />
+                  {savedHandle && (
+                    <span className={styles.postedLine}>
+                      <span aria-hidden="true">✓</span> Posted as {savedHandle}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Progression — the popup's center of gravity (the old
-              fun-facts bullets are gone; the board itself is one tap away
-              via View Grid). Desk families get the full module: a deck
-              unlock celebration on level-up, plus the XP bar with this
-              game's gain and the next deck teased. The column (mobile)
-              game keeps it minimal: the XP pill, plus a compact unlock
-              row on level-up. Archive re-views (viewOnly) earn nothing
-              and show none of it. */}
+          {/* Next-deck teaser — everyday desk games only (a level-up's
+              celebration below shows the new deck instead; mobile stays
+              minimal). */}
+          {!viewOnly && !columnFamily && unlocked === null && nextUnlock && (
+            <div className={styles.teaser}>
+              <MiniFace
+                id={nextUnlock.skinIds[0]}
+                rank="J"
+                suit="c"
+                size={34}
+                className={styles.nextFace}
+              />
+              <span className={styles.nextText}>
+                <b>Next unlock — {nextUnlock.name} deck</b>
+                <i>
+                  Reach Level {nextUnlock.level}
+                  {nextUnlock.skinIds.length > 1
+                    ? ` · ${nextUnlock.skinIds.length} designs`
+                    : ''}
+                </i>
+              </span>
+              <span className={styles.lockGlyph} aria-hidden="true">
+                🔒
+              </span>
+            </div>
+          )}
+
+          {/* Celebrations, with breathing room under the meta row: the
+              deck-unlock container, then any achievements in the same
+              accent-themed dress. */}
           {!viewOnly && unlocked !== null && (
             <div className={columnFamily ? styles.unlockRow : styles.unlock} role="status">
               {columnFamily ? (
@@ -399,161 +472,76 @@ export function DesktopResultDialog({
               )}
             </div>
           )}
-          {!viewOnly && !columnFamily && (
-            <div
-              className={`${styles.xpModule} ${
-                unlocked !== null ? styles.xpModuleSlim : ''
-              }`}
-            >
-              <div className={styles.xpTop}>
-                <span className={styles.levelBadge}>Level {levelInfo.level}</span>
-                {earnedXp > 0 && (
-                  <button
-                    type="button"
-                    className={styles.xpGain}
-                    onClick={() => setXpOpen(true)}
-                    aria-label={`Earned ${earnedXp} XP this game — show breakdown`}
-                  >
-                    <span aria-hidden="true">✨</span> +{earnedXp} XP
-                    <span className={styles.xpHint} aria-hidden="true">
-                      ⓘ
-                    </span>
-                  </button>
-                )}
-              </div>
-              <div className={styles.xpTrack}>
-                {prePct > 0 && (
-                  <div className={styles.xpFillOld} style={{ width: `${prePct}%` }} />
-                )}
-                {gainPct > 0 && (
-                  <div
-                    className={styles.xpFillNew}
-                    style={{
-                      left: `${prePct}%`,
-                      width: xpSettled ? `${gainPct}%` : '0%',
-                    }}
-                  />
-                )}
-              </div>
-              <div className={styles.xpCaption}>
-                <span>
-                  {levelInfo.atMax
-                    ? `${levelInfo.xp.toLocaleString()} XP`
-                    : `${levelInfo.xpIntoLevel.toLocaleString()} / ${span.toLocaleString()} XP`}
-                </span>
-                <span>
-                  {levelInfo.atMax
-                    ? 'Max level'
-                    : unlocked !== null && nextUnlock
-                      ? `Next: ${nextUnlock.name} deck at Level ${nextUnlock.level}`
-                      : `${(span - levelInfo.xpIntoLevel).toLocaleString()} to Level ${
-                          levelInfo.level + 1
-                        }`}
-                </span>
-              </div>
-              {unlocked === null && nextUnlock && (
-                <div className={styles.nextUnlock}>
-                  <MiniFace
-                    id={nextUnlock.skinIds[0]}
-                    rank="J"
-                    suit="c"
-                    size={34}
-                    className={styles.nextFace}
-                  />
-                  <span className={styles.nextText}>
-                    <b>Next unlock — {nextUnlock.name} deck</b>
-                    <i>
-                      Reach Level {nextUnlock.level}
-                      {nextUnlock.skinIds.length > 1
-                        ? ` · ${nextUnlock.skinIds.length} designs`
-                        : ''}
-                    </i>
+          {/* Just-earned achievements — the level-up container's sibling:
+              same accent-tinted dress. Desk: eyebrow + serif name(s) +
+              (single achievement) inline description. Mobile: a compact
+              row matching the deck-unlock row. Names stay tappable for
+              the explainer sheet, with the hover tooltip on desk. */}
+          {newAchievements.length > 0 &&
+            (columnFamily ? (
+              newAchievements.map(a => (
+                <button
+                  key={a.id}
+                  type="button"
+                  className={`${styles.unlockRow} ${styles.achRow}`}
+                  onClick={() => setAchInfo(a)}
+                >
+                  <span className={styles.achRowIcon} aria-hidden="true">
+                    🏆
                   </span>
-                  <span className={styles.lockGlyph} aria-hidden="true">
-                    🔒
+                  <span className={styles.unlockRowText}>
+                    <b>{a.name}</b>
+                    <i>Achievement unlocked</i>
                   </span>
-                </div>
-              )}
-            </div>
-          )}
-          {!viewOnly && columnFamily && earnedXp > 0 && (
-            <div className={styles.rewards}>
-              <button
-                type="button"
-                className={styles.xpEarned}
-                onClick={() => setXpOpen(true)}
-                aria-label={`Earned ${earnedXp} XP this game — show breakdown`}
-              >
-                <span aria-hidden="true">✨</span> +{earnedXp} XP
-                <span className={styles.xpHint} aria-hidden="true">
-                  ⓘ
-                </span>
-              </button>
-            </div>
-          )}
-          {/* Daily, mobile only: the player's standing for this date,
-              reusing the leaderboard bar (rank / of-total + the retryable
-              "submitting…" queue state) — the column game has no
-              leaderboard rail, so the result popup carries it. Free /
-              challenge / Targets-Up show no rank row (no per-date
-              leaderboard), and desk / desk-lite already show the rail.
-              RankPanel owns its own hooks, so gating its render here keeps
-              this component's hook order stable. */}
-          {mode.kind === 'daily' && columnFamily && isBackendConfigured() && (
-            <div className={styles.rankRow}>
-              <RankPanel dateISO={mode.dateISO} placementOnly />
-            </div>
-          )}
-          {/* Just-earned achievements — mobile's 🏆 callout at dialog
-              weight: a warm callout box, each name tappable for its
-              explainer. */}
-          {newAchievements.length > 0 && (
-            <div className={styles.achievements} role="status">
-              <span className={styles.achievementsLabel}>
-                <span aria-hidden="true">🏆</span>{' '}
-                {newAchievements.length > 1
-                  ? 'Achievements unlocked'
-                  : 'Achievement unlocked'}
-              </span>
-              <span className={styles.achievementsList}>
-                {newAchievements.map(a => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    className={styles.achievementBtn}
-                    onClick={() => setAchInfo(a)}
-                  >
-                    {a.name}
-                    {/* Hover/focus explainer — the dark tooltip
-                        pattern; click still opens the full sheet. */}
-                    <span className={styles.achTip} role="tooltip">
-                      {a.description}
-                    </span>
-                  </button>
-                ))}
-              </span>
-            </div>
-          )}
-
-          {isDaily &&
-            isBackendConfigured() &&
-            (savedHandle ? (
-              <div className={styles.posted}>
-                <span aria-hidden="true">✓</span>
-                Posted as {savedHandle}
-              </div>
+                </button>
+              ))
             ) : (
-              <div className={styles.claim}>
-                <span className={styles.claimTitle}>
-                  Claim your spot on the leaderboard
+              <div className={styles.achBox} role="status">
+                <span className={styles.unlockEyebrow}>
+                  <span aria-hidden="true">🏆</span>{' '}
+                  {newAchievements.length > 1
+                    ? 'Achievements unlocked'
+                    : 'Achievement unlocked'}
                 </span>
-                <span className={styles.claimSub}>
-                  Pick a handle to post this score and track your daily
-                  streak.
+                <span className={styles.achNames}>
+                  {newAchievements.map(a => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      className={styles.achievementBtn}
+                      onClick={() => setAchInfo(a)}
+                    >
+                      {a.name}
+                      {/* Hover/focus explainer — the dark tooltip
+                          pattern; click still opens the full sheet. */}
+                      <span className={styles.achTip} role="tooltip">
+                        {a.description}
+                      </span>
+                    </button>
+                  ))}
                 </span>
-                <HandleEditor heading={null} />
+                {newAchievements.length === 1 && (
+                  <span className={styles.achDesc}>
+                    {newAchievements[0].description}
+                  </span>
+                )}
               </div>
             ))}
+
+          {/* First-time handle claim (once saved, "Posted as …" lives in
+              the meta row instead). */}
+          {isDaily && isBackendConfigured() && !savedHandle && (
+            <div className={styles.claim}>
+              <span className={styles.claimTitle}>
+                Claim your spot on the leaderboard
+              </span>
+              <span className={styles.claimSub}>
+                Pick a handle to post this score and track your daily
+                streak.
+              </span>
+              <HandleEditor heading={null} />
+            </div>
+          )}
           <div className={styles.footer}>
             {isDaily ? (
               <Link to="/daily/archive" className={styles.primaryBtn}>
