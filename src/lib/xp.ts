@@ -145,6 +145,29 @@ export const xpBuckets = (
 };
 
 /**
+ * The XP a single recorded daily play contributed: its show-up + beat
+ * value in the daily bucket, plus the tier kicker on a win — exactly the
+ * per-play terms of xpBuckets' dailies loop. One-time buckets
+ * (achievements, first clears, level milestones) can't be attributed to a
+ * historical run and are omitted. Used to label archive re-views, where
+ * the live before/after bucket diff no longer exists.
+ */
+export const dailyPlayXpBuckets = (
+  play: DailyXpPlay
+): Partial<Record<XpBucket, number>> => {
+  const out: Partial<Record<XpBucket, number>> = {
+    daily: DAILY_PLAY_XP + (play.won ? DAILY_BEAT_XP : 0),
+  };
+  if (play.won) {
+    const target = dailyTargetFor(play.difficulty, play.twist);
+    const t =
+      TIER_WIN_BONUS[tierForRun({ score: play.score, target, won: true })];
+    if (t > 0) out.tier = t;
+  }
+  return out;
+};
+
+/**
  * Total lifetime XP implied by the player's record. Pure — same inputs
  * always give the same number, and it counts each earning source exactly
  * once because each maps to a distinct persisted counter.

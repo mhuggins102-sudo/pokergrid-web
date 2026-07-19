@@ -132,6 +132,36 @@
   background: var(--hairline);
 }
 
+/* Double Duty flip identity on a SKINNED face: the skin draws the active
+   half as a normal card, so the flip half rides a compact rotated pill —
+   solid card-face background so it reads over arbitrary skin art. */
+.skinFlipChip {
+  position: absolute;
+  right: 5cqw;
+  bottom: 5cqh;
+  display: flex;
+  align-items: baseline;
+  gap: 2cqw;
+  line-height: 1;
+  font-family: var(--font-body);
+  padding: 3cqh 3.5cqw;
+  background: var(--card-face);
+  border: 1px solid var(--rule);
+  border-radius: 2.5cqmin;
+  transform: rotate(180deg);
+  box-shadow: var(--shadow-sm);
+}
+
+.flipChipRank {
+  font-weight: 700;
+  font-size: 16cqh;
+  letter-spacing: -0.02em;
+}
+
+.flipChipPip {
+  font-size: 13cqh;
+}
+
 /* Supercharge badge — wild or double. A solid chip, never a glow. */
 .charge {
   position: absolute;

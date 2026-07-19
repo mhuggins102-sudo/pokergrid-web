@@ -433,13 +433,9 @@
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   --card-rank-size: 46cqh;
 
-  /* The dark table is the one theme where the home cards' diagonal
-     gradient reads well — opt back into it (all others stay flat). */
-  --home-surface: linear-gradient(
-    135deg,
-    var(--paper-sunken),
-    var(--paper-raised)
-  );
+  /* (Card Room Dark used to opt back into the home cards' diagonal
+     sunken→raised gradient; it now stays flat like every other theme —
+     the default --home-surface applies.) */
 
   /* Card Room body font (Space Grotesk); display stays Fraunces. */
   --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
