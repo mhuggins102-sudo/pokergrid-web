@@ -5,6 +5,7 @@ import {
   XP_BUCKET_LABEL,
   XP_BUCKET_ORDER,
   XpBucket,
+  dailyPlayXpBuckets,
   levelInfoFor,
   xpBuckets,
   xpForStats,
@@ -62,10 +63,19 @@ const preBucketsByState = new WeakMap<object, Record<XpBucket, number>>();
  * line and its tap breakdown. Derived as the diff between a pre-result
  * bucket snapshot (captured on this result view's first render, before
  * useRecordResult's effect writes the run) and the live, post-write
- * buckets. `viewOnly` (archive replay) earns nothing → null.
+ * buckets.
+ *
+ * `viewOnly` (archive replay): the live diff no longer exists, but a
+ * recorded DAILY play's own XP is reconstructable from its record (the
+ * show-up + beat value and the tier kicker — see dailyPlayXpBuckets), so
+ * when the caller passes the run's `{ score, won }` a daily re-view still
+ * reports what that play earned. Anything else view-only → null.
  */
-export function useXpEarned(viewOnly: boolean = false): XpEarned | null {
-  const { state } = useGameSession();
+export function useXpEarned(
+  viewOnly: boolean = false,
+  run?: { score: number; won: boolean }
+): XpEarned | null {
+  const { state, mode } = useGameSession();
   const stats = useStatsStore(s => s.stats);
   const plays = usePlaysStore(s => s.plays);
 
@@ -85,7 +95,19 @@ export function useXpEarned(viewOnly: boolean = false): XpEarned | null {
     return preBucketsByState.get(state)!;
   }, [state]);
 
-  if (viewOnly) return null;
+  if (viewOnly) {
+    if (!run || mode.kind !== 'daily') return null;
+    const buckets = dailyPlayXpBuckets({
+      score: run.score,
+      won: run.won,
+      difficulty: mode.recipe.difficulty,
+      twist: mode.recipe.twist,
+    });
+    const items = XP_BUCKET_ORDER.filter(b => (buckets[b] ?? 0) > 0).map(
+      bucket => ({ bucket, label: XP_BUCKET_LABEL[bucket], xp: buckets[bucket]! })
+    );
+    return { total: items.reduce((sum, i) => sum + i.xp, 0), items };
+  }
 
   const after = xpBuckets(stats, toDailyXpPlays(plays));
   const items = XP_BUCKET_ORDER.map(bucket => ({

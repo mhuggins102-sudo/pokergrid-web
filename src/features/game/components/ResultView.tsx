@@ -80,8 +80,10 @@ export function ResultView({ onReplay }: ResultViewProps) {
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
   // Non-null only when THIS run crossed a new XP level (see useLevelUp).
   const levelUp = useLevelUp(viewOnly);
-  // XP this run earned, split by source (null in the archive view).
-  const xpEarned = useXpEarned(viewOnly);
+  // XP this run earned, split by source. In the archive view (viewOnly)
+  // the hook reconstructs the recorded daily play's own XP from its
+  // score/won record instead of the live before/after diff.
+  const xpEarned = useXpEarned(viewOnly, { score: report.total, won });
   const [xpOpen, setXpOpen] = useState(false);
 
   // Game-end tally, three beats told by the rail chips:

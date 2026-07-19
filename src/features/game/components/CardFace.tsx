@@ -126,9 +126,36 @@ export function CardFace({ card }: { card: Card }) {
   }
   if (card.dual) {
     // Double Duty two-way face (draw well only — placed/discarded cards
-    // are stripped to their active half). Active identity top-left,
-    // the flip identity bottom-right printed upside-down, so a 180°
-    // rotation of the card reads correctly.
+    // are stripped to their active half). With a deck skin active, the
+    // skin draws the ACTIVE identity as a normal card and the flip
+    // identity rides a compact rotated pill on top — a solid card-face
+    // chip so it stays legible over arbitrary skin art.
+    if (activeSkin) {
+      const face = skinFace(
+        activeSkin,
+        card.rank,
+        SUIT_KEY[card.suit],
+        !twoColorDeck,
+        mobile
+      );
+      return (
+        <SkinnedFace face={face} skin={activeSkin}>
+          <span
+            className={styles.skinFlipChip}
+            style={{ color: suitColor(card.dual.suit, twoColorDeck) }}
+            aria-hidden="true"
+          >
+            <span className={styles.flipChipRank}>{card.dual.rank}</span>
+            <span className={styles.flipChipPip}>
+              {SUIT_GLYPH[card.dual.suit]}
+            </span>
+          </span>
+        </SkinnedFace>
+      );
+    }
+    // Theme default: active identity top-left, the flip identity
+    // bottom-right printed upside-down, so a 180° rotation of the card
+    // reads correctly.
     return (
       <div className={styles.card}>
         <span

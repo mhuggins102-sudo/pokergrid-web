@@ -126,8 +126,10 @@ export function DesktopResultDialog({
 
   const { won, tier, newAchievements } = useRecordResult(report, shapley);
   const levelUp = useLevelUp(viewOnly);
-  // XP this run earned, split by source (null in the archive view).
-  const xpEarned = useXpEarned(viewOnly);
+  // XP this run earned, split by source. In the archive view (viewOnly)
+  // the hook reconstructs the recorded daily play's own XP from its
+  // score/won record instead of the live before/after diff.
+  const xpEarned = useXpEarned(viewOnly, { score: report.total, won });
   const [xpOpen, setXpOpen] = useState(false);
   // Targets-Up ladder lifecycle — the hook shared with mobile's
   // ResultView; its module-level guard keeps the advance/clear commit
@@ -309,8 +311,10 @@ export function DesktopResultDialog({
           {/* Meta row, straight under the header: this game's XP (with
               the mini progress bar to the next level) on the left, the
               daily standing + posted-as handle right-aligned opposite.
-              Archive re-views (viewOnly) earn nothing and skip it. */}
-          {!viewOnly && (
+              Archive re-views (viewOnly) still show the recorded daily
+              play's own XP and its standing — but not the live level
+              bar, which tracks TODAY'S progress, not that run's. */}
+          {(!viewOnly || isDaily) && (
             <div className={styles.metaRow}>
               <div className={styles.metaXp}>
                 {earnedXp > 0 && (
@@ -326,32 +330,36 @@ export function DesktopResultDialog({
                     </span>
                   </button>
                 )}
-                <div className={styles.miniTrack}>
-                  {prePct > 0 && (
-                    <div
-                      className={styles.xpFillOld}
-                      style={{ width: `${prePct}%` }}
-                    />
-                  )}
-                  {gainPct > 0 && (
-                    <div
-                      className={styles.xpFillNew}
-                      style={{
-                        left: `${prePct}%`,
-                        width: xpSettled ? `${gainPct}%` : '0%',
-                      }}
-                    />
-                  )}
-                </div>
-                <span className={styles.miniCap}>
-                  {levelInfo.atMax
-                    ? `Level ${levelInfo.level} · Max level`
-                    : levelUp !== null
-                      ? `Level ${levelInfo.level} · ${levelInfo.xpIntoLevel.toLocaleString()} / ${span.toLocaleString()} XP`
-                      : `Level ${levelInfo.level} · ${(
-                          span - levelInfo.xpIntoLevel
-                        ).toLocaleString()} to Level ${levelInfo.level + 1}`}
-                </span>
+                {!viewOnly && (
+                  <>
+                    <div className={styles.miniTrack}>
+                      {prePct > 0 && (
+                        <div
+                          className={styles.xpFillOld}
+                          style={{ width: `${prePct}%` }}
+                        />
+                      )}
+                      {gainPct > 0 && (
+                        <div
+                          className={styles.xpFillNew}
+                          style={{
+                            left: `${prePct}%`,
+                            width: xpSettled ? `${gainPct}%` : '0%',
+                          }}
+                        />
+                      )}
+                    </div>
+                    <span className={styles.miniCap}>
+                      {levelInfo.atMax
+                        ? `Level ${levelInfo.level} · Max level`
+                        : levelUp !== null
+                          ? `Level ${levelInfo.level} · ${levelInfo.xpIntoLevel.toLocaleString()} / ${span.toLocaleString()} XP`
+                          : `Level ${levelInfo.level} · ${(
+                              span - levelInfo.xpIntoLevel
+                            ).toLocaleString()} to Level ${levelInfo.level + 1}`}
+                    </span>
+                  </>
+                )}
               </div>
               {mode.kind === 'daily' && isBackendConfigured() && (
                 <div className={styles.metaRight}>
