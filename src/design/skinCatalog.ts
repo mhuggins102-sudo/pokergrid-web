@@ -154,10 +154,10 @@ const LEVEL_BY_SKIN: Record<string, number> = Object.fromEntries(
 export const skinUnlockLevel = (skinId: string): number =>
   LEVEL_BY_SKIN[skinId] ?? 1;
 
-// TEMPORARY — playtest override: treat every store entry as unlocked so
-// all card designs can be equipped regardless of player level. Flip back
-// to false (and nothing else) to restore the real level gating.
-export const UNLOCK_ALL_FOR_TESTING = true;
+// Playtest override: treat every store entry as unlocked so all card
+// designs can be equipped regardless of player level. OFF for release —
+// flip to true (and nothing else) when a full-catalog review is needed.
+export const UNLOCK_ALL_FOR_TESTING = false;
 
 /** Is a skin unlocked at the player's current level? */
 export const skinUnlocked = (skinId: string, playerLevel: number): boolean =>

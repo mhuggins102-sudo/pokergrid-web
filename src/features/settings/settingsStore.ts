@@ -51,14 +51,15 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  // New players start on the original editorial look, dark.
-  themeFamily: 'paper',
-  appearance: 'dark',
+  // New players start on the Card Room look, following the OS appearance.
+  themeFamily: 'card-room',
+  appearance: 'system',
   sounds: true,
-  dockLayout: 'hand-stack',
-  // Rails start off — the plain board reads cleaner for new players;
-  // line totals stay reachable via the Lines sheet and tap-spotlight.
-  lineRails: false,
+  // 'desktop' = the Split arrangement on phones; the desk/desk-lite forks
+  // render it as their compact (Classic) dock — one default, both tiers.
+  dockLayout: 'desktop',
+  // Live line totals ride the board edge from the first game.
+  lineRails: true,
   // Desktop chips default ON — the mockup's default. Migration-safe:
   // persist merges stored keys over these defaults, so profiles saved
   // before this key existed simply pick up `true`.
