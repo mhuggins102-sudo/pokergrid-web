@@ -828,7 +828,12 @@ export function DesktopBonusPanel({
             )}
           </span>
         </button>
-        {usable && (
+        {/* Inline Use is a DESK affordance: the dock column's fixed-height
+            slots can't stack a button under the title (a green special's
+            entry clipped to its middle band — "one-time" + half a button).
+            There the tap-opened DetailSheet carries "Use card", same as
+            the phone chip strip. */}
+        {usable && !dockColumn && (
           <Button
             variant="primary"
             size="sm"
