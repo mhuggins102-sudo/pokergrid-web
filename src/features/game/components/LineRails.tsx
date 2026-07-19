@@ -72,6 +72,9 @@ const POTENTIAL_TONE: Record<ChipTone, string> = {
   made: styles.toneMade,
   potential: styles.tonePotential,
   wip: styles.toneWip,
+  // Game over, line still open: the penalty landed — the result screen's
+  // negative tone, not a dashed potential.
+  dead: styles.neg,
   none: styles.toneNone,
 };
 

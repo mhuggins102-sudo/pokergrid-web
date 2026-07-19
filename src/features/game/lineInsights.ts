@@ -76,6 +76,7 @@ export type ChipTone =
   | 'made'
   | 'potential'
   | 'wip'
+  | 'dead' // game over with the line still open — the -25 penalty landed
   | 'none';
 
 export interface LinePotential {
@@ -100,6 +101,19 @@ export const linePotential = (
   handBoost?: Partial<Record<HandRank, number>>
 ): LinePotential => {
   const filled = line.cards.filter(c => c !== null).length;
+  // Game over with the line still open: the incomplete penalty has landed
+  // in the report (live play scores open lines as 0), so there is no
+  // potential left — the chip shows the -25 it actually cost.
+  if (!line.hand && line.incomplete && line.total < 0) {
+    return {
+      tone: 'dead',
+      label: String(line.total),
+      name: filled > 0 ? 'Incomplete' : 'Empty',
+      mult: 1,
+      filled,
+      value: 0,
+    };
+  }
   if (filled === 0) {
     return { tone: 'none', label: '–', name: '', mult: 1, filled, value: 0 };
   }
