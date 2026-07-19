@@ -1063,6 +1063,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               )
             : null
         }
+        handBoost={state.handBoost}
         onClose={() => setDetailLine(null)}
       />
       <DeckPreviewDialog open={peekOpen} onClose={() => setPeekOpen(false)} />
