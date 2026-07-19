@@ -33,7 +33,9 @@ export function LinesPanel({ report, title = 'Lines', bare = false }: LinesPanel
             </span>
           ) : (
             <span className={`${styles.hand} ${styles.empty}`}>
-              {line.incomplete ? 'Open' : '—'}
+              {/* An open line reads "Open" during play; once the game ends
+                  its penalty lands (negative total) — it's Incomplete. */}
+              {line.incomplete ? (line.total < 0 ? 'Incomplete' : 'Open') : '—'}
             </span>
           )}
           <span className={styles.pts}>{line.total}</span>

@@ -141,10 +141,15 @@ export interface ScoringPanelProps {
 }
 
 // Status column per the mockup: Empty, In Progress (partial names live
-// on the edge chips, not here), High Card, or the made hand name.
+// on the edge chips, not here), High Card, or the made hand name. Once
+// the game ends an open line's penalty lands (negative total) — it is
+// no longer "In Progress", it's Incomplete.
 const lineStatus = (line: ScoredLine): { text: string; muted: boolean } => {
   const filled = line.cards.filter(c => c !== null).length;
   if (filled === 0) return { text: 'Empty', muted: true };
+  if (!line.hand && line.incomplete && line.total < 0) {
+    return { text: 'Incomplete', muted: true };
+  }
   if (line.hand) {
     return { text: HAND_LABEL[line.hand], muted: line.total <= 0 };
   }

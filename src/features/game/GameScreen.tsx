@@ -1042,7 +1042,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const overlays = (
     <>
       <Sheet open={linesOpen} onClose={() => setLinesOpen(false)} title="Lines">
-        <LinesPanel report={liveReport} />
+        {/* activeReport: at game end open lines show Incomplete / -25. */}
+        <LinesPanel report={activeReport} />
       </Sheet>
       <LineDetailSheet
         line={detailLine}
