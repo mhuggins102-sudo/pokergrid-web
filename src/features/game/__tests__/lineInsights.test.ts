@@ -96,6 +96,7 @@ describe('linePotential', () => {
       name: '',
       mult: 1,
       filled: 0,
+      value: 0,
     });
   });
 
@@ -112,6 +113,7 @@ describe('linePotential', () => {
       label: '+8',
       name: 'Pair',
       mult: 1.5,
+      value: 8,
     });
   });
 

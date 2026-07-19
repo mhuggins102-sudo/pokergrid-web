@@ -88,6 +88,9 @@ export interface LinePotential {
   /** Effective gold multiplier when shown (>1), else 1. */
   mult: number;
   filled: number;
+  /** The label's number: the made total, or what the forming hand would
+   *  pay if the line completed as-is. 0 when nothing would score. */
+  value: number;
 }
 
 export const linePotential = (
@@ -98,7 +101,7 @@ export const linePotential = (
 ): LinePotential => {
   const filled = line.cards.filter(c => c !== null).length;
   if (filled === 0) {
-    return { tone: 'none', label: '–', name: '', mult: 1, filled };
+    return { tone: 'none', label: '–', name: '', mult: 1, filled, value: 0 };
   }
   if (line.hand && line.hand !== 'HIGH_CARD') {
     const gold = line.multiplier > 1;
@@ -108,10 +111,11 @@ export const linePotential = (
       name: HAND_LABEL[line.hand],
       mult: gold ? line.multiplier : 1,
       filled,
+      value: line.total > 0 ? line.total : 0,
     };
   }
   if (line.hand === 'HIGH_CARD') {
-    return { tone: 'none', label: '–', name: 'High Card', mult: 1, filled };
+    return { tone: 'none', label: '–', name: 'High Card', mult: 1, filled, value: 0 };
   }
   // Incomplete: what the current partial hand would pay if the line
   // finished as-is, including every line multiplier the partial hand
@@ -128,9 +132,10 @@ export const linePotential = (
       name: HAND_LABEL[partial],
       mult: m > 1 ? m : 1,
       filled,
+      value: potential > 0 ? potential : 0,
     };
   }
-  return { tone: 'wip', label: '–', name: 'In Progress', mult: 1, filled };
+  return { tone: 'wip', label: '–', name: 'In Progress', mult: 1, filled, value: 0 };
 };
 
 // ------------------------------------------------------------- //

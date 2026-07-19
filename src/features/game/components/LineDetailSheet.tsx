@@ -8,6 +8,7 @@ import {
   hasScoringBonusCards,
   investedBase,
 } from '../lineBonuses';
+import { LinePotential } from '../lineInsights';
 import { CardFace } from './CardFace';
 import styles from './LineDetailSheet.module.css';
 
@@ -23,6 +24,14 @@ export interface LineDetailSheetProps {
    * unaccounted for.
    */
   gridBonusesApplied?: boolean;
+  /**
+   * LIVE game only: the line's rail potential (lineInsights). An
+   * in-progress line then titles itself with the FORMING hand ("Pair*")
+   * and its total shows what the rail shows — the hand's value if the
+   * line completes as-is — instead of a flat 0. Result surfaces omit
+   * this and keep the final "In Progress" / penalty reading.
+   */
+  potential?: LinePotential | null;
   onClose: () => void;
 }
 
@@ -36,9 +45,18 @@ export function LineDetailSheet({
   bonusCards,
   allLines,
   gridBonusesApplied = false,
+  potential = null,
   onClose,
 }: LineDetailSheetProps) {
   const applied = line ? appliedLineBonuses(line, bonusCards, allLines) : [];
+  // A live in-progress line with a FORMING hand: title and total read the
+  // rail's anticipated values (asterisked — they only pay if it completes).
+  const forming =
+    line?.incomplete &&
+    potential &&
+    (potential.tone === 'potential' || potential.tone === 'goldPotential')
+      ? potential
+      : null;
 
   return (
     <Sheet
@@ -49,11 +67,13 @@ export function LineDetailSheet({
           ? `${lineLabel(line.kind, line.index)} — ${
               line.hand
                 ? HAND_LABEL[line.hand]
-                : line.incomplete
-                  ? line.cards.some(c => c !== null)
-                    ? 'In Progress'
-                    : 'Empty'
-                  : 'No hand'
+                : forming
+                  ? `${forming.name}*`
+                  : line.incomplete
+                    ? line.cards.some(c => c !== null)
+                      ? 'In Progress'
+                      : 'Empty'
+                    : 'No hand'
             }`
           : ''
       }
@@ -122,8 +142,8 @@ export function LineDetailSheet({
               </div>
             )}
             <div className={`${styles.row} ${styles.total}`}>
-              <span>Line total</span>
-              <span>{line.total}</span>
+              <span>{forming ? 'Line total (* if completed)' : 'Line total'}</span>
+              <span>{forming ? forming.value : line.total}</span>
             </div>
             {gridBonusesApplied && (
               <p className={styles.gridNote}>
