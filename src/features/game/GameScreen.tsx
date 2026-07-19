@@ -1047,18 +1047,20 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       <LineDetailSheet
         line={detailLine}
         bonusCards={state.bonusCards}
-        allLines={liveReport.lines}
+        allLines={activeReport.lines}
         gridBonusesApplied={
-          liveReport.gridMultiplier !== 1 || liveReport.gridFlat !== 0
+          activeReport.gridMultiplier !== 1 || activeReport.gridFlat !== 0
         }
         // Live board: an in-progress line's sheet mirrors its rail chip —
         // the forming hand (asterisked) and what it would pay if completed.
+        // At game end linePotential reads 'dead' and the sheet shows the
+        // landed -25 instead.
         potential={
           detailLine
             ? linePotential(
                 detailLine,
                 state.bonusCards,
-                liveReport.lines,
+                activeReport.lines,
                 state.handBoost
               )
             : null
@@ -1502,7 +1504,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <MaybeRails
                 enabled={lineRails}
                 grid={state.grid}
-                report={liveReport}
+                // activeReport: once the game ends the chips show the FINAL
+                // math — open lines flip from dashed potential to their -25.
+                report={activeReport}
                 onLineTap={setDetailLine}
                 highlight={railHighlight}
                 // Streamlined puts the row chips on the RIGHT of the board

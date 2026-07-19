@@ -458,6 +458,14 @@
   color: var(--ink-3);
 }
 
+/* Game over with the line still open — the -25 penalty landed. Solid
+   (nothing is forming anymore), danger-toned. */
+.pillDead {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 /* The dark hand-name tooltip below the chip. */
 .chipName {
   position: absolute;

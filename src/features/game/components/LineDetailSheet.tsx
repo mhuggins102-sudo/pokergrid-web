@@ -66,6 +66,12 @@ export function LineDetailSheet({
     (potential.tone === 'potential' || potential.tone === 'goldPotential')
       ? potential
       : null;
+  // Game over with the line still open: the -25 penalty is IN line.total
+  // (live play scores open lines as 0), so this needs no extra prop and
+  // holds on every surface — the sheet reads "Incomplete" with the
+  // penalty as its red total, no separate warning.
+  const dead =
+    line !== null && !line.hand && line.incomplete && line.total < 0;
   const formingHand = forming ? evaluatePartialLine(line!.cards) : null;
   const formingBase = formingHand
     ? effectiveHandBase(formingHand, handBoost)
@@ -92,7 +98,9 @@ export function LineDetailSheet({
                   ? forming.name
                   : line.incomplete
                     ? line.cards.some(c => c !== null)
-                      ? 'In Progress'
+                      ? dead
+                        ? 'Incomplete'
+                        : 'In Progress'
                       : 'Empty'
                     : 'No hand'
             }`
@@ -180,20 +188,21 @@ export function LineDetailSheet({
                 <span>No scoring hand in this line</span>
               </div>
             )}
-            <div className={`${styles.row} ${styles.total}`}>
+            <div
+              className={`${styles.row} ${styles.total} ${
+                dead ? styles.penalty : ''
+              }`}
+            >
               <span>{forming ? 'Line total (* if completed)' : 'Line total'}</span>
               <span>{forming ? forming.value : line.total}</span>
             </div>
-            {/* The unfinished stakes ride BELOW the total: what this line
-                costs if it is still open when the game ends. */}
-            {!line.hand && line.incomplete && (
+            {/* LIVE only — the unfinished stakes below the total: what this
+                line costs if it's still open at game end. Once the game IS
+                over (dead), the penalty is simply the red total above. */}
+            {!line.hand && line.incomplete && !dead && (
               <div className={`${styles.row} ${styles.penalty}`}>
                 <span className={styles.rowLabel}>Unfinished at game end</span>
-                <span>
-                  {line.total !== 0 && !forming
-                    ? line.total
-                    : INCOMPLETE_LINE_PENALTY}
-                </span>
+                <span>{INCOMPLETE_LINE_PENALTY}</span>
               </div>
             )}
             {gridBonusesApplied && (

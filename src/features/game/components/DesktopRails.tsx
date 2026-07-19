@@ -340,6 +340,8 @@ export function EdgeRails({
         return styles.pillPotential;
       case 'wip':
         return styles.pillWip;
+      case 'dead':
+        return styles.pillDead;
       default:
         return styles.pillEmpty;
     }
