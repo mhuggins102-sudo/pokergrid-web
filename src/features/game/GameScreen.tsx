@@ -46,6 +46,7 @@ import { lineLabel } from './handLabels';
 import {
   cardFiresOnLine,
   endgameRows as computeEndgameRows,
+  linePotential,
   purpleProgress,
 } from './lineInsights';
 import { GridBoard, useJokerArrivals } from './components/GridBoard';
@@ -1049,6 +1050,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         allLines={liveReport.lines}
         gridBonusesApplied={
           liveReport.gridMultiplier !== 1 || liveReport.gridFlat !== 0
+        }
+        // Live board: an in-progress line's sheet mirrors its rail chip —
+        // the forming hand (asterisked) and what it would pay if completed.
+        potential={
+          detailLine
+            ? linePotential(
+                detailLine,
+                state.bonusCards,
+                liveReport.lines,
+                state.handBoost
+              )
+            : null
         }
         onClose={() => setDetailLine(null)}
       />
