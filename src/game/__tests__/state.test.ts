@@ -209,10 +209,13 @@ describe('GameState — ♣ Cards bonus draw', () => {
     expect(after.bonusCards).toEqual(held);
   });
 
-  test('declining returns both drawn to the bottom of the deck', () => {
+  test('declining returns both drawn to the bottom of the deck (medium)', () => {
+    // Difficulty medium: below-cap declining is allowed on Medium+ only —
+    // on Easy a taken card can always be swapped later, so there's no
+    // decline (covered below).
     const club = { kind: 'standard' as const, rank: 'K' as const, suit: 'C' as const };
     const filler = { kind: 'standard' as const, rank: '3' as const, suit: 'H' as const };
-    const state = baseState({ deck: [filler], drawn: club });
+    const state = baseState({ deck: [filler], drawn: club, difficulty: 'medium' });
     const begun = step(state, { type: 'BEGIN_SUIT_ACTION' });
     if (begun.phase.kind !== 'bonus-card-resolving') return;
     const [a, b] = begun.phase.drawn;
@@ -224,6 +227,16 @@ describe('GameState — ♣ Cards bonus draw', () => {
     // a declined ♣ draw doesn't move the Burnout / Frugal perk count.
     expect(after.perkSpent).not.toContainEqual(club);
     expect(after.discards).toContainEqual(club);
+  });
+
+  test('on EASY, a below-cap draw cannot be declined (taking is free)', () => {
+    const club = { kind: 'standard' as const, rank: 'K' as const, suit: 'C' as const };
+    const filler = { kind: 'standard' as const, rank: '3' as const, suit: 'H' as const };
+    const state = baseState({ deck: [filler], drawn: club });
+    const begun = step(state, { type: 'BEGIN_SUIT_ACTION' });
+    if (begun.phase.kind !== 'bonus-card-resolving') return;
+    const after = step(begun, { type: 'BONUS_DECLINE' });
+    expect(after.phase.kind).toBe('bonus-card-resolving');
   });
 
   test('at the limit (3 held), SELECT_NEW then REPLACE swaps one out and trashes it conceptually', () => {
@@ -478,18 +491,41 @@ describe('GameState — Short Circuit challenge', () => {
     expect(cancelled.phase.kind).toBe('awaiting-target-hop');
   });
 
-  test('randomPerks: a revealed ♣ draw cannot be declined below the cap', () => {
-    // Empty grid → only ♣ is available; the draw is revealed.
+  test('randomPerks on EASY: a revealed ♣ draw cannot be declined below the cap', () => {
+    // Below-cap declining is a difficulty rule (see handleBonusDecline):
+    // on Easy a taken card can always be swapped out later, so there's
+    // no decline. Cancel is separately locked by Short Circuit.
     const heart = { kind: 'standard' as const, rank: '5' as const, suit: 'H' as const };
     const filler = { kind: 'standard' as const, rank: '3' as const, suit: 'C' as const };
     const state = baseState({ deck: [filler], drawn: heart, randomPerks: true });
     const revealed = step(state, { type: 'BEGIN_SUIT_ACTION' }, rngAlwaysZero);
     expect(revealed.phase.kind).toBe('bonus-card-resolving');
-    // Neither decline nor cancel escapes — the pick must be kept.
     const declined = step(revealed, { type: 'BONUS_DECLINE' }, rngAlwaysZero);
     expect(declined.phase.kind).toBe('bonus-card-resolving');
     const cancelled = step(revealed, { type: 'CANCEL_ACTION' }, rngAlwaysZero);
     expect(cancelled.phase.kind).toBe('bonus-card-resolving');
+  });
+
+  test('randomPerks on HARD: a below-cap ♣ draw CAN be waved off', () => {
+    // Medium+ taking is binding (forced swap at the cap on Medium, no
+    // swaps on Hard/Extreme), so the player may decline and wait for a
+    // better offer — Short Circuit's random ♣ included.
+    const heart = { kind: 'standard' as const, rank: '5' as const, suit: 'H' as const };
+    const filler = { kind: 'standard' as const, rank: '3' as const, suit: 'C' as const };
+    const state = baseState({
+      deck: [filler],
+      drawn: heart,
+      randomPerks: true,
+      difficulty: 'hard',
+    });
+    const revealed = step(state, { type: 'BEGIN_SUIT_ACTION' }, rngAlwaysZero);
+    expect(revealed.phase.kind).toBe('bonus-card-resolving');
+    const declined = step(revealed, { type: 'BONUS_DECLINE' }, rngAlwaysZero);
+    expect(declined.phase.kind).toBe('awaiting-action');
+    expect(declined.bonusCards).toEqual([]);
+    // Declined = nothing taken: the spent card retires to discards.
+    expect(declined.perkSpent).not.toContainEqual(heart);
+    expect(declined.discards).toContainEqual(heart);
   });
 
   test('randomPerks: the easy-mode cap decline still works', () => {
