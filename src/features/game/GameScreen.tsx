@@ -963,6 +963,28 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     );
   };
 
+  // Icon-only Discard glyph — shared by the Split dock's icon column and
+  // Double Duty's center-stage Discard/Undo row.
+  const trashIcon = (
+    <svg
+      viewBox="0 0 24 24"
+      width="17"
+      height="17"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  );
+
   const actionBtn = (a: (typeof ui.actions)[number], cls?: string) => (
     <Button
       key={a.id}
@@ -1624,7 +1646,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               </div>
             ) : dockLayout === 'classic' ? (
               // Classic: slim card + meta row with the secondary actions,
-              // full-width commit beneath.
+              // full-width commit beneath. Double Duty's Flip rides the
+              // commit row (right of Place) instead of the meta row —
+              // Place stays the featured, widest button.
               <>
                 <div className={styles.dockRow}>
                   <NextCardWell
@@ -1633,14 +1657,30 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     flight={flight}
                   />
                   {banner}
-                  {rowActions.map(a =>
-                    actionBtn(a, a.id === 'perk' ? styles.perkAmber : undefined)
-                  )}
+                  {rowActions
+                    .filter(a => a.id !== 'flip')
+                    .map(a =>
+                      actionBtn(
+                        a,
+                        a.id === 'perk' ? styles.perkAmber : undefined
+                      )
+                    )}
                   {dockUndoBtn()}
                 </div>
-                {commitBtn(
-                  commitAction?.id === 'cancel' ? 'secondary' : undefined
-                )}
+                {(() => {
+                  const flipAction = ui.actions.find(a => a.id === 'flip');
+                  const commit = commitBtn(
+                    commitAction?.id === 'cancel' ? 'secondary' : undefined
+                  );
+                  return flipAction ? (
+                    <div className={styles.commitRow}>
+                      {commit}
+                      {actionBtn(flipAction, styles.commitRowSide)}
+                    </div>
+                  ) : (
+                    commit
+                  );
+                })()}
               </>
             ) : dockLayout === 'center-stage' ? (
               // Center stage: the card front and center, with two stacked
@@ -1655,23 +1695,64 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 {banner}
                 <div className={styles.stageRow}>
                   <div className={styles.stageSide}>
-                    {discardAction &&
-                      actionBtn(discardAction, styles.stageBtn)}
-                    {/* Undo hides while a suit action is targeting or the ♣
-                        bonus modal is up — matching the other buttons. */}
-                    {maxUndos > 0 && !ui.banner && !ui.bonusDialog && (
-                      <Button
-                        variant="secondary"
-                        className={styles.stageBtn}
-                        disabled={!canUndo || flight !== null}
-                        onClick={() => dispatch({ type: 'UNDO' })}
-                        aria-label={`Undo (${Math.max(
-                          0,
-                          maxUndos - state.undoCount
-                        )} left)`}
-                      >
-                        Undo
-                      </Button>
+                    {dtExtraActions.length > 0 ? (
+                      // Double Duty: Flip takes Discard's slot beside the
+                      // deck, and Discard drops onto a compact icon row
+                      // with Undo (trash + ↺ glyphs, side by side).
+                      <>
+                        {dtExtraActions.map(a => actionBtn(a, styles.stageBtn))}
+                        <div className={styles.stageIconRow}>
+                          <Button
+                            variant="secondary"
+                            className={styles.stageIconBtn}
+                            disabled={
+                              !discardAction ||
+                              discardAction.disabled ||
+                              flight !== null
+                            }
+                            onClick={discardAction?.onPress}
+                            aria-label="Discard"
+                          >
+                            {trashIcon}
+                          </Button>
+                          {maxUndos > 0 && (
+                            <Button
+                              variant="secondary"
+                              className={styles.stageIconBtn}
+                              disabled={!canUndo || flight !== null}
+                              onClick={() => dispatch({ type: 'UNDO' })}
+                              aria-label={`Undo (${Math.max(
+                                0,
+                                maxUndos - state.undoCount
+                              )} left)`}
+                            >
+                              ↺
+                            </Button>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {discardAction &&
+                          actionBtn(discardAction, styles.stageBtn)}
+                        {/* Undo hides while a suit action is targeting or
+                            the ♣ bonus modal is up — matching the other
+                            buttons. */}
+                        {maxUndos > 0 && !ui.banner && !ui.bonusDialog && (
+                          <Button
+                            variant="secondary"
+                            className={styles.stageBtn}
+                            disabled={!canUndo || flight !== null}
+                            onClick={() => dispatch({ type: 'UNDO' })}
+                            aria-label={`Undo (${Math.max(
+                              0,
+                              maxUndos - state.undoCount
+                            )} left)`}
+                          >
+                            Undo
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className={styles.stageWell}>
@@ -1695,9 +1776,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         perkAction,
                         `${styles.stageBtn} ${styles.perkAmber}`
                       )}
-                    {/* Double Duty's Flip / any extra stacks after the
-                        perk — Place → suit perk → Flip. */}
-                    {dtExtraActions.map(a => actionBtn(a, styles.stageBtn))}
                   </div>
                 </div>
               </div>
@@ -1727,7 +1805,17 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           {rowActions.map(a =>
                             actionBtn(
                               a,
-                              a.id === 'perk' ? styles.perkAmber : undefined
+                              a.id === 'perk'
+                                ? // Double Duty: the perk label swaps with
+                                  // every Flip (♥ Swap ↔ ♦ Destroy…), so a
+                                  // fixed width (sized to the widest,
+                                  // ♦ Destroy) keeps the row from jumping.
+                                  `${styles.perkAmber}${
+                                    state.doubleDuty
+                                      ? ' ' + styles.ddPerkFixed
+                                      : ''
+                                  }`
+                                : undefined
                             )
                           )}
                           {undoNode}
@@ -1845,13 +1933,24 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           )}
                         </>
                       ) : (
-                        <>
+                        // Main column: Place, the suit action, then any
+                        // extra (Double Duty's Flip) — all at the same
+                        // dtGridBtn size. The icon column (Discard / Undo)
+                        // rides beside it, vertically centered against
+                        // however many main buttons are showing.
                         <div className={styles.dtGrid}>
-                          {/* Row 1: Place (the active commit) + Discard.
-                              actionBtn with dtGridBtn (not commitBtn's
-                              taller .commitButton) so both rows are slim. */}
-                          {commitAction &&
-                            actionBtn(commitAction, styles.dtGridBtn)}
+                          <div className={styles.dtGridMain}>
+                            {commitAction &&
+                              actionBtn(commitAction, styles.dtGridBtn)}
+                            {perkAction &&
+                              actionBtn(
+                                perkAction,
+                                `${styles.dtGridBtn} ${styles.dtPerkBtn}`
+                              )}
+                            {dtExtraActions.map(a =>
+                              actionBtn(a, styles.dtGridBtn)
+                            )}
+                          </div>
                           {/* Discard + Undo hide while the ♣ bonus modal is
                               up — the draw choice owns the turn, so they'd
                               only sit behind the scrim doing nothing — and
@@ -1860,67 +1959,35 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                               no Cancel action, so the cancel-branch above
                               never catches them). */}
                           {!ui.bonusDialog && !ui.banner && (
-                            <Button
-                              variant="secondary"
-                              className={styles.dtIconBtn}
-                              disabled={
-                                !discardAction ||
-                                discardAction.disabled ||
-                                flight !== null
-                              }
-                              onClick={discardAction?.onPress}
-                              aria-label="Discard"
-                            >
-                              <svg
-                                viewBox="0 0 24 24"
-                                width="17"
-                                height="17"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                aria-hidden="true"
+                            <div className={styles.dtGridIcons}>
+                              <Button
+                                variant="secondary"
+                                className={styles.dtIconBtn}
+                                disabled={
+                                  !discardAction ||
+                                  discardAction.disabled ||
+                                  flight !== null
+                                }
+                                onClick={discardAction?.onPress}
+                                aria-label="Discard"
                               >
-                                <path d="M3 6h18" />
-                                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
-                                <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
-                                <line x1="10" y1="11" x2="10" y2="17" />
-                                <line x1="14" y1="11" x2="14" y2="17" />
-                              </svg>
-                            </Button>
-                          )}
-                          {/* Row 2: the suit action + Undo (icon-only). */}
-                          {perkAction ? (
-                            actionBtn(
-                              perkAction,
-                              `${styles.dtGridBtn} ${styles.dtPerkBtn}`
-                            )
-                          ) : (
-                            <span aria-hidden="true" />
-                          )}
-                          {!ui.bonusDialog && !ui.banner && (
-                          <Button
-                            variant="secondary"
-                            className={styles.dtIconBtn}
-                            disabled={!canUndo || flight !== null}
-                            onClick={() => dispatch({ type: 'UNDO' })}
-                            aria-label={`Undo (${Math.max(
-                              0,
-                              maxUndos - state.undoCount
-                            )} left)`}
-                          >
-                            ↺
-                          </Button>
+                                {trashIcon}
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                className={styles.dtIconBtn}
+                                disabled={!canUndo || flight !== null}
+                                onClick={() => dispatch({ type: 'UNDO' })}
+                                aria-label={`Undo (${Math.max(
+                                  0,
+                                  maxUndos - state.undoCount
+                                )} left)`}
+                              >
+                                ↺
+                              </Button>
+                            </div>
                           )}
                         </div>
-                        {/* Non-standard actions (Double Duty's Flip)
-                            stack full-width BELOW the grid — Place and
-                            the suit perk always lead the dock. */}
-                        {dtExtraActions.map(a =>
-                          actionBtn(a, styles.dtStackBtn)
-                        )}
-                        </>
                       )}
                     </div>
                   </div>

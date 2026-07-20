@@ -223,6 +223,23 @@
   min-height: 44px;
 }
 
+/* Classic dock, Double Duty: the commit row splits — Place keeps the
+   featured width, Flip rides its right at natural size. */
+.commitRow {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.commitRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.commitRow .commitRowSide {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
 /* Hand-stack dock: hero card left, importance-stacked actions right.
    Centered cross-axis: the card+meta column runs ~11px shorter than
    the pinned action stack — centering splits that shortfall so the
@@ -314,6 +331,36 @@
   width: 100%;
   max-width: 130px;
   min-height: 44px;
+}
+
+/* Center-stage, Double Duty: Flip takes Discard's slot, and Discard +
+   Undo compress onto one icon row (trash / ↺) beneath it. */
+.stageIconRow {
+  width: 100%;
+  max-width: 130px;
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.stageIconBtn {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding-left: 0;
+  padding-right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hand-stack, Double Duty: every Flip swaps the perk label (♥ Swap ↔
+   ♦ Destroy…), so the button holds a fixed width — sized to the widest
+   label, ♦ Destroy — and the row stops jumping. */
+.actionRow .ddPerkFixed {
+  flex: 0 0 96px;
+  padding-left: var(--space-xs);
+  padding-right: var(--space-xs);
+  white-space: nowrap;
 }
 
 .stageWell [class*='cardSlot'] {
@@ -1077,14 +1124,29 @@
   text-align: center;
 }
 
-/* The 'desktop' dock's own 2×2 action grid: wide action buttons (Place,
-   suit action) fill the left column; icon-only Discard / Undo squares ride
-   the right. Rows: [Place | 🗑] then [suit | ↺]. */
+/* The 'desktop' dock's action block: wide action buttons (Place, suit
+   action, Double Duty's Flip) stack in the main column; icon-only
+   Discard / Undo squares ride a side column, vertically centered
+   against however many main buttons are showing. */
 .dtGrid {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
   gap: var(--space-xs);
   align-items: stretch;
+}
+
+.dtGridMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.dtGridIcons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  justify-content: center;
 }
 
 .dtGridBtn {
