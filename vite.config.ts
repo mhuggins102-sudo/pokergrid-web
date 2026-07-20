@@ -21,10 +21,18 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // 'prompt': a fresh deploy parks the new service worker in
-      // "waiting" and the UpdatePrompt banner offers a reload — never
-      // forced, so a player mid-game can't lose state to a refresh.
-      registerType: 'prompt',
+      // 'autoUpdate': a fresh deploy's worker installs and activates
+      // immediately — no waiting-worker purgatory where surfaces can
+      // disagree about which build is live. The RELOAD stays ours to
+      // schedule: the library hands it to AutoUpdater (onNeedReload),
+      // which holds it while a game is mounted and applies it the
+      // moment the player is idle or navigates.
+      registerType: 'autoUpdate',
+      // Registration happens through the virtual module in AutoUpdater,
+      // so no injected register script is needed — and 'auto' would
+      // force clientsClaim back on (the plugin overrides the workbox
+      // flags below for autoUpdate + auto-injection).
+      injectRegister: false,
       includeAssets: ['apple-touch-icon.png'],
       manifest: {
         name: 'PokerGrid',
@@ -46,6 +54,15 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // A new worker activates as soon as it installs (autoUpdate);
+        // clientsClaim stays OFF so a freshly-registered worker never
+        // seizes a page mid-boot — Safari can fail the page's in-flight
+        // module fetches when a worker takes over during load, which is
+        // one way the "just updated" card used to resurface right after
+        // a recovery reload. An update still re-controls previously
+        // controlled pages via skipWaiting alone.
+        skipWaiting: true,
+        clientsClaim: false,
         // Leaderboard traffic must never be served from cache — the
         // queue-first sync layer owns retry semantics.
         runtimeCaching: [
