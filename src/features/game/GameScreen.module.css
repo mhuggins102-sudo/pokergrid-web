@@ -1148,28 +1148,22 @@
   justify-content: center;
 }
 
-/* Double Duty's Split-dock side column: Flip at natural label width on
-   Place's row, with the trash Discard stretching to match beneath. */
-.dtSideBtn {
-  min-height: 36px;
-  white-space: nowrap;
-  padding-left: var(--space-sm);
-  padding-right: var(--space-sm);
-}
-
-.dtSideIcon {
-  width: 100%;
-}
-
-/* Double Duty's Split-dock ↺ — a slim square under the "Deck · N"
+/* Double Duty's Split-dock Flip — a slim button under the "Deck · N"
    caption beside the deck card. */
-.dtWellUndo {
+.dtWellBtn {
   align-self: flex-start;
-  min-width: 44px;
   min-height: 30px;
-  padding: 2px 0 0;
+  padding: 2px 12px;
   margin-top: 4px;
+  white-space: nowrap;
   border-radius: var(--radius-button);
+}
+
+/* Classic dock, Double Duty: Flip grows into the meta row's slack (the
+   icon Discard freed it), capped so the row keeps its rhythm. */
+.dockRow .classicFlip {
+  flex: 1 1 auto;
+  max-width: 140px;
 }
 
 .dtGridBtn {
