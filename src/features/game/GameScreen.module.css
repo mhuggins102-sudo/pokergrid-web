@@ -224,7 +224,7 @@
 }
 
 /* Classic dock, Double Duty: the commit row splits — Place keeps the
-   featured width, Flip rides its right at natural size. */
+   featured width, the ↺ rides its right as an icon square. */
 .commitRow {
   display: flex;
   gap: var(--space-xs);
@@ -235,8 +235,7 @@
   min-width: 0;
 }
 
-.commitRow .commitRowSide {
-  flex: 0 0 auto;
+.commitRow .dockUndo {
   min-height: 44px;
 }
 
@@ -1147,6 +1146,30 @@
   flex-direction: column;
   gap: var(--space-xs);
   justify-content: center;
+}
+
+/* Double Duty's Split-dock side column: Flip at natural label width on
+   Place's row, with the trash Discard stretching to match beneath. */
+.dtSideBtn {
+  min-height: 36px;
+  white-space: nowrap;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+}
+
+.dtSideIcon {
+  width: 100%;
+}
+
+/* Double Duty's Split-dock ↺ — a slim square under the "Deck · N"
+   caption beside the deck card. */
+.dtWellUndo {
+  align-self: flex-start;
+  min-width: 44px;
+  min-height: 30px;
+  padding: 2px 0 0;
+  margin-top: 4px;
+  border-radius: var(--radius-button);
 }
 
 .dtGridBtn {
