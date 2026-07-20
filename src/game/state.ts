@@ -1740,20 +1740,18 @@ const handleBonusDecline = (s: GameState, rng: () => number): GameState => {
   ) {
     return s;
   }
-  // At the cap, declining is normally not allowed — the player must take
-  // one of the drawn cards and swap one out. Easy difficulty flips this
-  // via bonusDeclineAllowed so the player can keep their existing hand.
-  if (
-    s.bonusCards.length >= BONUS_HAND_LIMIT &&
-    !s.bonusDeclineAllowed
-  ) {
-    return s;
-  }
-  // Short Circuit: a random perk is committed once revealed — a ♣ pick
-  // must be kept, not waved off. The one exception is the easy-mode
-  // cap decline above: at the cap with bonusDeclineAllowed, keeping
-  // the existing hand stays legal.
-  if (s.randomPerks && s.bonusCards.length < BONUS_HAND_LIMIT) {
+  // Below the cap, declining is a DIFFICULTY rule (Short Circuit's
+  // random ♣ included): on Easy a taken card can always be swapped out
+  // later, so taking is free and there's nothing to decline; Medium+
+  // taking is binding (forced swap at the cap on Medium, no swaps at
+  // all on Hard/Extreme), so the player may wave the draw off and wait
+  // for a better offer.
+  if (s.bonusCards.length < BONUS_HAND_LIMIT) {
+    if (s.difficulty === 'easy') return s;
+  } else if (!s.bonusDeclineAllowed) {
+    // At the cap, declining is normally not allowed — the player must
+    // take one of the drawn cards and swap one out. Easy flips this via
+    // bonusDeclineAllowed so the player can keep their existing hand.
     return s;
   }
   // Declined: no card taken, so the club retires to discards, not

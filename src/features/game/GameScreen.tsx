@@ -1815,8 +1815,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                             actionBtn(commitAction, styles.dtGridBtn)}
                           {/* Discard + Undo hide while the ♣ bonus modal is
                               up — the draw choice owns the turn, so they'd
-                              only sit behind the scrim doing nothing. */}
-                          {!ui.bonusDialog && (
+                              only sit behind the scrim doing nothing — and
+                              while a suit action is targeting (ui.banner;
+                              Short Circuit's locked perks reach here with
+                              no Cancel action, so the cancel-branch above
+                              never catches them). */}
+                          {!ui.bonusDialog && !ui.banner && (
                             <Button
                               variant="secondary"
                               className={styles.dtIconBtn}
@@ -1856,7 +1860,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           ) : (
                             <span aria-hidden="true" />
                           )}
-                          {!ui.bonusDialog && (
+                          {!ui.bonusDialog && !ui.banner && (
                           <Button
                             variant="secondary"
                             className={styles.dtIconBtn}

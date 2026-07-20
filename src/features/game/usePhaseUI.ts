@@ -381,15 +381,16 @@ export function usePhaseUI(): PhaseUI {
             mode: 'resolving',
             drawn: phase.drawn,
             atCap,
-            // Short Circuit: a random ♣ is committed — no declining the
-            // draw, EXCEPT the easy-mode cap decline (keep the existing
-            // hand instead of a forced swap). Mirrors the reducer's
-            // handleBonusDecline gates.
+            // Mirrors the reducer's handleBonusDecline gates. Below the
+            // cap declining is a difficulty rule: Easy never needs it (a
+            // taken card can always be swapped out later), Medium+ may
+            // wave the draw off since taking is binding there. At the cap
+            // only Easy's bonusDeclineAllowed keeps the existing hand.
             canDecline:
               phase.targetSlot === undefined &&
-              (state.randomPerks
-                ? atCap && state.bonusDeclineAllowed
-                : !atCap || state.bonusDeclineAllowed),
+              (atCap
+                ? state.bonusDeclineAllowed
+                : state.difficulty !== 'easy'),
           },
         };
       }
