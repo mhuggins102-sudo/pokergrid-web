@@ -7,7 +7,7 @@ import { GameScreen } from '../game/GameScreen';
 const isChallengeId = (v: string | undefined): v is ChallengeId =>
   CHALLENGES.some(c => c.id === v);
 
-/** /challenges/:id — run one challenge (Hard ruleset, no undos). */
+/** /challenges/:id — run one challenge (Hard ruleset, one undo). */
 export function ChallengePlayPage() {
   const { id } = useParams<'id'>();
   const [params] = useSearchParams();

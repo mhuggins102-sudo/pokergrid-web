@@ -25,14 +25,23 @@ export const JOKERS_BY_DIFFICULTY: Record<Difficulty, number> = {
   extreme: 0,
 };
 
-// Free Play undo cap per difficulty. Targets-Up and Challenges set their
-// own caps via setupForMode (src/features/game/modes.ts); this only
-// applies to Free Play runs.
+// Undo cap per difficulty — the ONE table for every mode: Free Play,
+// the Daily, Targets-Up, and Challenges (which run on the Hard ruleset)
+// all read it via setupForMode (src/features/game/modes.ts). Only the
+// tutorial pins 0, since a rewind would desync its coach script.
 export const UNDOS_BY_DIFFICULTY: Record<Difficulty, number> = {
-  easy: 1,
+  easy: 2,
   medium: 1,
-  hard: 0,
+  hard: 1,
   extreme: 0,
+};
+
+// The undo clause for difficulty blurbs ("two undos" / "one undo" /
+// "no undo") — shared by the Free Play cards and the Daily splash so
+// the copy always matches the table above.
+export const undoClauseFor = (d: Difficulty): string => {
+  const undos = UNDOS_BY_DIFFICULTY[d];
+  return undos === 0 ? 'no undo' : undos === 1 ? 'one undo' : `${undos} undos`;
 };
 
 // How many bonus cards the player starts the run holding. Easy / Medium
@@ -107,8 +116,8 @@ export const BONUS_SWAP_CLAUSE: Record<BonusSwapAtCap, string> = {
 // canonical order shared by the Daily splash, the Free Play blurbs + card
 // table, and the in-game popup:
 //   jokers → starter bonus → bonus swap → deck peek → discards → (undo)
-// The undo clause is appended by the caller — the daily grants one undo to
-// every difficulty, while Free Play uses UNDOS_BY_DIFFICULTY.
+// The undo clause is appended by the caller — undoClauseFor(d) gives the
+// standard wording off UNDOS_BY_DIFFICULTY, shared by every mode.
 export const difficultyClauses = (d: Difficulty): string[] => {
   const j = JOKERS_BY_DIFFICULTY[d];
   return [

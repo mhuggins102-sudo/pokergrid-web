@@ -37,9 +37,10 @@ export interface ModeSetup {
 /**
  * Translate a play mode into the newGame() configuration. Mirrors the
  * original App.tsx context helpers: challenges run on the Hard ruleset
- * with their own score target and no undos; Targets-Up derives
- * difficulty and target from the level and feeds the saved carry-over
- * cards back into the deal.
+ * with their own score target; Targets-Up derives difficulty and target
+ * from the level and feeds the saved carry-over cards back into the
+ * deal. Undos come from UNDOS_BY_DIFFICULTY in every mode (tutorial
+ * excepted).
  */
 export const setupForMode = (mode: GameMode): ModeSetup => {
   switch (mode.kind) {
@@ -70,7 +71,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
       return {
         difficulty,
         target: challenge.scoreTarget,
-        maxUndos: 0,
+        maxUndos: UNDOS_BY_DIFFICULTY[difficulty],
         challenge,
         start: rng =>
           newGame(difficulty, rng, {
@@ -118,15 +119,15 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
     case 'daily': {
       // A twisted daily is structurally identical to the same-named
       // challenge — same flag plumbing — but seeded so every player
-      // worldwide gets the same deal. One free undo regardless of
-      // difficulty (locked decision); using it doesn't taint the score.
+      // worldwide gets the same deal. Undos follow the difficulty table
+      // like every other mode; using one doesn't taint the score.
       const twist = mode.recipe.twist ?? null;
       const difficulty = mode.recipe.difficulty;
       const target = dailyTargetFor(difficulty, mode.recipe.twist);
       return {
         difficulty,
         target,
-        maxUndos: 1,
+        maxUndos: UNDOS_BY_DIFFICULTY[difficulty],
         challenge: twist ? findChallenge(twist) : null,
         start: rng =>
           newGame(difficulty, rng, {

@@ -13,6 +13,7 @@ import {
   UNDOS_BY_DIFFICULTY,
 } from '../rules';
 import { newGame } from '../state';
+import { setupForMode } from '../../features/game/modes';
 
 const allDifficulties: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
 
@@ -39,14 +40,52 @@ describe('per-difficulty rules tables', () => {
     expect(CAN_PREVIEW_DECK_BY_DIFFICULTY.extreme).toBe(false);
   });
 
+  it('undo caps follow the spec — 2 / 1 / 1 / 0 across all modes', () => {
+    // This table now drives EVERY mode (Free Play, Daily, Targets-Up,
+    // Challenges via the Hard ruleset) — see setupForMode.
+    expect(UNDOS_BY_DIFFICULTY).toEqual({
+      easy: 2,
+      medium: 1,
+      hard: 1,
+      extreme: 0,
+    });
+  });
+
   it('Easy has the spec values', () => {
     expect(TARGET_BY_DIFFICULTY.easy).toBe(400);
     expect(JOKERS_BY_DIFFICULTY.easy).toBe(2);
-    expect(UNDOS_BY_DIFFICULTY.easy).toBe(1);
+    expect(UNDOS_BY_DIFFICULTY.easy).toBe(2);
     expect(STARTER_BONUS_BY_DIFFICULTY.easy).toBe(1);
     expect(BONUS_DECLINE_AT_CAP_BY_DIFFICULTY.easy).toBe(true);
     expect(NO_DISCARDS_BY_DIFFICULTY.easy).toBe(false);
     expect(CAN_PREVIEW_DECK_BY_DIFFICULTY.easy).toBe(true);
+  });
+});
+
+describe('setupForMode undo caps', () => {
+  it('every mode reads UNDOS_BY_DIFFICULTY (tutorial excepted)', () => {
+    expect(setupForMode({ kind: 'free', difficulty: 'easy' }).maxUndos).toBe(2);
+    expect(setupForMode({ kind: 'free', difficulty: 'medium' }).maxUndos).toBe(1);
+    expect(setupForMode({ kind: 'free', difficulty: 'extreme' }).maxUndos).toBe(0);
+    // Challenges run the Hard ruleset → one undo.
+    expect(setupForMode({ kind: 'challenge', id: 'double-duty' }).maxUndos).toBe(1);
+    // Dailies follow their recipe difficulty like everything else.
+    expect(
+      setupForMode({
+        kind: 'daily',
+        dateISO: '2026-07-20',
+        recipe: { difficulty: 'easy' },
+      }).maxUndos
+    ).toBe(2);
+    expect(
+      setupForMode({
+        kind: 'daily',
+        dateISO: '2026-07-20',
+        recipe: { difficulty: 'extreme' },
+      }).maxUndos
+    ).toBe(0);
+    // Tutorial pins 0 — a rewind would desync the coach script.
+    expect(setupForMode({ kind: 'tutorial' }).maxUndos).toBe(0);
   });
 });
 
