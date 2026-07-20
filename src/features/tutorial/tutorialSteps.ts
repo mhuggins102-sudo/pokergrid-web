@@ -249,8 +249,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     kind: 'info',
     title: 'One step back',
     body:
-      'Easy, Medium, and daily puzzles include an undo that rolls back your whole ' +
-      'last move. Hard, Extreme, and Challenges play for keeps.',
+      'Undo rolls back your whole last move — two per game on Easy, one on ' +
+      'Medium and Hard (Challenges and dailies included). Extreme plays for keeps.',
   },
   {
     id: 'free',

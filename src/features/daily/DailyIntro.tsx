@@ -2,7 +2,11 @@ import { Link } from 'react-router';
 import type { Challenge } from '../../game/challenges';
 import type { DailyRecipe } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
-import { Difficulty, difficultySentence } from '../../game/rules';
+import {
+  Difficulty,
+  difficultySentence,
+  undoClauseFor,
+} from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
 import { DAILY_LAUNCH_ISO, dayMs, toUTC } from './dailyDates';
@@ -28,11 +32,10 @@ export interface DailyIntroProps {
   onPlay: () => void;
 }
 
-// Every daily grants one free undo regardless of difficulty (modes.ts),
-// so the undo clause is "one undo" for all four here — unlike Free Play,
-// where Hard / Extreme run with no undo.
+// The daily's undos follow the shared difficulty table (modes.ts), so
+// the clause comes from the same helper as the Free Play cards.
 const diffDescription = (d: Difficulty): string =>
-  difficultySentence(d, 'one undo');
+  difficultySentence(d, undoClauseFor(d));
 
 // "Thursday, July 9, 2026" — from ISO parts (timezone-safe).
 const longDate = (iso: string): string => {

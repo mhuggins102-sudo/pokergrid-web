@@ -11,6 +11,7 @@ import {
   TARGET_BY_DIFFICULTY,
   UNDOS_BY_DIFFICULTY,
   difficultySentence,
+  undoClauseFor,
 } from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
@@ -38,15 +39,10 @@ const NAME: Record<Difficulty, string> = {
   extreme: 'Extreme',
 };
 
-// One-paragraph card blurb — the shared difficulty sentence, with the undo
-// clause reflecting Free Play's real rule (Hard / Extreme run with no undo,
-// unlike the daily's one-undo-for-all).
-const blurb = (d: Difficulty): string => {
-  const undos = UNDOS_BY_DIFFICULTY[d];
-  const undoClause =
-    undos === 0 ? 'no undo' : undos === 1 ? 'one undo' : `${undos} undos`;
-  return difficultySentence(d, undoClause);
-};
+// One-paragraph card blurb — the shared difficulty sentence with the
+// standard undo clause (the same table drives every mode).
+const blurb = (d: Difficulty): string =>
+  difficultySentence(d, undoClauseFor(d));
 
 interface Axis {
   label: string;

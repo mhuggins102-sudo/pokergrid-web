@@ -17,7 +17,7 @@ export interface GameSession {
   dispatch: (action: Action) => void;
   mode: GameMode;
   setup: ModeSetup;
-  /** Per-mode undo cap (challenges 0, otherwise per difficulty). */
+  /** Per-mode undo cap (per difficulty everywhere; tutorial 0). */
   maxUndos: number;
   /** True when UNDO is currently allowed (snapshots exist + under cap). */
   canUndo: boolean;
