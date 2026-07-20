@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Card, Rank, Suit, isJoker, rankIndex } from '../../../game/cards';
 import { canPreviewDeck } from '../../../game/state';
@@ -71,6 +71,9 @@ export interface NextCardWellProps {
    * deck preview.
    */
   peek?: 'dialog' | 'hover';
+  /** Extra node under the deck caption (Double Duty's Split-dock Undo
+   *  lives here, keeping the action grid at two stable rows). */
+  metaExtra?: ReactNode;
   /**
    * Auto-place staging (useAutoPlaceFlights): while set, this card
    * poses here INSTEAD of the drawn card; on release the grid cell
@@ -91,6 +94,7 @@ export function NextCardWell({
   stacked = false,
   meta = 'left',
   peek = 'dialog',
+  metaExtra,
   flight = null,
 }: NextCardWellProps) {
   const { state } = useGameSession();
@@ -194,6 +198,7 @@ export function NextCardWell({
             Peek
           </button>
         )}
+        {metaExtra}
       </div>
       {hoverPeek && (
         <div className={styles.peekPop} role="tooltip">
