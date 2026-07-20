@@ -41,6 +41,7 @@ import { usePhaseUI } from './usePhaseUI';
 import { useGameSfx } from './useGameSfx';
 import { useSettingsStore } from '../settings/settingsStore';
 import { useStatsStore } from '../progress/statsStore';
+import { isPlaceholder } from '../../game/bonusCards';
 import { bonusCardLiveContext } from './bonusCardLiveContext';
 import { lineLabel } from './handLabels';
 import {
@@ -73,6 +74,7 @@ import {
 import { InvestWheel } from './components/InvestWheel';
 import {
   DeskHandValuesPanel,
+  DockHandBoostsPanel,
   HandValuesDialog,
 } from './components/HandValuesDialog';
 import { ReviveSheet } from './components/ReviveSheet';
@@ -948,6 +950,19 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     toast('Cards land on the pulsing slot — tap it (or press Place).');
   };
 
+  // Mixed Bag under no-swap rules (Hard / Extreme / No Swap): a live
+  // card locks its slot — ♣ draws only fill OPEN slots, so the slot
+  // pick falls through to the card's detail sheet (mirrors the
+  // engine's slotDrawable gate in state.ts).
+  const slotLocked = (slot: number): boolean => {
+    const occupant = state.bonusCards[slot];
+    return (
+      state.bonusSwapAtCap === 'off' &&
+      occupant !== undefined &&
+      !isPlaceholder(occupant)
+    );
+  };
+
   const actionBtn = (a: (typeof ui.actions)[number], cls?: string) => (
     <Button
       key={a.id}
@@ -958,7 +973,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       disabled={a.disabled || flight !== null}
       onClick={a.onPress}
       className={
-        [a.id === coachHighlight ? styles.coachPulse : null, cls]
+        [
+          a.id === coachHighlight ? styles.coachPulse : null,
+          // Double Duty's Flip gets a colored identity (the theme's
+          // joker purple) so the two-way action reads at a glance.
+          a.id === 'flip' ? styles.flipBtn : null,
+          cls,
+        ]
           .filter(Boolean)
           .join(' ') || undefined
       }
@@ -1385,6 +1406,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
                       : undefined
                   }
+                  slotLocked={slotLocked}
                   onUse={
                     ui.canActivateSpecials
                       ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
@@ -1545,6 +1567,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
                     : undefined
                 }
+                slotLocked={slotLocked}
                 onUse={
                   ui.canActivateSpecials
                     ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
@@ -1737,6 +1760,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
                         : undefined
                     }
+                    slotLocked={slotLocked}
                     onUse={
                       ui.canActivateSpecials
                         ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })
@@ -1745,7 +1769,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     liveContext={card => bonusCardLiveContext(card, state)}
                   />
                 ) : state.investHands ? (
-                  <DeskHandValuesPanel handBoost={state.handBoost} />
+                  // Bull Market on the phone Split dock: only the hands ♣
+                  // invests have RAISED — the desk's full 11-row table
+                  // starves the board at this width.
+                  <DockHandBoostsPanel handBoost={state.handBoost} />
                 ) : null}
               </div>
               <div className={styles.dtDock}>
@@ -1893,6 +1920,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
                     : undefined
                 }
+                slotLocked={slotLocked}
                 onUse={
                   ui.canActivateSpecials
                     ? idx => dispatch({ type: 'ACTIVATE_SPECIAL_CARD', idx })

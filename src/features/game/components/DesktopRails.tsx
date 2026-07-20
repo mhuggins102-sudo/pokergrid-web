@@ -716,6 +716,10 @@ export interface DesktopBonusPanelProps {
   values?: (number | undefined)[];
   /** Mixed Bag slot pick: tapping an entry reports its slot index. */
   onSlotTap?: (slot: number) => void;
+  /** Mixed Bag under no-swap rules: a live card locks its slot, so the
+   *  slot pick falls through to the detail sheet for it (mirrors the
+   *  engine's slotDrawable gate). */
+  slotLocked?: (slot: number) => boolean;
   /** awaiting-action + Three Tricks: activate the special at index. */
   onUse?: (index: number) => void;
   liveContext?: (card: BonusCard) => string[];
@@ -736,6 +740,7 @@ export function DesktopBonusPanel({
   cards,
   values,
   onSlotTap,
+  slotLocked,
   onUse,
   liveContext,
   hover,
@@ -786,9 +791,11 @@ export function DesktopBonusPanel({
           type="button"
           className={styles.bonusMain}
           onClick={() =>
-            // Slot pick never targets a spent one-time slot — the
-            // used card blocks that position for the whole game.
-            onSlotTap && !isSpentSlot(card)
+            // Slot pick never targets a spent one-time slot (the used
+            // card blocks that position for the whole game) or a locked
+            // one (no-swap rules holding a live card) — both fall
+            // through to the detail sheet.
+            onSlotTap && !isSpentSlot(card) && !slotLocked?.(i)
               ? onSlotTap(i)
               : setDetail({ card, index: i })
           }

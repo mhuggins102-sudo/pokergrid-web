@@ -193,15 +193,19 @@ export function LineDetailSheet({
                 dead ? styles.penalty : ''
               }`}
             >
-              <span>{forming ? 'Line total (* if completed)' : 'Line total'}</span>
+              <span>Line total</span>
               <span>{forming ? forming.value : line.total}</span>
             </div>
             {/* LIVE only — the unfinished stakes below the total: what this
-                line costs if it's still open at game end. Once the game IS
-                over (dead), the penalty is simply the red total above. */}
+                line costs if it's still open at game end (the leading *
+                pairs with the asterisked header — the total above only
+                pays if the line completes). Once the game IS over (dead),
+                the penalty is simply the red total above. */}
             {!line.hand && line.incomplete && !dead && (
               <div className={`${styles.row} ${styles.penalty}`}>
-                <span className={styles.rowLabel}>Unfinished at game end</span>
+                <span className={styles.rowLabel}>
+                  * Unfinished at game end
+                </span>
                 <span>{INCOMPLETE_LINE_PENALTY}</span>
               </div>
             )}

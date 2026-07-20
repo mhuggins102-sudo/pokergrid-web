@@ -17,12 +17,14 @@ import { GameState, newGame, step } from '../state';
 const SLOT_KINDS: SlotKind[] = ['special', 'in-game', 'end-game'];
 
 // Mixed Bag challenge — newGame seeded with slotCategories. The Hard
-// difficulty matches what App.tsx uses for challenges.
-const mixedBag = (): GameState =>
-  newGame('hard', seededRng(42), {
+// difficulty matches what App.tsx uses for challenges; medium exists
+// for twisted dailies (swap semantics differ by difficulty).
+const mixedBagAt = (difficulty: 'medium' | 'hard'): GameState =>
+  newGame(difficulty, seededRng(42), {
     targetOverride: findChallenge('mixed-bag').scoreTarget,
     slotCategories: SLOT_KINDS,
   });
+const mixedBag = (): GameState => mixedBagAt('hard');
 
 describe('Mixed Bag challenge', () => {
   it('seeds 3 placeholder slots in category order', () => {
@@ -135,7 +137,7 @@ describe('Mixed Bag challenge', () => {
     expect(isPlaceholder(s.bonusCards[2])).toBe(true);
   });
 
-  it('a subsequent draw into the same slot overwrites the real card (forced swap)', () => {
+  it('on HARD, a live card LOCKS its slot — no re-draw, open slots still work', () => {
     let s = mixedBag();
     // First ♣ → pick slot 1 → keep a card.
     s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
@@ -147,13 +149,39 @@ describe('Mixed Bag challenge', () => {
     s = step(s, { type: 'BONUS_KEEP', idx: 0 });
     expect(s.bonusCards[1]).toBe(firstKept);
 
-    // Second ♣ → pick slot 1 again → forces overwrite. Need to
-    // BEGIN_SUIT_ACTION again, but the reducer requires a drawn card
-    // to fire the perk. The default state from newGame already has a
-    // drawn card; once we resolve the first ♣ it advances to the
-    // next draw. Manually re-enter awaiting-action for the test by
-    // dispatching CANCEL... actually finishBonusFlow already calls
-    // drawNext which leaves us in awaiting-action with a fresh draw.
+    // Second ♣ → picking slot 1 again is REJECTED: no-swap rules
+    // (bonusSwapAtCap 'off') commit a live card to its slot for the
+    // run. Mixed Bag's per-slot draw is its version of the swap.
+    s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+    if (s.phase.kind !== 'awaiting-bonus-slot-choice') {
+      throw new Error('Expected awaiting-bonus-slot-choice');
+    }
+    const atChoice = s;
+    s = step(s, { type: 'BONUS_PICK_SLOT', slot: 1 });
+    expect(s).toBe(atChoice);
+    // An OPEN slot still draws normally.
+    s = step(s, { type: 'BONUS_PICK_SLOT', slot: 2 });
+    if (s.phase.kind !== 'bonus-card-resolving') {
+      throw new Error('Expected the open slot to draw');
+    }
+    expect(s.phase.targetSlot).toBe(2);
+  });
+
+  it('on MEDIUM, a subsequent draw into the same slot overwrites the real card (swap)', () => {
+    let s = mixedBagAt('medium');
+    // First ♣ → pick slot 1 → keep a card.
+    s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+    s = step(s, { type: 'BONUS_PICK_SLOT', slot: 1 });
+    if (s.phase.kind !== 'bonus-card-resolving') {
+      throw new Error('Expected to transition to bonus-card-resolving');
+    }
+    const firstKept = s.phase.drawn[0];
+    s = step(s, { type: 'BONUS_KEEP', idx: 0 });
+    expect(s.bonusCards[1]).toBe(firstKept);
+
+    // Second ♣ → pick slot 1 again → overwrites (Medium keeps Mixed
+    // Bag's swap-on-pick; finishBonusFlow's drawNext left us back in
+    // awaiting-action with a fresh draw).
     s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
     if (s.phase.kind !== 'awaiting-bonus-slot-choice') {
       throw new Error('Expected awaiting-bonus-slot-choice');
@@ -219,12 +247,20 @@ describe('Mixed Bag challenge', () => {
       expect(s.bonusCards[0].used).toBe(true);
     });
 
-    it('an UNUSED special in the green slot is still a valid target (forced swap)', () => {
-      let s = mixedBag();
-      s = seatCard(s, 0, { ...DOUBLER_CARD });
-      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
-      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 0 });
-      expect(s.phase.kind).toBe('bonus-card-resolving');
+    it('an UNUSED special locks its slot on HARD, but stays swappable on MEDIUM', () => {
+      // Hard: a live card (used or not) commits its slot — rejected.
+      let hard = mixedBag();
+      hard = seatCard(hard, 0, { ...DOUBLER_CARD });
+      hard = step(hard, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      const atChoice = hard;
+      hard = step(hard, { type: 'BONUS_PICK_SLOT', slot: 0 });
+      expect(hard).toBe(atChoice);
+      // Medium keeps the swap-on-pick.
+      let med = mixedBagAt('medium');
+      med = seatCard(med, 0, { ...DOUBLER_CARD });
+      med = step(med, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      med = step(med, { type: 'BONUS_PICK_SLOT', slot: 0 });
+      expect(med.phase.kind).toBe('bonus-card-resolving');
     });
 
     it('♣ is unavailable when the only drawable slot is spent', () => {
