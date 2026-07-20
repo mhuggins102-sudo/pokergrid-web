@@ -1673,8 +1673,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         Undo
                       </Button>
                     )}
-                    {/* Double Duty's Flip / any extra stacks under Undo. */}
-                    {dtExtraActions.map(a => actionBtn(a, styles.stageBtn))}
                   </div>
                   <div className={styles.stageWell}>
                     <NextCardWell
@@ -1697,6 +1695,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         perkAction,
                         `${styles.stageBtn} ${styles.perkAmber}`
                       )}
+                    {/* Double Duty's Flip / any extra stacks after the
+                        perk — Place → suit perk → Flip. */}
+                    {dtExtraActions.map(a => actionBtn(a, styles.stageBtn))}
                   </div>
                 </div>
               </div>
@@ -1771,8 +1772,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 ) : state.investHands ? (
                   // Bull Market on the phone Split dock: only the hands ♣
                   // invests have RAISED — the desk's full 11-row table
-                  // starves the board at this width.
-                  <DockHandBoostsPanel handBoost={state.handBoost} />
+                  // starves the board at this width. The fit wrapper pins
+                  // the panel to the dock's own height (absolute inset), so
+                  // a long boost list scrolls inside instead of growing the
+                  // dock row.
+                  <div className={styles.dtBoostsFit}>
+                    <DockHandBoostsPanel handBoost={state.handBoost} />
+                  </div>
                 ) : null}
               </div>
               <div className={styles.dtDock}>
@@ -1820,20 +1826,26 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           .dockText) so a wrap doesn't grow the dock and
                           resize the board. */}
                       {banner}
-                      {/* Non-standard actions (Double Duty's Flip, ±
-                          adjusters, a targeting Confirm) stack full-width
-                          above the 2×2 grid. */}
-                      {dtExtraActions.map(a => actionBtn(a, styles.dtStackBtn))}
                       {commitAction?.id === 'cancel' ? (
-                        // Suit-perk targeting: only the Cancel button —
-                        // Discard / Undo don't apply mid-selection. Slim
-                        // (dtGridBtn, not the taller commitButton) so even a
-                        // two-line instruction fits the pinned dock height.
-                        actionBtn(
-                          { ...commitAction, variant: 'secondary' },
-                          styles.dtGridBtn
-                        )
+                        <>
+                          {/* Targeting extras (a Confirm, ± adjusters)
+                              stack above Cancel so the affirmative action
+                              leads. */}
+                          {dtExtraActions.map(a =>
+                            actionBtn(a, styles.dtStackBtn)
+                          )}
+                          {/* Suit-perk targeting: only the Cancel button —
+                              Discard / Undo don't apply mid-selection. Slim
+                              (dtGridBtn, not the taller commitButton) so
+                              even a two-line instruction fits the pinned
+                              dock height. */}
+                          {actionBtn(
+                            { ...commitAction, variant: 'secondary' },
+                            styles.dtGridBtn
+                          )}
+                        </>
                       ) : (
+                        <>
                         <div className={styles.dtGrid}>
                           {/* Row 1: Place (the active commit) + Discard.
                               actionBtn with dtGridBtn (not commitBtn's
@@ -1902,6 +1914,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           </Button>
                           )}
                         </div>
+                        {/* Non-standard actions (Double Duty's Flip)
+                            stack full-width BELOW the grid — Place and
+                            the suit perk always lead the dock. */}
+                        {dtExtraActions.map(a =>
+                          actionBtn(a, styles.dtStackBtn)
+                        )}
+                        </>
                       )}
                     </div>
                   </div>

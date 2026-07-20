@@ -14,7 +14,11 @@ import {
 import { Suit, isJoker } from '../../game/cards';
 import { HandRank } from '../../game/hands';
 import { nextSpiralSlot } from '../../game/grid';
-import { BonusCard, cardMatchesSlot } from '../../game/bonusCards';
+import {
+  BonusCard,
+  cardMatchesSlot,
+  isPlaceholder,
+} from '../../game/bonusCards';
 import { slotDrawable } from '../../game/state';
 import { useGameSession } from './GameSessionProvider';
 
@@ -376,6 +380,19 @@ export function usePhaseUI(): PhaseUI {
         const atCap =
           phase.targetSlot === undefined &&
           state.bonusCards.length >= 3; /* BONUS_HAND_LIMIT */
+        // Mirrors the reducer's handleBonusDecline gates: what matters is
+        // whether taking would FILL AN OPEN SPOT or REPLACE a held card.
+        // Mixed Bag's categorized draws (targetSlot) answer per-slot —
+        // its hand is always 3 entries counting placeholders, so the raw
+        // length can't tell.
+        const targetOccupant =
+          phase.targetSlot !== undefined
+            ? state.bonusCards[phase.targetSlot]
+            : undefined;
+        const fillsOpenSpot =
+          phase.targetSlot !== undefined
+            ? targetOccupant === undefined || isPlaceholder(targetOccupant)
+            : !atCap;
         return {
           ...base,
           ...fromSets(EMPTY_SET),
@@ -384,16 +401,14 @@ export function usePhaseUI(): PhaseUI {
             mode: 'resolving',
             drawn: phase.drawn,
             atCap,
-            // Mirrors the reducer's handleBonusDecline gates. Below the
-            // cap declining is a difficulty rule: Easy never needs it (a
-            // taken card can always be swapped out later), Medium+ may
-            // wave the draw off since taking is binding there. At the cap
-            // only Easy's bonusDeclineAllowed keeps the existing hand.
-            canDecline:
-              phase.targetSlot === undefined &&
-              (atCap
-                ? state.bonusDeclineAllowed
-                : state.difficulty !== 'easy'),
+            // Open spot: declining is a difficulty rule — Easy never
+            // needs it (a taken card can always be swapped out later),
+            // Medium+ may wave the draw off since taking is binding
+            // there. Replacing a held card, only Easy's
+            // bonusDeclineAllowed keeps the existing hand.
+            canDecline: fillsOpenSpot
+              ? state.difficulty !== 'easy'
+              : state.bonusDeclineAllowed,
           },
         };
       }

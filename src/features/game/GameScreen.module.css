@@ -963,6 +963,20 @@
   width: 100%;
 }
 
+/* Bull Market's boosts panel: the wrapper contributes ZERO intrinsic
+   height to the grid row (the sibling dock alone sets it), and the panel
+   is pinned to the wrapper's box — however many hands the market has
+   boosted, the dock keeps its size and the list scrolls inside. */
+.dtBoostsFit {
+  position: relative;
+  min-width: 0;
+}
+
+.dtBoostsFit > * {
+  position: absolute;
+  inset: 0;
+}
+
 /* Right column raised panel — mirrors .deskDock at phone scale. The
    min-height matches the playing dock (deck well + 2×2 grid, a fixed-size
    stack) so the SHORTER finished dock — "Show result" / "Play Again" — no
