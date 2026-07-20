@@ -69,14 +69,22 @@ const bustReload = (): void => {
  */
 const dropStaleWorkerAndReload = async (): Promise<void> => {
   try {
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.unregister()));
-    }
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
-    }
+    // Capped: a hung storage API (observed as the spinner sitting
+    // forever on iOS) must not stall the recovery — after 2.5s the
+    // reload goes ahead with whatever purging completed.
+    await Promise.race([
+      (async () => {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+      })(),
+      new Promise<void>(resolve => setTimeout(resolve, 2500)),
+    ]);
   } catch {
     // best effort — fall through to the reload
   }
@@ -103,8 +111,10 @@ export function RouteError() {
   // Heal or show the manual card? Decided synchronously so the FIRST
   // paint already matches: a fresh stale-chunk failure auto-heals behind
   // a quiet "Updating…" card; a failure landing within 15s of a heal
-  // (loop guard) gets the full card with the manual Reload.
-  const [healing] = useState(() => {
+  // (loop guard) gets the full card with the manual Reload. The manual
+  // Reload re-enters the same healing state, so the button shows the
+  // spinner working instead of appearing dead.
+  const [healing, setHealing] = useState(() => {
     if (!stale) return false;
     const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
     return Date.now() - last >= 15_000;
@@ -113,16 +123,14 @@ export function RouteError() {
     if (!healing) return;
     sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
     void dropStaleWorkerAndReload();
-  }, [healing]);
-  // If the heal hangs (offline, storage denied), reveal the manual
-  // controls instead of spinning forever.
-  const [healTimedOut, setHealTimedOut] = useState(false);
-  useEffect(() => {
-    if (!healing) return;
-    const t = window.setTimeout(() => setHealTimedOut(true), 6000);
+    // The purge is capped at 2.5s (dropStaleWorkerAndReload), so the
+    // recovery navigation starts well inside this window — if the page
+    // is still here after 8s the network itself is stuck, and the
+    // manual controls come back.
+    const t = window.setTimeout(() => setHealing(false), 8000);
     return () => window.clearTimeout(t);
   }, [healing]);
-  const quiet = healing && !healTimedOut;
+  const quiet = healing;
 
   const wrap: CSSProperties = {
     minHeight: '100dvh',
@@ -194,11 +202,15 @@ export function RouteError() {
               type="button"
               style={button}
               onClick={() => {
-                // Stamp the guard so a still-broken reboot shows this
-                // card immediately instead of auto-heal flash-looping.
-                sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
-                if (stale) void dropStaleWorkerAndReload();
-                else bustReload();
+                // Stale path: re-enter the healing state — the spinner
+                // shows the retry working (the effect stamps the guard
+                // and runs the purge + reload). Other errors just
+                // cache-bust straight away.
+                if (stale) setHealing(true);
+                else {
+                  sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+                  bustReload();
+                }
               }}
             >
               Reload

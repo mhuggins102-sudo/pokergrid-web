@@ -1,0 +1,22 @@
+# Cloudflare Pages cache headers.
+#
+# Without these, Pages' defaults apply — and the default for .js gives
+# sw.js `max-age=14400` (4 HOURS). A freshly-deployed site could then
+# hand back the PREVIOUS build's service worker, whose precache
+# manifest points at chunk URLs that no longer exist; those requests
+# fall into the SPA catch-all and return index.html as "JavaScript",
+# which is exactly the "PokerGrid just updated" reload loop. HTML and
+# the worker script must always revalidate.
+#
+# Later rules override earlier ones for the same header, so the
+# hashed, content-addressed /assets/* get the immutable long cache
+# back after the catch-all.
+
+/*
+  Cache-Control: no-cache
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=86400
