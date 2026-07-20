@@ -122,7 +122,6 @@ export function DockHandBoostsPanel({
     <section
       className={`${railStyles.panel} ${railStyles.dockCol}`}
       aria-label="Hand values"
-      style={{ overflowY: 'auto' }}
     >
       <div
         style={{
@@ -151,7 +150,16 @@ export function DockHandBoostsPanel({
           ♣ raises a random hand's value — boosts land here.
         </p>
       ) : (
-        <div style={{ marginTop: 4 }}>
+        // The list (not the panel) scrolls: the header row stays put and
+        // the dock keeps its locked height however many boosts land.
+        <div
+          style={{
+            marginTop: 4,
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
           {boosted.map(hand => {
             const boost = handBoost?.[hand] ?? 0;
             return (

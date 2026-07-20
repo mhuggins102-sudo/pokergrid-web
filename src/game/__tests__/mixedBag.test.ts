@@ -19,7 +19,7 @@ const SLOT_KINDS: SlotKind[] = ['special', 'in-game', 'end-game'];
 // Mixed Bag challenge — newGame seeded with slotCategories. The Hard
 // difficulty matches what App.tsx uses for challenges; medium exists
 // for twisted dailies (swap semantics differ by difficulty).
-const mixedBagAt = (difficulty: 'medium' | 'hard'): GameState =>
+const mixedBagAt = (difficulty: 'easy' | 'medium' | 'hard'): GameState =>
   newGame(difficulty, seededRng(42), {
     targetOverride: findChallenge('mixed-bag').scoreTarget,
     slotCategories: SLOT_KINDS,
@@ -196,6 +196,78 @@ describe('Mixed Bag challenge', () => {
     expect(s.bonusCards[1]).toBe(secondKept);
     // swappedBonus flagged because we overwrote a real card.
     expect(s.swappedBonus).toBe(true);
+  });
+
+  describe('declining a categorized draw', () => {
+    // The 3 placeholder slots make bonusCards.length read "at cap" from
+    // turn 1, so the decline gate must judge by the TARGET SLOT's
+    // occupant: an open (placeholder) slot follows the below-cap
+    // difficulty rule, a held card follows bonusDeclineAllowed.
+    it('on HARD, an open-slot draw can be declined — ♣ to discards, drawn back to the deck', () => {
+      let s = mixedBag();
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 1 });
+      if (s.phase.kind !== 'bonus-card-resolving') {
+        throw new Error('Expected bonus-card-resolving');
+      }
+      const drawnCount = s.phase.drawn.length;
+      const deckBefore = s.bonusDeck.length;
+      const discardsBefore = s.discards.length;
+      const perkSpentBefore = s.perkSpent.length;
+      s = step(s, { type: 'BONUS_DECLINE' });
+      expect(s.phase.kind).toBe('awaiting-action');
+      // Hand untouched — all three slots still placeholders.
+      expect(s.bonusCards.every(c => isPlaceholder(c))).toBe(true);
+      // The drawn cards went back to the deck…
+      expect(s.bonusDeck.length).toBe(deckBefore + drawnCount);
+      // …and the ♣ retired to discards, not perkSpent (Burnout/Frugal
+      // don't count a declined draw).
+      expect(s.discards.length).toBe(discardsBefore + 1);
+      expect(s.perkSpent.length).toBe(perkSpentBefore);
+    });
+
+    it('on MEDIUM, an open-slot draw can be declined too', () => {
+      let s = mixedBagAt('medium');
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 2 });
+      expect(s.phase.kind).toBe('bonus-card-resolving');
+      s = step(s, { type: 'BONUS_DECLINE' });
+      expect(s.phase.kind).toBe('awaiting-action');
+      expect(s.bonusCards.every(c => isPlaceholder(c))).toBe(true);
+    });
+
+    it('on MEDIUM, drawing onto a HELD card cannot be declined (committed swap)', () => {
+      // Seat a real card, then draw onto its slot: picking an occupied
+      // slot commits to the swap on Medium (bonusDeclineAllowed=false),
+      // exactly like the classic at-cap draw.
+      let s = mixedBagAt('medium');
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 1 });
+      if (s.phase.kind !== 'bonus-card-resolving') {
+        throw new Error('Expected bonus-card-resolving');
+      }
+      s = step(s, { type: 'BONUS_KEEP', idx: 0 });
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 1 });
+      if (s.phase.kind !== 'bonus-card-resolving') {
+        throw new Error('Expected bonus-card-resolving for the re-draw');
+      }
+      const atResolve = s;
+      s = step(s, { type: 'BONUS_DECLINE' });
+      expect(s).toBe(atResolve);
+    });
+
+    it('on EASY, an open-slot draw cannot be declined (taking is free)', () => {
+      let s = mixedBagAt('easy');
+      s = step(s, { type: 'BEGIN_SUIT_ACTION', forSuit: 'C' });
+      s = step(s, { type: 'BONUS_PICK_SLOT', slot: 0 });
+      if (s.phase.kind !== 'bonus-card-resolving') {
+        throw new Error('Expected bonus-card-resolving');
+      }
+      const atResolve = s;
+      s = step(s, { type: 'BONUS_DECLINE' });
+      expect(s).toBe(atResolve);
+    });
   });
 
   it('CANCEL_ACTION on slot-choice returns to awaiting-action without spending the ♣', () => {

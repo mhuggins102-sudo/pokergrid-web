@@ -1759,18 +1759,31 @@ const handleBonusDecline = (s: GameState, rng: () => number): GameState => {
   ) {
     return s;
   }
-  // Below the cap, declining is a DIFFICULTY rule (Short Circuit's
-  // random ♣ included): on Easy a taken card can always be swapped out
-  // later, so taking is free and there's nothing to decline; Medium+
-  // taking is binding (forced swap at the cap on Medium, no swaps at
-  // all on Hard/Extreme), so the player may wave the draw off and wait
-  // for a better offer.
-  if (s.bonusCards.length < BONUS_HAND_LIMIT) {
+  // Whether taking would FILL AN OPEN SPOT or REPLACE a held card
+  // decides which decline rule applies. Mixed Bag's categorized draws
+  // ask per-slot: its hand is always 3 entries (placeholders included),
+  // so the raw length reads as "at cap" even when the chosen slot is
+  // empty — the target slot's occupant is the real answer there.
+  const targetSlot =
+    s.phase.kind === 'bonus-card-resolving' ? s.phase.targetSlot : undefined;
+  const fillsOpenSpot =
+    targetSlot !== undefined
+      ? s.bonusCards[targetSlot] === undefined ||
+        isPlaceholder(s.bonusCards[targetSlot])
+      : s.bonusCards.length < BONUS_HAND_LIMIT;
+  // Filling an open spot: declining is a DIFFICULTY rule (Short
+  // Circuit's random ♣ included): on Easy a taken card can always be
+  // swapped out later, so taking is free and there's nothing to
+  // decline; Medium+ taking is binding (forced swap at the cap on
+  // Medium, no swaps at all on Hard/Extreme), so the player may wave
+  // the draw off and wait for a better offer.
+  if (fillsOpenSpot) {
     if (s.difficulty === 'easy') return s;
   } else if (!s.bonusDeclineAllowed) {
-    // At the cap, declining is normally not allowed — the player must
-    // take one of the drawn cards and swap one out. Easy flips this via
-    // bonusDeclineAllowed so the player can keep their existing hand.
+    // Replacing a held card, declining is normally not allowed — the
+    // player must take one of the drawn cards and swap one out. Easy
+    // flips this via bonusDeclineAllowed so the player can keep their
+    // existing hand.
     return s;
   }
   // Declined: no card taken, so the club retires to discards, not
