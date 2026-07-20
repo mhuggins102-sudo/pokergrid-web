@@ -1027,6 +1027,22 @@
   color: var(--on-accent);
 }
 
+/* Double Duty's Flip: the theme's joker purple — distinct from the
+   amber perk and the accent Place in every palette (the token is
+   themed per family/appearance). */
+.flipBtn:not(:disabled) {
+  background: var(--joker);
+  border-color: var(--joker);
+  color: var(--on-accent);
+}
+
+@media (hover: hover) {
+  .flipBtn:not(:disabled):hover {
+    background: color-mix(in srgb, var(--joker) 88%, var(--ink));
+    border-color: color-mix(in srgb, var(--joker) 88%, var(--ink));
+  }
+}
+
 @media (hover: hover) {
   .perkAmber:not(:disabled):hover {
     background: color-mix(in srgb, var(--warn) 88%, var(--ink));

@@ -104,3 +104,74 @@ export function DeskHandValuesPanel({
     </section>
   );
 }
+
+/**
+ * Bull Market's PHONE Split-dock panel: the full 11-row table is far
+ * too tall for the dock column (it starves the board), so this lists
+ * ONLY the hands ♣ invests have raised — the numbers the twist is
+ * actually mutating. Before the first invest it's a one-line hint;
+ * the full table stays a tap away behind the header's Hands ⓘ.
+ */
+export function DockHandBoostsPanel({
+  handBoost,
+}: {
+  handBoost?: Partial<Record<HandRank, number>>;
+}) {
+  const boosted = ORDER.filter(hand => (handBoost?.[hand] ?? 0) > 0);
+  return (
+    <section
+      className={`${railStyles.panel} ${railStyles.dockCol}`}
+      aria-label="Hand values"
+      style={{ overflowY: 'auto' }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+          color: 'var(--ink-3)',
+        }}
+      >
+        <span>Hand values</span>
+        <span>♣ invests</span>
+      </div>
+      {boosted.length === 0 ? (
+        <p
+          style={{
+            margin: 'auto 0',
+            fontSize: 12.5,
+            lineHeight: 1.45,
+            color: 'var(--ink-2)',
+          }}
+        >
+          ♣ raises a random hand's value — boosts land here.
+        </p>
+      ) : (
+        <div style={{ marginTop: 4 }}>
+          {boosted.map(hand => {
+            const boost = handBoost?.[hand] ?? 0;
+            return (
+              <div
+                key={hand}
+                style={{ ...rowStyle, fontSize: 12.5, padding: '3px 0' }}
+              >
+                <span>{HAND_LABEL[hand]}</span>
+                <strong>
+                  {HAND_BASE_VALUE[hand] + boost}
+                  <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                    {' '}
+                    (+{boost})
+                  </span>
+                </strong>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}

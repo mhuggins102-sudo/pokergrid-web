@@ -796,6 +796,26 @@ const handleFlip = (s: GameState): GameState => {
 // noSwap cap rule for ♣) decide which suits are valid candidates,
 // so the randomly-picked perk is guaranteed to actually run rather
 // than no-op.
+/**
+ * Mixed Bag: can this slot take a ♣ draw? A spent one-time slot is gone
+ * for the whole game, and under no-swap rules (Hard / Extreme / the No
+ * Swap challenge — bonusSwapAtCap 'off') a slot holding a LIVE card is
+ * committed for the run: Mixed Bag's per-slot draws are its version of
+ * the swap, so no-swap games may only fill OPEN (placeholder) slots.
+ */
+export const slotDrawable = (s: GameState, slot: number): boolean => {
+  const occupant = s.bonusCards[slot];
+  if (isSpentSlot(occupant)) return false;
+  if (
+    s.bonusSwapAtCap === 'off' &&
+    occupant !== undefined &&
+    !isPlaceholder(occupant)
+  ) {
+    return false;
+  }
+  return true;
+};
+
 const pickRandomAvailablePerk = (s: GameState, rng: () => number): Suit | null => {
   const candidates: Suit[] = [];
   if (canHop(s.grid)) candidates.push('H');
@@ -888,14 +908,14 @@ const handleBeginSuitAction = (
       // filtered to that slot's category once the player picks (see
       // handleBonusPickSlot). Skip this branch if no slot category
       // has any drawable cards left. A slot whose one-time action has
-      // been used is spent for the whole game — it can't be drawn for
-      // again, so it doesn't count as drawable here. Mixed Bag runs its
-      // own always-3-slots swap semantics, so it is NOT gated by the
-      // at-cap rule below.
+      // been used is spent for the whole game, and under no-swap rules
+      // a live card locks its slot (see slotDrawable) — neither counts
+      // as drawable here. Mixed Bag runs its own per-slot swap
+      // semantics, so it is NOT gated by the at-cap rule below.
       if (s.slotCategories) {
         const anySlotDrawable = s.slotCategories.some(
           (kind, i) =>
-            !isSpentSlot(s.bonusCards[i]) &&
+            slotDrawable(s, i) &&
             s.bonusDeck.some(c => cardMatchesSlot(c, kind))
         );
         if (!anySlotDrawable) return s;
@@ -1650,10 +1670,9 @@ const handleBonusPickSlot = (s: GameState, slot: number): GameState => {
   if (s.phase.kind !== 'awaiting-bonus-slot-choice') return s;
   if (!s.slotCategories) return s;
   if (slot < 0 || slot >= s.slotCategories.length) return s;
-  // A used one-time action spends its slot for the rest of the game —
-  // it is not a valid replacement target on later ♣ draws (the spent
-  // card stays visible in the slot as a reminder).
-  if (isSpentSlot(s.bonusCards[slot])) return s;
+  // Spent one-time slots are gone for the game, and under no-swap rules
+  // a live card locks its slot — only open slots can draw.
+  if (!slotDrawable(s, slot)) return s;
   const kind = s.slotCategories[slot];
   // Filter the deck to cards that fit this slot's category. Draw up
   // to 2 from the top of the filtered subset; the remaining (in

@@ -93,6 +93,12 @@ export interface BonusCardStripProps {
    */
   onSlotTap?: (slot: number) => void;
   /**
+   * Mixed Bag under no-swap rules: a live card locks its slot, so the
+   * slot pick falls through to the detail sheet for it (mirrors the
+   * engine's slotDrawable gate).
+   */
+  slotLocked?: (slot: number) => boolean;
+  /**
    * Three Tricks: activate the special card at this hand index. When
    * provided, the detail sheet shows a Use button for unspent special
    * cards.
@@ -122,6 +128,7 @@ export function BonusCardStrip({
   title = 'Bonus cards',
   layout = 'panel',
   onSlotTap,
+  slotLocked,
   onUse,
   liveContext,
   hideEach,
@@ -132,11 +139,12 @@ export function BonusCardStrip({
   );
 
   const tapChip = (card: BonusCard, index: number) => {
-    // A used one-time slot is spent for the game — during the Mixed Bag
-    // slot pick it is not a valid target, so fall through to the detail
-    // sheet (which explains the card is already used).
-    if (onSlotTap && !isSpentSlot(card)) onSlotTap(index);
-    else setDetail({ card, index });
+    // A used one-time slot is spent for the game, and a locked slot
+    // (no-swap rules holding a live card) can't take a draw — during
+    // the Mixed Bag slot pick both fall through to the detail sheet.
+    if (onSlotTap && !isSpentSlot(card) && !slotLocked?.(index)) {
+      onSlotTap(index);
+    } else setDetail({ card, index });
   };
 
   const detailDialog = (

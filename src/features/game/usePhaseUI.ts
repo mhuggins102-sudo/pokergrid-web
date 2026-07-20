@@ -14,7 +14,8 @@ import {
 import { Suit, isJoker } from '../../game/cards';
 import { HandRank } from '../../game/hands';
 import { nextSpiralSlot } from '../../game/grid';
-import { BonusCard, cardMatchesSlot, isSpentSlot } from '../../game/bonusCards';
+import { BonusCard, cardMatchesSlot } from '../../game/bonusCards';
+import { slotDrawable } from '../../game/state';
 import { useGameSession } from './GameSessionProvider';
 
 export type CellRole = 'next' | 'target' | 'selected' | null;
@@ -232,7 +233,9 @@ export function usePhaseUI(): PhaseUI {
                   state.slotCategories
                     ? state.slotCategories.some(
                         (kind, i) =>
-                          !isSpentSlot(state.bonusCards[i]) &&
+                          // slotDrawable: spent slots are gone, and under
+                          // no-swap rules a live card locks its slot.
+                          slotDrawable(state, i) &&
                           state.bonusDeck.some(c => cardMatchesSlot(c, kind))
                       )
                     : null
