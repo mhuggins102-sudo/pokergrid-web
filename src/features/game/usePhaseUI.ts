@@ -9,6 +9,7 @@ import {
   canDeselectSideSlideSlot,
   sideSlideChainExtensions,
   sideSlideTapTargets,
+  spinDestination,
   suitActionAvailable,
 } from '../../game/actions';
 import { Suit, isJoker } from '../../game/cards';
@@ -90,12 +91,14 @@ export function usePhaseUI(): PhaseUI {
   const { state, dispatch } = useGameSession();
   const phase = state.phase;
 
-  // Hop is the one targeting flow with a UI-side selection step (the
-  // reducer only knows completed pairs). Reset it whenever the phase
-  // object changes.
+  // Hop and Spin are the targeting flows with a UI-side selection step
+  // (the reducer only knows completed commits). Reset both whenever the
+  // phase object changes.
   const [hopFirst, setHopFirst] = useState<number | null>(null);
+  const [spinPick, setSpinPick] = useState<number | null>(null);
   useEffect(() => {
     setHopFirst(null);
+    setSpinPick(null);
   }, [phase]);
 
   return useMemo<PhaseUI>(() => {
@@ -242,16 +245,19 @@ export function usePhaseUI(): PhaseUI {
                           slotDrawable(state, i) &&
                           state.bonusDeck.some(c => cardMatchesSlot(c, kind))
                       )
-                    : null
+                    : null,
+                  state.spinCycle
                 );
             const perkLabel = state.randomPerks
               ? '? Perk'
               : state.investHands && drawn.suit === 'C'
                 ? '♣ Invest'
-                : // Double Duty included — the docks all give the perk a
-                  // full-width slot now, so the suit glyph fits and the
-                  // button reads the same as in standard games.
-                  SUIT_PERK_LABEL[drawn.suit];
+                : state.spinCycle && drawn.suit === 'S'
+                  ? '♠ Spin'
+                  : // Double Duty included — the docks all give the perk a
+                    // full-width slot now, so the suit glyph fits and the
+                    // button reads the same as in standard games.
+                    SUIT_PERK_LABEL[drawn.suit];
             actions.push({
               id: 'perk',
               label: perkLabel,
@@ -373,6 +379,62 @@ export function usePhaseUI(): PhaseUI {
           idx => dispatch({ type: 'RESOLVE_DESTROY', slot: idx })
         );
         return { ...ui, actions: lockedPerkActions(ui.actions) };
+      }
+
+      case 'awaiting-target-spin': {
+        // Spin Cycle's ♠: tap a card to PREVIEW where it rotates (the
+        // next empty cell clockwise on its ring lights up alongside it),
+        // then Confirm — or tap the lit destination — to commit. Tapping
+        // the picked card again deselects; tapping another eligible card
+        // moves the preview.
+        const targets = new Set(phase.targets);
+        if (spinPick === null || !targets.has(spinPick)) {
+          return {
+            ...base,
+            banner: '♠ Spin — tap a card to rotate clockwise',
+            ...fromSets(targets),
+            isTappable: idx => targets.has(idx),
+            onCellTap: idx => {
+              if (targets.has(idx)) setSpinPick(idx);
+            },
+            actions: [cancelAction],
+          };
+        }
+        const dest = spinDestination(state.grid, spinPick);
+        const tappable = new Set(targets);
+        if (dest !== null) tappable.add(dest);
+        const commit = () =>
+          dispatch({ type: 'RESOLVE_SPIN', slot: spinPick });
+        return {
+          ...base,
+          banner: '♠ Spin — confirm the move, or pick another card',
+          ...fromSets(
+            tappable,
+            new Set(dest !== null ? [spinPick, dest] : [spinPick])
+          ),
+          isTappable: idx => tappable.has(idx),
+          onCellTap: idx => {
+            if (idx === spinPick) {
+              setSpinPick(null);
+              return;
+            }
+            if (idx === dest) {
+              commit();
+              return;
+            }
+            if (targets.has(idx)) setSpinPick(idx);
+          },
+          actions: [
+            {
+              id: 'confirm',
+              label: 'Confirm spin',
+              variant: 'primary',
+              disabled: dest === null,
+              onPress: commit,
+            },
+            cancelAction,
+          ],
+        };
       }
 
       case 'bonus-card-resolving': {
@@ -619,5 +681,5 @@ export function usePhaseUI(): PhaseUI {
           isGameOver: true,
         };
     }
-  }, [phase, state, dispatch, hopFirst]);
+  }, [phase, state, dispatch, hopFirst, spinPick]);
 }

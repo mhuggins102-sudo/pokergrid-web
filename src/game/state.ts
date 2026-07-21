@@ -75,6 +75,9 @@ import {
   SideSlideMove,
   SlideMove,
   slideDestinationsFrom,
+  canSpin,
+  spinDestination,
+  spinnableSlots,
   supercharchableSlots,
   validHopSwaps,
   validSideSlideSources,
@@ -99,6 +102,10 @@ export type Phase =
       returnTo: TargetReturnTo;
     }
   | { kind: 'awaiting-target-destroy'; targets: number[]; returnTo: TargetReturnTo }
+  // Spin Cycle: ♠ rotates one card clockwise to the next empty cell on
+  // its ring. Targets are the spinnable cards; the preview/confirm step
+  // lives UI-side (usePhaseUI), the reducer only resolves the commit.
+  | { kind: 'awaiting-target-spin'; targets: number[]; returnTo: TargetReturnTo }
   | {
       kind: 'bonus-card-resolving';
       drawn: BonusCard[]; // 1 or 2 cards
@@ -308,6 +315,10 @@ export interface GameState {
   // those currently available (hop / slide / destroy / bonus). The
   // drawn card is still spent in perkSpent.
   randomPerks: boolean;
+  // True when the Spin Cycle challenge is active: ♠ rotates one card
+  // clockwise to the next empty cell on its ring (inner 8 / outer 16;
+  // the center cell is on neither) instead of sliding.
+  spinCycle: boolean;
   // True when the Poker Purist challenge is active. The bonus deck
   // and hand both start empty and stay that way — no starter, no ♣
   // draws (canDrawBonus returns false against an empty bonusDeck),
@@ -372,6 +383,8 @@ export type Action =
   | { type: 'SLIDE_SELECT_SOURCE'; slot: number }
   | { type: 'RESOLVE_SLIDE'; from: number; direction: Direction; distance: number }
   | { type: 'RESOLVE_DESTROY'; slot: number }
+  // Spin Cycle: rotate the card at `slot` to its ring's next empty cell.
+  | { type: 'RESOLVE_SPIN'; slot: number }
   | { type: 'BONUS_KEEP'; idx: number }
   | { type: 'BONUS_SELECT_NEW'; idx: number }
   | { type: 'BONUS_REPLACE'; oldIdx: number }
@@ -482,6 +495,9 @@ export interface NewGameOptions {
   // dictates which perk fires; instead BEGIN_SUIT_ACTION picks a
   // uniformly-random perk from those currently available.
   randomPerks?: boolean;
+  // Lock in Spin Cycle rules — ♠ rotates a card around its ring
+  // instead of sliding.
+  spinCycle?: boolean;
   // Lock in Poker Purist rules — no bonus cards anywhere. Both the
   // starting hand and the bonus deck are emptied; ♣ becomes unavailable
   // (canDrawBonus → false against an empty deck) and the UI hides the
@@ -529,6 +545,7 @@ export const newGame = (
     deckExtras = [],
     superchargedDeckCards = [],
     randomPerks = false,
+    spinCycle = false,
     noBonusCards = false,
     initialBonusCards = [],
     slotCategories,
@@ -688,6 +705,7 @@ export const newGame = (
     // difficulty's own rule (Hard / Extreme are already 'off').
     bonusSwapAtCap: noSwap ? 'off' : BONUS_SWAP_AT_CAP_BY_DIFFICULTY[difficulty],
     randomPerks,
+    spinCycle,
     noBonusCards,
     slotCategories,
     scatter,
@@ -868,6 +886,19 @@ const handleBeginSuitAction = (
       };
     }
     case 'S': {
+      // Spin Cycle: ♠ rotates one card around its ring instead of
+      // sliding a chain.
+      if (s.spinCycle) {
+        if (!canSpin(s.grid)) return s;
+        return {
+          ...s,
+          phase: {
+            kind: 'awaiting-target-spin',
+            targets: spinnableSlots(s.grid),
+            returnTo: 'awaiting-action',
+          },
+        };
+      }
       if (!canSlide(s.grid)) return s;
       return {
         ...s,
@@ -990,6 +1021,26 @@ const handleResolveSlide = (
   const grid = executeSlide(s.grid, from, direction, distance);
   return drawNext(
     log(pushPerkSpent({ ...s, grid }, s.drawn), `Slide ${direction} × ${distance}`),
+    rng
+  );
+};
+
+const handleResolveSpin = (
+  s: GameState,
+  slot: number,
+  rng: () => number
+): GameState => {
+  if (s.phase.kind !== 'awaiting-target-spin') return s;
+  if (!s.drawn || isJoker(s.drawn)) return s;
+  if (!s.phase.targets.includes(slot)) return s;
+  const card = s.grid[slot];
+  const dest = spinDestination(s.grid, slot);
+  if (!card || dest === null) return s;
+  const grid = s.grid.slice();
+  grid[slot] = null;
+  grid[dest] = card;
+  return drawNext(
+    log(pushPerkSpent({ ...s, grid }, s.drawn), `Spin ${slot} → ${dest}`),
     rng
   );
 };
@@ -1859,6 +1910,7 @@ const handleCancelAction = (s: GameState): GameState => {
     case 'awaiting-target-hop':
     case 'awaiting-target-slide-source':
     case 'awaiting-target-destroy':
+    case 'awaiting-target-spin':
     case 'bonus-card-resolving':
     case 'awaiting-bonus-slot-choice':
       // Short Circuit: the random perk is committed the moment it is
@@ -1908,6 +1960,7 @@ const SNAP_ACTIONS = new Set<Action['type']>([
   'RESOLVE_HOP',
   'RESOLVE_SLIDE',
   'RESOLVE_DESTROY',
+  'RESOLVE_SPIN',
   'BONUS_KEEP',
   'BONUS_REPLACE',
   'BONUS_DECLINE',
@@ -1993,6 +2046,9 @@ export const step = (
       break;
     case 'RESOLVE_DESTROY':
       next = handleResolveDestroy(state, action.slot, rng);
+      break;
+    case 'RESOLVE_SPIN':
+      next = handleResolveSpin(state, action.slot, rng);
       break;
     case 'BONUS_KEEP':
       next = handleBonusKeep(state, action.idx, rng);
