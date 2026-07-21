@@ -248,11 +248,10 @@ export function usePhaseUI(): PhaseUI {
               ? '? Perk'
               : state.investHands && drawn.suit === 'C'
                 ? '♣ Invest'
-                : state.doubleDuty
-                  ? // Three side-by-side options — drop the suit glyph so
-                    // the label fits ("♥ Swap" → "Swap").
-                    SUIT_PERK_LABEL[drawn.suit].replace(/^\S+\s/, '')
-                  : SUIT_PERK_LABEL[drawn.suit];
+                : // Double Duty included — the docks all give the perk a
+                  // full-width slot now, so the suit glyph fits and the
+                  // button reads the same as in standard games.
+                  SUIT_PERK_LABEL[drawn.suit];
             actions.push({
               id: 'perk',
               label: perkLabel,

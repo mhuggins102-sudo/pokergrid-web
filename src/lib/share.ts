@@ -2,8 +2,9 @@ import { Card, isJoker } from '../game/cards';
 import { Grid } from '../game/grid';
 
 // Two-char fixed encoding per cell (50 chars total for a 5×5 grid). Matches
-// the decoder in the share OG-image function (ported from the original
-// repo's functions/share/_shared.ts).
+// the decoder in functions/share/_shared.ts. NEW share links no longer
+// carry the grid (the OG card dropped the board render), but the encoding
+// stays so previously shared URLs keep parsing.
 //   '__' = empty
 //   'JK' = joker
 //   '<rank><suit>' = standard card. Rank '10' is encoded as 'T' so each cell
@@ -22,7 +23,10 @@ export interface ShareParams {
   score: number;
   mode: 'free' | 'targets-up' | 'challenge' | 'daily';
   difficulty?: string;
-  grid: Grid;
+  /** Result tier letter (SS/S/A/B/C/D) — the OG card's rating. */
+  tier?: string;
+  /** Variant name (the challenge / daily twist, e.g. "Double Duty"). */
+  variant?: string;
   /** Daily shares carry their date (ISO) so the link lands the
    *  recipient on that exact puzzle — the shared score is a
    *  challenge, and this is the deal to beat it on. */
@@ -33,7 +37,8 @@ export interface ShareParams {
 }
 
 // Build the absolute /share URL the player will hand off, anchored on the
-// deployed origin.
+// deployed origin. The player's ACTIVE theme rides along so the OG card
+// renders in the same palette they play in.
 export const buildShareUrl = (params: ShareParams): string => {
   const origin =
     typeof window !== 'undefined' && window.location?.origin
@@ -43,9 +48,15 @@ export const buildShareUrl = (params: ShareParams): string => {
   u.searchParams.set('score', String(params.score));
   u.searchParams.set('mode', params.mode);
   if (params.difficulty) u.searchParams.set('diff', params.difficulty);
+  if (params.tier) u.searchParams.set('tier', params.tier);
+  if (params.variant) u.searchParams.set('variant', params.variant);
   if (params.dateISO) u.searchParams.set('date', params.dateISO);
   if (params.seed !== undefined) u.searchParams.set('seed', String(params.seed));
-  u.searchParams.set('grid', encodeGrid(params.grid));
+  const theme =
+    typeof document !== 'undefined'
+      ? document.documentElement.dataset.theme
+      : undefined;
+  if (theme) u.searchParams.set('theme', theme);
   return u.toString();
 };
 
@@ -57,11 +68,10 @@ export interface ShareResult {
 
 // "Share this URL": first attempt the Web Share API (which on iOS / Android
 // browsers opens the system share sheet → iMessage, Slack, Mail, etc.),
-// then fall back to copying to the clipboard.
-export const shareUrl = async (
-  url: string,
-  title: string
-): Promise<ShareResult> => {
+// then fall back to copying to the clipboard. URL ONLY — no title/text,
+// so the recipient sees just the unfurled card, without a "PokerGrid —
+// N points" line riding along.
+export const shareUrl = async (url: string): Promise<ShareResult> => {
   if (typeof navigator === 'undefined') return { outcome: 'failed' };
   const nav = navigator as Navigator & {
     share?: (data: { title?: string; text?: string; url?: string }) => Promise<void>;
@@ -69,7 +79,7 @@ export const shareUrl = async (
   };
   if (typeof nav.share === 'function') {
     try {
-      await nav.share({ title, text: title, url });
+      await nav.share({ url });
       return { outcome: 'shared' };
     } catch (e) {
       // AbortError = user dismissed. Don't fall back to clipboard in that

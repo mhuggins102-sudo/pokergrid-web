@@ -4,13 +4,20 @@ export type ParsedShare = {
   score: number;
   mode: ModeLabel;
   difficulty: string | null;
+  // Result tier letter (validated against the app's tier ladder).
+  tier: Tier | null;
+  // Variant name (challenge / daily twist), sanitized for rendering.
+  variant: string | null;
+  // The sharer's resolved theme — the OG card renders in their palette.
+  theme: ThemeKey;
   // Daily shares only: the puzzle's ISO date (validated), so the link
   // can land the recipient on that exact deal. Null otherwise.
   dateISO: string | null;
   // Free-play shares only: the run's seed (validated digits), so the
   // splash's play button can re-issue the identical deal.
   seed: string | null;
-  // 25-cell grid. Each cell: null (empty), 'JK' (joker), or a 2-char rank+suit.
+  // 25-cell grid — LEGACY: new links omit it (the OG card no longer
+  // renders the board), but old shared URLs still parse.
   grid: (CellCode | null)[];
 };
 
@@ -21,6 +28,26 @@ export type CellCode =
 export type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'T' | 'J' | 'Q' | 'K';
 export type Suit = 'H' | 'S' | 'D' | 'C';
 export type ModeLabel = 'Free' | 'Targets Up' | 'Challenge' | 'Daily';
+export type Tier = 'SS' | 'S' | 'A' | 'B' | 'C' | 'D';
+export type ThemeKey = 'paper' | 'paper-dark' | 'card-room' | 'card-room-dark';
+
+// Mirrors TIER_RULES in src/features/game/components/TierBreakdownSheet.
+export const TIER_LABEL: Record<Tier, string> = {
+  SS: 'Perfect',
+  S: 'Strong win',
+  A: 'Win',
+  B: 'Close',
+  C: 'Missed',
+  D: 'Far miss',
+};
+
+const TIERS: Set<string> = new Set(['SS', 'S', 'A', 'B', 'C', 'D']);
+const THEMES: Set<string> = new Set([
+  'paper',
+  'paper-dark',
+  'card-room',
+  'card-room-dark',
+]);
 
 const RANKS: Set<string> = new Set(['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K']);
 const SUITS: Set<string> = new Set(['H', 'S', 'D', 'C']);
@@ -57,6 +84,17 @@ export const parseShare = (url: URL): ParsedShare => {
   const modeRaw = (url.searchParams.get('mode') ?? 'free').toLowerCase();
   const mode = MODE_LABELS[modeRaw] ?? 'Free';
   const difficulty = url.searchParams.get('diff'); // 'easy' | 'medium' | 'hard' | null
+  const tierRaw = url.searchParams.get('tier');
+  const tier = tierRaw && TIERS.has(tierRaw) ? (tierRaw as Tier) : null;
+  // Variant is free text (a challenge name) — strip to safe characters
+  // and cap the length before it goes anywhere near markup.
+  const variantRaw = url.searchParams.get('variant');
+  const variant = variantRaw
+    ? variantRaw.replace(/[^\w\s&'!-]/g, '').slice(0, 28) || null
+    : null;
+  const themeRaw = url.searchParams.get('theme');
+  const theme: ThemeKey =
+    themeRaw && THEMES.has(themeRaw) ? (themeRaw as ThemeKey) : 'paper-dark';
   // Strict shape checks — these values get echoed into link targets.
   const dateRaw = url.searchParams.get('date');
   const dateISO =
@@ -67,7 +105,7 @@ export const parseShare = (url: URL): ParsedShare => {
   const seed =
     mode === 'Free' && seedRaw && /^\d{1,10}$/.test(seedRaw) ? seedRaw : null;
   const grid = decodeGrid(url.searchParams.get('grid'));
-  return { score, mode, difficulty, dateISO, seed, grid };
+  return { score, mode, difficulty, tier, variant, theme, dateISO, seed, grid };
 };
 
 export const escapeHtml = (s: string): string =>

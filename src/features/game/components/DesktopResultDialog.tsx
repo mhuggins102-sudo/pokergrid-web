@@ -236,11 +236,12 @@ export function DesktopResultDialog({
             ? 'daily'
             : 'free',
       difficulty: state.difficulty,
-      grid: state.grid,
+      tier,
+      variant: setup.challenge?.name,
       dateISO: isDaily && mode.kind === 'daily' ? mode.dateISO : undefined,
       seed: mode.kind === 'free' ? seed : undefined,
     });
-    const result = await shareUrl(url, `PokerGrid — ${report.total} points`);
+    const result = await shareUrl(url);
     if (result.outcome === 'copied') toast('Link copied.', 'success');
     else if (result.outcome === 'failed') toast('Could not share.', 'danger');
   };
@@ -271,7 +272,14 @@ export function DesktopResultDialog({
   }
 
   return (
-    <div className={styles.scrim}>
+    <div
+      className={styles.scrim}
+      onClick={e => {
+        // Click/tap on the scrim itself (not the card) dismisses to the
+        // grid — same as Esc.
+        if (e.target === e.currentTarget) onViewGrid();
+      }}
+    >
       <div
         className={styles.card}
         role="dialog"
@@ -553,7 +561,7 @@ export function DesktopResultDialog({
           <div className={styles.footer}>
             {isDaily ? (
               <Link to="/daily/archive" className={styles.primaryBtn}>
-                Play Again
+                Daily Archive
               </Link>
             ) : isTargets ? (
               targetsPrimary
@@ -572,7 +580,7 @@ export function DesktopResultDialog({
                 className={styles.ghostBtn}
                 onClick={onShare}
               >
-                Share result
+                Share
               </button>
             )}
             <button
@@ -596,7 +604,7 @@ export function DesktopResultDialog({
                     className={styles.quietLink}
                     onClick={onShare}
                   >
-                    Share result
+                    Share
                   </button>
                   <Link to="/targets" className={styles.quietLink}>
                     Targets Up home
