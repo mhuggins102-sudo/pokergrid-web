@@ -352,14 +352,20 @@
   justify-content: center;
 }
 
-/* Hand-stack, Double Duty: every Flip swaps the perk label (♥ Swap ↔
-   ♦ Destroy…), so the button holds a fixed width — sized to the widest
-   label, ♦ Destroy — and the row stops jumping. */
-.actionRow .ddPerkFixed {
-  flex: 0 0 96px;
+/* Hand-stack, Double Duty: the action row is a GRID so the suit perk
+   and Flip stay exactly equal width on every phone — a Flip's label
+   swap (♥ Swap ↔ ♦ Destroy…) can't reflow anything — with the ↺
+   keeping its square column. Slim padding + nowrap keep ♦ Destroy on
+   one line in the halved width. */
+.ddActionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+}
+
+.ddActionRow > button:not(.dockUndo) {
+  white-space: nowrap;
   padding-left: var(--space-xs);
   padding-right: var(--space-xs);
-  white-space: nowrap;
 }
 
 .stageWell [class*='cardSlot'] {
@@ -1159,11 +1165,12 @@
   border-radius: var(--radius-button);
 }
 
-/* Classic dock, Double Duty: Flip grows into the meta row's slack (the
-   icon Discard freed it), capped so the row keeps its rhythm. */
+/* Classic dock, Double Duty: Flip pins to the width the TEXT Discard
+   button has in non-Double-Duty classic games (measured ~74px), so the
+   row keeps that familiar rhythm — and the suit perk to its left grows
+   leftward with its label, exactly as in non-Double-Duty games. */
 .dockRow .classicFlip {
-  flex: 1 1 auto;
-  max-width: 140px;
+  flex: 0 0 74px;
 }
 
 .dtGridBtn {

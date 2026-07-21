@@ -52,30 +52,48 @@ const bustReload = (): void => {
 };
 
 /**
- * Drop the stale service worker (and its precache) before reloading.
+ * Heal the stale service-worker state, then reload.
  *
- * The chunk that failed to load is the OLD deploy's — but the page is
- * still controlled by the OLD service worker, whose precache serves the
- * stale index.html + evicted chunk map. A plain location.reload() fetches
- * right back through that worker and hits the same missing chunk, so the
- * heal never converges and the update card resurfaces once the reload
- * rate-limit lapses. Unregistering the worker (and clearing the Cache
- * Storage entries it was serving) means the reload navigates with NO
- * controller and pulls the fresh index.html + live chunks straight from
- * the network; vite-plugin-pwa then re-registers a worker that precaches
- * the NEW build. Best-effort: any step can reject (private mode, denied
- * storage) — we reload regardless, which is still better than the
- * old-worker loop.
+ * FIRST CHOICE — pull a fresh worker: registration.update() fetches
+ * sw.js over the network, BYPASSING the HTTP/edge caches that can keep
+ * handing back the previous build's worker (the loop's root: a stale
+ * worker re-poisons the client no matter how many times the page
+ * itself reloads fresh). If a new build's worker installs, it
+ * skip-waits into control and the reload below boots straight into it
+ * — caches intact, convergence in one cycle.
+ *
+ * FALLBACK — purge: no newer worker exists (or update failed), so the
+ * breakage is local. Unregister the worker and clear Cache Storage;
+ * the reload then navigates with NO controller and pulls the fresh
+ * index.html + live chunks straight from the network; vite-plugin-pwa
+ * re-registers a worker that precaches the current build. Best-effort:
+ * any step can reject (private mode, denied storage) — we reload
+ * regardless, which is still better than the stale-worker loop.
  */
 const dropStaleWorkerAndReload = async (): Promise<void> => {
   try {
     // Capped: a hung storage API (observed as the spinner sitting
-    // forever on iOS) must not stall the recovery — after 2.5s the
-    // reload goes ahead with whatever purging completed.
+    // forever on iOS) must not stall the recovery — after 4s the
+    // reload goes ahead with whatever healing completed.
     await Promise.race([
       (async () => {
         if ('serviceWorker' in navigator) {
           const regs = await navigator.serviceWorker.getRegistrations();
+          const updated = await Promise.all(
+            regs.map(r =>
+              r
+                .update()
+                .then(() => !!(r.installing || r.waiting))
+                .catch(() => false)
+            )
+          );
+          if (updated.some(Boolean)) {
+            // A fresh worker is installing — give it a beat toward
+            // activation (it skip-waits), then reload into it. Leave
+            // the caches alone: its precache is mid-build.
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            return;
+          }
           await Promise.all(regs.map(r => r.unregister()));
         }
         if ('caches' in window) {
@@ -83,7 +101,7 @@ const dropStaleWorkerAndReload = async (): Promise<void> => {
           await Promise.all(keys.map(k => caches.delete(k)));
         }
       })(),
-      new Promise<void>(resolve => setTimeout(resolve, 2500)),
+      new Promise<void>(resolve => setTimeout(resolve, 4000)),
     ]);
   } catch {
     // best effort — fall through to the reload
