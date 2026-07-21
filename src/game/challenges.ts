@@ -22,7 +22,8 @@ export type ChallengeId =
   | 'gridlock'
   | 'scatter'
   | 'bull-market'
-  | 'double-duty';
+  | 'double-duty'
+  | 'spin-cycle';
 
 export interface Challenge {
   id: ChallengeId;
@@ -150,6 +151,17 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame (dual identities assigned to the deck) and by
     // the FLIP_CARD reducer guards. Hitting the score target is the only
     // end-state check.
+    conditionMet: () => true,
+  },
+  {
+    id: 'spin-cycle',
+    name: 'Spin Cycle',
+    synopsis: 'Twist: ♠ spins a card around its ring',
+    goal: "Score 500+ points with a rewired ♠ perk: instead of sliding, pick any card and it rotates clockwise to the next EMPTY cell on its ring — the board's 16 border cells form the outer ring, the 8 cells around the center the inner ring. The center cell is on neither, so a card there can't spin. Tap a card to preview its landing spot, then confirm.",
+    scoreTarget: 500,
+    // Enforced at the reducer level: state.spinCycle reroutes ♠ from the
+    // slide flow into the spin flow. Hitting the score target is the
+    // only end-state check.
     conditionMet: () => true,
   },
 ];

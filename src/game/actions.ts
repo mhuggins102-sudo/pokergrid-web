@@ -538,6 +538,48 @@ export const executeSlide = (
   return next;
 };
 
+// ---------- ♠ Spin (Spin Cycle challenge) ----------
+// Under the Spin Cycle variant, ♠ rotates ONE card clockwise to the next
+// empty cell on its ring instead of sliding. The 5×5 board splits into
+// two rings: the OUTER ring is the 16 border cells, the INNER ring the 8
+// cells around the center. The center cell (12) belongs to neither, so a
+// card sitting there can never spin.
+
+// Clockwise orders, starting at each ring's top-left corner.
+export const OUTER_RING: readonly number[] = [
+  0, 1, 2, 3, 4, 9, 14, 19, 24, 23, 22, 21, 20, 15, 10, 5,
+];
+export const INNER_RING: readonly number[] = [6, 7, 8, 13, 18, 17, 16, 11];
+
+export const ringOf = (idx: number): readonly number[] | null =>
+  OUTER_RING.includes(idx) ? OUTER_RING : INNER_RING.includes(idx) ? INNER_RING : null;
+
+/** The cell a spin from `idx` lands on: the first EMPTY cell walking
+ *  clockwise around its ring (wrapping past the start). Null when the
+ *  cell is off-ring (center) or every other cell on the ring is full. */
+export const spinDestination = (grid: Grid, idx: number): number | null => {
+  const ring = ringOf(idx);
+  if (!ring) return null;
+  const at = ring.indexOf(idx);
+  for (let step = 1; step < ring.length; step++) {
+    const j = ring[(at + step) % ring.length];
+    if (grid[j] === null) return j;
+  }
+  return null;
+};
+
+/** Cards that can spin: occupied, on a ring, with an empty cell to
+ *  rotate into. */
+export const spinnableSlots = (grid: Grid): number[] => {
+  const out: number[] = [];
+  for (let i = 0; i < GRID_SLOTS; i++) {
+    if (grid[i] !== null && spinDestination(grid, i) !== null) out.push(i);
+  }
+  return out;
+};
+
+export const canSpin = (grid: Grid): boolean => spinnableSlots(grid).length > 0;
+
 // ---------- ♦ Destroy (diamond) ----------
 // Trash any one card on the grid (any rank/suit, including joker).
 
@@ -584,14 +626,16 @@ export const suitActionAvailable = (
   // turn 1, so the cap gate would kill the mechanic outright). Pass
   // whether ANY slot is still drawable (unspent + a matching card left
   // in the bonus deck); null = the run has no slot categories.
-  slotDrawable: boolean | null = null
+  slotDrawable: boolean | null = null,
+  // Spin Cycle: ♠ rotates a card around its ring instead of sliding.
+  spinCycle: boolean = false
 ): boolean => {
   if (!drawn || isJoker(drawn)) return false;
   switch (drawn.suit) {
     case 'H':
       return canHop(grid);
     case 'S':
-      return canSlide(grid);
+      return spinCycle ? canSpin(grid) : canSlide(grid);
     case 'D':
       return canDestroy(grid);
     case 'C':
