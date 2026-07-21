@@ -93,13 +93,15 @@ const dropStaleWorkerAndReload = async (): Promise<void> => {
 
 /**
  * Router-level error surface. Its main job is the stale-deploy
- * self-heal: chunk-load failures trigger ONE automatic hard reload
- * (rate-limited via sessionStorage so a persistently broken cache
- * can't reload-loop) — the stale worker is dropped first so the fresh
- * index.html references live chunks and the app recovers without the
- * player doing anything. Anything else (or a failed heal) gets a
- * friendly reload/home card instead of React Router's developer error
- * page.
+ * self-heal: a chunk-load failure shows ONLY the quiet "Updating…"
+ * spinner and keeps retrying the recovery on its own — drop the stale
+ * worker + caches, cache-busted reload, and if the page is somehow
+ * still here (offline, hung network, another stale layer) try again,
+ * paced at least 15s apart so a persistently broken device calmly
+ * retries instead of flash-looping. There is deliberately NO manual
+ * Reload button on this path — the player never has anything to do.
+ * Non-update errors (a genuine crash) keep the friendly reload/home
+ * card instead of React Router's developer error page.
  *
  * Styled inline with token fallbacks: when this renders, the
  * stylesheet may be exactly what failed to load.
@@ -108,29 +110,41 @@ export function RouteError() {
   const error = useRouteError();
 
   const stale = isChunkLoadError(error);
-  // Heal or show the manual card? Decided synchronously so the FIRST
-  // paint already matches: a fresh stale-chunk failure auto-heals behind
-  // a quiet "Updating…" card; a failure landing within 15s of a heal
-  // (loop guard) gets the full card with the manual Reload. The manual
-  // Reload re-enters the same healing state, so the button shows the
-  // spinner working instead of appearing dead.
-  const [healing, setHealing] = useState(() => {
-    if (!stale) return false;
-    const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
-    return Date.now() - last >= 15_000;
-  });
+  // Perpetual paced self-heal. Each attempt normally tears this page
+  // down (the recovery navigates); reaching the timer again means the
+  // navigation didn't happen or the reborn page failed straight back
+  // into this boundary — wait out the remainder of the 15s pace and go
+  // again. sessionStorage carries the pace across the reloads.
   useEffect(() => {
-    if (!healing) return;
-    sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
-    void dropStaleWorkerAndReload();
-    // The purge is capped at 2.5s (dropStaleWorkerAndReload), so the
-    // recovery navigation starts well inside this window — if the page
-    // is still here after 8s the network itself is stuck, and the
-    // manual controls come back.
-    const t = window.setTimeout(() => setHealing(false), 8000);
+    if (!stale) return;
+    let cancelled = false;
+    let timer: number;
+    const arm = () => {
+      if (cancelled) return;
+      const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
+      const wait = Math.max(0, 15_000 - (Date.now() - last));
+      timer = window.setTimeout(() => {
+        if (cancelled) return;
+        sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+        void dropStaleWorkerAndReload();
+        arm();
+      }, wait);
+    };
+    arm();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [stale]);
+  // After ~20s of not converging, add a reassurance line (still no
+  // controls — the retries keep running underneath).
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!stale) return;
+    const t = window.setTimeout(() => setSlow(true), 20_000);
     return () => window.clearTimeout(t);
-  }, [healing]);
-  const quiet = healing;
+  }, [stale]);
+  const quiet = stale;
 
   const wrap: CSSProperties = {
     minHeight: '100dvh',
@@ -183,34 +197,34 @@ export function RouteError() {
       <div style={card}>
         {quiet && <span style={spinner} aria-hidden="true" />}
         <h1 style={{ fontSize: 18, margin: '0 0 8px' }}>
-          {quiet
-            ? 'Updating PokerGrid…'
-            : stale
-              ? 'PokerGrid just updated'
-              : 'Something went wrong'}
+          {quiet ? 'Updating PokerGrid…' : 'Something went wrong'}
         </h1>
         <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0, opacity: 0.8 }}>
           {quiet
             ? 'Grabbing the newest version — one moment. Your saved games and stats are safe.'
-            : stale
-              ? 'A new version was deployed while this page was open. Reloading picks it up — your saved games and stats are safe.'
-              : 'An unexpected error interrupted the page. Reloading usually clears it — your saved games and stats are safe.'}
+            : 'An unexpected error interrupted the page. Reloading usually clears it — your saved games and stats are safe.'}
         </p>
+        {quiet && slow && (
+          <p
+            style={{
+              fontSize: 13,
+              lineHeight: 1.5,
+              margin: '12px 0 0',
+              opacity: 0.65,
+            }}
+          >
+            Still working — if this persists, check your connection. It will
+            keep retrying on its own.
+          </p>
+        )}
         {!quiet && (
           <>
             <button
               type="button"
               style={button}
               onClick={() => {
-                // Stale path: re-enter the healing state — the spinner
-                // shows the retry working (the effect stamps the guard
-                // and runs the purge + reload). Other errors just
-                // cache-bust straight away.
-                if (stale) setHealing(true);
-                else {
-                  sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
-                  bustReload();
-                }
+                sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+                bustReload();
               }}
             >
               Reload
