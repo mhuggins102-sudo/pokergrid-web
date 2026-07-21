@@ -1865,18 +1865,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     const undoNode = dockUndoBtn();
                     const flipAction = rowActions.find(a => a.id === 'flip');
                     if (state.doubleDuty && commitAction?.id === 'place') {
-                      // Double Duty deciding turns: perk (fixed width,
-                      // sized to the widest label so a Flip's label swap
-                      // can't reflow the row) → Flip (flexes wide; a
-                      // disabled stand-in holds the spot when the draw
-                      // isn't a dual) → ↺. Discard rides beside Place.
+                      // Double Duty deciding turns: a GRID row so the
+                      // suit perk and Flip are exactly equal width on
+                      // every phone (a Flip's label swap can't reflow
+                      // anything, and a disabled stand-in holds Flip's
+                      // spot on non-dual draws) → ↺. Discard rides
+                      // beside Place.
                       return (
-                        <div className={styles.actionRow}>
+                        <div
+                          className={`${styles.actionRow} ${styles.ddActionRow}`}
+                        >
                           {perkAction &&
-                            actionBtn(
-                              perkAction,
-                              `${styles.perkAmber} ${styles.ddPerkFixed}`
-                            )}
+                            actionBtn(perkAction, styles.perkAmber)}
                           {flipAction ? (
                             actionBtn(flipAction)
                           ) : (
@@ -2039,13 +2039,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           )}
                         </>
                       ) : (
-                        // Main column: Place + the suit action. Standard
-                        // games put icon Discard / Undo beside them
-                        // (hidden while targeting or the ♣ modal owns the
-                        // turn). Double Duty: the ↺ rides Place's row and
-                        // the trash Discard the perk's — two stable rows,
-                        // with Flip living by the deck (see metaExtra) so
-                        // nothing reflows between draws.
+                        // Main column: Place + the suit action (Double
+                        // Duty's Flip lives by the deck — see metaExtra).
+                        // The icon Discard / Undo column rides beside
+                        // them in every variant, hidden while the ♣
+                        // bonus modal is up — the draw choice owns the
+                        // turn, so they'd only sit behind the scrim
+                        // doing nothing — and while a suit action is
+                        // targeting (ui.banner; Short Circuit's locked
+                        // perks reach here with no Cancel action, so the
+                        // cancel-branch above never catches them).
                         <div className={styles.dtGrid}>
                           <div className={styles.dtGridMain}>
                             {commitAction &&
@@ -2059,20 +2062,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                               .filter(a => a.id !== 'flip')
                               .map(a => actionBtn(a, styles.dtGridBtn))}
                           </div>
-                          {state.doubleDuty ? (
+                          {!ui.bonusDialog && !ui.banner && (
                             <div className={styles.dtGridIcons}>
-                              <Button
-                                variant="secondary"
-                                className={styles.dtIconBtn}
-                                disabled={!canUndo || flight !== null}
-                                onClick={() => dispatch({ type: 'UNDO' })}
-                                aria-label={`Undo (${Math.max(
-                                  0,
-                                  maxUndos - state.undoCount
-                                )} left)`}
-                              >
-                                ↺
-                              </Button>
                               <Button
                                 variant="secondary"
                                 className={styles.dtIconBtn}
@@ -2086,46 +2077,19 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                               >
                                 {trashIcon}
                               </Button>
+                              <Button
+                                variant="secondary"
+                                className={styles.dtIconBtn}
+                                disabled={!canUndo || flight !== null}
+                                onClick={() => dispatch({ type: 'UNDO' })}
+                                aria-label={`Undo (${Math.max(
+                                  0,
+                                  maxUndos - state.undoCount
+                                )} left)`}
+                              >
+                                ↺
+                              </Button>
                             </div>
-                          ) : (
-                            /* Discard + Undo hide while the ♣ bonus modal
-                               is up — the draw choice owns the turn, so
-                               they'd only sit behind the scrim doing
-                               nothing — and while a suit action is
-                               targeting (ui.banner; Short Circuit's locked
-                               perks reach here with no Cancel action, so
-                               the cancel-branch above never catches
-                               them). */
-                            !ui.bonusDialog &&
-                            !ui.banner && (
-                              <div className={styles.dtGridIcons}>
-                                <Button
-                                  variant="secondary"
-                                  className={styles.dtIconBtn}
-                                  disabled={
-                                    !discardAction ||
-                                    discardAction.disabled ||
-                                    flight !== null
-                                  }
-                                  onClick={discardAction?.onPress}
-                                  aria-label="Discard"
-                                >
-                                  {trashIcon}
-                                </Button>
-                                <Button
-                                  variant="secondary"
-                                  className={styles.dtIconBtn}
-                                  disabled={!canUndo || flight !== null}
-                                  onClick={() => dispatch({ type: 'UNDO' })}
-                                  aria-label={`Undo (${Math.max(
-                                    0,
-                                    maxUndos - state.undoCount
-                                  )} left)`}
-                                >
-                                  ↺
-                                </Button>
-                              </div>
-                            )
                           )}
                         </div>
                       )}
