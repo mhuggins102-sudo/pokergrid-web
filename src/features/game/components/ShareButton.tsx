@@ -1,23 +1,27 @@
-import { Grid } from '../../../game/grid';
 import { useToast } from '../../../design/primitives';
 import { ShareParams, buildShareUrl, shareUrl } from '../../../lib/share';
 
 /**
  * "Share" in the result dock: native share sheet where available,
- * clipboard fallback. The URL unfurls via the /share OG function.
+ * clipboard fallback. The URL unfurls via the /share OG function —
+ * URL only, no accompanying text.
  */
 export function ShareButton({
   score,
   mode,
   difficulty,
-  grid,
+  tier,
+  variant,
   dateISO,
   seed,
 }: {
   score: number;
   mode: ShareParams['mode'];
   difficulty?: string;
-  grid: Grid;
+  /** Result tier letter (SS/S/A/B/C/D) for the OG card. */
+  tier?: string;
+  /** Variant name (challenge / daily twist) for the OG card. */
+  variant?: string;
   /** Daily only: the puzzle's date, so the link opens that deal. */
   dateISO?: string;
   /** Free play only: the run's seed, so the link re-issues the deal. */
@@ -26,8 +30,16 @@ export function ShareButton({
   const { toast } = useToast();
 
   const onShare = async () => {
-    const url = buildShareUrl({ score, mode, difficulty, grid, dateISO, seed });
-    const result = await shareUrl(url, `PokerGrid — ${score} points`);
+    const url = buildShareUrl({
+      score,
+      mode,
+      difficulty,
+      tier,
+      variant,
+      dateISO,
+      seed,
+    });
+    const result = await shareUrl(url);
     if (result.outcome === 'copied') toast('Link copied.', 'success');
     else if (result.outcome === 'failed') toast('Could not share.', 'danger');
   };

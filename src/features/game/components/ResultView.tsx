@@ -444,7 +444,8 @@ export function ResultView({ onReplay }: ResultViewProps) {
                       : 'free'
               }
               difficulty={state.difficulty}
-              grid={state.grid}
+              tier={tier}
+              variant={setup.challenge?.name}
               dateISO={mode.kind === 'daily' ? mode.dateISO : undefined}
               seed={mode.kind === 'free' ? seed : undefined}
             />

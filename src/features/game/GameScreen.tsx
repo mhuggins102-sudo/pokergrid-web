@@ -1359,7 +1359,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           className={styles.deskStackBtn}
                           onClick={playAgain}
                         >
-                          Play Again
+                          {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
                         </Button>
                       )}
                     </div>
@@ -1640,7 +1640,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         : onReplay()
                     }
                   >
-                    Play Again
+                    {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
                   </Button>
                 )}
               </div>
@@ -1970,7 +1970,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                               : onReplay()
                           }
                         >
-                          Play Again
+                          {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
                         </Button>
                       )}
                     </div>

@@ -47,9 +47,11 @@ export const onRequest: PagesFunction = async ({ request }) => {
   <title>${escapeHtml(title)}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
+  <!-- The unfurl card's TITLE (the text under the image) stays a bare
+       "PokerGrid" — the score/result lives in the image itself. -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PokerGrid" />
-  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:title" content="PokerGrid" />
   <meta property="og:description" content="5×5 poker solitaire. Place every card, score the 10 lines, beat your target." />
   <meta property="og:url" content="${escapeHtml(url.href)}" />
   <meta property="og:image" content="${escapeHtml(ogImageUrl.href)}" />
@@ -57,7 +59,7 @@ export const onRequest: PagesFunction = async ({ request }) => {
   <meta property="og:image:height" content="630" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:title" content="PokerGrid" />
   <meta name="twitter:image" content="${escapeHtml(ogImageUrl.href)}" />
 ${
   dateISO
