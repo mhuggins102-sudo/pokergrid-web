@@ -29,6 +29,8 @@ const baseState = (overrides: Partial<GameState>): GameState => ({
   bonusSwapAtCap: 'must',
   randomPerks: false,
   spiraling: false,
+  timeTrial: false,
+  elapsedMs: 0,
   noBonusCards: false,
   scatter: false,
   scatterSlot: null,

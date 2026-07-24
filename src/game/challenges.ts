@@ -23,7 +23,8 @@ export type ChallengeId =
   | 'scatter'
   | 'bull-market'
   | 'double-duty'
-  | 'spiraling';
+  | 'spiraling'
+  | 'time-trial';
 
 export interface Challenge {
   id: ChallengeId;
@@ -162,6 +163,18 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at the reducer level: state.spiraling reroutes ♠ from the
     // slide flow into the spiral flow. Hitting the score target is the
     // only end-state check.
+    conditionMet: () => true,
+  },
+  {
+    id: 'time-trial',
+    name: 'Time Trial',
+    synopsis: 'Twist: the clock scores — fast pays, slow costs',
+    goal: 'Score 500+ points with the clock in the math. The rules are unchanged, but your final score adds a time adjustment: every second under 5:00 pays +0.5 points, every second over costs the same, capped at ±120 either way. The clock pauses while the app is in the background.',
+    scoreTarget: 500,
+    // The adjustment is applied by the FINAL score surfaces via
+    // scoring.ts's timeTrialAdjust (state.timeTrial + state.elapsedMs,
+    // ticked by useGameClock). Hitting the adjusted target is the only
+    // end-state check.
     conditionMet: () => true,
   },
 ];

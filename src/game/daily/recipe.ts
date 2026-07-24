@@ -60,10 +60,12 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // Rare (1)
   'bull-market': 1,
   'double-duty': 1,
-  // Not in the daily rotation (yet) — Spiraling is challenges-only
-  // while it's playtested. Also absent from ALL_TWISTS above, so this
-  // zero weight is belt-and-braces for the Record type.
+  // Not in the daily rotation (yet) — Spiraling and Time Trial are
+  // challenges-only while they're playtested. Also absent from
+  // ALL_TWISTS above, so these zero weights are belt-and-braces for
+  // the Record type.
   spiraling: 0,
+  'time-trial': 0,
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {

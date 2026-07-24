@@ -12,8 +12,10 @@ import { LayoutGroup, MotionConfig } from 'motion/react';
 import {
   ScoredLine,
   ScoreReport,
+  TIME_TRIAL_PAR_S,
   bonusShapleyValues,
   scoreGrid,
+  timeTrialAdjust,
 } from '../../game/scoring';
 import {
   BONUS_SWAP_LABEL,
@@ -38,6 +40,7 @@ import { difficultyColors } from '../../design/tokens';
 import { useNavExtras, useNavGameRow } from '../../app/DesktopNav';
 import { useGameSession } from './GameSessionProvider';
 import { prefersReducedMotion } from './useAnimatedNumber';
+import { formatClock, useGameClock } from './useGameClock';
 import { useGameFamily } from './useGameFamily';
 import { useTier } from '../../app/useTier';
 import { useCoachHighlight } from './coach';
@@ -302,11 +305,25 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             discards: state.discards,
             perkSpent: state.perkSpent,
             handBoost: state.handBoost,
+            // Time Trial: the clock joins the math at game end ONLY —
+            // liveReport (and ScoreBar / Shapley / card popups) stay
+            // board-only; the header clock pill carries the live worth.
+            timeAdjust: timeTrialAdjust(state),
           })
         : null,
     [finished, state]
   );
   const activeReport = finalReport ?? liveReport;
+
+  // Time Trial's clock: the hook owns real time (paused while hidden)
+  // and writes whole-second CLOCK_TICKs; everything below reads
+  // state.elapsedMs. The pill pieces are computed here so the navPill
+  // memo can list them as plain deps.
+  useGameClock();
+  const clockWorth = timeTrialAdjust(state);
+  const clockText = formatClock(state.elapsedMs);
+  const clockOver =
+    state.timeTrial && Math.floor(state.elapsedMs / 1000) > TIME_TRIAL_PAR_S;
 
   // Desktop nav pill cluster (per the mockup's header, lines 80–90):
   // an optional ✦ twist pill (challenge runs / twisted dailies) and
@@ -342,9 +359,24 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Game-commit dismissal (decision E): every committed action produces a
   // NEW state object (the reducer is pure — GameSessionProvider), so this
   // closes any open tap-popover on each commit. View-only archive runs
-  // never dispatch, so they never trigger it.
+  // never dispatch, so they never trigger it. Time Trial's CLOCK_TICK
+  // also mints a new state every second — but only elapsedMs moves, and
+  // every real commit swaps at least one of the references checked
+  // here, so ticks leave open popovers alone.
   const closeAllPopovers = useTapPopoverCloseAll();
+  const prevCommitRef = useRef(state);
   useEffect(() => {
+    const prev = prevCommitRef.current;
+    prevCommitRef.current = state;
+    if (
+      prev.phase === state.phase &&
+      prev.grid === state.grid &&
+      prev.drawn === state.drawn &&
+      prev.bonusCards === state.bonusCards &&
+      prev.history === state.history
+    ) {
+      return;
+    }
     closeAllPopovers();
   }, [state, closeAllPopovers]);
 
@@ -518,12 +550,31 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           </span>
         </span>
+        {/* Time Trial: the clock and its current worth. Fixed-width
+            tabular numerals so 9:59 → 10:00 can't reflow the row. */}
+        {state.timeTrial && (
+          <span
+            className={`${styles.clockPill} ${
+              clockOver ? styles.clockPillOver : ''
+            }`}
+            aria-label={`Time ${clockText}, currently worth ${
+              clockWorth >= 0 ? `+${clockWorth}` : clockWorth
+            } points`}
+          >
+            <span aria-hidden="true">⏱</span>
+            {clockText} · {clockWorth >= 0 ? `+${clockWorth}` : clockWorth}
+          </span>
+        )}
       </span>
     );
   }, [
     state.difficulty,
     state.bonusSwapAtCap,
     state.noBonusCards,
+    state.timeTrial,
+    clockText,
+    clockWorth,
+    clockOver,
     navScore,
     state.target,
     state.noDiscards,

@@ -13,7 +13,8 @@ import { categoryOf } from '../../lib/bonusCardCategory';
 // and what the purple (grid-level) cards multiplied it by. Exact by
 // construction against scoring.ts's pipeline:
 //
-//   ceil((base + goldAdd) × gridMultiplier) + gridFlat === report.total
+//   ceil((base + goldAdd) × gridMultiplier) + gridFlat + timeAdjust
+//     === report.total
 export interface ScoreBreakdownData {
   // Pure-poker score: the grid scored with NO bonus cards. Bull
   // Market's handBoost stays in — it changes hand values rather than
@@ -23,6 +24,8 @@ export interface ScoreBreakdownData {
   goldAdd: number;
   gridMultiplier: number;
   gridFlat: number;
+  // Time Trial's clock adjustment (0 everywhere else).
+  timeAdjust: number;
   hasGold: boolean;
   hasPurple: boolean;
   // The no-bonus-cards report — its per-line totals drive the rail
@@ -44,6 +47,9 @@ export const computeScoreBreakdown = (
     ...options,
     ignoreIncompletePenalty:
       (options.ignoreIncompletePenalty ?? false) || negatesPenalty,
+    // Time Trial: the clock's flat lives OUTSIDE the decomposition —
+    // letting it into the base would skew goldAdd (subtotal − base).
+    timeAdjust: 0,
   });
   const base = baseReport.total;
   const goldAdd = report.subtotal - base;
@@ -52,6 +58,7 @@ export const computeScoreBreakdown = (
     goldAdd,
     gridMultiplier: report.gridMultiplier,
     gridFlat: report.gridFlat,
+    timeAdjust: report.timeAdjust,
     hasGold: goldAdd !== 0,
     hasPurple: report.gridMultiplier !== 1 || report.gridFlat !== 0,
     baseReport,
@@ -124,6 +131,8 @@ export const computeScoreBuild = (
     ...options,
     ignoreIncompletePenalty:
       (options.ignoreIncompletePenalty ?? false) || negatesPenalty,
+    // Per-card scoring must stay clock-free (see computeScoreBreakdown).
+    timeAdjust: 0,
   };
 
   const goldCards = bonusCards.filter(c => GOLD_CATEGORIES.has(categoryOf(c)));

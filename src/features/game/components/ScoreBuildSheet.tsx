@@ -50,6 +50,19 @@ export function ScoreBuildSheet({
             </span>
           </div>
         ))}
+        {/* Time Trial's clock adjustment — not a card, its own row. */}
+        {build.timeAdjust !== 0 && (
+          <div className={styles.row}>
+            <span>
+              {build.timeAdjust > 0 ? '⏱ Time bonus' : '⏱ Time penalty'}
+            </span>
+            <span>
+              {build.timeAdjust > 0
+                ? `+${build.timeAdjust}`
+                : build.timeAdjust}
+            </span>
+          </div>
+        )}
         <div className={`${styles.row} ${styles.total}`}>
           <span>Final score</span>
           <span>{build.total}</span>
