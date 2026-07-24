@@ -95,7 +95,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             scatter: mode.id === 'scatter',
             investHands: mode.id === 'bull-market',
             doubleDuty: mode.id === 'double-duty',
-            spinCycle: mode.id === 'spin-cycle',
+            spiraling: mode.id === 'spiraling',
           }),
       };
     }

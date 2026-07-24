@@ -11,6 +11,8 @@ import {
   slideChain,
   slideChainMaxDistance,
   slideTargets,
+  SPIRAL_ORDER,
+  SPIRAL_POSITION,
 } from './grid';
 
 // ---------- Generic grid queries (shared by special-card flows) ----------
@@ -538,47 +540,64 @@ export const executeSlide = (
   return next;
 };
 
-// ---------- ♠ Spin (Spin Cycle challenge) ----------
-// Under the Spin Cycle variant, ♠ rotates ONE card clockwise to the next
-// empty cell on its ring instead of sliding. The 5×5 board splits into
-// two rings: the OUTER ring is the 16 border cells, the INNER ring the 8
-// cells around the center. The center cell (12) belongs to neither, so a
-// card sitting there can never spin.
+// ---------- ♠ Spiral (Spiraling challenge) ----------
+// Under the Spiraling variant, ♠ moves ONE card OUTWARD along the spiral
+// placement order by the played spade's pip value. A card on spiral
+// position p lands on position p + pips; the move is legal only when
+// that position exists (≤ 25) and its cell is EMPTY — cards along the
+// way are jumped over, they never block.
 
-// Clockwise orders, starting at each ring's top-left corner.
-export const OUTER_RING: readonly number[] = [
-  0, 1, 2, 3, 4, 9, 14, 19, 24, 23, 22, 21, 20, 15, 10, 5,
-];
-export const INNER_RING: readonly number[] = [6, 7, 8, 13, 18, 17, 16, 11];
-
-export const ringOf = (idx: number): readonly number[] | null =>
-  OUTER_RING.includes(idx) ? OUTER_RING : INNER_RING.includes(idx) ? INNER_RING : null;
-
-/** The cell a spin from `idx` lands on: the first EMPTY cell walking
- *  clockwise around its ring (wrapping past the start). Null when the
- *  cell is off-ring (center) or every other cell on the ring is full. */
-export const spinDestination = (grid: Grid, idx: number): number | null => {
-  const ring = ringOf(idx);
-  if (!ring) return null;
-  const at = ring.indexOf(idx);
-  for (let step = 1; step < ring.length; step++) {
-    const j = ring[(at + step) % ring.length];
-    if (grid[j] === null) return j;
-  }
-  return null;
+/** The played spade's travel distance: A=1, 2–10 face value, J=11,
+ *  Q=12, K=13. (Jokers never reach here — they have no suit perk.) */
+export const spiralPipValue = (card: Card): number => {
+  if (isJoker(card)) return 0;
+  const r = card.rank;
+  if (r === 'A') return 1;
+  if (r === 'J') return 11;
+  if (r === 'Q') return 12;
+  if (r === 'K') return 13;
+  return parseInt(r, 10);
 };
 
-/** Cards that can spin: occupied, on a ring, with an empty cell to
- *  rotate into. */
-export const spinnableSlots = (grid: Grid): number[] => {
+/** The cell a spiral from `idx` lands on, or null when the move runs
+ *  past the spiral's end (position 25) or the landing cell is taken. */
+export const spiralDestination = (
+  grid: Grid,
+  idx: number,
+  steps: number
+): number | null => {
+  if (steps <= 0) return null;
+  const destPos = SPIRAL_POSITION[idx] + steps; // positions are 1-based
+  if (destPos > GRID_SLOTS) return null;
+  const dest = SPIRAL_ORDER[destPos - 1];
+  return grid[dest] === null ? dest : null;
+};
+
+/** The spiral cells a moving card travels THROUGH (for the hop
+ *  animation): every slot from the source's next position up to and
+ *  including the destination, occupied or not. */
+export const spiralHopPath = (from: number, dest: number): number[] => {
+  const a = SPIRAL_POSITION[from];
+  const b = SPIRAL_POSITION[dest];
+  const out: number[] = [];
+  for (let p = a + 1; p <= b; p++) out.push(SPIRAL_ORDER[p - 1]);
+  return out;
+};
+
+/** Cards that can spiral `steps` outward: occupied source, in-range
+ *  empty destination. */
+export const spiralableSlots = (grid: Grid, steps: number): number[] => {
   const out: number[] = [];
   for (let i = 0; i < GRID_SLOTS; i++) {
-    if (grid[i] !== null && spinDestination(grid, i) !== null) out.push(i);
+    if (grid[i] !== null && spiralDestination(grid, i, steps) !== null) {
+      out.push(i);
+    }
   }
   return out;
 };
 
-export const canSpin = (grid: Grid): boolean => spinnableSlots(grid).length > 0;
+export const canSpiral = (grid: Grid, steps: number): boolean =>
+  spiralableSlots(grid, steps).length > 0;
 
 // ---------- ♦ Destroy (diamond) ----------
 // Trash any one card on the grid (any rank/suit, including joker).
@@ -627,15 +646,18 @@ export const suitActionAvailable = (
   // whether ANY slot is still drawable (unspent + a matching card left
   // in the bonus deck); null = the run has no slot categories.
   slotDrawable: boolean | null = null,
-  // Spin Cycle: ♠ rotates a card around its ring instead of sliding.
-  spinCycle: boolean = false
+  // Spiraling: ♠ moves a card outward along the spiral by the drawn
+  // spade's pip value instead of sliding.
+  spiraling: boolean = false
 ): boolean => {
   if (!drawn || isJoker(drawn)) return false;
   switch (drawn.suit) {
     case 'H':
       return canHop(grid);
     case 'S':
-      return spinCycle ? canSpin(grid) : canSlide(grid);
+      return spiraling
+        ? canSpiral(grid, spiralPipValue(drawn))
+        : canSlide(grid);
     case 'D':
       return canDestroy(grid);
     case 'C':

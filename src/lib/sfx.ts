@@ -110,6 +110,19 @@ export const sfxFlip = (): void => {
   tone(200, 0.2, 0.05, 0.035, 'square', 150);
 };
 
+/** Spiraling's ♠ — one papery tick per spiral space hopped, rising in
+ *  pitch as the card travels outward. `step` is 0-based of `total`. */
+export const sfxSpiralTick = (step: number, total: number): void => {
+  const t = total <= 1 ? 1 : step / (total - 1);
+  tone(440 + t * 440, 0, 0.045, 0.045, 'triangle');
+};
+
+/** Spiraling's landing — a settled two-note thunk. */
+export const sfxSpiralLand = (): void => {
+  tone(587.33, 0, 0.09, 0.07, 'triangle');
+  tone(293.66, 0.02, 0.13, 0.055, 'sine');
+};
+
 /** Target beaten — rising arpeggio. */
 export const sfxWin = (): void => {
   [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>

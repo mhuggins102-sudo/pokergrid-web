@@ -9,7 +9,7 @@ import {
   canDeselectSideSlideSlot,
   sideSlideChainExtensions,
   sideSlideTapTargets,
-  spinDestination,
+  spiralDestination,
   suitActionAvailable,
 } from '../../game/actions';
 import { Suit, isJoker } from '../../game/cards';
@@ -91,14 +91,14 @@ export function usePhaseUI(): PhaseUI {
   const { state, dispatch } = useGameSession();
   const phase = state.phase;
 
-  // Hop and Spin are the targeting flows with a UI-side selection step
-  // (the reducer only knows completed commits). Reset both whenever the
-  // phase object changes.
+  // Hop and Spiral are the targeting flows with a UI-side selection
+  // step (the reducer only knows completed commits). Reset both
+  // whenever the phase object changes.
   const [hopFirst, setHopFirst] = useState<number | null>(null);
-  const [spinPick, setSpinPick] = useState<number | null>(null);
+  const [spiralPick, setSpiralPick] = useState<number | null>(null);
   useEffect(() => {
     setHopFirst(null);
-    setSpinPick(null);
+    setSpiralPick(null);
   }, [phase]);
 
   return useMemo<PhaseUI>(() => {
@@ -246,14 +246,14 @@ export function usePhaseUI(): PhaseUI {
                           state.bonusDeck.some(c => cardMatchesSlot(c, kind))
                       )
                     : null,
-                  state.spinCycle
+                  state.spiraling
                 );
             const perkLabel = state.randomPerks
               ? '? Perk'
               : state.investHands && drawn.suit === 'C'
                 ? '♣ Invest'
-                : state.spinCycle && drawn.suit === 'S'
-                  ? '♠ Spin'
+                : state.spiraling && drawn.suit === 'S'
+                  ? '♠ Spiral'
                   : // Double Duty included — the docks all give the perk a
                     // full-width slot now, so the suit glyph fits and the
                     // button reads the same as in standard games.
@@ -381,53 +381,54 @@ export function usePhaseUI(): PhaseUI {
         return { ...ui, actions: lockedPerkActions(ui.actions) };
       }
 
-      case 'awaiting-target-spin': {
-        // Spin Cycle's ♠: tap a card to PREVIEW where it rotates (the
-        // next empty cell clockwise on its ring lights up alongside it),
-        // then Confirm — or tap the lit destination — to commit. Tapping
-        // the picked card again deselects; tapping another eligible card
-        // moves the preview.
+      case 'awaiting-target-spiral': {
+        // Spiraling's ♠: tap a card to PREVIEW where it travels (its
+        // landing cell `steps` outward along the spiral lights up
+        // alongside it), then Confirm — or tap the lit destination — to
+        // commit. Tapping the picked card again deselects; tapping
+        // another eligible card moves the preview.
         const targets = new Set(phase.targets);
-        if (spinPick === null || !targets.has(spinPick)) {
+        const steps = phase.steps;
+        if (spiralPick === null || !targets.has(spiralPick)) {
           return {
             ...base,
-            banner: '♠ Spin — tap a card to rotate clockwise',
+            banner: `♠ Spiral — tap a card to move it ${steps} along the spiral`,
             ...fromSets(targets),
             isTappable: idx => targets.has(idx),
             onCellTap: idx => {
-              if (targets.has(idx)) setSpinPick(idx);
+              if (targets.has(idx)) setSpiralPick(idx);
             },
             actions: [cancelAction],
           };
         }
-        const dest = spinDestination(state.grid, spinPick);
+        const dest = spiralDestination(state.grid, spiralPick, steps);
         const tappable = new Set(targets);
         if (dest !== null) tappable.add(dest);
         const commit = () =>
-          dispatch({ type: 'RESOLVE_SPIN', slot: spinPick });
+          dispatch({ type: 'RESOLVE_SPIRAL', slot: spiralPick });
         return {
           ...base,
-          banner: '♠ Spin — confirm the move, or pick another card',
+          banner: '♠ Spiral — confirm the move, or pick another card',
           ...fromSets(
             tappable,
-            new Set(dest !== null ? [spinPick, dest] : [spinPick])
+            new Set(dest !== null ? [spiralPick, dest] : [spiralPick])
           ),
           isTappable: idx => tappable.has(idx),
           onCellTap: idx => {
-            if (idx === spinPick) {
-              setSpinPick(null);
+            if (idx === spiralPick) {
+              setSpiralPick(null);
               return;
             }
             if (idx === dest) {
               commit();
               return;
             }
-            if (targets.has(idx)) setSpinPick(idx);
+            if (targets.has(idx)) setSpiralPick(idx);
           },
           actions: [
             {
               id: 'confirm',
-              label: 'Confirm spin',
+              label: 'Confirm spiral',
               variant: 'primary',
               disabled: dest === null,
               onPress: commit,
@@ -681,5 +682,5 @@ export function usePhaseUI(): PhaseUI {
           isGameOver: true,
         };
     }
-  }, [phase, state, dispatch, hopFirst, spinPick]);
+  }, [phase, state, dispatch, hopFirst, spiralPick]);
 }
