@@ -384,15 +384,16 @@ export function usePhaseUI(): PhaseUI {
       case 'awaiting-target-spiral': {
         // Spiraling's ♠: tap a card to PREVIEW where it travels (its
         // landing cell `steps` outward along the spiral lights up
-        // alongside it), then Confirm — or tap the lit destination — to
-        // commit. Tapping the picked card again deselects; tapping
-        // another eligible card moves the preview.
+        // alongside it), then tap the lit landing space to commit —
+        // same shape as Slide's source → destination flow, so the dock
+        // never grows an extra button. Tapping the picked card again
+        // deselects; tapping another eligible card moves the preview.
         const targets = new Set(phase.targets);
         const steps = phase.steps;
         if (spiralPick === null || !targets.has(spiralPick)) {
           return {
             ...base,
-            banner: `♠ Spiral — tap a card to move it ${steps} along the spiral`,
+            banner: `♠ Spiral — tap a card to move ${steps} spaces`,
             ...fromSets(targets),
             isTappable: idx => targets.has(idx),
             onCellTap: idx => {
@@ -404,11 +405,9 @@ export function usePhaseUI(): PhaseUI {
         const dest = spiralDestination(state.grid, spiralPick, steps);
         const tappable = new Set(targets);
         if (dest !== null) tappable.add(dest);
-        const commit = () =>
-          dispatch({ type: 'RESOLVE_SPIRAL', slot: spiralPick });
         return {
           ...base,
-          banner: '♠ Spiral — confirm the move, or pick another card',
+          banner: '♠ Spiral — tap the landing space',
           ...fromSets(
             tappable,
             new Set(dest !== null ? [spiralPick, dest] : [spiralPick])
@@ -420,21 +419,12 @@ export function usePhaseUI(): PhaseUI {
               return;
             }
             if (idx === dest) {
-              commit();
+              dispatch({ type: 'RESOLVE_SPIRAL', slot: spiralPick });
               return;
             }
             if (targets.has(idx)) setSpiralPick(idx);
           },
-          actions: [
-            {
-              id: 'confirm',
-              label: 'Confirm spiral',
-              variant: 'primary',
-              disabled: dest === null,
-              onPress: commit,
-            },
-            cancelAction,
-          ],
+          actions: [cancelAction],
         };
       }
 
