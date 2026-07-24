@@ -1,10 +1,23 @@
-import { CSSProperties, useEffect, useRef } from 'react';
+import { CSSProperties, RefObject, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Card, isJoker } from '../../../game/cards';
 import { GRID_SIZE, Grid } from '../../../game/grid';
 import { CardFace, cardAriaLabel, cardLayoutId } from './CardFace';
 import { CellRole } from '../usePhaseUI';
 import styles from './GridBoard.module.css';
+
+/** Spiraling's committed ♠: the moved card hops cell-to-cell along the
+ *  spiral path (path[0] = its source cell, last = its landing cell)
+ *  while the landing cell itself is hidden via hiddenSlots. */
+export interface HopFlight {
+  card: Card;
+  path: readonly number[];
+  /** Fires as the card arrives on each waypoint (1-based step of
+   *  path.length - 1 hops) — the per-hop tick sound. */
+  onStep?: (step: number, total: number) => void;
+  /** Fires once the card has settled on the landing cell. */
+  onDone: () => void;
+}
 
 export interface GridBoardProps {
   grid: Grid;
@@ -66,6 +79,8 @@ export interface GridBoardProps {
    *  mockup's "PLACE"). Follows the role — a staged flight suppresses
    *  the 'next' role and this label with it. */
   nextSlotLabel?: string;
+  /** Spiraling: a card mid-hop along the spiral (see HopFlight). */
+  hopFlight?: HopFlight | null;
 }
 
 const cellLabel = (idx: number, card: Card | null, role: CellRole): string => {
@@ -153,12 +168,19 @@ export function GridBoard({
   onCellHover,
   hoverOutline,
   nextSlotLabel,
+  hopFlight = null,
 }: GridBoardProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const dealOrder = [...openingDeal];
   const spotRow = spotlight ? Math.floor(spotlight.idx / GRID_SIZE) : -1;
   const spotCol = spotlight ? spotlight.idx % GRID_SIZE : -1;
   return (
-    <div className={styles.board} role="grid" aria-label="Game board">
+    <div
+      ref={rootRef}
+      className={styles.board}
+      role="grid"
+      aria-label="Game board"
+    >
       {grid.map((realCard, idx) => {
         // A staged card renders as empty here — it's posing in the
         // well, and lands (with FLIP travel) when its flight releases.
@@ -288,6 +310,91 @@ export function GridBoard({
           {spotlight.colText}
         </span>
       )}
+      {hopFlight && <HopOverlay boardRef={rootRef} flight={hopFlight} />}
     </div>
+  );
+}
+
+// One hop per spiral space, brisk and even — a 13-step King reads as a
+// quick run around the board, not a slog.
+const HOP_STEP_S = 0.11;
+
+/**
+ * The Spiraling travel animation: a floating copy of the moved card
+ * hops waypoint-to-waypoint along the spiral path (measured from the
+ * live cell buttons), ticking onStep at each arrival and onDone after
+ * settling on the landing cell — where the real card then un-hides.
+ */
+function HopOverlay({
+  boardRef,
+  flight,
+}: {
+  boardRef: RefObject<HTMLDivElement | null>;
+  flight: HopFlight;
+}) {
+  const [rects, setRects] = useState<
+    { x: number; y: number; w: number; h: number }[] | null
+  >(null);
+  // Measure once per flight; schedule the step ticks + completion on
+  // the same clock the keyframes run on.
+  useEffect(() => {
+    const root = boardRef.current;
+    if (!root) {
+      flight.onDone();
+      return;
+    }
+    const cells = root.querySelectorAll(':scope > button');
+    const rootRect = root.getBoundingClientRect();
+    const measured = flight.path.map(idx => {
+      const r = (cells[idx] as HTMLElement).getBoundingClientRect();
+      return {
+        x: r.left - rootRect.left,
+        y: r.top - rootRect.top,
+        w: r.width,
+        h: r.height,
+      };
+    });
+    setRects(measured);
+    const hops = flight.path.length - 1;
+    const timers: number[] = [];
+    for (let i = 1; i <= hops; i++) {
+      timers.push(
+        window.setTimeout(
+          () => flight.onStep?.(i, hops),
+          i * HOP_STEP_S * 1000
+        )
+      );
+    }
+    timers.push(
+      window.setTimeout(flight.onDone, hops * HOP_STEP_S * 1000 + 120)
+    );
+    return () => timers.forEach(t => window.clearTimeout(t));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flight]);
+
+  if (!rects || rects.length < 2) return null;
+  const hops = rects.length - 1;
+  const times = rects.map((_, i) => i / hops);
+  return (
+    <motion.div
+      className={styles.hopCard}
+      style={{ width: rects[0].w, height: rects[0].h }}
+      initial={{ x: rects[0].x, y: rects[0].y, scale: 1 }}
+      animate={{
+        x: rects.map(r => r.x),
+        y: rects.map(r => r.y),
+        // A light lift on every intermediate waypoint, settled flat at
+        // the landing cell.
+        scale: rects.map((_, i) => (i === 0 || i === hops ? 1 : 1.08)),
+      }}
+      transition={{
+        duration: hops * HOP_STEP_S,
+        times,
+        ease: 'linear',
+      }}
+      aria-hidden="true"
+    >
+      <CardFace card={flight.card} />
+    </motion.div>
   );
 }

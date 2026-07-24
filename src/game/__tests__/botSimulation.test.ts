@@ -346,8 +346,8 @@ const pickAction = (s: GameState): Action => {
     case 'awaiting-special-revive-pick':
     case 'awaiting-special-rewind':
     case 'awaiting-bonus-slot-choice':
-    case 'awaiting-target-spin':
-      // Three Tricks / Mixed Bag / Spin Cycle specialty phases don't
+    case 'awaiting-target-spiral':
+      // Three Tricks / Mixed Bag / Spiraling specialty phases don't
       // appear in the bot's Free Play simulation. If they ever do,
       // just bail out cleanly.
       return { type: 'CANCEL_ACTION' };

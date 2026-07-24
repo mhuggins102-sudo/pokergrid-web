@@ -75,9 +75,10 @@ import {
   SideSlideMove,
   SlideMove,
   slideDestinationsFrom,
-  canSpin,
-  spinDestination,
-  spinnableSlots,
+  canSpiral,
+  spiralDestination,
+  spiralPipValue,
+  spiralableSlots,
   supercharchableSlots,
   validHopSwaps,
   validSideSlideSources,
@@ -102,10 +103,16 @@ export type Phase =
       returnTo: TargetReturnTo;
     }
   | { kind: 'awaiting-target-destroy'; targets: number[]; returnTo: TargetReturnTo }
-  // Spin Cycle: ♠ rotates one card clockwise to the next empty cell on
-  // its ring. Targets are the spinnable cards; the preview/confirm step
-  // lives UI-side (usePhaseUI), the reducer only resolves the commit.
-  | { kind: 'awaiting-target-spin'; targets: number[]; returnTo: TargetReturnTo }
+  // Spiraling: ♠ moves one card outward along the spiral by `steps`
+  // (the played spade's pip value). Targets are the movable cards; the
+  // preview/confirm step lives UI-side (usePhaseUI), the reducer only
+  // resolves the commit.
+  | {
+      kind: 'awaiting-target-spiral';
+      targets: number[];
+      steps: number;
+      returnTo: TargetReturnTo;
+    }
   | {
       kind: 'bonus-card-resolving';
       drawn: BonusCard[]; // 1 or 2 cards
@@ -315,10 +322,10 @@ export interface GameState {
   // those currently available (hop / slide / destroy / bonus). The
   // drawn card is still spent in perkSpent.
   randomPerks: boolean;
-  // True when the Spin Cycle challenge is active: ♠ rotates one card
-  // clockwise to the next empty cell on its ring (inner 8 / outer 16;
-  // the center cell is on neither) instead of sliding.
-  spinCycle: boolean;
+  // True when the Spiraling challenge is active: ♠ moves one card
+  // OUTWARD along the spiral order by the played spade's pip value
+  // (A=1, 2–10 face, J=11, Q=12, K=13) instead of sliding.
+  spiraling: boolean;
   // True when the Poker Purist challenge is active. The bonus deck
   // and hand both start empty and stay that way — no starter, no ♣
   // draws (canDrawBonus returns false against an empty bonusDeck),
@@ -383,8 +390,8 @@ export type Action =
   | { type: 'SLIDE_SELECT_SOURCE'; slot: number }
   | { type: 'RESOLVE_SLIDE'; from: number; direction: Direction; distance: number }
   | { type: 'RESOLVE_DESTROY'; slot: number }
-  // Spin Cycle: rotate the card at `slot` to its ring's next empty cell.
-  | { type: 'RESOLVE_SPIN'; slot: number }
+  // Spiraling: move the card at `slot` outward along the spiral.
+  | { type: 'RESOLVE_SPIRAL'; slot: number }
   | { type: 'BONUS_KEEP'; idx: number }
   | { type: 'BONUS_SELECT_NEW'; idx: number }
   | { type: 'BONUS_REPLACE'; oldIdx: number }
@@ -495,9 +502,9 @@ export interface NewGameOptions {
   // dictates which perk fires; instead BEGIN_SUIT_ACTION picks a
   // uniformly-random perk from those currently available.
   randomPerks?: boolean;
-  // Lock in Spin Cycle rules — ♠ rotates a card around its ring
-  // instead of sliding.
-  spinCycle?: boolean;
+  // Lock in Spiraling rules — ♠ moves a card outward along the spiral
+  // by the drawn spade's pip value.
+  spiraling?: boolean;
   // Lock in Poker Purist rules — no bonus cards anywhere. Both the
   // starting hand and the bonus deck are emptied; ♣ becomes unavailable
   // (canDrawBonus → false against an empty deck) and the UI hides the
@@ -545,7 +552,7 @@ export const newGame = (
     deckExtras = [],
     superchargedDeckCards = [],
     randomPerks = false,
-    spinCycle = false,
+    spiraling = false,
     noBonusCards = false,
     initialBonusCards = [],
     slotCategories,
@@ -705,7 +712,7 @@ export const newGame = (
     // difficulty's own rule (Hard / Extreme are already 'off').
     bonusSwapAtCap: noSwap ? 'off' : BONUS_SWAP_AT_CAP_BY_DIFFICULTY[difficulty],
     randomPerks,
-    spinCycle,
+    spiraling,
     noBonusCards,
     slotCategories,
     scatter,
@@ -886,15 +893,17 @@ const handleBeginSuitAction = (
       };
     }
     case 'S': {
-      // Spin Cycle: ♠ rotates one card around its ring instead of
-      // sliding a chain.
-      if (s.spinCycle) {
-        if (!canSpin(s.grid)) return s;
+      // Spiraling: ♠ moves one card outward along the spiral by the
+      // played spade's pip value instead of sliding a chain.
+      if (s.spiraling) {
+        const steps = spiralPipValue(drawn);
+        if (!canSpiral(s.grid, steps)) return s;
         return {
           ...s,
           phase: {
-            kind: 'awaiting-target-spin',
-            targets: spinnableSlots(s.grid),
+            kind: 'awaiting-target-spiral',
+            targets: spiralableSlots(s.grid, steps),
+            steps,
             returnTo: 'awaiting-action',
           },
         };
@@ -1025,22 +1034,22 @@ const handleResolveSlide = (
   );
 };
 
-const handleResolveSpin = (
+const handleResolveSpiral = (
   s: GameState,
   slot: number,
   rng: () => number
 ): GameState => {
-  if (s.phase.kind !== 'awaiting-target-spin') return s;
+  if (s.phase.kind !== 'awaiting-target-spiral') return s;
   if (!s.drawn || isJoker(s.drawn)) return s;
   if (!s.phase.targets.includes(slot)) return s;
   const card = s.grid[slot];
-  const dest = spinDestination(s.grid, slot);
+  const dest = spiralDestination(s.grid, slot, s.phase.steps);
   if (!card || dest === null) return s;
   const grid = s.grid.slice();
   grid[slot] = null;
   grid[dest] = card;
   return drawNext(
-    log(pushPerkSpent({ ...s, grid }, s.drawn), `Spin ${slot} → ${dest}`),
+    log(pushPerkSpent({ ...s, grid }, s.drawn), `Spiral ${slot} → ${dest}`),
     rng
   );
 };
@@ -1910,7 +1919,7 @@ const handleCancelAction = (s: GameState): GameState => {
     case 'awaiting-target-hop':
     case 'awaiting-target-slide-source':
     case 'awaiting-target-destroy':
-    case 'awaiting-target-spin':
+    case 'awaiting-target-spiral':
     case 'bonus-card-resolving':
     case 'awaiting-bonus-slot-choice':
       // Short Circuit: the random perk is committed the moment it is
@@ -1960,7 +1969,7 @@ const SNAP_ACTIONS = new Set<Action['type']>([
   'RESOLVE_HOP',
   'RESOLVE_SLIDE',
   'RESOLVE_DESTROY',
-  'RESOLVE_SPIN',
+  'RESOLVE_SPIRAL',
   'BONUS_KEEP',
   'BONUS_REPLACE',
   'BONUS_DECLINE',
@@ -2047,8 +2056,8 @@ export const step = (
     case 'RESOLVE_DESTROY':
       next = handleResolveDestroy(state, action.slot, rng);
       break;
-    case 'RESOLVE_SPIN':
-      next = handleResolveSpin(state, action.slot, rng);
+    case 'RESOLVE_SPIRAL':
+      next = handleResolveSpiral(state, action.slot, rng);
       break;
     case 'BONUS_KEEP':
       next = handleBonusKeep(state, action.idx, rng);

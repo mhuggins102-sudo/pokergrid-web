@@ -21,8 +21,11 @@ import {
   STARTER_BONUS_BY_DIFFICULTY,
 } from '../../game/rules';
 import { TARGETS_UP_STEP } from '../../game/challenges';
+import { spiralHopPath } from '../../game/actions';
+import { Card } from '../../game/cards';
 import { canPreviewDeck } from '../../game/state';
 import { targetsUpReached, tierForRun } from '../../lib/stats';
+import { sfxSpiralLand, sfxSpiralTick } from '../../lib/sfx';
 import {
   Button,
   Sheet,
@@ -34,6 +37,7 @@ import {
 import { difficultyColors } from '../../design/tokens';
 import { useNavExtras, useNavGameRow } from '../../app/DesktopNav';
 import { useGameSession } from './GameSessionProvider';
+import { prefersReducedMotion } from './useAnimatedNumber';
 import { useGameFamily } from './useGameFamily';
 import { useTier } from '../../app/useTier';
 import { useCoachHighlight } from './coach';
@@ -50,7 +54,7 @@ import {
   linePotential,
   purpleProgress,
 } from './lineInsights';
-import { GridBoard, useJokerArrivals } from './components/GridBoard';
+import { GridBoard, HopFlight, useJokerArrivals } from './components/GridBoard';
 import {
   TIER_RULES,
   requirementFor,
@@ -695,6 +699,60 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     state,
     viewOnly
   );
+  // Spiraling: a committed ♠ logs "Spiral a → b" — run the hop overlay
+  // (the card visibly travels the spiral, one hop per space, ticking as
+  // it goes) while the landing cell stays hidden; the real card reveals
+  // on completion. Reduced motion skips straight to the landing sound.
+  const [spiralHop, setSpiralHop] = useState<{
+    card: Card;
+    path: number[];
+    dest: number;
+  } | null>(null);
+  const spiralHistLenRef = useRef(state.history.length);
+  useEffect(() => {
+    const prev = spiralHistLenRef.current;
+    spiralHistLenRef.current = state.history.length;
+    if (!state.spiraling || state.history.length <= prev) return;
+    for (const entry of state.history.slice(prev)) {
+      const m = /^Spiral (\d+) → (\d+)$/.exec(entry);
+      if (!m) continue;
+      const from = Number(m[1]);
+      const dest = Number(m[2]);
+      const card = state.grid[dest];
+      if (!card) continue;
+      const { reduceMotion: rm, sounds } = useSettingsStore.getState();
+      if (rm || prefersReducedMotion()) {
+        if (sounds) sfxSpiralLand();
+        continue;
+      }
+      setSpiralHop({ card, path: [from, ...spiralHopPath(from, dest)], dest });
+    }
+  }, [state]);
+  const spiralHopFlight = useMemo<HopFlight | null>(
+    () =>
+      spiralHop
+        ? {
+            card: spiralHop.card,
+            path: spiralHop.path,
+            onStep: (step, total) => {
+              if (useSettingsStore.getState().sounds) sfxSpiralTick(step, total);
+            },
+            onDone: () => {
+              if (useSettingsStore.getState().sounds) sfxSpiralLand();
+              setSpiralHop(null);
+            },
+          }
+        : null,
+    [spiralHop]
+  );
+  // The landing cell stays empty while the hop overlay carries the card.
+  const boardHidden = useMemo(
+    () =>
+      spiralHop
+        ? new Set([...hiddenSlots, spiralHop.dest])
+        : hiddenSlots,
+    [hiddenSlots, spiralHop]
+  );
   // Cells of a line that just completed with a scoring hand — flashed
   // as a staggered sweep on the board.
   const sweepSlots = useLineCompletions(liveReport);
@@ -927,15 +985,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const rowActions = ui.actions.filter(a => a !== commitAction);
 
   // Mirrors the dock's pause: while an engine flight is posing in the
-  // well, a board tap must not commit the drawn card either.
+  // well (or a Spiraling hop is travelling), a board tap must not
+  // commit the drawn card either.
   const placeArmed =
-    placeAction !== undefined && flight === null && hiddenSlots.size === 0;
+    placeAction !== undefined && flight === null && boardHidden.size === 0;
   const boardRole = (idx: number) => {
     const role = ui.roleOf(idx);
     // Hold the next-slot ring until any staged flight (opening pose,
-    // joker arrival) has landed — otherwise it highlights the SECOND
-    // slot while the first card is still posing in the well.
-    if (role === 'next' && (flight !== null || hiddenSlots.size > 0)) {
+    // joker arrival, spiral hop) has landed — otherwise it highlights
+    // the SECOND slot while the first card is still in motion.
+    if (role === 'next' && (flight !== null || boardHidden.size > 0)) {
       return null;
     }
     return role;
@@ -989,10 +1048,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     <Button
       key={a.id}
       variant={a.variant}
-      // While an auto-placed card poses in the well, the dock pauses —
-      // committing then would act on the drawn card while the well
-      // shows the flight card.
-      disabled={a.disabled || flight !== null}
+      // While an auto-placed card poses in the well (or a Spiraling hop
+      // is travelling), the dock pauses — committing then would act on
+      // the drawn card while a card is still in motion.
+      disabled={a.disabled || flight !== null || spiralHop !== null}
       onClick={a.onPress}
       className={
         [
@@ -1074,9 +1133,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       instantLayout={instantLayout}
       jokerArrivals={jokerArrivals}
       openingDeal={cssDeal}
-      hiddenSlots={hiddenSlots}
+      hiddenSlots={boardHidden}
       spotlight={spotlightProp}
       sweepSlots={sweepSlots}
+      hopFlight={spiralHopFlight}
       {...extra}
     />
   );

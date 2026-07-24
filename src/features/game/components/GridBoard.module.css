@@ -103,6 +103,17 @@
   inset: 0;
 }
 
+/* Spiraling's hop flight — the floating card copy travelling the spiral
+   path above the cells (HopOverlay positions it via transforms). */
+.hopCard {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28));
+}
+
 /* The pulsing next slot names its action (mockup line 746). Desk-tuned at
    11px; the mobile column board now shows it too (GameScreen's column board
    call passes nextSlotLabel), so a phone rule scales it down below. */

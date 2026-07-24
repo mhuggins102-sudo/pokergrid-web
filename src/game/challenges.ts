@@ -23,7 +23,7 @@ export type ChallengeId =
   | 'scatter'
   | 'bull-market'
   | 'double-duty'
-  | 'spin-cycle';
+  | 'spiraling';
 
 export interface Challenge {
   id: ChallengeId;
@@ -154,13 +154,13 @@ export const CHALLENGES: Challenge[] = [
     conditionMet: () => true,
   },
   {
-    id: 'spin-cycle',
-    name: 'Spin Cycle',
-    synopsis: 'Twist: ♠ spins a card around its ring',
-    goal: "Score 500+ points with a rewired ♠ perk: instead of sliding, pick any card and it rotates clockwise to the next EMPTY cell on its ring — the board's 16 border cells form the outer ring, the 8 cells around the center the inner ring. The center cell is on neither, so a card there can't spin. Tap a card to preview its landing spot, then confirm.",
+    id: 'spiraling',
+    name: 'Spiraling',
+    synopsis: 'Twist: ♠ spirals a card outward by its pips',
+    goal: "Score 500+ points with a rewired ♠ perk: instead of sliding, pick any card on the board and it travels OUTWARD along the spiral by the played spade's pip value (A=1, 2–10 face value, J=11, Q=12, K=13) — a card on spiral space 1, moved by a 9♠, lands on space 10. It jumps over cards along the way, but the landing space must be empty and within the spiral (space 25 is the end). Tap a card to preview its landing spot, then confirm.",
     scoreTarget: 500,
-    // Enforced at the reducer level: state.spinCycle reroutes ♠ from the
-    // slide flow into the spin flow. Hitting the score target is the
+    // Enforced at the reducer level: state.spiraling reroutes ♠ from the
+    // slide flow into the spiral flow. Hitting the score target is the
     // only end-state check.
     conditionMet: () => true,
   },
