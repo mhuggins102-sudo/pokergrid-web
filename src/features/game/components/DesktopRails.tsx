@@ -260,7 +260,7 @@ export function ScoringPanel({
           );
         })}
       </div>
-      {endgame.length > 0 && (
+      {(endgame.length > 0 || report.timeAdjust !== 0) && (
         <>
           <div className={styles.subRow}>
             <span>Subtotal</span>
@@ -274,6 +274,24 @@ export function ScoringPanel({
               </span>
             </div>
           ))}
+          {/* Time Trial's clock adjustment — not a bonus card, so it
+              rides beside the per-card endgame rows directly. */}
+          {report.timeAdjust !== 0 && (
+            <div className={styles.subRow}>
+              <span className={styles.endgameLabel}>
+                {report.timeAdjust > 0 ? 'Time bonus' : 'Time penalty'}
+              </span>
+              <span
+                className={`${styles.subPts} ${styles.endgameLabel}${
+                  report.timeAdjust < 0 ? ` ${styles.linePtsNeg}` : ''
+                }`}
+              >
+                {report.timeAdjust > 0
+                  ? `+${report.timeAdjust}`
+                  : report.timeAdjust}
+              </span>
+            </div>
+          )}
         </>
       )}
       <div className={styles.totalRow}>

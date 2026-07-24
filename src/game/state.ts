@@ -326,6 +326,14 @@ export interface GameState {
   // OUTWARD along the spiral order by the played spade's pip value
   // (A=1, 2–10 face, J=11, Q=12, K=13) instead of sliding.
   spiraling: boolean;
+  // True when the Time Trial challenge is active: a clock runs during
+  // play and the FINAL score adds timeTrialAdjust (scoring.ts).
+  timeTrial: boolean;
+  // Active play time in ms, written by CLOCK_TICK from the UI-owned
+  // clock (useGameClock) — the reducer never reads Date.now() itself
+  // (rngPurity). Monotonic: ticks can only raise it, and UNDO keeps
+  // the higher value (rewinding a move must not rewind the clock).
+  elapsedMs: number;
   // True when the Poker Purist challenge is active. The bonus deck
   // and hand both start empty and stay that way — no starter, no ♣
   // draws (canDrawBonus returns false against an empty bonusDeck),
@@ -392,6 +400,9 @@ export type Action =
   | { type: 'RESOLVE_DESTROY'; slot: number }
   // Spiraling: move the card at `slot` outward along the spiral.
   | { type: 'RESOLVE_SPIRAL'; slot: number }
+  // Time Trial: the UI clock reports active play time. Pure — the
+  // elapsed value rides the action payload, never Date.now() in here.
+  | { type: 'CLOCK_TICK'; elapsedMs: number }
   | { type: 'BONUS_KEEP'; idx: number }
   | { type: 'BONUS_SELECT_NEW'; idx: number }
   | { type: 'BONUS_REPLACE'; oldIdx: number }
@@ -505,6 +516,9 @@ export interface NewGameOptions {
   // Lock in Spiraling rules — ♠ moves a card outward along the spiral
   // by the drawn spade's pip value.
   spiraling?: boolean;
+  // Lock in Time Trial rules — the clock scores (see scoring.ts's
+  // timeTrialAdjust).
+  timeTrial?: boolean;
   // Lock in Poker Purist rules — no bonus cards anywhere. Both the
   // starting hand and the bonus deck are emptied; ♣ becomes unavailable
   // (canDrawBonus → false against an empty deck) and the UI hides the
@@ -553,6 +567,7 @@ export const newGame = (
     superchargedDeckCards = [],
     randomPerks = false,
     spiraling = false,
+    timeTrial = false,
     noBonusCards = false,
     initialBonusCards = [],
     slotCategories,
@@ -713,6 +728,8 @@ export const newGame = (
     bonusSwapAtCap: noSwap ? 'off' : BONUS_SWAP_AT_CAP_BY_DIFFICULTY[difficulty],
     randomPerks,
     spiraling,
+    timeTrial,
+    elapsedMs: 0,
     noBonusCards,
     slotCategories,
     scatter,
@@ -1032,6 +1049,18 @@ const handleResolveSlide = (
     log(pushPerkSpent({ ...s, grid }, s.drawn), `Slide ${direction} × ${distance}`),
     rng
   );
+};
+
+// Time Trial's clock write. Same-reference no-ops (useReducer bails
+// out, so a tick that changes nothing re-renders nothing): games
+// without the clock, finished games (the final adjustment reads the
+// last in-play value), and non-advancing ticks (monotonic guard —
+// StrictMode double-dispatch included).
+const handleClockTick = (s: GameState, elapsedMs: number): GameState => {
+  if (!s.timeTrial) return s;
+  if (s.phase.kind === 'game-over') return s;
+  if (elapsedMs <= s.elapsedMs) return s;
+  return { ...s, elapsedMs };
 };
 
 const handleResolveSpiral = (
@@ -1994,6 +2023,9 @@ const handleUndo = (s: GameState): GameState => {
   return {
     ...last,
     past: s.past.slice(0, -1),
+    // Time Trial: rewinding a move must never rewind the clock — keep
+    // whichever elapsed value is higher.
+    elapsedMs: Math.max(s.elapsedMs, last.elapsedMs),
     // undoCount tracks total undos across the run; never reverts.
     undoCount: s.undoCount + 1,
   };
@@ -2058,6 +2090,9 @@ export const step = (
       break;
     case 'RESOLVE_SPIRAL':
       next = handleResolveSpiral(state, action.slot, rng);
+      break;
+    case 'CLOCK_TICK':
+      next = handleClockTick(state, action.elapsedMs);
       break;
     case 'BONUS_KEEP':
       next = handleBonusKeep(state, action.idx, rng);

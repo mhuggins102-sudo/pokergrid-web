@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { bonusShapleyValues, scoreGrid } from '../../../game/scoring';
+import {
+  bonusShapleyValues,
+  scoreGrid,
+  timeTrialAdjust,
+} from '../../../game/scoring';
 import type { Achievement } from '../../../game/achievements';
 import { Sheet, useToast } from '../../../design/primitives';
 import { buildShareUrl, shareUrl } from '../../../lib/share';
@@ -22,6 +26,7 @@ import { HandleEditor, RankPanel } from '../../daily/RankPanel';
 import { useHandle } from '../../daily/sync/handleStore';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { prefersReducedMotion } from '../useAnimatedNumber';
+import { formatClock } from '../useGameClock';
 import { skinFace } from './skinFace';
 import { TIER_RULES } from './TierBreakdownSheet';
 import styles from './DesktopResultDialog.module.css';
@@ -117,6 +122,10 @@ export function DesktopResultDialog({
       discards: state.discards,
       perkSpent: state.perkSpent,
       handBoost: state.handBoost,
+      // Time Trial: the clock joins the final math. (Shapley is immune
+      // to a constant term — marginals cancel it — so sharing options
+      // is safe.)
+      timeAdjust: timeTrialAdjust(state),
     };
     return {
       report: scoreGrid(state.grid, state.bonusCards, options),
@@ -298,6 +307,16 @@ export function DesktopResultDialog({
                 <span className={styles.headContext}>
                   {' '}
                   · <span aria-hidden="true">✦</span> {setup.challenge.name}
+                </span>
+              ) : null}
+              {state.timeTrial ? (
+                <span className={styles.headContext}>
+                  {' '}
+                  · <span aria-hidden="true">⏱</span>{' '}
+                  {formatClock(state.elapsedMs)} ·{' '}
+                  {report.timeAdjust >= 0
+                    ? `+${report.timeAdjust}`
+                    : report.timeAdjust}
                 </span>
               ) : null}
             </span>

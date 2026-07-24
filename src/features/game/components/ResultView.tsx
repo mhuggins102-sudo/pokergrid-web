@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { ScoredLine, bonusShapleyValues, scoreGrid } from '../../../game/scoring';
+import {
+  ScoredLine,
+  bonusShapleyValues,
+  scoreGrid,
+  timeTrialAdjust,
+} from '../../../game/scoring';
 import { Button, Chevron, Sheet } from '../../../design/primitives';
 import { useGameSession } from '../GameSessionProvider';
 import { useRecordResult } from '../../progress/useRecordResult';
@@ -58,6 +63,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
       discards: state.discards,
       perkSpent: state.perkSpent,
       handBoost: state.handBoost,
+      // Time Trial: the clock joins the final math (the breakdown /
+      // build helpers zero it internally for their per-card scoring).
+      timeAdjust: timeTrialAdjust(state),
     };
     const fullReport = scoreGrid(state.grid, state.bonusCards, options);
     const bd = computeScoreBreakdown(
@@ -157,12 +165,16 @@ export function ResultView({ onReplay }: ResultViewProps) {
   // its counting segment, so the hero number visibly counts alongside
   // the row that explains it (green with the base count, gold with
   // base→subtotal, purple with subtotal→total).
+  const finalBeat = breakdown.hasGold ? 4700 : 3300;
   const beatDelays = staticTally
     ? undefined
     : [
         150,
         ...(breakdown.hasGold ? [3300] : []),
-        ...(breakdown.hasPurple ? [breakdown.hasGold ? 4700 : 3300] : []),
+        ...(breakdown.hasPurple ? [finalBeat] : []),
+        // Time Trial's clock row lands on the same final beat — the
+        // total's last counting segment already includes it.
+        ...(breakdown.timeAdjust !== 0 ? [finalBeat] : []),
       ];
 
   // ---- Daily: save locally, then queue-first submit ----
@@ -299,6 +311,20 @@ export function ResultView({ onReplay }: ResultViewProps) {
         <div className={styles.mathRow}>
           <span>Grid flat bonus</span>
           <span>+{report.gridFlat}</span>
+        </div>
+      )}
+      {report.timeAdjust !== 0 && (
+        <div
+          className={`${styles.mathRow}${
+            report.timeAdjust < 0 ? ` ${styles.mathPenalty}` : ''
+          }`}
+        >
+          <span>{report.timeAdjust > 0 ? 'Time bonus' : 'Time penalty'}</span>
+          <span>
+            {report.timeAdjust > 0
+              ? `+${report.timeAdjust}`
+              : report.timeAdjust}
+          </span>
         </div>
       )}
       <div className={`${styles.mathRow} ${styles.mathTotal}`}>

@@ -53,10 +53,13 @@ describe('computeScoreBuild', () => {
       expect(mult).toBeCloseTo(report.gridMultiplier, 10);
       expect(flat).toBe(report.gridFlat);
 
-      // The displayed chain reproduces the final score.
-      expect(Math.ceil(build.subtotal * report.gridMultiplier) + report.gridFlat).toBe(
-        build.total
-      );
+      // The displayed chain reproduces the final score (timeAdjust is
+      // 0 outside Time Trial, but the identity includes it).
+      expect(
+        Math.ceil(build.subtotal * report.gridMultiplier) +
+          report.gridFlat +
+          report.timeAdjust
+      ).toBe(build.total);
 
       // Gold rows only contain gold-category cards; purple rows purple.
       for (const g of build.golds) {

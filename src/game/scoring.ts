@@ -38,7 +38,10 @@ export interface ScoreReport {
   incompletePenalty: number; // sum of all penalty contributions (negative or 0)
   gridMultiplier: number;
   gridFlat: number;
-  total: number; // final score: ceil(subtotal * gridMultiplier) + gridFlat
+  // Time Trial's clock adjustment (0 everywhere else) — a flat term
+  // OUTSIDE the grid multiplier, echoed here for the display surfaces.
+  timeAdjust: number;
+  total: number; // ceil(subtotal * gridMultiplier) + gridFlat + timeAdjust
 }
 
 export interface ScoreOptions {
@@ -56,7 +59,31 @@ export interface ScoreOptions {
   // Per-hand base-value boosts (the Bull Market challenge's ♣ invest
   // perk). Added to HAND_BASE_VALUE before any line multipliers apply.
   handBoost?: Partial<Record<HandRank, number>>;
+  // Time Trial: the clock's flat adjustment (timeTrialAdjust). Only the
+  // FINAL score surfaces pass it — the live score stays board-only.
+  timeAdjust?: number;
 }
+
+// ---- Time Trial (challenge) -------------------------------------------
+// Linear around par, clamped: every second under par pays RATE points,
+// every second over costs the same, capped both ways. Exported for the
+// challenge blurb + tests; tune here.
+export const TIME_TRIAL_PAR_S = 300; // 5:00
+export const TIME_TRIAL_RATE = 0.5; // points per second
+export const TIME_TRIAL_CAP = 120; // max swing either way
+
+/** The clock's current worth. Structural param (not GameState) so the
+ *  scoring module stays engine-import-free; tolerant of hydrated old
+ *  states missing the fields. */
+export const timeTrialAdjust = (s: {
+  timeTrial?: boolean;
+  elapsedMs?: number;
+}): number => {
+  if (!s.timeTrial) return 0;
+  const elapsedS = Math.floor((s.elapsedMs ?? 0) / 1000);
+  const raw = Math.round((TIME_TRIAL_PAR_S - elapsedS) * TIME_TRIAL_RATE);
+  return Math.max(-TIME_TRIAL_CAP, Math.min(TIME_TRIAL_CAP, raw));
+};
 
 /** Base value of a hand including any Bull Market invest boosts. */
 export const effectiveHandBase = (
@@ -169,13 +196,15 @@ export const scoreGrid = (
     { grid, deckRemaining, discards, perkSpent, lines: scored },
     bonusCards
   );
-  const total = Math.ceil(subtotal * gridMultiplier) + gridFlat;
+  const timeAdjust = options.timeAdjust ?? 0;
+  const total = Math.ceil(subtotal * gridMultiplier) + gridFlat + timeAdjust;
   return {
     lines: scored,
     subtotal,
     incompletePenalty,
     gridMultiplier,
     gridFlat,
+    timeAdjust,
     total,
   };
 };

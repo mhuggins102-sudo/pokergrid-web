@@ -144,6 +144,16 @@
   color: var(--joker);
 }
 
+/* Time Trial's clock row in the corner stack — accent under par,
+   danger over (the negative class layers on top). */
+.breakTime {
+  color: var(--accent);
+}
+
+.breakTimeNeg {
+  color: var(--danger);
+}
+
 .breakRowIn {
   animation: break-row-in 0.6s ease-out backwards;
 }

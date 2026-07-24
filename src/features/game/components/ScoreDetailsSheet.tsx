@@ -174,6 +174,22 @@ export function ScoreDetailsSheet({
               <span>+{report.gridFlat}</span>
             </div>
           )}
+          {report.timeAdjust !== 0 && (
+            <div
+              className={`${styles.totalsRow}${
+                report.timeAdjust < 0 ? ` ${styles.penalty}` : ''
+              }`}
+            >
+              <span>
+                {report.timeAdjust > 0 ? 'Time bonus' : 'Time penalty'}
+              </span>
+              <span>
+                {report.timeAdjust > 0
+                  ? `+${report.timeAdjust}`
+                  : report.timeAdjust}
+              </span>
+            </div>
+          )}
           <div className={`${styles.totalsRow} ${styles.grand}`}>
             <span>Total</span>
             <span>{report.total}</span>

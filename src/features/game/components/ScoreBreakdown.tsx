@@ -25,8 +25,8 @@ export function ScoreBreakdown({
   /** Tap → the per-card score build-up sheet. */
   onOpen?: () => void;
 }) {
-  const { base, goldAdd, hasGold, hasPurple } = breakdown;
-  if (!hasGold && !hasPurple) return null;
+  const { base, goldAdd, hasGold, hasPurple, timeAdjust } = breakdown;
+  if (!hasGold && !hasPurple && timeAdjust === 0) return null;
   const rows: { key: string; className: string; text: string }[] = [
     { key: 'base', className: styles.breakBase, text: String(base) },
   ];
@@ -42,6 +42,17 @@ export function ScoreBreakdown({
       key: 'purple',
       className: styles.breakPurple,
       text: multText(breakdown),
+    });
+  }
+  // Time Trial's clock adjustment — its own row on the final beat.
+  if (timeAdjust !== 0) {
+    rows.push({
+      key: 'time',
+      className:
+        timeAdjust < 0
+          ? `${styles.breakTime} ${styles.breakTimeNeg}`
+          : styles.breakTime,
+      text: `⏱ ${timeAdjust > 0 ? `+${timeAdjust}` : timeAdjust}`,
     });
   }
   const rowSpans = rows.map((row, i) => (

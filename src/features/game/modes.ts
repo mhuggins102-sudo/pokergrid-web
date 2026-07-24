@@ -96,6 +96,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             investHands: mode.id === 'bull-market',
             doubleDuty: mode.id === 'double-duty',
             spiraling: mode.id === 'spiraling',
+            timeTrial: mode.id === 'time-trial',
           }),
       };
     }

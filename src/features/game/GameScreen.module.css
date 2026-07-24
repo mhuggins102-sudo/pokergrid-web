@@ -878,6 +878,31 @@
   line-height: 1;
 }
 
+/* Time Trial's clock pill — the twist pill's chrome with tabular
+   numerals and a fixed minimum width, so the once-a-second tick (and
+   the 9:59 → 10:00 digit growth) can never reflow the header row. It
+   flips to the danger tone once past par. */
+.clockPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 108px;
+  padding: 6px 10px;
+  border-radius: var(--radius-chip);
+  background: color-mix(in srgb, var(--accent) 12%, var(--paper-raised));
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.clockPillOver {
+  background: color-mix(in srgb, var(--danger) 12%, var(--paper-raised));
+  color: var(--danger);
+}
+
 .navMenu {
   position: absolute;
   top: calc(100% + 9px);
