@@ -157,7 +157,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'spiraling',
     name: 'Spiraling',
     synopsis: 'Twist: ♠ spirals a card outward by its pips',
-    goal: "Score 500+ points with a rewired ♠ perk: instead of sliding, pick any card on the board and it travels OUTWARD along the spiral by the played spade's pip value (A=1, 2–10 face value, J=11, Q=12, K=13) — a card on spiral space 1, moved by a 9♠, lands on space 10. It jumps over cards along the way, but the landing space must be empty and within the spiral (space 25 is the end). Tap a card to preview its landing spot, then confirm.",
+    goal: "Score 500+ points with a rewired ♠ perk: instead of sliding, pick any card on the board and it travels OUTWARD along the spiral by the played spade's pip value (A=1, 2–10 face value, J=11, Q=12, K=13) — a card on spiral space 1, moved by a 9♠, lands on space 10. It jumps over cards along the way, but the landing space must be empty and within the spiral (space 25 is the end). Tap a card to preview its landing spot, then tap that spot to commit.",
     scoreTarget: 500,
     // Enforced at the reducer level: state.spiraling reroutes ♠ from the
     // slide flow into the spiral flow. Hitting the score target is the
