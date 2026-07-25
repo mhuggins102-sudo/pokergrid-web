@@ -2,7 +2,7 @@ import { isJoker } from './cards';
 import { HandRank } from './hands';
 import { ScoreReport } from './scoring';
 import type { GameState } from './state';
-import { CHALLENGES } from './challenges';
+import { LIVE_CHALLENGES } from './challenges';
 import type { Difficulty } from './rules';
 
 // ============================================================================
@@ -334,9 +334,10 @@ export const ACHIEVEMENTS: Achievement[] = [
 export const findAchievement = (id: AchievementId): Achievement | undefined =>
   ACHIEVEMENTS.find(a => a.id === id);
 
-// Size of the Challenge catalog, exposed for milestone bookkeeping so
-// callers don't need to import CHALLENGES directly.
-export const CHALLENGES_TOTAL = CHALLENGES.length;
+// Size of the LIVE Challenge catalog (hidden entries don't count),
+// exposed for milestone bookkeeping so callers don't need to import
+// the catalog directly.
+export const CHALLENGES_TOTAL = LIVE_CHALLENGES.length;
 
 // Achievements only earn on Free Play runs, with one exception:
 // 'all-challenges' fires when the qualifying Challenge run clears

@@ -1,7 +1,7 @@
 import { CSSProperties, useState } from 'react';
 import { Link } from 'react-router';
 import { tutorialSeen } from '../tutorial/tutorialSeen';
-import { CHALLENGES, findChallenge } from '../../game/challenges';
+import { LIVE_CHALLENGES, findChallenge } from '../../game/challenges';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
 import { Difficulty, difficultyColors } from '../../design/tokens';
@@ -130,7 +130,7 @@ export function HomePage() {
             ? 'Ten twisted rule sets — No Discards, Short Deck, Poker Purist, etc.'
             : 'Ten twisted rule sets — No Discards, Short Deck, Poker Purist and more. Beat them all for the sweep.'}
         </span>
-        <span className={styles.modeLink}>{CHALLENGES.length} modes to beat →</span>
+        <span className={styles.modeLink}>{LIVE_CHALLENGES.length} modes to beat →</span>
       </Link>
       <Link to="/stats" className={styles.modeCard}>
         <span className={styles.modeTitle}>Stats</span>

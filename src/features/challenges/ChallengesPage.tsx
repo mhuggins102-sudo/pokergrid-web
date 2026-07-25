@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { CHALLENGES, ChallengeId } from '../../game/challenges';
+import { ChallengeId, LIVE_CHALLENGES } from '../../game/challenges';
 import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import styles from './ChallengesPage.module.css';
@@ -20,8 +20,8 @@ import styles from './ChallengesPage.module.css';
 
 export function ChallengesPage() {
   const done = useStatsStore(s => s.stats.challengesDone);
-  const doneCount = CHALLENGES.filter(c => done.includes(c.id)).length;
-  const pct = Math.round((doneCount / CHALLENGES.length) * 100);
+  const doneCount = LIVE_CHALLENGES.filter(c => done.includes(c.id)).length;
+  const pct = Math.round((doneCount / LIVE_CHALLENGES.length) * 100);
   const isPhone = useTier() === 'phone';
   // Phone-only per-card expansion — single-open (opening one closes any
   // other), so the list never grows into a long scroll of open cards.
@@ -51,19 +51,19 @@ export function ChallengesPage() {
           className={styles.progressTrack}
           role="progressbar"
           aria-valuemin={0}
-          aria-valuemax={CHALLENGES.length}
+          aria-valuemax={LIVE_CHALLENGES.length}
           aria-valuenow={doneCount}
           aria-label="Challenges beaten"
         >
           <div className={styles.progressFill} style={{ width: `${pct}%` }} />
         </div>
         <span className={styles.progressLabel}>
-          {doneCount} of {CHALLENGES.length} beaten
+          {doneCount} of {LIVE_CHALLENGES.length} beaten
         </span>
       </div>
 
       <div className={styles.grid}>
-        {CHALLENGES.map((challenge, i) => {
+        {LIVE_CHALLENGES.map((challenge, i) => {
           const isDone = done.includes(challenge.id);
           const isOpen = openId === challenge.id;
 

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { ToastProvider } from '../../../design/primitives';
-import { CHALLENGES } from '../../../game/challenges';
+import { LIVE_CHALLENGES } from '../../../game/challenges';
 import { EMPTY_STATS } from '../../../lib/stats';
 import { useStatsStore } from '../statsStore';
 import { useTargetsStore } from '../../targets/targetsStore';
@@ -96,11 +96,13 @@ describe('challenges', () => {
     // behind a tap, and expansion is single-open (opening one closes the
     // rest). Open each card in turn and confirm it reveals exactly one
     // Play link pointing at that challenge.
-    CHALLENGES.forEach(c => {
+    LIVE_CHALLENGES.forEach(c => {
       fireEvent.click(screen.getByRole('button', { name: new RegExp(c.name) }));
       const play = screen.getByRole('link', { name: 'Play' });
       expect(play).toHaveAttribute('href', `/challenges/${c.id}`);
     });
+    // Benched (hidden) challenges are off the page…
+    expect(screen.queryByText('Spiraling')).not.toBeInTheDocument();
   });
 
   it('three-tricks seeds three one-time specials', () => {
