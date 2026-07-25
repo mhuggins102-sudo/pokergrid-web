@@ -123,8 +123,8 @@ export const bonusCardLiveContext = (
     );
     out.push(
       final
-        ? `Distinct scoring hand types: ${types.size} (needs 6+)`
-        : `Distinct scoring hand types right now: ${types.size} (needs 6+)`
+        ? `Distinct scoring hand types: ${types.size} (pays each above 5)`
+        : `Distinct scoring hand types right now: ${types.size} (pays each above 5)`
     );
   }
   if (base === 'balance-x1_25') {
