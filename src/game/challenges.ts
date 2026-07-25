@@ -169,7 +169,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'time-trial',
     name: 'Time Trial',
     synopsis: 'Twist: the clock scores — fast pays, slow costs',
-    goal: 'Score 500+ points with the clock in the math. The rules are unchanged, but your final score adds a time adjustment: every second under 5:00 pays +0.5 points, every second over costs the same, capped at ±120 either way. The clock pauses while the app is in the background.',
+    goal: 'Score 500+ points with the clock in the math. The rules are unchanged, but finishing under 3:00 earns bonus points — the faster the finish, the bigger the bonus — while finishing over 3:00 costs points, with every extra second costing more. The clock pauses while the app is in the background.',
     scoreTarget: 500,
     // The adjustment is applied by the FINAL score surfaces via
     // scoring.ts's timeTrialAdjust (state.timeTrial + state.elapsedMs,

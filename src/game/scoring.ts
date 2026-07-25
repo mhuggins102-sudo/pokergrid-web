@@ -65,12 +65,25 @@ export interface ScoreOptions {
 }
 
 // ---- Time Trial (challenge) -------------------------------------------
-// Linear around par, clamped: every second under par pays RATE points,
-// every second over costs the same, capped both ways. Exported for the
-// challenge blurb + tests; tune here.
-export const TIME_TRIAL_PAR_S = 300; // 5:00
-export const TIME_TRIAL_RATE = 0.5; // points per second
-export const TIME_TRIAL_CAP = 120; // max swing either way
+// Two nonlinear halves around a 3:00 par, each quadratic in the whole
+// seconds from par (t) and saturating past a 60s window:
+//   under par:  +(BONUS_BASE + t² / BONUS_DIV)     +25 @10s … +200 @60s+
+//   over par:   −(PENALTY_BASE + t² / PENALTY_DIV) −23 @10s … −110 @60s+
+// Exactly at par: 0. Deliberately asymmetric — every second saved is
+// worth more than the matching second lost costs, so fast play is the
+// bigger lever. Tune here.
+export const TIME_TRIAL_PAR_S = 180; // 3:00
+export const TIME_TRIAL_WINDOW_S = 60; // swing saturates past ±this
+export const TIME_TRIAL_BONUS_BASE = 20;
+export const TIME_TRIAL_BONUS_DIV = 20;
+export const TIME_TRIAL_PENALTY_BASE = 20;
+export const TIME_TRIAL_PENALTY_DIV = 40;
+// The saturated extremes (sub-2:00 → +200, past 4:00 → −110), derived so
+// they track the knobs above.
+export const TIME_TRIAL_MAX_BONUS =
+  TIME_TRIAL_BONUS_BASE + TIME_TRIAL_WINDOW_S ** 2 / TIME_TRIAL_BONUS_DIV;
+export const TIME_TRIAL_MAX_PENALTY =
+  TIME_TRIAL_PENALTY_BASE + TIME_TRIAL_WINDOW_S ** 2 / TIME_TRIAL_PENALTY_DIV;
 
 /** The clock's current worth. Structural param (not GameState) so the
  *  scoring module stays engine-import-free; tolerant of hydrated old
@@ -81,8 +94,12 @@ export const timeTrialAdjust = (s: {
 }): number => {
   if (!s.timeTrial) return 0;
   const elapsedS = Math.floor((s.elapsedMs ?? 0) / 1000);
-  const raw = Math.round((TIME_TRIAL_PAR_S - elapsedS) * TIME_TRIAL_RATE);
-  return Math.max(-TIME_TRIAL_CAP, Math.min(TIME_TRIAL_CAP, raw));
+  const delta = TIME_TRIAL_PAR_S - elapsedS; // + under par, − over
+  if (delta === 0) return 0;
+  const t = Math.min(Math.abs(delta), TIME_TRIAL_WINDOW_S);
+  return delta > 0
+    ? Math.round(TIME_TRIAL_BONUS_BASE + (t * t) / TIME_TRIAL_BONUS_DIV)
+    : -Math.round(TIME_TRIAL_PENALTY_BASE + (t * t) / TIME_TRIAL_PENALTY_DIV);
 };
 
 /** Base value of a hand including any Bull Market invest boosts. */
