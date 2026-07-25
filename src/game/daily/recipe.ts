@@ -41,11 +41,12 @@ const ALL_TWISTS: ChallengeId[] = [
   'scatter',
   'bull-market',
   'double-duty',
+  'time-trial',
 ];
 
 // Relative odds of each twist when a day is twisted (common / normal /
 // rare tiers, 3 : 2 : 1). Uniform selection is replaced by a weighted
-// bag keyed on the twist-index channel. Total weight 22.
+// bag keyed on the twist-index channel. Total weight 23.
 const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // Common (3)
   'short-deck': 3,
@@ -60,12 +61,11 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // Rare (1)
   'bull-market': 1,
   'double-duty': 1,
-  // Not in the daily rotation (yet) — Spiraling and Time Trial are
-  // challenges-only while they're playtested. Also absent from
-  // ALL_TWISTS above, so these zero weights are belt-and-braces for
-  // the Record type.
+  'time-trial': 1,
+  // Not in the daily rotation — Spiraling is benched while its
+  // mechanic is tuned. Also absent from ALL_TWISTS above, so the zero
+  // weight is belt-and-braces for the Record type.
   spiraling: 0,
-  'time-trial': 0,
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {

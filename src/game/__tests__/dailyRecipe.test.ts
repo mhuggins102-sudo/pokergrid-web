@@ -86,7 +86,7 @@ describe('daily recipe', () => {
       }
     }
 
-    // All ten twists appear.
+    // All eleven twists appear.
     const ALL = [
       'short-circuit',
       'no-discards',
@@ -98,24 +98,28 @@ describe('daily recipe', () => {
       'scatter',
       'bull-market',
       'double-duty',
+      'time-trial',
     ];
     for (const t of ALL) expect(counts[t] ?? 0).toBeGreaterThan(0);
 
     // Weights: common (short-deck / poker-purist / mixed-bag /
     // three-tricks) 3, normal (no-discards / short-circuit / scatter /
-    // gridlock) 2, rare (bull-market / double-duty) 1. Total weight 22.
+    // gridlock) 2, rare (bull-market / double-duty / time-trial) 1.
+    // Total weight 23.
     const share = (t: string) => (counts[t] ?? 0) / twisted;
     const common = share('short-deck');
     const normal = share('scatter');
     const rare = share('bull-market');
     const rare2 = share('double-duty');
-    // Expected shares 3/22, 2/22, 1/22 — loose ±0.03 tolerance.
-    expect(common).toBeGreaterThan(3 / 22 - 0.03);
-    expect(common).toBeLessThan(3 / 22 + 0.03);
-    expect(normal).toBeGreaterThan(2 / 22 - 0.03);
-    expect(normal).toBeLessThan(2 / 22 + 0.03);
-    expect(rare).toBeLessThan(2 / 22); // rare strictly below a normal tier
-    expect(rare2).toBeLessThan(2 / 22);
+    const rare3 = share('time-trial');
+    // Expected shares 3/23, 2/23, 1/23 — loose ±0.03 tolerance.
+    expect(common).toBeGreaterThan(3 / 23 - 0.03);
+    expect(common).toBeLessThan(3 / 23 + 0.03);
+    expect(normal).toBeGreaterThan(2 / 23 - 0.03);
+    expect(normal).toBeLessThan(2 / 23 + 0.03);
+    expect(rare).toBeLessThan(2 / 23); // rare strictly below a normal tier
+    expect(rare2).toBeLessThan(2 / 23);
+    expect(rare3).toBeLessThan(2 / 23);
     // Ordering holds: a common twist is meaningfully more frequent.
     expect(common).toBeGreaterThan(rare);
   });

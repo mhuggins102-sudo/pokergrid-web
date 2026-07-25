@@ -161,6 +161,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             // Dual pairing draws from the same seeded rng inside newGame,
             // so a Double Duty daily is globally identical for free.
             doubleDuty: twist === 'double-duty',
+            timeTrial: twist === 'time-trial',
           }),
       };
     }

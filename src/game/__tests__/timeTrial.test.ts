@@ -1,5 +1,6 @@
+import { setupForMode } from '../../features/game/modes';
 import { seededRng } from '../deck';
-import { CHALLENGES, findChallenge } from '../challenges';
+import { LIVE_CHALLENGES, findChallenge } from '../challenges';
 import { recipeFor } from '../daily/recipe';
 import {
   TIME_TRIAL_MAX_BONUS,
@@ -145,9 +146,11 @@ describe('Time Trial — scoring integration', () => {
 });
 
 describe('Time Trial — challenge catalog', () => {
-  it('is listed last and configured', () => {
-    const c = CHALLENGES[CHALLENGES.length - 1];
-    expect(c.id).toBe('time-trial');
+  it('is listed directly above Mixed Bag and configured', () => {
+    const idx = LIVE_CHALLENGES.findIndex(c => c.id === 'time-trial');
+    expect(idx).toBeGreaterThan(-1);
+    expect(LIVE_CHALLENGES[idx + 1]?.id).toBe('mixed-bag');
+    const c = LIVE_CHALLENGES[idx];
     expect(c.name).toBe('Time Trial');
     expect(c.scoreTarget).toBe(500);
   });
@@ -161,13 +164,32 @@ describe('Time Trial — challenge catalog', () => {
     expect(plain.timeTrial).toBe(false);
   });
 
-  it('never appears in the daily rotation', () => {
-    // A year of recipes — the twist channel must never pick it (it is
-    // absent from ALL_TWISTS; the zero weight is belt-and-braces).
+  it('appears in the daily rotation, and its dailies get the clock', () => {
+    // Sweep years of recipes until the twist channel picks it — it's a
+    // rare-tier twist (weight 1/23 on twisted days) so a decade is
+    // plenty — then confirm the daily setup wires the reducer flag.
+    let hit: string | null = null;
+    for (let i = 0; i < 3650 && !hit; i++) {
+      const d = new Date(Date.UTC(2026, 0, 1 + i));
+      const iso = d.toISOString().slice(0, 10);
+      if (recipeFor(iso).twist === 'time-trial') hit = iso;
+    }
+    expect(hit).not.toBeNull();
+    const recipe = recipeFor(hit!);
+    const setup = setupForMode({ kind: 'daily', dateISO: hit!, recipe });
+    const s = setup.start(seededRng(1));
+    expect(s.timeTrial).toBe(true);
+    expect(s.elapsedMs).toBe(0);
+  });
+
+  it('Spiraling stays hidden and out of the rotation', () => {
+    expect(LIVE_CHALLENGES.some(c => c.id === 'spiraling')).toBe(false);
+    // Still resolvable for its route and archived plays.
+    expect(findChallenge('spiraling').name).toBe('Spiraling');
     for (let i = 0; i < 366; i++) {
       const d = new Date(Date.UTC(2026, 0, 1 + i));
       const iso = d.toISOString().slice(0, 10);
-      expect(recipeFor(iso).twist).not.toBe('time-trial');
+      expect(recipeFor(iso).twist).not.toBe('spiraling');
     }
   });
 });

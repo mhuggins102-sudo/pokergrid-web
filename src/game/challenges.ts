@@ -42,6 +42,10 @@ export interface Challenge {
   conditionMet: (state: GameState, report: ScoreReport) => boolean;
   // Optional: override the deck size at game start. Used by short-deck.
   deckLimit?: number;
+  // Not ready for prime time: kept in the catalog (routes, archived
+  // plays, and findChallenge still work) but left off the Challenges
+  // page, the beaten-count math, and the daily rotation.
+  hidden?: boolean;
 }
 
 // Ordered simplest → most complex. Drives the on-screen list order
@@ -113,6 +117,18 @@ export const CHALLENGES: Challenge[] = [
     conditionMet: () => true,
   },
   {
+    id: 'time-trial',
+    name: 'Time Trial',
+    synopsis: 'Twist: The clock scores — fast pays, slow costs',
+    goal: 'Score 500+ points with the clock in the math. The rules are unchanged, but finishing under 3:00 earns bonus points — the faster the finish, the bigger the bonus — while finishing over 3:00 costs points, with every extra second costing more. The clock pauses while the app is in the background.',
+    scoreTarget: 500,
+    // The adjustment is applied by the FINAL score surfaces via
+    // scoring.ts's timeTrialAdjust (state.timeTrial + state.elapsedMs,
+    // ticked by useGameClock). Hitting the adjusted target is the only
+    // end-state check.
+    conditionMet: () => true,
+  },
+  {
     id: 'mixed-bag',
     name: 'Mixed Bag',
     synopsis: 'Twist: Bonus slots locked to green/yellow/purple',
@@ -157,6 +173,9 @@ export const CHALLENGES: Challenge[] = [
   {
     id: 'spiraling',
     name: 'Spiraling',
+    // Benched while the mechanic is tuned — playable at
+    // /challenges/spiraling but off the menu and the counts.
+    hidden: true,
     synopsis: 'Twist: ♠ spirals a card outward by its pips',
     goal: "Score 500+ points with a rewired ♠ perk: instead of sliding, pick any card on the board and it travels OUTWARD along the spiral by the played spade's pip value (A=1, 2–10 face value, J=11, Q=12, K=13) — a card on spiral space 1, moved by a 9♠, lands on space 10. It jumps over cards along the way, but the landing space must be empty and within the spiral (space 25 is the end). Tap a card to preview its landing spot, then tap that spot to commit.",
     scoreTarget: 500,
@@ -165,19 +184,12 @@ export const CHALLENGES: Challenge[] = [
     // only end-state check.
     conditionMet: () => true,
   },
-  {
-    id: 'time-trial',
-    name: 'Time Trial',
-    synopsis: 'Twist: the clock scores — fast pays, slow costs',
-    goal: 'Score 500+ points with the clock in the math. The rules are unchanged, but finishing under 3:00 earns bonus points — the faster the finish, the bigger the bonus — while finishing over 3:00 costs points, with every extra second costing more. The clock pauses while the app is in the background.',
-    scoreTarget: 500,
-    // The adjustment is applied by the FINAL score surfaces via
-    // scoring.ts's timeTrialAdjust (state.timeTrial + state.elapsedMs,
-    // ticked by useGameClock). Hitting the adjusted target is the only
-    // end-state check.
-    conditionMet: () => true,
-  },
 ];
+
+// The player-facing catalog: what the Challenges page lists, what the
+// beaten-out-of-N counts measure, and what "beat every Challenge" means.
+// Hidden entries stay playable by direct route but don't count.
+export const LIVE_CHALLENGES: Challenge[] = CHALLENGES.filter(c => !c.hidden);
 
 export const findChallenge = (id: ChallengeId): Challenge => {
   const c = CHALLENGES.find(x => x.id === id);

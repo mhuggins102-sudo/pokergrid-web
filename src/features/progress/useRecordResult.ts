@@ -6,7 +6,7 @@ import {
   achievementEarned,
 } from '../../game/achievements';
 import { BONUS_DECK_POOL, baseId } from '../../game/bonusCards';
-import { CHALLENGES, challengeWon } from '../../game/challenges';
+import { LIVE_CHALLENGES, challengeWon } from '../../game/challenges';
 import { Difficulty } from '../../game/rules';
 import { ScoreReport } from '../../game/scoring';
 import { RunRecord, Stats, Tier, recordRun, tierForRun } from '../../lib/stats';
@@ -139,8 +139,12 @@ export function useRecordResult(
         DIFFICULTIES.map(d => [d, after.tierCounts[d].SS])
       ) as Record<Difficulty, number>,
       totalWins: after.wins,
-      challengesCompleted: after.challengesDone.length,
-      totalChallenges: CHALLENGES.length,
+      // Count only LIVE catalog entries — a wins list carrying a
+      // since-hidden challenge mustn't fire Challenge Sweep early.
+      challengesCompleted: after.challengesDone.filter(id =>
+        LIVE_CHALLENGES.some(c => c.id === id)
+      ).length,
+      totalChallenges: LIVE_CHALLENGES.length,
       runBonusShapley: shapley,
       runWasFreePlay: mode.kind === 'free',
       uniqueBonusCardsScored: Object.values(after.bonusCardStats).filter(
