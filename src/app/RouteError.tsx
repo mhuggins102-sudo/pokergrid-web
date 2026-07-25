@@ -51,48 +51,128 @@ const bustReload = (): void => {
   window.location.replace(url.toString());
 };
 
+const HEAL_EPISODE_KEY = 'pokergrid:heal-episode';
+
+// Attempt number within the current heal episode. The retry pace is
+// 15s, so attempts landing within 2 minutes of each other are one
+// episode; a quiet spell means the last heal converged and the next
+// failure starts fresh at attempt 1.
+const nextHealAttempt = (): number => {
+  try {
+    const raw = sessionStorage.getItem(HEAL_EPISODE_KEY);
+    const prev = raw ? (JSON.parse(raw) as { at?: number; n?: number }) : null;
+    const n =
+      prev && typeof prev.at === 'number' && Date.now() - prev.at < 120_000
+        ? (prev.n ?? 0) + 1
+        : 1;
+    sessionStorage.setItem(
+      HEAL_EPISODE_KEY,
+      JSON.stringify({ at: Date.now(), n })
+    );
+    return n;
+  } catch {
+    return 1;
+  }
+};
+
+// Resolve when the registration's in-flight worker either activates or
+// dies (redundant = its install failed), or the timeout elapses. The
+// old blind 1500ms sleep treated a DOOMED install — one that 404s on a
+// precache URL every single cycle — the same as a good one, which is
+// exactly how the "Updating…" screen could spin forever: each cycle
+// saw `installing`, skipped the purge, and reloaded back into the same
+// stale worker.
+const settleWorker = (
+  reg: ServiceWorkerRegistration,
+  timeoutMs: number
+): Promise<'activated' | 'redundant' | 'timeout'> =>
+  new Promise(resolve => {
+    const w = reg.installing ?? reg.waiting;
+    if (!w) {
+      resolve('timeout');
+      return;
+    }
+    let timer = 0;
+    const finish = (r: 'activated' | 'redundant' | 'timeout') => {
+      window.clearTimeout(timer);
+      w.removeEventListener('statechange', onChange);
+      resolve(r);
+    };
+    const onChange = () => {
+      if (w.state === 'activated') finish('activated');
+      else if (w.state === 'redundant') finish('redundant');
+    };
+    timer = window.setTimeout(() => finish('timeout'), timeoutMs);
+    w.addEventListener('statechange', onChange);
+    onChange();
+  });
+
 /**
- * Heal the stale service-worker state, then reload.
+ * Heal the stale service-worker state, then reload — an escalating
+ * ladder, one rung per 15s attempt:
  *
- * FIRST CHOICE — pull a fresh worker: registration.update() fetches
- * sw.js over the network, BYPASSING the HTTP/edge caches that can keep
- * handing back the previous build's worker (the loop's root: a stale
- * worker re-poisons the client no matter how many times the page
- * itself reloads fresh). If a new build's worker installs, it
- * skip-waits into control and the reload below boots straight into it
- * — caches intact, convergence in one cycle.
+ * ATTEMPT 1 — pull a fresh worker: registration.update() refetches
+ * sw.js; if a new build's worker ACTIVATES (it skip-waits), reload
+ * straight into it with caches intact. Anything less — no change
+ * found, install failed (redundant), install stuck — falls through to
+ * the purge IN THE SAME CYCLE.
  *
- * FALLBACK — purge: no newer worker exists (or update failed), so the
- * breakage is local. Unregister the worker and clear Cache Storage;
- * the reload then navigates with NO controller and pulls the fresh
- * index.html + live chunks straight from the network; vite-plugin-pwa
- * re-registers a worker that precaches the current build. Best-effort:
- * any step can reject (private mode, denied storage) — we reload
- * regardless, which is still better than the stale-worker loop.
+ * ATTEMPT 2+ — the reload came straight back here, so whatever the
+ * network handed attempt 1 didn't converge. The observed culprit: a
+ * CDN/edge cache serving the PREVIOUS build's sw.js for hours (the
+ * pokergrid.app zone stamps max-age=14400 over the worker script,
+ * overriding the origin's no-cache), which re-poisons the client on
+ * every re-registration. Counter it by registering the worker through
+ * a NEVER-SEEN URL — /sw.js?pgheal=<now> — a unique query is a
+ * distinct cache key at every layer, so this always pulls the CURRENT
+ * build's worker from origin. If even that doesn't activate, fall
+ * through to the full purge (unregister + clear Cache Storage) and a
+ * controllerless reload.
+ *
+ * Best-effort throughout: any step can reject (private mode, denied
+ * storage) — we reload regardless, which is still better than the
+ * stale-worker loop.
  */
 const dropStaleWorkerAndReload = async (): Promise<void> => {
+  const attempt = nextHealAttempt();
   try {
     // Capped: a hung storage API (observed as the spinner sitting
-    // forever on iOS) must not stall the recovery — after 4s the
+    // forever on iOS) must not stall the recovery — after 8s the
     // reload goes ahead with whatever healing completed.
     await Promise.race([
       (async () => {
         if ('serviceWorker' in navigator) {
           const regs = await navigator.serviceWorker.getRegistrations();
-          const updated = await Promise.all(
-            regs.map(r =>
-              r
-                .update()
-                .then(() => !!(r.installing || r.waiting))
-                .catch(() => false)
-            )
-          );
-          if (updated.some(Boolean)) {
-            // A fresh worker is installing — give it a beat toward
-            // activation (it skip-waits), then reload into it. Leave
-            // the caches alone: its precache is mid-build.
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            return;
+          if (attempt === 1) {
+            const updated = await Promise.all(
+              regs.map(r =>
+                r
+                  .update()
+                  .then(() => !!(r.installing || r.waiting))
+                  .catch(() => false)
+              )
+            );
+            if (updated.some(Boolean)) {
+              const settled = await Promise.all(
+                regs.map(r => settleWorker(r, 2500))
+              );
+              if (settled.includes('activated')) return;
+              // Install failed or stalled — escalate to the purge now
+              // rather than reloading into the same stale worker.
+            }
+          } else {
+            // Cache-busted re-registration: always fetches the live
+            // build's worker, no matter how stale the edge copy of
+            // the plain /sw.js URL is.
+            try {
+              const reg = await navigator.serviceWorker.register(
+                `/sw.js?pgheal=${Date.now()}`,
+                { updateViaCache: 'none' }
+              );
+              if ((await settleWorker(reg, 4000)) === 'activated') return;
+            } catch {
+              // fall through to the purge
+            }
           }
           await Promise.all(regs.map(r => r.unregister()));
         }
@@ -101,7 +181,7 @@ const dropStaleWorkerAndReload = async (): Promise<void> => {
           await Promise.all(keys.map(k => caches.delete(k)));
         }
       })(),
-      new Promise<void>(resolve => setTimeout(resolve, 4000)),
+      new Promise<void>(resolve => setTimeout(resolve, 8000)),
     ]);
   } catch {
     // best effort — fall through to the reload
