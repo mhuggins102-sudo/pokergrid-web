@@ -878,10 +878,12 @@ const balance: BonusCard = {
   },
 };
 
-// Diversity — at least 6 distinct scoring hand types appear across
-// the 10 lines. There are exactly 10 scoring hand types in the game
-// (PAIR through ROYAL_FLUSH), so this is "more than half the catalog
-// in one grid".
+// Diversity — compounds per distinct scoring hand type above 5 across
+// the 10 lines (Trash Joker's "(each)" semantics): 6 types → ×1.25,
+// 7 → ×1.5625 … 10 (the whole catalog) → ×1.25⁵ ≈ ×3.05. There are
+// exactly 10 scoring hand types in the game (PAIR through
+// ROYAL_FLUSH), so the trigger floor is "more than half the catalog
+// in one grid" and the ceiling is all of it.
 const SCORING_HAND_TYPES = new Set<HandRank>([
   'PAIR',
   'TWO_PAIR',
@@ -895,12 +897,14 @@ const SCORING_HAND_TYPES = new Set<HandRank>([
   'ROYAL_FLUSH',
 ]);
 
+// (ID keeps the plain x1_25 tag for save compatibility.)
 const diversity: BonusCard = {
   id: 'diversity-x1_25',
-  name: 'Diversity ×1.25',
+  name: 'Diversity ×1.25 (each)',
   title: 'Diversity',
-  mult: '×1.25',
-  description: 'Board contains 6+ distinct scoring hand types.',
+  mult: '×1.25 (each)',
+  description:
+    'Each distinct scoring hand type above 5 on the board. Stacks up to ×1.25⁵.',
   multValue: 1.25,
   baseMultValue: 1.25,
   gridEffect: ({ lines }, card) => {
@@ -908,7 +912,11 @@ const diversity: BonusCard = {
     for (const l of lines) {
       if (l.hand && SCORING_HAND_TYPES.has(l.hand)) seen.add(l.hand);
     }
-    return seen.size >= 6 ? { totalMultiplier: card.multValue ?? 1.25 } : {};
+    const extra = seen.size - 5;
+    if (extra <= 0) return {};
+    // Compounding: ×1.25 per type above 5 — 6 → ×1.25, 10 → ×3.05.
+    const base = card.multValue ?? 1.25;
+    return { totalMultiplier: Math.pow(base, extra) };
   },
 };
 

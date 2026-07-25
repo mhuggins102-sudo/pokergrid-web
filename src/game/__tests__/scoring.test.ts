@@ -6,6 +6,7 @@ import {
   universalEffectFor,
 } from '../bonusCards';
 import { emptyGrid, Grid, GRID_SLOTS } from '../grid';
+import { HandRank } from '../hands';
 import { bonusShapleyValues, HAND_BASE_VALUE, scoreGrid } from '../scoring';
 
 const C = (rank: Rank, suit: Suit): StandardCard => ({ kind: 'standard', rank, suit });
@@ -796,40 +797,50 @@ describe('Diversity ×1.25 (grid achievement)', () => {
     expect(withDiv).toBe(withoutDiv);
   });
 
-  test('fires when the board contains ≥ 6 distinct scoring hand types', () => {
+  test('compounds ×1.25 per distinct scoring hand type above 5', () => {
     const div = findCard('diversity-x1_25');
-    // Confirm via two equivalent paths: build a grid via the lines
-    // helper and synthetically check the achievement. We trust the
-    // contract: when lines produces 6+ scoring hand types, the
-    // multiplier is 1.25.
-    //
-    // Mock the trigger directly by constructing the LineContext
-    // array that gridEffect reads and invoking the bonus card's
-    // gridEffect with a hand-rolled snapshot. This avoids needing
-    // to engineer a 5×5 board with 6 distinct hand types (very hard).
-    const distinctHands: LineContext[] = [
-      { kind: 'row', index: 0, cards: [null, null, null, null, null], hand: 'PAIR' },
-      { kind: 'row', index: 1, cards: [null, null, null, null, null], hand: 'TWO_PAIR' },
-      { kind: 'row', index: 2, cards: [null, null, null, null, null], hand: 'THREE_OF_A_KIND' },
-      { kind: 'row', index: 3, cards: [null, null, null, null, null], hand: 'STRAIGHT' },
-      { kind: 'row', index: 4, cards: [null, null, null, null, null], hand: 'FLUSH' },
-      { kind: 'col', index: 0, cards: [null, null, null, null, null], hand: 'FULL_HOUSE' },
-      { kind: 'col', index: 1, cards: [null, null, null, null, null], hand: 'PAIR' },
-      { kind: 'col', index: 2, cards: [null, null, null, null, null], hand: null },
-      { kind: 'col', index: 3, cards: [null, null, null, null, null], hand: null },
-      { kind: 'col', index: 4, cards: [null, null, null, null, null], hand: null },
+    // Mock the trigger directly by constructing the LineContext array
+    // that gridEffect reads — engineering real 5×5 boards with 6–10
+    // distinct hand types is impractical. Same "(each)" semantics as
+    // Trash Joker / the Border cards: ×1.25^(types − 5).
+    const TYPES: HandRank[] = [
+      'PAIR',
+      'TWO_PAIR',
+      'THREE_OF_A_KIND',
+      'STRAIGHT',
+      'FLUSH',
+      'FULL_HOUSE',
+      'FOUR_OF_A_KIND',
+      'STRAIGHT_FLUSH',
+      'FIVE_OF_A_KIND',
+      'ROYAL_FLUSH',
     ];
-    const eff = div.gridEffect!(
-      {
-        grid: emptyGrid(),
-        deckRemaining: 0,
-        discards: [],
-        perkSpent: [],
-        lines: distinctHands,
-      },
-      div
-    );
-    expect(eff.totalMultiplier).toBe(1.25);
+    const linesWith = (n: number): LineContext[] =>
+      Array.from({ length: 10 }, (_, i) => ({
+        kind: i < 5 ? ('row' as const) : ('col' as const),
+        index: i % 5,
+        cards: [null, null, null, null, null],
+        // First n lines carry the n distinct types; the rest repeat
+        // PAIR (dupes must not add steps).
+        hand: i < n ? TYPES[i] : 'PAIR',
+      }));
+    const multFor = (n: number) =>
+      div.gridEffect!(
+        {
+          grid: emptyGrid(),
+          deckRemaining: 0,
+          discards: [],
+          perkSpent: [],
+          lines: linesWith(n),
+        },
+        div
+      ).totalMultiplier;
+    expect(multFor(6)).toBe(1.25);
+    expect(multFor(7)).toBe(1.25 ** 2);
+    expect(multFor(8)).toBe(1.25 ** 3);
+    expect(multFor(9)).toBe(1.25 ** 4);
+    // The whole catalog on one board — the ceiling.
+    expect(multFor(10)).toBe(1.25 ** 5);
   });
 });
 

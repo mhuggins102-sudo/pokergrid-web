@@ -218,7 +218,7 @@ export const purpleProgress = (
     }
     return {
       tags: new Set(seen.values()),
-      label: `${seen.size} / 6 distinct hand types`,
+      label: `${seen.size} distinct hand types — ×1.25 each above 5`,
       ok: seen.size >= 6,
     };
   }
