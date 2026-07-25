@@ -7,7 +7,7 @@
 import type { Difficulty } from '../rules';
 import { TARGET_BY_DIFFICULTY } from '../rules';
 import type { ChallengeId } from '../challenges';
-import { fnv1a } from './seed';
+import { DAILY_GENERATION, fnv1a } from './seed';
 
 export interface DailyRecipe {
   difficulty: Difficulty;
@@ -44,21 +44,18 @@ const ALL_TWISTS: ChallengeId[] = [
   'time-trial',
 ];
 
-// Relative odds of each twist when a day is twisted (common / normal /
-// rare tiers, 3 : 2 : 1). Uniform selection is replaced by a weighted
-// bag keyed on the twist-index channel. Total weight 23.
+// Relative odds of each twist when a day is twisted — flat since g2:
+// every live twist is equally likely (1/11). The weighted-bag shape
+// stays so a future rebalance is a per-twist one-line edit.
 const TWIST_WEIGHT: Record<ChallengeId, number> = {
-  // Common (3)
-  'short-deck': 3,
-  'poker-purist': 3,
-  'mixed-bag': 3,
-  'three-tricks': 3,
-  // Normal (2)
-  'no-discards': 2,
-  'short-circuit': 2,
-  scatter: 2,
-  gridlock: 2,
-  // Rare (1)
+  'short-deck': 1,
+  'poker-purist': 1,
+  'mixed-bag': 1,
+  'three-tricks': 1,
+  'no-discards': 1,
+  'short-circuit': 1,
+  scatter: 1,
+  gridlock: 1,
   'bull-market': 1,
   'double-duty': 1,
   'time-trial': 1,
@@ -101,10 +98,12 @@ const scramble32 = (h: number): number => {
 // (different salt prefixes) so difficulty / twist-probability /
 // twist-index don't share entropy. Each gets a scramble32 pass on
 // top to fix FNV-1a's weak avalanche for similar consecutive inputs.
+// DAILY_GENERATION rides every salt so a bump re-rolls the recipes
+// together with the deals.
 const channelsFor = (dateISO: string): { difficultyRoll: number; twistRoll: number; twistIndexRoll: number } => {
-  const hDiff      = scramble32(fnv1a(`pokergrid-recipe-difficulty::${dateISO}`));
-  const hTwist     = scramble32(fnv1a(`pokergrid-recipe-twist::${dateISO}`));
-  const hTwistIdx  = scramble32(fnv1a(`pokergrid-recipe-twist-index::${dateISO}`));
+  const hDiff      = scramble32(fnv1a(`pokergrid-recipe-difficulty-g${DAILY_GENERATION}::${dateISO}`));
+  const hTwist     = scramble32(fnv1a(`pokergrid-recipe-twist-g${DAILY_GENERATION}::${dateISO}`));
+  const hTwistIdx  = scramble32(fnv1a(`pokergrid-recipe-twist-index-g${DAILY_GENERATION}::${dateISO}`));
   return {
     difficultyRoll: hDiff / 0x100000000,    // [0, 1) using all 32 bits
     twistRoll: hTwist / 0x100000000,        // [0, 1)

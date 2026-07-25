@@ -41,11 +41,20 @@ export const fnv1a = (s: string): number => {
   return h >>> 0;
 };
 
+// Generation marker folded into every daily salt (deck, specials, and
+// the recipe channels in recipe.ts). Bumping it regenerates ALL
+// dailies — recipes and deals alike, past dates included, since every
+// daily function is pure in the date string with no per-date cutoff.
+// g2: July 2026 — twist odds flattened to uniform and a full
+// regeneration (covering the whole archive, back through March 1)
+// requested during playtest.
+export const DAILY_GENERATION = 2;
+
 // Seed for the Mulberry32 deck RNG. Salted so different daily channels
 // (deck vs. initial-specials below vs. future hypothetical bonus-deck)
 // can't accidentally share the same stream.
 export const seedForDate = (dateISO: string): number => {
-  return fnv1a(`pokergrid-deck::${dateISO}`);
+  return fnv1a(`pokergrid-deck-g${DAILY_GENERATION}::${dateISO}`);
 };
 
 // Separate seed for the Three Tricks initial-hand sample. Daily mode
@@ -54,5 +63,5 @@ export const seedForDate = (dateISO: string): number => {
 // would steal random calls that newGame expects) or fall back to
 // Math.random (and players would all see different starting hands).
 export const seedForInitialSpecials = (dateISO: string): number => {
-  return fnv1a(`pokergrid-initial-specials::${dateISO}`);
+  return fnv1a(`pokergrid-initial-specials-g${DAILY_GENERATION}::${dateISO}`);
 };
