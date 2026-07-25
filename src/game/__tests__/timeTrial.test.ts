@@ -165,9 +165,9 @@ describe('Time Trial — challenge catalog', () => {
   });
 
   it('appears in the daily rotation, and its dailies get the clock', () => {
-    // Sweep years of recipes until the twist channel picks it — it's a
-    // rare-tier twist (weight 1/23 on twisted days) so a decade is
-    // plenty — then confirm the daily setup wires the reducer flag.
+    // Sweep years of recipes until the twist channel picks it (1/11 of
+    // twisted days under the flat weights; a decade is plenty), then
+    // confirm the daily setup wires the reducer flag.
     let hit: string | null = null;
     for (let i = 0; i < 3650 && !hit; i++) {
       const d = new Date(Date.UTC(2026, 0, 1 + i));

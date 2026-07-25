@@ -72,7 +72,7 @@ describe('daily recipe', () => {
     expect(counts.extreme / TOTAL).toBeLessThan(0.13);
   });
 
-  it('twist odds follow the 3:2:1 common/normal/rare tiers', () => {
+  it('twist odds are uniform across the live rotation', () => {
     const start = new Date(Date.UTC(2026, 0, 1));
     const TOTAL = 3650;
     const counts: Record<string, number> = {};
@@ -86,7 +86,7 @@ describe('daily recipe', () => {
       }
     }
 
-    // All eleven twists appear.
+    // All eleven twists appear, and only those eleven.
     const ALL = [
       'short-circuit',
       'no-discards',
@@ -101,27 +101,16 @@ describe('daily recipe', () => {
       'time-trial',
     ];
     for (const t of ALL) expect(counts[t] ?? 0).toBeGreaterThan(0);
+    expect(Object.keys(counts).sort()).toEqual([...ALL].sort());
 
-    // Weights: common (short-deck / poker-purist / mixed-bag /
-    // three-tricks) 3, normal (no-discards / short-circuit / scatter /
-    // gridlock) 2, rare (bull-market / double-duty / time-trial) 1.
-    // Total weight 23.
-    const share = (t: string) => (counts[t] ?? 0) / twisted;
-    const common = share('short-deck');
-    const normal = share('scatter');
-    const rare = share('bull-market');
-    const rare2 = share('double-duty');
-    const rare3 = share('time-trial');
-    // Expected shares 3/23, 2/23, 1/23 — loose ±0.03 tolerance.
-    expect(common).toBeGreaterThan(3 / 23 - 0.03);
-    expect(common).toBeLessThan(3 / 23 + 0.03);
-    expect(normal).toBeGreaterThan(2 / 23 - 0.03);
-    expect(normal).toBeLessThan(2 / 23 + 0.03);
-    expect(rare).toBeLessThan(2 / 23); // rare strictly below a normal tier
-    expect(rare2).toBeLessThan(2 / 23);
-    expect(rare3).toBeLessThan(2 / 23);
-    // Ordering holds: a common twist is meaningfully more frequent.
-    expect(common).toBeGreaterThan(rare);
+    // Flat weights since g2: every twist lands 1/11 of twisted days.
+    // ±0.03 absolute tolerance — over ~2400 twisted samples the
+    // binomial std-dev for a 1/11 bucket is ~0.6%, so this is ~5σ.
+    for (const t of ALL) {
+      const share = (counts[t] ?? 0) / twisted;
+      expect(share).toBeGreaterThan(1 / 11 - 0.03);
+      expect(share).toBeLessThan(1 / 11 + 0.03);
+    }
   });
 
   it('snapshots — locked recipes for known dates', () => {
