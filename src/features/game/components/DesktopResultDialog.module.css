@@ -474,6 +474,17 @@
   opacity: 0.85;
 }
 
+/* Time Trial's clock line — same dress as .headContext, but a line of
+   its own under the tier label so it never wraps mid-phrase. */
+.headClock {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
 /* Just-earned achievements (desk) — the level-up container's sibling:
    same accent-tinted dress, eyebrow + serif name(s), inline description
    for a single achievement. Names tap through to the explainer sheet. */

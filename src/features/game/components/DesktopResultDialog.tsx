@@ -309,17 +309,18 @@ export function DesktopResultDialog({
                   · <span aria-hidden="true">✦</span> {setup.challenge.name}
                 </span>
               ) : null}
-              {state.timeTrial ? (
-                <span className={styles.headContext}>
-                  {' '}
-                  · <span aria-hidden="true">⏱</span>{' '}
-                  {formatClock(state.elapsedMs)} ·{' '}
-                  {report.timeAdjust >= 0
-                    ? `+${report.timeAdjust}`
-                    : report.timeAdjust}
-                </span>
-              ) : null}
             </span>
+            {/* Time Trial: the clock gets its own line under the tier
+                label — appended to that line it wrapped awkwardly. */}
+            {state.timeTrial ? (
+              <span className={styles.headClock}>
+                <span aria-hidden="true">⏱</span>{' '}
+                {formatClock(state.elapsedMs)} ·{' '}
+                {report.timeAdjust >= 0
+                  ? `+${report.timeAdjust}`
+                  : report.timeAdjust}
+              </span>
+            ) : null}
           </div>
           <div className={styles.headRight}>
             <span

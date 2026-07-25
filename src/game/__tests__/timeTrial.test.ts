@@ -2,9 +2,9 @@ import { seededRng } from '../deck';
 import { CHALLENGES, findChallenge } from '../challenges';
 import { recipeFor } from '../daily/recipe';
 import {
-  TIME_TRIAL_CAP,
+  TIME_TRIAL_MAX_BONUS,
+  TIME_TRIAL_MAX_PENALTY,
   TIME_TRIAL_PAR_S,
-  TIME_TRIAL_RATE,
   scoreGrid,
   timeTrialAdjust,
 } from '../scoring';
@@ -28,30 +28,48 @@ describe('Time Trial — timeTrialAdjust', () => {
     expect(timeTrialAdjust({ elapsedMs: 10_000_000 })).toBe(0);
   });
 
-  it('pays the linear rate under par and costs it over', () => {
-    // Exactly at par: zero.
+  it('is zero exactly at par', () => {
     expect(timeTrialAdjust(atElapsed(TIME_TRIAL_PAR_S))).toBe(0);
-    // 60s under par → +30 at 0.5/s.
-    expect(timeTrialAdjust(atElapsed(TIME_TRIAL_PAR_S - 60))).toBe(
-      Math.round(60 * TIME_TRIAL_RATE)
-    );
-    // 60s over par → −30.
-    expect(timeTrialAdjust(atElapsed(TIME_TRIAL_PAR_S + 60))).toBe(
-      -Math.round(60 * TIME_TRIAL_RATE)
-    );
   });
 
-  it('clamps both ways', () => {
-    // t=0 would be par × rate = 150 raw → capped.
-    expect(timeTrialAdjust(atElapsed(0))).toBe(TIME_TRIAL_CAP);
-    // An hour over par → capped at the penalty floor.
+  it('pays the accelerating bonus curve under par', () => {
+    // 20 + t²/20 — the agreed table.
+    const under = (s: number) => timeTrialAdjust(atElapsed(TIME_TRIAL_PAR_S - s));
+    expect(under(10)).toBe(25);
+    expect(under(20)).toBe(40);
+    expect(under(30)).toBe(65);
+    expect(under(40)).toBe(100);
+    expect(under(50)).toBe(145);
+    expect(under(60)).toBe(200);
+  });
+
+  it('costs the gentler penalty curve over par', () => {
+    // −(20 + t²/40) — the agreed table.
+    const over = (s: number) => timeTrialAdjust(atElapsed(TIME_TRIAL_PAR_S + s));
+    expect(over(10)).toBe(-23);
+    expect(over(20)).toBe(-30);
+    expect(over(30)).toBe(-43);
+    expect(over(40)).toBe(-60);
+    expect(over(50)).toBe(-83);
+    expect(over(60)).toBe(-110);
+  });
+
+  it('saturates beyond the ±60s window', () => {
+    expect(TIME_TRIAL_MAX_BONUS).toBe(200);
+    expect(TIME_TRIAL_MAX_PENALTY).toBe(110);
+    // Sub-2:00 is all worth the same +200…
+    expect(timeTrialAdjust(atElapsed(0))).toBe(TIME_TRIAL_MAX_BONUS);
+    expect(timeTrialAdjust(atElapsed(TIME_TRIAL_PAR_S - 90))).toBe(
+      TIME_TRIAL_MAX_BONUS
+    );
+    // …and an hour past 4:00 costs no more than 4:00 does.
     expect(timeTrialAdjust(atElapsed(TIME_TRIAL_PAR_S + 3600))).toBe(
-      -TIME_TRIAL_CAP
+      -TIME_TRIAL_MAX_PENALTY
     );
   });
 
   it('missing elapsedMs (hydrated old state) reads as zero elapsed', () => {
-    expect(timeTrialAdjust({ timeTrial: true })).toBe(TIME_TRIAL_CAP);
+    expect(timeTrialAdjust({ timeTrial: true })).toBe(TIME_TRIAL_MAX_BONUS);
   });
 });
 
