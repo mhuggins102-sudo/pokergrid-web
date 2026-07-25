@@ -441,12 +441,29 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             tabIndex={0}
             {...twistPop.toggleProps}
           >
-            <span className={styles.twistPill}>
-              <span className={styles.twistStar} aria-hidden="true">
-                ✦
+            {state.timeTrial ? (
+              /* Time Trial: the clock IS the twist pill — same slot, same
+                 rules menu, no extra width. Fixed-width tabular numerals
+                 so 9:59 → 10:00 can't reflow the row. */
+              <span
+                className={`${styles.clockPill} ${
+                  clockOver ? styles.clockPillOver : ''
+                }`}
+                aria-label={`${twist.name} — time ${clockText}, currently worth ${
+                  clockWorth >= 0 ? `+${clockWorth}` : clockWorth
+                } points`}
+              >
+                <span aria-hidden="true">⏱</span>
+                {clockText} · {clockWorth >= 0 ? `+${clockWorth}` : clockWorth}
               </span>
-              {twist.name}
-            </span>
+            ) : (
+              <span className={styles.twistPill}>
+                <span className={styles.twistStar} aria-hidden="true">
+                  ✦
+                </span>
+                {twist.name}
+              </span>
+            )}
             <div className={`${styles.navMenu} ${styles.navMenuWide}`}>
               <div className={`${styles.navMenuHead} ${styles.navMenuHeadAccent}`}>
                 Twist · {twist.synopsis.replace(/^Twist:\s*/i, '')}
@@ -550,9 +567,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             </div>
           </span>
         </span>
-        {/* Time Trial: the clock and its current worth. Fixed-width
-            tabular numerals so 9:59 → 10:00 can't reflow the row. */}
-        {state.timeTrial && (
+        {/* Time Trial outside a challenge run has no twist pill to
+            inhabit — belt-and-braces standalone clock (unused today:
+            only the challenge sets the flag). */}
+        {state.timeTrial && !twist && (
           <span
             className={`${styles.clockPill} ${
               clockOver ? styles.clockPillOver : ''
