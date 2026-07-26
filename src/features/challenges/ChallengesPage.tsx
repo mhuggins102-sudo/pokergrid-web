@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { ChallengeId, LIVE_CHALLENGES } from '../../game/challenges';
+import { trophyForTier } from '../../lib/stats';
 import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
+import { Trophy } from './Trophy';
 import styles from './ChallengesPage.module.css';
 
 /*
@@ -20,6 +22,7 @@ import styles from './ChallengesPage.module.css';
 
 export function ChallengesPage() {
   const done = useStatsStore(s => s.stats.challengesDone);
+  const tiers = useStatsStore(s => s.stats.challengeTiers);
   const doneCount = LIVE_CHALLENGES.filter(c => done.includes(c.id)).length;
   const pct = Math.round((doneCount / LIVE_CHALLENGES.length) * 100);
   const isPhone = useTier() === 'phone';
@@ -66,11 +69,21 @@ export function ChallengesPage() {
         {LIVE_CHALLENGES.map((challenge, i) => {
           const isDone = done.includes(challenge.id);
           const isOpen = openId === challenge.id;
+          // Trophy from the best recorded WIN tier: SS gold, S silver,
+          // A bronze. Wins recorded before trophies existed have no
+          // tier — beaten (checked number) but unmedaled until re-won.
+          const bestTier = tiers[challenge.id];
+          const trophy = isDone && bestTier ? trophyForTier(bestTier) : null;
 
           const head = (
             <div className={styles.cardTop}>
               <div className={styles.cardId}>
-                <span className={styles.num}>{i + 1}</span>
+                <span
+                  className={`${styles.num} ${isDone ? styles.numDone : ''}`}
+                  aria-label={isDone ? `Challenge ${i + 1}, beaten` : undefined}
+                >
+                  {isDone ? '✓' : i + 1}
+                </span>
                 <div>
                   <div className={styles.name}>{challenge.name}</div>
                   <div className={styles.synopsis}>
@@ -79,16 +92,14 @@ export function ChallengesPage() {
                   </div>
                 </div>
               </div>
-              {/* Beaten cards keep their ✓ badge at every tier. The old
-                  "Open" badge (a relic of the retired unlock system) is
-                  dropped at phone so the synopsis can run full width;
-                  ≥768 still shows it. */}
-              {(isDone || !isPhone) && (
-                <span
-                  className={`${styles.badge} ${isDone ? styles.badgeDone : ''}`}
-                >
-                  {isDone ? '✓ Beaten' : 'Open'}
-                </span>
+              {/* Right side: the earned trophy (best win tier). Unbeaten
+                  cards keep the "Open" badge at ≥768 only — dropped at
+                  phone so the synopsis can run full width. */}
+              {trophy ? (
+                <Trophy kind={trophy} size={22} className={styles.trophy} />
+              ) : (
+                !isDone &&
+                !isPhone && <span className={styles.badge}>Open</span>
               )}
             </div>
           );

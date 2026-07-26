@@ -7,7 +7,9 @@ import {
   EMPTY_STATS,
   RunRecord,
   Stats,
+  Tier,
   hydrateStats,
+  isBetterTier,
   recordRun,
 } from '../../lib/stats';
 
@@ -15,7 +17,9 @@ interface StatsStore {
   stats: Stats;
   record: (run: RunRecord) => void;
   recordTargetsUp: (level: number) => void;
-  recordChallenge: (id: ChallengeId) => void;
+  // Marks the challenge beaten and, when a win tier is given, raises
+  // (never lowers) its stored best tier — the trophy on the page.
+  recordChallenge: (id: ChallengeId, tier?: Tier) => void;
   recordAchievement: (id: AchievementId) => void;
   reset: () => void;
 }
@@ -35,17 +39,26 @@ export const useStatsStore = create<StatsStore>()(
             ? s
             : { stats: { ...s.stats, targetsUpBest: level } }
         ),
-      recordChallenge: id =>
-        set(s =>
-          s.stats.challengesDone.includes(id)
-            ? s
-            : {
-                stats: {
-                  ...s.stats,
-                  challengesDone: [...s.stats.challengesDone, id],
-                },
-              }
-        ),
+      recordChallenge: (id, tier) =>
+        set(s => {
+          const done = s.stats.challengesDone.includes(id)
+            ? s.stats.challengesDone
+            : [...s.stats.challengesDone, id];
+          const prev = s.stats.challengeTiers[id];
+          const tiers =
+            tier && (!prev || isBetterTier(tier, prev))
+              ? { ...s.stats.challengeTiers, [id]: tier }
+              : s.stats.challengeTiers;
+          if (
+            done === s.stats.challengesDone &&
+            tiers === s.stats.challengeTiers
+          ) {
+            return s;
+          }
+          return {
+            stats: { ...s.stats, challengesDone: done, challengeTiers: tiers },
+          };
+        }),
       recordAchievement: id =>
         set(s =>
           s.stats.achievementsDone.includes(id)

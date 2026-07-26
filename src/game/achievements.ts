@@ -66,6 +66,8 @@ export type AchievementId =
   | 'wins-25'
   | 'wins-100'
   | 'all-challenges'
+  | 'challenge-trophies-5'
+  | 'challenge-golds-3'
   | 'full-bonus-hand';
 
 // Minimal subset of stats / run data the milestone-tier conditions need.
@@ -83,6 +85,10 @@ export interface MilestoneInputs {
   // Number of completed Challenges and the size of the catalog.
   challengesCompleted: number;
   totalChallenges: number;
+  // Challenge trophy counts (post-run, live catalog only): silver-or-
+  // better (S / SS win tiers) and gold (SS) across distinct challenges.
+  challengeSilverPlus: number;
+  challengeGold: number;
   // Per-card Shapley contribution for the held bonus cards on this
   // run. Index-aligned with state.bonusCards.
   runBonusShapley: number[];
@@ -322,6 +328,21 @@ export const ACHIEVEMENTS: Achievement[] = [
       milestone.challengesCompleted >= milestone.totalChallenges,
   },
   {
+    id: 'challenge-trophies-5',
+    tier: 'milestone',
+    name: 'Trophy Case',
+    description:
+      'Earn silver or gold trophies (S or SS wins) on 5 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeSilverPlus >= 5,
+  },
+  {
+    id: 'challenge-golds-3',
+    tier: 'milestone',
+    name: 'Gold Standard',
+    description: 'Earn gold trophies (SS wins) on 3 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeGold >= 3,
+  },
+  {
     id: 'full-bonus-hand',
     tier: 'milestone',
     name: 'Full Slate',
@@ -339,10 +360,16 @@ export const findAchievement = (id: AchievementId): Achievement | undefined =>
 // the catalog directly.
 export const CHALLENGES_TOTAL = LIVE_CHALLENGES.length;
 
-// Achievements only earn on Free Play runs, with one exception:
-// 'all-challenges' fires when the qualifying Challenge run clears
-// the last entry in the catalog (so the trigger event is the
-// Challenge win itself).
+// Achievements only earn on Free Play runs, with an exception for the
+// Challenge-flavored milestones ('all-challenges' and the two trophy
+// counters): their qualifying event IS a Challenge win, so they fire
+// on challenge runs too.
+const CHALLENGE_MILESTONES: ReadonlySet<AchievementId> = new Set([
+  'all-challenges',
+  'challenge-trophies-5',
+  'challenge-golds-3',
+]);
+
 const modeAllowedFor = (
   ach: Achievement,
   mode: AchievementCheckCtx['mode']
@@ -350,7 +377,7 @@ const modeAllowedFor = (
   // Daily-tier achievements are cumulative over the plays map, recorded
   // by earnedCumulativeAchievements — never by the per-run engine.
   if (ach.tier === 'daily') return false;
-  if (ach.id === 'all-challenges') {
+  if (CHALLENGE_MILESTONES.has(ach.id)) {
     return mode === 'free' || mode === 'challenge';
   }
   return mode === 'free';

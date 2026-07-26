@@ -73,6 +73,18 @@ const emptyTierCounts = (): Record<Tier, number> => ({
   SS: 0, S: 0, A: 0, B: 0, C: 0, D: 0,
 });
 
+/** True when `a` outranks `b` (TIER_ORDER runs best → worst). */
+export const isBetterTier = (a: Tier, b: Tier): boolean =>
+  TIER_ORDER.indexOf(a) < TIER_ORDER.indexOf(b);
+
+// Challenge trophies — the Challenges page's per-challenge metal,
+// mapped from the best WIN tier recorded on that challenge. Loss tiers
+// (B/C/D) never map: a challenge entry only exists after a win.
+export type TrophyKind = 'gold' | 'silver' | 'bronze';
+
+export const trophyForTier = (t: Tier): TrophyKind | null =>
+  t === 'SS' ? 'gold' : t === 'S' ? 'silver' : t === 'A' ? 'bronze' : null;
+
 export const tierForRun = (run: Pick<RunRecord, 'score' | 'target' | 'won'>): Tier => {
   const ratio = run.score / Math.max(1, run.target);
   if (run.won) {
@@ -121,6 +133,10 @@ export interface Stats {
   // Highest Targets-Up level reached, and completed Challenges.
   targetsUpBest: number;
   challengesDone: ChallengeId[];
+  // Best WIN tier per beaten challenge (drives the trophy shown on the
+  // Challenges page). Entries recorded before trophies existed are
+  // absent — the challenge shows beaten but unmedaled until re-won.
+  challengeTiers: Partial<Record<ChallengeId, Tier>>;
   achievementsDone: AchievementId[];
   // All-time bonus-card attribution, keyed by base card id.
   bonusCardStats: Record<string, BonusCardStat>;
@@ -150,6 +166,7 @@ export const EMPTY_STATS: Stats = {
   },
   targetsUpBest: 0,
   challengesDone: [],
+  challengeTiers: {},
   achievementsDone: [],
   bonusCardStats: {},
   bonusCardStatsByDifficulty: { easy: {}, medium: {}, hard: {}, extreme: {} },
@@ -224,6 +241,7 @@ export const hydrateStats = (parsed: Partial<Stats> | undefined): Stats => {
       extreme: { ...emptyTierCounts(), ...parsed.tierCounts?.extreme },
     },
     challengesDone: survivingChallenges,
+    challengeTiers: parsed.challengeTiers ?? {},
     achievementsDone,
   };
 };
