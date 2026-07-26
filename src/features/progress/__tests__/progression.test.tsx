@@ -86,10 +86,14 @@ describe('challenges', () => {
   });
 
   it('every challenge is playable; beaten ones stay marked', () => {
-    useStatsStore.getState().recordChallenge('short-circuit');
+    useStatsStore.getState().recordChallenge('short-circuit', 'S');
     renderAt('/challenges');
-    // The Beaten badge shows on the collapsed phone card head.
-    expect(screen.getByText('✓ Beaten')).toBeInTheDocument();
+    // Beaten: the card's number square becomes a green check, and the
+    // best win tier shows as a trophy (S → silver).
+    expect(
+      screen.getByRole('button', { name: /Short Circuit/ }).textContent
+    ).toContain('✓');
+    expect(screen.getByRole('img', { name: 'Silver trophy' })).toBeInTheDocument();
     // No lock gating anywhere.
     expect(screen.queryByText('Locked')).not.toBeInTheDocument();
     // Phone (jsdom default): cards collapse, so the Play footer lives

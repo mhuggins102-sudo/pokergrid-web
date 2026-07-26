@@ -15,6 +15,7 @@ import { useTier } from '../../../app/useTier';
 import { useGameSession } from '../GameSessionProvider';
 import { useGameFamily } from '../useGameFamily';
 import { useRecordResult } from '../../progress/useRecordResult';
+import { TROPHY_LABEL, Trophy } from '../../challenges/Trophy';
 import {
   useLevelUp,
   usePlayerLevel,
@@ -133,7 +134,10 @@ export function DesktopResultDialog({
     };
   }, [state]);
 
-  const { won, tier, newAchievements } = useRecordResult(report, shapley);
+  const { won, tier, newAchievements, challengeTrophy } = useRecordResult(
+    report,
+    shapley
+  );
   const levelUp = useLevelUp(viewOnly);
   // XP this run earned, split by source. In the archive view (viewOnly)
   // the hook reconstructs the recorded daily play's own XP from its
@@ -508,6 +512,46 @@ export function DesktopResultDialog({
               )}
             </div>
           )}
+          {/* Challenge trophy callout — only on a first beat or a strict
+              trophy upgrade (recorded by useRecordResult); repeat wins
+              at the same tier stay quiet. Same dress as the achievement
+              rows below. */}
+          {challengeTrophy &&
+            (columnFamily ? (
+              <div
+                className={`${styles.unlockRow} ${styles.achRow}`}
+                role="status"
+              >
+                <span className={styles.achRowIcon} aria-hidden="true">
+                  <Trophy kind={challengeTrophy.kind} size={20} />
+                </span>
+                <span className={styles.unlockRowText}>
+                  <b>
+                    {challengeTrophy.first
+                      ? `${TROPHY_LABEL[challengeTrophy.kind]} trophy earned`
+                      : `Trophy upgraded to ${TROPHY_LABEL[challengeTrophy.kind].toLowerCase()}`}
+                  </b>
+                  <i>{challengeTrophy.tier}-tier Challenge win</i>
+                </span>
+              </div>
+            ) : (
+              <div className={styles.achBox} role="status">
+                <span className={styles.unlockEyebrow}>
+                  <Trophy
+                    kind={challengeTrophy.kind}
+                    size={15}
+                    className={styles.trophyInline}
+                  />{' '}
+                  {challengeTrophy.first
+                    ? `${TROPHY_LABEL[challengeTrophy.kind]} trophy earned`
+                    : `Trophy upgraded to ${TROPHY_LABEL[challengeTrophy.kind].toLowerCase()}`}
+                </span>
+                <span className={styles.achDesc}>
+                  {challengeTrophy.tier}-tier Challenge win — trophies live
+                  on the Challenges page.
+                </span>
+              </div>
+            ))}
           {/* Just-earned achievements — the level-up container's sibling:
               same accent-tinted dress. Desk: eyebrow + serif name(s) +
               (single achievement) inline description. Mobile: a compact

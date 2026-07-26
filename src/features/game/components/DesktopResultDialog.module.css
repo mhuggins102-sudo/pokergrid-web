@@ -474,6 +474,11 @@
   opacity: 0.85;
 }
 
+/* Trophy glyph inline with the earned-trophy eyebrow text. */
+.trophyInline {
+  vertical-align: -3px;
+}
+
 /* Time Trial's clock line — same dress as .headContext, but a line of
    its own under the tier label so it never wraps mid-phrase. */
 .headClock {

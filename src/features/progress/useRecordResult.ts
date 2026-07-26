@@ -9,7 +9,16 @@ import { BONUS_DECK_POOL, baseId } from '../../game/bonusCards';
 import { LIVE_CHALLENGES, challengeWon } from '../../game/challenges';
 import { Difficulty } from '../../game/rules';
 import { ScoreReport } from '../../game/scoring';
-import { RunRecord, Stats, Tier, recordRun, tierForRun } from '../../lib/stats';
+import {
+  RunRecord,
+  Stats,
+  Tier,
+  TrophyKind,
+  isBetterTier,
+  recordRun,
+  tierForRun,
+  trophyForTier,
+} from '../../lib/stats';
 import { usePlaysStore } from '../daily/sync/playsStore';
 import { useGameSession } from '../game/GameSessionProvider';
 import { newlyEarnedFromDailyFinish } from './cumulativeInputs';
@@ -20,6 +29,16 @@ export interface RecordedResult {
   tier: Tier;
   /** Achievements newly earned by this run (already persisted). */
   newAchievements: Achievement[];
+  /** Set when THIS challenge run earned a first trophy or upgraded the
+   *  stored one — the result popup's trophy callout. Null otherwise. */
+  challengeTrophy: ChallengeTrophy | null;
+}
+
+export interface ChallengeTrophy {
+  kind: TrophyKind;
+  tier: Tier;
+  /** True on the challenge's first-ever win; false on an upgrade. */
+  first: boolean;
 }
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
@@ -47,6 +66,8 @@ export function useRecordResult(
   const won = report.total >= state.target;
   const tier = tierForRun({ score: report.total, target: state.target, won });
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+  const [challengeTrophy, setChallengeTrophy] =
+    useState<ChallengeTrophy | null>(null);
   const ranRef = useRef(false);
 
   useEffect(() => {
@@ -89,13 +110,25 @@ export function useRecordResult(
       store.record(run);
     } else if (mode.kind === 'challenge') {
       if (setup.challenge && challengeWon(setup.challenge, state, report)) {
-        store.recordChallenge(setup.challenge.id);
+        const id = setup.challenge.id;
+        const prevBest = before.challengeTiers[id] ?? null;
+        const upgraded = !prevBest || isBetterTier(tier, prevBest);
+        store.recordChallenge(id, tier);
         after = {
           ...before,
-          challengesDone: before.challengesDone.includes(setup.challenge.id)
+          challengesDone: before.challengesDone.includes(id)
             ? before.challengesDone
-            : [...before.challengesDone, setup.challenge.id],
+            : [...before.challengesDone, id],
+          challengeTiers: upgraded
+            ? { ...before.challengeTiers, [id]: tier }
+            : before.challengeTiers,
         };
+        // Trophy callout: only on a first win or a strict upgrade — a
+        // repeat win at the same (or lower) tier stays quiet.
+        const kind = trophyForTier(tier);
+        if (upgraded && kind) {
+          setChallengeTrophy({ kind, tier, first: !prevBest });
+        }
       }
     } else if (mode.kind === 'targets' && won) {
       store.recordTargetsUp(mode.level);
@@ -145,6 +178,13 @@ export function useRecordResult(
         LIVE_CHALLENGES.some(c => c.id === id)
       ).length,
       totalChallenges: LIVE_CHALLENGES.length,
+      challengeSilverPlus: LIVE_CHALLENGES.filter(c => {
+        const t = after.challengeTiers[c.id];
+        return t === 'SS' || t === 'S';
+      }).length,
+      challengeGold: LIVE_CHALLENGES.filter(
+        c => after.challengeTiers[c.id] === 'SS'
+      ).length,
       runBonusShapley: shapley,
       runWasFreePlay: mode.kind === 'free',
       uniqueBonusCardsScored: Object.values(after.bonusCardStats).filter(
@@ -161,5 +201,5 @@ export function useRecordResult(
     if (earned.length > 0) setNewAchievements(earned);
   }, [mode, setup, state, report, shapley, won, viewOnly]);
 
-  return { won, tier, newAchievements };
+  return { won, tier, newAchievements, challengeTrophy };
 }

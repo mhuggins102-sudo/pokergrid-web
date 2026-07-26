@@ -184,9 +184,18 @@
   color: var(--ink-3);
 }
 
-.badgeDone {
+/* Beaten: the number square turns into a green check. */
+.numDone {
   background: color-mix(in srgb, var(--success) 16%, transparent);
   color: var(--success);
+  font-size: 15px;
+}
+
+/* Earned trophy on the card's right edge (gold/silver/bronze fill is
+   baked into the SVG). */
+.trophy {
+  flex: none;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18));
 }
 
 .goal {
