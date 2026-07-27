@@ -56,7 +56,7 @@ const PALETTES: Record<ThemeKey, Palette> = {
     outline: 'rgba(239, 231, 212, 0.16)',
     textHi: '#efe7d4',
     textMid: '#9a917c',
-    accent: '#2b6b4c',
+    accent: '#35855e',
     onAccent: '#ffffff',
   },
   'card-room': {
