@@ -320,9 +320,10 @@
   --face-suit-c: #43a873;
   --face-suit-s: #241f16;
 
-  /* A deep forest green — replaced the earlier brick red, which read
-     too bright for the broadsheet after dark. */
-  --accent: #2b6b4c;
+  /* A deep green — replaced the earlier brick red, which read too
+     bright for the broadsheet after dark (and a first, darker forest
+     green that sacrificed too much legibility for accent text). */
+  --accent: #35855e;
   /* Gold + joker chips lift bright enough here that near-black lettering
      reads, so --on-accent keeps the dark ink for them. The accent itself
      is now DEEP, so accent-filled controls print in the newsprint cream
@@ -341,7 +342,7 @@
 
   /* Accent-filled controls print their labels in the newsprint cream
      (= --card-face, the stock the cards are printed on) — near-black ink
-     fails on the deep forest accent, and the cream ties the buttons to
+     fails on the deep green accent, and the cream ties the buttons to
      the cards. Consumed as var(--on-primary, var(--on-accent)) by every
      accent-backed CTA (the Button primitive plus the page-level CTAs);
      gold/joker/success pills keep --on-accent's dark ink. */
