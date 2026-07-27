@@ -45,7 +45,7 @@ export function ChallengesPage() {
           <Link to="/achievements" className={styles.ledeLink}>
             Challenge Sweep
           </Link>{' '}
-          milestone.
+          achievement.
         </p>
       </div>
 

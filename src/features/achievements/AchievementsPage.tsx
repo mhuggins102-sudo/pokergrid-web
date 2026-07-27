@@ -22,13 +22,22 @@ const TIER_META: Array<{
   label: string;
   note: string;
 }> = [
-  { tier: 'easy', label: 'Easy', note: 'Earned on Free Play · Easy' },
+  {
+    tier: 'easy-medium',
+    label: 'Easy / Medium',
+    note: 'Earned on Free Play · Easy or Medium',
+  },
   {
     tier: 'hard-extreme',
     label: 'Hard / Extreme',
     note: 'Earned on Free Play · Hard or Extreme',
   },
   { tier: 'daily', label: 'Daily Puzzles', note: 'Cumulative across daily plays' },
+  {
+    tier: 'challenge',
+    label: 'Challenges',
+    note: 'Trophy goals across the Challenge catalog',
+  },
   { tier: 'milestone', label: 'Milestones', note: 'Long-term goals across all modes' },
 ];
 
@@ -91,7 +100,7 @@ export function AchievementsPage() {
   const total = ACHIEVEMENTS.length;
   const pct = total ? doneCount / total : 0;
   const isPhone = useTier() === 'phone';
-  // Phone accordion: all four tiers closed on load, single-open.
+  // Phone accordion: all tiers closed on load, single-open.
   const [openTier, setOpenTier] = useState<AchievementTier | null>(null);
 
   return (

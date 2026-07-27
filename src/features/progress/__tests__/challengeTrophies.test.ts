@@ -54,7 +54,7 @@ describe('challenge trophies', () => {
     expect(stats.challengeTiers['gridlock']).toBeUndefined();
   });
 
-  it('the two trophy milestones sit beneath Challenge Sweep and count correctly', () => {
+  it('the two trophy achievements sit beneath Challenge Sweep and count correctly', () => {
     const ids = ACHIEVEMENTS.map(a => a.id);
     const sweep = ids.indexOf('all-challenges');
     expect(ids[sweep + 1]).toBe('challenge-trophies-5');
@@ -79,16 +79,16 @@ describe('challenge trophies', () => {
         (typeof ACHIEVEMENTS)[number]['conditionMet']
       >[0];
 
-    const trophies5 = ACHIEVEMENTS.find(a => a.id === 'challenge-trophies-5')!;
-    expect(trophies5.conditionMet(ctxWith({ challengeSilverPlus: 4 }))).toBe(
+    const trophyCase = ACHIEVEMENTS.find(a => a.id === 'challenge-trophies-5')!;
+    expect(trophyCase.conditionMet(ctxWith({ challengeSilverPlus: 6 }))).toBe(
       false
     );
-    expect(trophies5.conditionMet(ctxWith({ challengeSilverPlus: 5 }))).toBe(
+    expect(trophyCase.conditionMet(ctxWith({ challengeSilverPlus: 7 }))).toBe(
       true
     );
 
-    const golds3 = ACHIEVEMENTS.find(a => a.id === 'challenge-golds-3')!;
-    expect(golds3.conditionMet(ctxWith({ challengeGold: 2 }))).toBe(false);
-    expect(golds3.conditionMet(ctxWith({ challengeGold: 3 }))).toBe(true);
+    const goldStandard = ACHIEVEMENTS.find(a => a.id === 'challenge-golds-3')!;
+    expect(goldStandard.conditionMet(ctxWith({ challengeGold: 4 }))).toBe(false);
+    expect(goldStandard.conditionMet(ctxWith({ challengeGold: 5 }))).toBe(true);
   });
 });
