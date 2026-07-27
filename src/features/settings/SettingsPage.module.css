@@ -293,7 +293,8 @@
 .confirmScrim {
   position: fixed;
   inset: 0;
-  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  /* Theme scrim token, not an ink mix — see DesktopResultDialog. */
+  background: var(--scrim);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -5,7 +5,10 @@
 .scrim {
   position: fixed;
   inset: 0;
-  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  /* The theme scrim token, NOT an ink mix — ink is cream in the dark
+     themes, and a cream wash read as light-mode leakage behind the
+     dialog. The token dims in every theme. */
+  background: var(--scrim);
   display: flex;
   align-items: center;
   justify-content: center;
