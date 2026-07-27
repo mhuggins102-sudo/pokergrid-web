@@ -270,7 +270,7 @@ export function RouteError() {
     borderRadius: 10,
     border: 'none',
     background: 'var(--accent, #3a8f68)',
-    color: 'var(--on-accent, #ffffff)',
+    color: 'var(--on-primary, var(--on-accent, #ffffff))',
     font: 'inherit',
     fontWeight: 650,
     cursor: 'pointer',

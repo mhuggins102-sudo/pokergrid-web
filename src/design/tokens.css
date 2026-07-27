@@ -320,13 +320,15 @@
   --face-suit-c: #43a873;
   --face-suit-s: #241f16;
 
-  /* A deep brick red — closer to printed newsprint ink than the earlier
-     vermilion, which read too "loud" for the broadsheet. */
-  --accent: #c0392b;
-  /* Accent + gold both lift bright enough here that near-black lettering
-     reads (the "Night edition" Place button + gold perks). Danger keeps
-     white via --on-danger. Squared corners + uppercase nameplate/CTAs
-     inherit from :root; only the divider + these ink flips are local. */
+  /* A deep forest green — replaced the earlier brick red, which read
+     too bright for the broadsheet after dark. */
+  --accent: #2b6b4c;
+  /* Gold + joker chips lift bright enough here that near-black lettering
+     reads, so --on-accent keeps the dark ink for them. The accent itself
+     is now DEEP, so accent-filled controls print in the newsprint cream
+     instead — via --on-primary below. Danger keeps white via --on-danger.
+     Squared corners + uppercase nameplate/CTAs inherit from :root; only
+     the divider + these ink flips are local. */
   --on-accent: #14120d;
   --warn: #d9a941;
   --danger: #d0655a;
@@ -337,10 +339,12 @@
      softened above. */
   --masthead-rule: 2px double #efe7d4;
 
-  /* Primary CTAs print their label in the newsprint cream (= --card-face,
-     the stock the cards are printed on) rather than near-black — crisper
-     on the deep brick accent, and it ties the button to the cards. Only
-     the primary buttons; gold/success pills keep --on-accent's dark ink. */
+  /* Accent-filled controls print their labels in the newsprint cream
+     (= --card-face, the stock the cards are printed on) — near-black ink
+     fails on the deep forest accent, and the cream ties the buttons to
+     the cards. Consumed as var(--on-primary, var(--on-accent)) by every
+     accent-backed CTA (the Button primitive plus the page-level CTAs);
+     gold/joker/success pills keep --on-accent's dark ink. */
   --on-primary: #f4eeda;
 
   --difficulty-easy: #4caf7d;

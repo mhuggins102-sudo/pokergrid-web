@@ -271,7 +271,7 @@
   align-items: center;
   gap: 8px;
   background: var(--accent);
-  color: var(--on-accent, #fff);
+  color: var(--on-primary, var(--on-accent, #fff));
   border-radius: 11px;
   padding: 14px 30px;
   font-size: 16px;

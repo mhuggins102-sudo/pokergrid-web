@@ -28,7 +28,7 @@
    a compact badge on the right (the old centered block gave a third of
    the dialog to one huge letter). */
 .head {
-  color: var(--on-accent);
+  color: var(--on-primary, var(--on-accent));
   padding: 16px 22px;
   display: flex;
   align-items: center;
@@ -338,7 +338,7 @@
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: var(--on-accent);
+  color: var(--on-primary, var(--on-accent));
   border: none;
   border-radius: 11px;
   padding: 10px 22px;
@@ -645,7 +645,7 @@
 
 .primaryBtn {
   background: var(--accent);
-  color: var(--on-accent);
+  color: var(--on-primary, var(--on-accent));
   border: none;
 }
 

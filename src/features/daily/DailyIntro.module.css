@@ -255,7 +255,7 @@
   width: 100%;
   margin-top: 22px;
   background: var(--accent);
-  color: var(--on-accent, #fff);
+  color: var(--on-primary, var(--on-accent, #fff));
   border: none;
   border-radius: 13px;
   padding: 17px;
