@@ -8,17 +8,18 @@ import type { Difficulty } from './rules';
 // ============================================================================
 // Achievements — passive accomplishments earned through play.
 //
-// Three tiers:
-//   - 'easy'         : Free Play on Easy only.
+// Five tiers:
+//   - 'easy-medium'  : Free Play on Easy or Medium only.
 //   - 'hard-extreme' : Free Play on Hard or Extreme only.
+//   - 'daily'        : cumulative across Daily Puzzle plays.
+//   - 'challenge'    : Challenge-flavored goals (catalog sweep + trophy
+//                      counters) — earnable from Challenge runs.
 //   - 'milestone'    : longer-term cumulative goals (wins across modes,
-//                      challenge completion totals, etc.) plus a couple of
-//                      one-shot prowess achievements that don't fit a
-//                      single-difficulty tier.
+//                      etc.) plus a couple of one-shot prowess
+//                      achievements that don't fit a single-difficulty
+//                      tier.
 //
-// Medium runs are deliberately ineligible for tiered achievements. Targets
-// Up and Challenges contribute to milestones but don't have their own
-// tier sets.
+// Targets Up contributes to milestones but doesn't have its own tier set.
 //
 // Every achievement has:
 //   - id: stable string saved into stats.achievementsDone
@@ -30,7 +31,12 @@ import type { Difficulty } from './rules';
 //   - conditionMet: checks the run / cumulative state.
 // ============================================================================
 
-export type AchievementTier = 'easy' | 'hard-extreme' | 'daily' | 'milestone';
+export type AchievementTier =
+  | 'easy-medium'
+  | 'hard-extreme'
+  | 'daily'
+  | 'challenge'
+  | 'milestone';
 
 // Pair, Two Pair, and Three of a Kind — and anything that scored nothing
 // (no hand). Used by the Low Hands achievement.
@@ -60,14 +66,17 @@ export type AchievementId =
   | 'daily-20'
   | 'daily-streak-3'
   | 'daily-streak-10'
+  // Challenges (ids keep their original threshold suffixes — they're
+  // saved into stats.achievementsDone, so they stay stable even though
+  // the requirements have since been raised)
+  | 'all-challenges'
+  | 'challenge-trophies-5'
+  | 'challenge-golds-3'
   // Milestones
   | 'win-every-difficulty'
   | 'perfect-every-difficulty'
   | 'wins-25'
   | 'wins-100'
-  | 'all-challenges'
-  | 'challenge-trophies-5'
-  | 'challenge-golds-3'
   | 'full-bonus-hand';
 
 // Minimal subset of stats / run data the milestone-tier conditions need.
@@ -124,10 +133,10 @@ export interface Achievement {
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
-  // ---------- Easy tier ----------
+  // ---------- Easy / Medium tier ----------
   {
     id: 'easy-overshot',
-    tier: 'easy',
+    tier: 'easy-medium',
     name: 'Overshot',
     description: 'Score 750+ points.',
     scoreTarget: 750,
@@ -135,7 +144,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'easy-grand',
-    tier: 'easy',
+    tier: 'easy-medium',
     name: 'Grand',
     description: 'Score 1000+ points.',
     scoreTarget: 1000,
@@ -143,7 +152,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'easy-soloist',
-    tier: 'easy',
+    tier: 'easy-medium',
     name: 'Soloist',
     description: 'Score 500+ with no joker on the grid at game end.',
     scoreTarget: 500,
@@ -283,6 +292,31 @@ export const ACHIEVEMENTS: Achievement[] = [
     conditionMet: () => false,
   },
 
+  // ---------- Challenges ----------
+  {
+    id: 'all-challenges',
+    tier: 'challenge',
+    name: 'Challenge Sweep',
+    description: 'Beat every Challenge.',
+    conditionMet: ({ milestone }) =>
+      milestone.challengesCompleted >= milestone.totalChallenges,
+  },
+  {
+    id: 'challenge-trophies-5',
+    tier: 'challenge',
+    name: 'Trophy Case',
+    description:
+      'Earn silver or gold trophies (S or SS wins) on 7 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeSilverPlus >= 7,
+  },
+  {
+    id: 'challenge-golds-3',
+    tier: 'challenge',
+    name: 'Gold Standard',
+    description: 'Earn gold trophies (SS wins) on 5 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeGold >= 5,
+  },
+
   // ---------- Milestones ----------
   {
     id: 'win-every-difficulty',
@@ -320,29 +354,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     conditionMet: ({ milestone }) => milestone.totalWins >= 100,
   },
   {
-    id: 'all-challenges',
-    tier: 'milestone',
-    name: 'Challenge Sweep',
-    description: 'Beat every Challenge.',
-    conditionMet: ({ milestone }) =>
-      milestone.challengesCompleted >= milestone.totalChallenges,
-  },
-  {
-    id: 'challenge-trophies-5',
-    tier: 'milestone',
-    name: 'Trophy Case',
-    description:
-      'Earn silver or gold trophies (S or SS wins) on 5 different Challenges.',
-    conditionMet: ({ milestone }) => milestone.challengeSilverPlus >= 5,
-  },
-  {
-    id: 'challenge-golds-3',
-    tier: 'milestone',
-    name: 'Gold Standard',
-    description: 'Earn gold trophies (SS wins) on 3 different Challenges.',
-    conditionMet: ({ milestone }) => milestone.challengeGold >= 3,
-  },
-  {
     id: 'full-bonus-hand',
     tier: 'milestone',
     name: 'Full Slate',
@@ -361,15 +372,9 @@ export const findAchievement = (id: AchievementId): Achievement | undefined =>
 export const CHALLENGES_TOTAL = LIVE_CHALLENGES.length;
 
 // Achievements only earn on Free Play runs, with an exception for the
-// Challenge-flavored milestones ('all-challenges' and the two trophy
-// counters): their qualifying event IS a Challenge win, so they fire
-// on challenge runs too.
-const CHALLENGE_MILESTONES: ReadonlySet<AchievementId> = new Set([
-  'all-challenges',
-  'challenge-trophies-5',
-  'challenge-golds-3',
-]);
-
+// Challenge tier ('all-challenges' and the two trophy counters): their
+// qualifying event IS a Challenge win, so they fire on challenge runs
+// too.
 const modeAllowedFor = (
   ach: Achievement,
   mode: AchievementCheckCtx['mode']
@@ -377,26 +382,32 @@ const modeAllowedFor = (
   // Daily-tier achievements are cumulative over the plays map, recorded
   // by earnedCumulativeAchievements — never by the per-run engine.
   if (ach.tier === 'daily') return false;
-  if (CHALLENGE_MILESTONES.has(ach.id)) {
+  if (ach.tier === 'challenge') {
     return mode === 'free' || mode === 'challenge';
   }
   return mode === 'free';
 };
 
 // Earned iff the achievement's tier-specific gating passes AND the
-// per-tier condition fires. Easy / Hard-Extreme tiers require the
-// matching Free Play difficulty plus a score floor; Milestones run
-// the condition directly and ignore per-difficulty / score gating.
-// Every tier additionally requires modeAllowedFor — without it
-// Hard-tier achievements would fire on Challenge runs because every
-// Challenge runs on the Hard ruleset.
+// per-tier condition fires. Easy-Medium / Hard-Extreme tiers require a
+// matching Free Play difficulty plus a score floor; Challenges and
+// Milestones run the condition directly and ignore per-difficulty /
+// score gating. Every tier additionally requires modeAllowedFor —
+// without it Hard-tier achievements would fire on Challenge runs
+// because every Challenge runs on the Hard ruleset.
 export const achievementEarned = (
   ach: Achievement,
   ctx: AchievementCheckCtx
 ): boolean => {
   const { state, report, mode } = ctx;
   if (!modeAllowedFor(ach, mode)) return false;
-  if (ach.tier === 'easy' && state.difficulty !== 'easy') return false;
+  if (
+    ach.tier === 'easy-medium' &&
+    state.difficulty !== 'easy' &&
+    state.difficulty !== 'medium'
+  ) {
+    return false;
+  }
   if (
     ach.tier === 'hard-extreme' &&
     state.difficulty !== 'hard' &&
