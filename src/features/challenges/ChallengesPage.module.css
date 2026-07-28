@@ -129,6 +129,16 @@
   display: flex;
   align-items: center;
   gap: 11px;
+  /* The name/synopsis column takes the free width and may shrink, so
+     the single-line synopsis can ellipsize instead of stretching the
+     card (the badge/trophy stays right via .cardTop's space-between). */
+  flex: 1;
+  min-width: 0;
+}
+
+.cardId > div {
+  flex: 1;
+  min-width: 0;
 }
 
 .num {
@@ -155,21 +165,18 @@
   color: var(--ink);
 }
 
+/* One line, always — no bullet, and rather than wrap, a too-long
+   synopsis ellipsizes (the catalog copy is kept short enough that the
+   ellipsis should never actually show). */
 .synopsis {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: block;
   margin-top: 5px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--warn);
-}
-
-.synopsisDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--warn);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .badge {
@@ -291,21 +298,9 @@
     overflow: hidden;
   }
 
-  /* With the "Open" badge dropped (TSX fork), the name + synopsis
-     column takes the full card width, so the yellow synopsis line runs
-     to the same right margin as the goal copy below it. */
-  .cardId {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* The name/synopsis stack (the unclassed div beside the number tile)
-     fills the freed width so long synopses wrap at the card's right
-     margin rather than early. */
-  .cardId > div {
-    flex: 1;
-    min-width: 0;
-  }
+  /* (The .cardId flex/min-width rules that let the synopsis take the
+     full card width moved to the base — they now serve the single-line
+     ellipsis at every tier.) */
 
   /* The whole collapsed header is the tap target. */
   .cardToggle {

@@ -119,7 +119,7 @@ export const CHALLENGES: Challenge[] = [
   {
     id: 'time-trial',
     name: 'Time Trial',
-    synopsis: 'Twist: The clock scores — fast pays, slow costs',
+    synopsis: 'Twist: Finish fast for bonus points',
     goal: 'Score 500+ points with the clock in the math. The rules are unchanged, but finishing under 3:00 earns bonus points — the faster the finish, the bigger the bonus — while finishing over 3:00 costs points, with every extra second costing more. The clock pauses while the app is in the background.',
     scoreTarget: 500,
     // The adjustment is applied by the FINAL score surfaces via
@@ -131,7 +131,7 @@ export const CHALLENGES: Challenge[] = [
   {
     id: 'mixed-bag',
     name: 'Mixed Bag',
-    synopsis: 'Twist: Bonus slots locked to green/yellow/purple',
+    synopsis: 'Twist: One bonus slot per color',
     goal: 'Score 500+ points with bonus slots locked to categories. Slot 1 holds a green one-time action card — tap it to read what it does, then tap Use to fire it; it\'s consumed on use. Slot 2 holds a yellow (per-line) card and slot 3 a purple (end-game) card. ♣ asks which slot to draw for, then shows 2 category-matching cards to pick from.',
     scoreTarget: 500,
     // Enforced at newGame via slotCategories — placeholders seed the
