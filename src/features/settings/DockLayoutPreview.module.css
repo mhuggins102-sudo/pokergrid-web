@@ -254,7 +254,10 @@
   gap: 4px;
   padding: 6px 8px;
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-md);
+  /* Theme personality radii, matching the real dock (BonusCardStrip):
+     panels ride --radius-panel, card chips --radius-button — so Morning
+     Paper previews squared corners, Card Room rounded. */
+  border-radius: var(--radius-panel);
   background: var(--paper-raised);
 }
 
@@ -275,7 +278,7 @@
   gap: 1px;
   padding: 3px 8px;
   border: 1px solid var(--tone, var(--rule));
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   background: color-mix(in srgb, var(--tone, var(--rule)) 8%, var(--paper-raised));
   line-height: 1.2;
   white-space: nowrap;
@@ -312,7 +315,7 @@
   align-items: center;
   justify-content: center;
   border: 1px dashed var(--rule);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   color: var(--ink-3);
   font-size: 9px;
   font-weight: 600;
@@ -327,6 +330,6 @@
   gap: var(--space-xs);
   padding: var(--space-xs);
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-panel);
   background: var(--paper-raised);
 }

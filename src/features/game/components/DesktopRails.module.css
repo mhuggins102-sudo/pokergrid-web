@@ -500,10 +500,14 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Spotlight: the tapped card's row + column chips light up. */
+/* Spotlight: the tapped card's row + column chips light up. Lifted
+   above the positioned .board so Card Room's felt bleed can't cover
+   the ring's board-facing side (see LineRails .chipLit). */
 .chipLit .chipPill {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+  position: relative;
+  z-index: 1;
 }
 
 /* ---------------- LEADERBOARD ---------------- */
