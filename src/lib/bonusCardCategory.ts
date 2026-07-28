@@ -116,11 +116,13 @@ const CATEGORY_ICON: Record<BonusCategory, string> = {
 // The ✦ spark draws visibly smaller than its sibling glyphs at the same
 // font size (worse on iOS), so it gets a per-icon em multiplier that
 // render sites apply to the icon span. Everything else stays at 1.
+// 1.2, down from 1.45 — the first compensation overshot and the spark
+// dwarfed the other category glyphs.
 const CATEGORY_ICON_SCALE: Record<BonusCategory, number> = {
   hand: 1,
   line: 1,
   suit: 1,
-  conditional: 1.45,
+  conditional: 1.2,
   grid: 1,
   'deck-management': 1,
   special: 1,

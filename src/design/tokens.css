@@ -294,7 +294,9 @@
   --ink-2: #9a917c;
   --ink-3: color-mix(in srgb, #efe7d4 46%, #14120d);
   --hairline: rgba(239, 231, 212, 0.16);
-  --scrim: rgba(0, 0, 0, 0.55);
+  /* Deeper than the light themes' 0.5 — a dark board behind a dialog
+     needs more push to clearly recede. */
+  --scrim: rgba(0, 0, 0, 0.65);
   /* In-game strokes ride --rule (dashed empty cells, secondary button
      borders, panel edges). Keep it a SOFT cream here — a full-bright rule
      made the dashed board borders glare. The masthead's double rule takes
@@ -380,7 +382,8 @@
   --ink-2: #8ea095;
   --ink-3: color-mix(in srgb, #e8efe6 46%, #0e1712);
   --hairline: rgba(232, 239, 230, 0.13);
-  --scrim: rgba(0, 0, 0, 0.55);
+  /* Deeper than the light themes' 0.5 — see paper-dark. */
+  --scrim: rgba(0, 0, 0, 0.65);
   --rule: rgba(232, 239, 230, 0.13);
 
   --card-face: #f4f0e4;

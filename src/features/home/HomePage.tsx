@@ -175,7 +175,12 @@ export function HomePage() {
               {recipe.difficulty} · {target}
             </span>
             {twist && (
-              <span className={styles.twistChip}>✦ {twist.name}</span>
+              <span className={styles.twistChip}>
+                <span className={styles.twistStar} aria-hidden="true">
+                  ✦
+                </span>
+                {twist.name}
+              </span>
             )}
             {/* Phone hides the streak chip — the hero stays compact above
                 the CTA. Desktop keeps it. */}

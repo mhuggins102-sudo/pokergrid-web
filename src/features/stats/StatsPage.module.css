@@ -334,6 +334,14 @@
   white-space: nowrap;
 }
 
+/* The ✦ spark draws small in its em box — paint it up via transform so
+   the pill's line box can't grow (matches the home / in-game pills). */
+.twistStar {
+  line-height: 1;
+  display: inline-block;
+  transform: translateY(-0.04em) scale(1.3);
+}
+
 .runScore {
   text-align: center;
   font-size: 14px;

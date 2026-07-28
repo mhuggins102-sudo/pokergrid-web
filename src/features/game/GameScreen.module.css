@@ -873,9 +873,13 @@
   white-space: nowrap;
 }
 
+/* The ✦ spark draws small in its em box (the quirk the bonus-card
+   glyphs also compensate for) — inherit the pill's font size and paint
+   it up via transform so the pill's line box can't grow. */
 .twistStar {
-  font-size: 11px;
   line-height: 1;
+  display: inline-block;
+  transform: translateY(-0.04em) scale(1.3);
 }
 
 /* Time Trial's clock pill — the twist pill's chrome with tabular
