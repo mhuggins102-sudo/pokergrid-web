@@ -19,7 +19,7 @@
   justify-content: center;
   width: 27px;
   height: 27px;
-  border-radius: 7px;
+  border-radius: var(--radius-button);
   border: 1px solid var(--hairline);
   background: var(--paper);
   font-size: 15px;
@@ -51,7 +51,7 @@
   .suitBtn {
     width: 34px;
     height: 34px;
-    border-radius: 9px;
+    border-radius: var(--radius-button);
     font-size: 18px;
   }
 }

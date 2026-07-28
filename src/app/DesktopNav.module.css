@@ -126,7 +126,7 @@
   transform: translateX(-50%) translateY(-4px);
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   padding: 6px;
   min-width: 150px;
@@ -161,7 +161,7 @@
 .menuItem {
   display: block;
   padding: 8px 12px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
@@ -196,7 +196,7 @@
   display: none;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: var(--radius-icon, 50%);
   border: 1px solid var(--rule);
   background: transparent;
   color: var(--ink-2);
@@ -220,7 +220,7 @@
 .themeToggle {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: var(--radius-icon, 50%);
   border: 1px solid var(--rule);
   background: transparent;
   color: var(--ink-2);

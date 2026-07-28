@@ -114,11 +114,12 @@
   --space-xxxl: 48px;
 
   /* ---- Radius ----
-     Theme-constant generic scale (chrome: dialogs, sheets, page cards).
-     The theme's square/round PERSONALITY is carried by the semantic
-     tokens below, scoped to the game board + its panels — the subject of
-     the Claude Design mockups. App chrome stays on this shared rounded
-     scale in every theme so it reads consistently across pages. */
+     Generic scale (chrome: dialogs, sheets, page cards). Card Room keeps
+     these rounded values; Morning Paper overrides the whole scale in the
+     blocky-broadsheet block below, so its app chrome squares to match
+     its board. The theme's square/round PERSONALITY is carried by the
+     semantic tokens below, scoped to the game board + its panels — the
+     subject of the Claude Design mockups. */
   --radius-xs: 2px;
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -181,6 +182,28 @@
   --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
   --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system,
     'Segoe UI', sans-serif;
+}
+
+/*
+ * Blocky broadsheet — Morning Paper (both appearances) extends its
+ * squared board personality to ALL app chrome: the generic radius
+ * scale + pills flatten (page cards, dialogs, chips, progress bars,
+ * toggle tracks), and the two opt-in tokens square the round controls
+ * (toggle knobs, header icon buttons) that stay circles in every other
+ * theme via their 50% fallback. Card Room inherits the :root scale
+ * untouched. Functional circles — status dots, ⓘ markers, the
+ * progress ring — stay round on purpose.
+ */
+[data-theme='paper'],
+[data-theme='paper-dark'] {
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 5px;
+  --radius-pill: 3px;
+  /* Consumed as var(--radius-knob, 50%) / var(--radius-icon, 50%). */
+  --radius-knob: 2px;
+  --radius-icon: 3px;
 }
 
 /*

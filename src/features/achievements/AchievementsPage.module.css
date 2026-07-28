@@ -88,14 +88,14 @@
   padding: 13px 16px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
 .progressTrack {
   flex: 1;
   height: 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--paper-sunken);
   overflow: hidden;
 }
@@ -103,7 +103,7 @@
 .progressFill {
   height: 100%;
   background: var(--accent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .progressLabel {
@@ -164,7 +164,7 @@
 .card {
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 14px 15px;
   box-shadow: var(--shadow-sm);
   opacity: 0.72;
@@ -195,7 +195,7 @@
   flex: none;
   width: 34px;
   height: 34px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -270,7 +270,7 @@
   .sectionCard {
     background: var(--paper-raised);
     border: 1px solid var(--hairline);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 14px 16px;
     /* Clear the sticky header when an opened card auto-scrolls up. */
@@ -296,7 +296,7 @@
   .sectionToggle:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
   }
 
   .sectionCaret {

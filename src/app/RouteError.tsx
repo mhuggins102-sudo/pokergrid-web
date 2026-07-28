@@ -259,7 +259,7 @@ export function RouteError() {
   const card: CSSProperties = {
     maxWidth: 360,
     padding: '32px 24px',
-    borderRadius: 14,
+    borderRadius: 'var(--radius-lg)',
     background: 'var(--paper-raised, #211e17)',
     border: '1px solid var(--rule, #3a352a)',
   };
@@ -267,7 +267,7 @@ export function RouteError() {
     display: 'inline-block',
     marginTop: 20,
     padding: '12px 24px',
-    borderRadius: 10,
+    borderRadius: 'var(--radius-button)',
     border: 'none',
     background: 'var(--accent, #3a8f68)',
     color: 'var(--on-primary, var(--on-accent, #ffffff))',
