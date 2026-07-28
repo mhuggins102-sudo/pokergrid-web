@@ -232,7 +232,10 @@ export function StatsPage() {
               <span className={styles.runTwistCell}>
                 {run.twist && (
                   <span className={styles.twistPill}>
-                    <span aria-hidden="true">✦</span> {twistName(run.twist)}
+                    <span className={styles.twistStar} aria-hidden="true">
+                      ✦
+                    </span>
+                    {twistName(run.twist)}
                   </span>
                 )}
               </span>
