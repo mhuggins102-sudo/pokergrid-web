@@ -38,7 +38,7 @@
 .listPanel {
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
@@ -78,7 +78,7 @@
   right: 14px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   padding: 5px;
   opacity: 0;
@@ -102,7 +102,7 @@
   text-align: left;
   padding: 8px 11px;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: transparent;
   font-family: var(--font-body);
   font-size: 13px;
@@ -187,7 +187,7 @@
   flex: none;
   width: 38px;
   height: 38px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -266,7 +266,7 @@
   font-size: 10px;
   font-weight: 700;
   padding: 2px 7px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--tier-tone, var(--ink-2)) 16%, transparent);
   color: var(--tier-tone, var(--ink-2));
 }
@@ -289,7 +289,7 @@
   font-size: 11px;
   font-weight: 700;
   padding: 5px 11px;
-  border-radius: 8px;
+  border-radius: var(--radius-button);
   background: var(--accent);
   color: var(--on-primary, var(--on-accent, #fff));
   text-decoration: none;
@@ -328,7 +328,7 @@
 .detailPanel {
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 24px 26px;
 }
@@ -356,7 +356,7 @@
   justify-content: center;
   width: 32px;
   height: 28px;
-  border-radius: 7px;
+  border-radius: var(--radius-button);
   border: 1px solid var(--rule);
   background: transparent;
   color: var(--ink-3);
@@ -417,7 +417,7 @@
   font-size: 17px;
   font-weight: 700;
   padding: 4px 13px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--tier-tone, var(--ink-2)) 18%, transparent);
   color: var(--tier-tone, var(--ink-2));
 }
@@ -457,7 +457,7 @@
   gap: 6px;
   background: var(--accent);
   color: var(--on-primary, var(--on-accent, #fff));
-  border-radius: 9px;
+  border-radius: var(--radius-button);
   padding: 9px 18px;
   font-size: 13px;
   font-weight: 700;
@@ -488,7 +488,7 @@
 
 .rankCard {
   background: var(--paper-sunken);
-  border-radius: 11px;
+  border-radius: var(--radius-md);
   padding: 13px 15px;
   text-align: center;
 }
@@ -541,7 +541,7 @@
 
 .histBar {
   width: 100%;
-  border-radius: 3px 3px 0 0;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
   background: color-mix(in srgb, var(--ink-3) 32%, var(--paper-sunken));
 }
 
@@ -592,7 +592,7 @@
 .legendSwatchOwn {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
 .legendSwatchOwn {
@@ -618,7 +618,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .leaderName {

@@ -60,7 +60,7 @@
   width: 520px;
   max-width: 100%;
   background: var(--paper-raised);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: 24px 26px 26px;
   animation: draw-in 220ms ease;
@@ -128,7 +128,7 @@
   text-align: left;
   cursor: pointer;
   border: 1.5px solid var(--tone, var(--rule));
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 16px 16px 18px;
   background: color-mix(in srgb, var(--tone, var(--rule)) 8%, var(--paper-raised));
   font: inherit;
@@ -229,7 +229,7 @@
   text-align: left;
   cursor: pointer;
   border: 1.5px dashed var(--danger);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 14px 14px 16px;
   background: var(--paper-raised);
   font: inherit;
@@ -275,7 +275,7 @@
   .card {
     width: 100%;
     padding: 18px 18px 20px;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     max-height: calc(100dvh - 32px);
     overflow: auto;
   }

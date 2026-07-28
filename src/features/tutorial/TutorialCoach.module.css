@@ -93,7 +93,7 @@
   flex-direction: column;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 14px 16px;
 }
@@ -124,7 +124,7 @@
 .deskTrack {
   flex: none;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--paper-sunken);
   overflow: hidden;
   margin-top: 9px;
@@ -133,7 +133,7 @@
 .deskFill {
   height: 100%;
   background: var(--accent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   transition: width 200ms ease;
 }
 

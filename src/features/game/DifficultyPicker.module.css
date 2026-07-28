@@ -58,7 +58,7 @@
   text-align: left;
   background: var(--paper-raised);
   border: 2px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 18px;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
@@ -183,7 +183,7 @@
   padding: 20px 24px;
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -233,14 +233,14 @@
 .seedToggle:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .seedTrack {
   position: relative;
   width: 38px;
   height: 22px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--rule);
   transition: background 160ms ease;
   flex: none;
@@ -256,7 +256,7 @@
   left: 2px;
   width: 18px;
   height: 18px;
-  border-radius: 50%;
+  border-radius: var(--radius-knob, 50%);
   background: #fff;
   transition: left 160ms ease;
   box-shadow: var(--shadow-sm);
@@ -272,7 +272,7 @@
   gap: 8px;
   background: var(--accent);
   color: var(--on-primary, var(--on-accent, #fff));
-  border-radius: 11px;
+  border-radius: var(--radius-button);
   padding: 14px 30px;
   font-size: 16px;
   font-weight: 600;
@@ -304,14 +304,14 @@
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--paper-raised);
   box-shadow: var(--shadow-sm);
 }
 
 .diffPill {
   padding: 9px 6px;
-  border-radius: 9px;
+  border-radius: var(--radius-button);
   border: 1px solid transparent;
   background: transparent;
   font-family: var(--font-body);
@@ -349,7 +349,7 @@
      paper/shadow the flattened inner card gives up. */
   .singleCard {
     border: 2px solid var(--tone);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     background: var(--paper-raised);
     box-shadow: var(--shadow-md);
     overflow: hidden;

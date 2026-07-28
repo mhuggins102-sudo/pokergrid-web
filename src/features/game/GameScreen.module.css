@@ -985,7 +985,7 @@
 .navMenuRowOn {
   margin: 0 -6px;
   padding: 4px 6px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 

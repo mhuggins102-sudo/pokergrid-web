@@ -52,7 +52,7 @@
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--paper-raised);
   box-shadow: var(--shadow-sm);
 }
@@ -60,7 +60,7 @@
 .tab {
   /* Narrow paddings so heading + both groups fit one line at 1200px. */
   padding: 8px 14px;
-  border-radius: 9px;
+  border-radius: var(--radius-button);
   font-size: 13px;
   font-weight: 600;
   font-family: var(--font-body);
@@ -96,7 +96,7 @@
 .headCard {
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 18px 20px;
 }
@@ -138,7 +138,7 @@
 .panel {
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 20px 22px;
 }
@@ -190,14 +190,14 @@
 .tierTrack {
   flex: 1;
   height: 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--paper-sunken);
   overflow: hidden;
 }
 
 .tierFill {
   height: 100%;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .tierCount {
@@ -326,7 +326,7 @@
   align-items: center;
   gap: 5px;
   padding: 2px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent);
   font-size: 10.5px;
@@ -365,7 +365,7 @@
   font-size: 12px;
   font-weight: 700;
   padding: 3px 9px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--tier-tone) 16%, transparent);
   color: var(--tier-tone);
 }
@@ -455,7 +455,7 @@
     justify-content: center;
     width: 32px;
     height: 28px;
-    border-radius: 7px;
+    border-radius: var(--radius-button);
     border: 1px solid var(--rule);
     background: transparent;
     color: var(--ink-3);

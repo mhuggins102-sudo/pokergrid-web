@@ -64,6 +64,9 @@ export const spacing = {
   xxxl: 48,
 } as const;
 
+// The :root generic scale (Card Room's values). Morning Paper overrides
+// the whole scale in CSS (the blocky-broadsheet block in tokens.css) —
+// JS consumers of these numbers get the rounded base scale.
 export const radius = {
   xs: 2,
   sm: 6,

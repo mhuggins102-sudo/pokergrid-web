@@ -30,7 +30,7 @@
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   background: var(--home-surface);
   border: 1px solid var(--hairline);
@@ -176,7 +176,7 @@
   text-decoration: none;
   background: var(--accent);
   color: var(--on-primary, var(--on-accent, #fff));
-  border-radius: 12px;
+  border-radius: var(--radius-button);
   padding: 14px 26px;
   font-size: 16px;
   font-weight: 600;
@@ -188,7 +188,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
 }
 
 .heroCta:focus-visible {
@@ -216,7 +216,7 @@
 .heroArchive:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 /* Played today's grid: the CTA is replaced by the result — score / target
@@ -247,7 +247,7 @@
   font-size: 17px;
   font-weight: 700;
   padding: 4px 13px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--tier-tone, var(--ink-2)) 18%, transparent);
   color: var(--tier-tone, var(--ink-2));
 }
@@ -271,7 +271,7 @@
 .heroResultLink:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 /* Right panel: the rotated 3×3 of demo card faces. */
@@ -295,7 +295,7 @@
 
 .heroCard {
   position: relative;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--card-face);
   box-shadow: var(--card-shadow, var(--shadow-sm));
   container-type: size;
@@ -392,7 +392,7 @@
   flex-direction: column;
   gap: 9px;
   padding: 22px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: var(--home-surface);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
@@ -449,7 +449,7 @@
   flex-direction: column;
   gap: 9px;
   padding: 22px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: var(--home-surface);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
@@ -464,7 +464,7 @@
 .footerCard .modeLink:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 /* ---- QUICK START ---- */
@@ -474,7 +474,7 @@
    height), the full-width strip below the card grid otherwise. */
 .quickStart {
   padding: 16px 22px 18px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: var(--home-surface);
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
@@ -517,7 +517,7 @@
   align-items: center;
   justify-content: center;
   padding: 12px 4px;
-  border-radius: 10px;
+  border-radius: var(--radius-button);
   font-size: 14px;
   font-weight: 700;
   text-align: center;
