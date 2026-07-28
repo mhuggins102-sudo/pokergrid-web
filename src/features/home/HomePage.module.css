@@ -130,8 +130,11 @@
   gap: 6px;
   padding: 6px 13px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--warn) 13%, var(--paper-raised));
-  color: var(--warn);
+  /* Accent, matching the in-game nav's twist pill — one variant color
+     at every width (this was amber ≥768 / accent below, and the split
+     read as a theme inconsistency). */
+  background: color-mix(in srgb, var(--accent) 13%, var(--paper-raised));
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -713,13 +716,6 @@
     align-self: end;
     font-size: 13px;
     white-space: nowrap;
-  }
-
-  /* Twist/variant pill goes green to match the in-game nav's twist pill
-     (var(--accent)), rather than the amber it wears elsewhere. */
-  .twistChip {
-    background: color-mix(in srgb, var(--accent) 13%, var(--paper-raised));
-    color: var(--accent);
   }
 
   /* 2×2 card grid (columns come from the ≤1023 rule): tighter gaps so
