@@ -87,7 +87,6 @@ export function ChallengesPage() {
                 <div>
                   <div className={styles.name}>{challenge.name}</div>
                   <div className={styles.synopsis}>
-                    <span className={styles.synopsisDot} aria-hidden="true" />
                     {challenge.synopsis.replace(/^Twist:\s*/i, '')}
                   </div>
                 </div>
