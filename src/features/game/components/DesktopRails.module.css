@@ -51,11 +51,14 @@
   border: none;
   background: transparent;
   color: var(--ink-3);
-  font-size: 14px;
-  line-height: 1;
   padding: 2px 4px;
   cursor: pointer;
   border-radius: var(--radius-xs);
+}
+
+/* The hands icon (SVG, not a text glyph) — kill the inline baseline gap. */
+.headBtn svg {
+  display: block;
 }
 
 .headBtn:hover {

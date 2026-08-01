@@ -676,11 +676,6 @@
   display: block;
 }
 
-.rowCtrlGlyph {
-  font-size: 13px;
-  line-height: 1;
-}
-
 @media (hover: hover) {
   .rowCtrlBtn:hover {
     color: var(--ink);

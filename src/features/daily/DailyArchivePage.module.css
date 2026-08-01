@@ -35,12 +35,15 @@
 
 /* ---- Archive list ---- */
 
+/* NO overflow:hidden here — the month dropdown (.monthMenu) hangs out
+   of the panel when the day list is short (start of a month), and a
+   panel clip would cut it off. The rounded-corner clipping the hidden
+   used to provide lives on .dateScroll's own bottom radius instead. */
 .listPanel {
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
 }
 
 /* Head row: month picker (label + caret grouped left) with the list ↔
@@ -178,6 +181,9 @@
 .dateScroll {
   max-height: 560px;
   overflow-y: auto;
+  /* Clip the bottom row's full-width hover background to the panel's
+     rounded corners (the panel itself must not clip — see .listPanel). */
+  border-radius: 0 0 calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px);
 }
 
 /* ---- Calendar view ----

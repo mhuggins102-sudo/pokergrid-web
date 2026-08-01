@@ -5,6 +5,7 @@ import { useGameSession } from '../GameSessionProvider';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useAnimatedNumber } from '../useAnimatedNumber';
 import { TierBreakdownSheet } from './TierBreakdownSheet';
+import { HandsIcon } from './icons';
 import styles from './ScoreBar.module.css';
 
 export interface ScoreBarProps {
@@ -117,7 +118,7 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
           onClick={onShowHandValues}
           aria-label="Hand values"
         >
-          ⓘ
+          <HandsIcon size={14} />
         </Button>
       </div>
       <TierBreakdownSheet

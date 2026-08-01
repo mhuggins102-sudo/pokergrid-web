@@ -64,6 +64,7 @@ import {
 } from './components/TierBreakdownSheet';
 import { LineRails } from './components/LineRails';
 import { LineDetailSheet } from './components/LineDetailSheet';
+import { HandsIcon, ScoringIcon } from './components/icons';
 import { useAutoPlaceFlights } from './useAutoPlaceFlights';
 import { NextCardWell } from './components/NextCardWell';
 import { ScoreBar } from './components/ScoreBar';
@@ -641,9 +642,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               aria-label="Hand values"
               {...handsRowPop.toggleProps}
             >
-              <span className={styles.rowCtrlGlyph} aria-hidden="true">
-                ⓘ
-              </span>
+              <HandsIcon />
               {!compactRowIcons && <span>Hands</span>}
             </button>
             <div
@@ -665,20 +664,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               aria-label="Scoring"
               {...scoringRowPop.toggleProps}
             >
-              <svg
-                viewBox="0 0 24 24"
-                width="15"
-                height="15"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                aria-hidden="true"
-              >
-                <line x1="4" y1="7" x2="20" y2="7" />
-                <line x1="4" y1="12" x2="20" y2="12" />
-                <line x1="4" y1="17" x2="20" y2="17" />
-              </svg>
+              <ScoringIcon />
               {!compactRowIcons && <span>Scoring</span>}
             </button>
             <div className={`${styles.rowPop} ${styles.rowScoringPop}`}>
