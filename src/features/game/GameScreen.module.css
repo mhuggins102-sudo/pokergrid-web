@@ -90,26 +90,41 @@
   );
 }
 
-/* Phone: the grid centers in the VISIBLE window (info row → dock) by
-   plain area-centering — no base nudge. The old +4px margin-top
-   compensated for the pre-drawer header chrome; after the header
-   rework the window measures symmetric at area-center across the full
-   matrix (widths 390/393 × heights 660–844 × dock layouts) with ONE
-   exception, corrected below. If chrome changes again, re-measure and
-   adjust — flex centers the margin-box, so a margin of m shifts the
-   board m/2. */
+/* Phone: the grid centers in the VISIBLE window (info row → dock), and
+   the nudges below are calibrated to VISIBLE INK, not layout boxes —
+   the eye measures from the info-row chips' borders (which end 3px
+   [short viewports] / 6px [full height] ABOVE the row's padded box
+   edge) down to the first dashed cell, and from the totals chips down
+   to the first dock ink (Split: the raised panels' border at its box
+   edge; strip layouts: the bonus chips sitting 4px/8px INSIDE the
+   borderless merged strip). Box-symmetric therefore reads top-heavy on
+   Split and roughly even on the strip layouts. Calibrated against the
+   full ink matrix (widths 390/393 × heights 660–844 × dock layouts);
+   if chrome changes, re-measure ink, not boxes. A margin moves the
+   flex-centered board's above−below difference by its full size
+   (margin-top +, margin-bottom −). */
 
-/* The exception: on FULL-HEIGHT phones the docked bonus strip's 4px
-   breath (its margin above the merged dock) sits below the board area,
-   so every strip-carrying layout — Classic, Hand stack, Center stage —
-   measures 4px more below than above (e.g. 96/100 at 390×844). Split
-   keeps its bonus cards inside the dock (no strip, no breath) and
-   measures symmetric, so it exempts itself via .dockSplit. Below 781px
-   the short-viewport bonus reclaim drops the breath and everything
-   measures symmetric unnudged. */
+/* One more px of the eye's edge: the info-row buttons' drop shadow
+   paints a dense row right under their border, so the perceived row
+   bottom sits ~1px BELOW the border box (screenshot band-scans read it
+   at every threshold; the totals chips cast none, so only the top gap
+   is affected). Net: pixel-true balance wants the DOM ink diff at
+   about +1, not 0 — the values below hit |pixel imbalance| ≤ 0.7
+   across the matrix. */
+
+/* Full-height phones: the strip layouts' 4px breath margin sits below
+   the board area (−4 boxwise) and their strip-padding ink offset (+8)
+   over-cancels the info row's hidden 6px — margin-top 6 lands them at
+   pixel-even. Split has no strip ink inset, so the info row's hidden
+   6px (plus chip rounding) reads +7 top-heavy; margin-bottom 6 pulls
+   the board up to pixel-center. */
 @media (max-width: 767px) and (min-height: 781px) {
   .layout:not(.dockSplit) .boardFrame {
-    margin-top: 4px;
+    margin-top: 6px;
+  }
+
+  .dockSplit .boardFrame {
+    margin-bottom: 6px;
   }
 }
 
@@ -429,8 +444,20 @@
     padding-bottom: var(--space-xs);
   }
 
-  /* (No board re-center needed here since the base nudge went to zero —
-     the short viewport measures 28/28 above/below at area-center.) */
+  /* Ink re-center (see the calibration note above): the strip layouts
+     measure near-even here unnudged (hidden 3px above ≈ 4px strip
+     inset below) and take +2 for the shadow row; Split's dock ink
+     starts at its panel border, so the info row's hidden 3px reads
+     +3.5 top-heavy — margin-bottom 3 trades board height for balance.
+     On this height-bound branch margins resize the board rather than
+     move it, so each costs its full size in board height. */
+  .layout:not(.dockSplit) .boardFrame {
+    margin-top: 2px;
+  }
+
+  .dockSplit .boardFrame {
+    margin-bottom: 3px;
+  }
 }
 
 /* The ScoreBar's Undo, relocated into the dock: a compact icon-only

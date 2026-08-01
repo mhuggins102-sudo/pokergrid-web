@@ -285,7 +285,10 @@
   .progress {
     gap: 12px;
     padding: 12px 16px;
-    margin-top: 4px;
+    /* Zero the desktop 22px head-gap: with the eyebrow/title hidden
+       (and the phone header divider gone) this is the page's first
+       element, sitting at the shell's shared 8px like every page. */
+    margin-top: 0;
   }
 
   .grid {

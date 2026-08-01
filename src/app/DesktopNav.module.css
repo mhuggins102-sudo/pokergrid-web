@@ -422,6 +422,10 @@
     /* row-gap only matters in-game, where .gameRow adds row 2. */
     gap: 2px 10px;
     padding: 4px var(--space-lg) 6px;
+    /* Phone runs divider-free on EVERY page (the masthead rule stays on
+       tablet/desktop): the header's opaque paper surface alone marks the
+       sticky boundary while content scrolls beneath. */
+    border-bottom: none;
   }
 
   .menuBtn {
@@ -465,11 +469,10 @@
     display: none;
   }
 
-  /* In-game the header runs DIVIDER-FREE: the title bar flows straight
-     into the score / Hands / Scoring row and the board below (the
-     masthead rule stays on every non-game page via the base .bar
-     border-bottom, suppressed for gameRowActive underneath). The row
-     carries the header's bottom padding itself. */
+  /* In-game the title bar flows straight into the score / Hands /
+     Scoring row and the board below (the whole phone header is
+     divider-free — see .bar above). The row carries the header's
+     bottom padding itself. */
   .gameRow {
     display: flex;
     grid-row: 2;
@@ -483,7 +486,6 @@
   }
 
   .bar.gameRowActive {
-    border-bottom: none;
     padding-bottom: 0;
   }
 
