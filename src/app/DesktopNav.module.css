@@ -192,6 +192,163 @@
   display: none;
 }
 
+/* Phone-only hamburger (nav-drawer trigger), first in the nameplate
+   cluster. Borderless — `.left` is a nameplate, not a button rail; the
+   bordered 34px recipe stays on the `.right` cluster. Hidden ≥768,
+   where the center nav shows instead. */
+.menuBtn {
+  display: none;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  /* The .left flex is baseline-aligned (wordmark + label). */
+  align-self: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-icon, 50%);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (hover: hover) {
+  .menuBtn:hover {
+    color: var(--ink);
+  }
+}
+
+.menuBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Phone nav drawer content (rendered in the <dialog> top layer,
+   so no width gating is needed here — only the trigger is gated). ---- */
+.drawerNav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawerGroupLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  padding: 4px 10px;
+}
+
+.drawerLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .drawerLink:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+}
+
+.drawerLinkOn {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.drawerRule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 10px 0;
+}
+
+.drawerDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawerCtlLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 2px 10px 0;
+}
+
+/* Segmented quick switches — the SettingsPage .seg recipe at drawer
+   density. */
+.drawerSeg {
+  display: flex;
+  background: var(--paper-sunken);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin: 0 10px;
+}
+
+.drawerSegBtn {
+  flex: 1;
+  min-height: 34px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.drawerSegBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.drawerSegBtnOn {
+  background: var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.drawerChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 10px;
+}
+
+.drawerChip {
+  border: 1px solid var(--rule);
+  background: transparent;
+  border-radius: var(--radius-chip);
+  padding: 6px 11px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.drawerChip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.drawerChipOn {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
 .homeBtn {
   display: none;
   width: 34px;
@@ -294,18 +451,21 @@
   }
 }
 
-/* Phone (<768, phase 6 unified header): wordmark + extras + ◐ on the
-   top row, and the SAME desk `.center` nav — Game Modes dropdown + the
-   four page links — as the second header row beneath (the phone link
-   row was retired for the desk nav per the directive). */
+/* Phone (<768, phase 7 drawer header): ONE header row — hamburger +
+   wordmark + page label on the left, ◐ (and, in-game, the score pill +
+   HOME) on the right. The desk `.center` nav is display:none here; its
+   links live in the hamburger's Drawer instead. In-game, the game
+   details row still takes a second grid row exactly as before. */
 @media (max-width: 767px) { /* below bp-tablet */
   .bar {
     grid-template-columns: 1fr auto;
-    /* Top row rides as high as the in-game header (was 8px padding-top);
-       the tighter row-gap then bumps the second row up a touch. Every
-       page now shares the in-game header's vertical rhythm. */
+    /* row-gap only matters in-game, where .gameRow adds row 2. */
     gap: 2px 10px;
     padding: 4px var(--space-lg) 6px;
+  }
+
+  .menuBtn {
+    display: inline-flex;
   }
 
   .wordmark {
@@ -339,32 +499,9 @@
     min-width: 0;
   }
 
-  /* The center nav drops to a left-aligned second row spanning the full
-     header width. "Game Modes ▾" + Stats + Achievements + Rules +
-     Settings ≈ 360px at the condensed 13.5px link font / 14px gaps, so
-     it fits 390 without scrolling.
-     Pinned to row 2 EXPLICITLY so it leaves row 1 to auto-placement —
-     the wordmark (.left) and ◐ (.right) then fill row 1 in DOM order.
-     (An explicit row on .right instead would place it before .left and
-     swap them; a full-width auto .center would sparse-push ◐ to row 3.)
-     No overflow here: overflow-x:auto would force overflow-y:auto and
-     CLIP the Game Modes dropdown even at 390 — the scroll safety net is
-     scoped to sub-384 widths below, where the fixed row truly overflows. */
+  /* The center nav's links moved into the hamburger Drawer — the row
+     is gone at this width entirely (the ~40px vertical reclaim). */
   .center {
-    display: flex;
-    grid-row: 2;
-    grid-column: 1 / -1;
-    justify-self: stretch;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-  }
-
-  /* In-game (streamlined): the details row TAKES OVER row 2 — the center
-     nav yields (its Game Modes + links belong to non-game pages), and the
-     HOME icon appears left of ◐ so the game keeps a one-tap exit. */
-  .bar.gameRowActive .center {
     display: none;
   }
 
@@ -382,44 +519,6 @@
   .homeBtn {
     display: inline-flex;
     flex: none;
-  }
-
-  .link {
-    font-size: 13px;
-    /* ~38px touch target without growing the row height via font size. */
-    min-height: 38px;
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .modesTrigger {
-    flex-shrink: 0;
-  }
-
-  /* The desk menu is centered under its trigger (translateX(-50%)); on
-     the phone row the trigger sits at the left edge, so centering clips
-     the menu off the left of the viewport. Anchor it to the trigger's
-     left edge instead — same vertical slide/transition, no X-centering. */
-  .modesMenu {
-    left: 0;
-    transform: translateX(0) translateY(-4px);
-  }
-
-  .modesWrap:hover .modesMenu,
-  .modesWrap:focus-within .modesMenu,
-  .modesWrap.modesWrapOpen .modesMenu {
-    transform: translateX(0) translateY(0);
-  }
-
-  .modesWrap.modesWrapClosed .modesMenu {
-    transform: translateX(0) translateY(-4px);
-  }
-
-  /* Re-anchor the hover bridge to match. */
-  .modesWrap::after {
-    left: 0;
-    transform: none;
   }
 }
 
@@ -442,22 +541,5 @@
   }
 }
 
-/* Narrow-device safety net (sub-~384px, where the fixed-width link row
-   would overflow the viewport): let the ROW scroll instead of forcing
-   horizontal PAGE scroll. overflow-x:auto forces overflow-y:auto, so the
-   Game Modes dropdown can clip at the row's scroll edge here — acceptable
-   per the directive; 390 never reaches this branch (the row fits ~360). */
-@media (max-width: 383px) { /* narrow phones */
-  .center {
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    /* Bleed to the header edges so the row scrolls off the screen edge. */
-    margin: 0 calc(-1 * var(--space-lg));
-    padding: 0 var(--space-lg);
-  }
-
-  .center::-webkit-scrollbar {
-    display: none;
-  }
-}
+/* (The sub-384px link-row scroll safety net is gone with the row — the
+   drawer holds the links at every phone width.) */

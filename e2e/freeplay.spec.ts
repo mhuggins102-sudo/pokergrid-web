@@ -10,11 +10,13 @@ test('token gallery renders the design system', async ({ page }) => {
 test('achievements are reachable from the home tile', async ({ page }) => {
   await page.goto('/');
   // Home's card grid doesn't include Achievements; it's reached through
-  // the header nav (the Game Modes row on phone, the center nav ≥768).
+  // the header nav (the hamburger drawer on phone, the center nav ≥768).
   const tile = page.locator('main').getByRole('link', { name: /Achievements/ });
   if (await tile.count()) {
     await tile.click();
   } else {
+    const menuBtn = page.getByRole('button', { name: 'Menu' });
+    if (await menuBtn.isVisible()) await menuBtn.click();
     await page.getByRole('link', { name: 'Achievements' }).click();
   }
   await expect(page).toHaveURL(/\/achievements/);

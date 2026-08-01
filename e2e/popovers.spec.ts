@@ -24,28 +24,30 @@ const popOpacity = (loc: Locator): Promise<number> =>
     return Number(getComputedStyle(pop as Element).opacity);
   });
 
-test('mobile header: Game Modes taps open and route into Daily', async ({
+test('mobile header: the hamburger drawer opens and routes into Daily', async ({
   page,
 }, testInfo) => {
   const vp = page.viewportSize();
   test.skip(
     !testInfo.project.use.hasTouch || !vp || vp.width >= 768,
-    'phone header row is the <768 touch case'
+    'phone header drawer is the <768 touch case'
   );
 
   await page.goto('/');
-  const trigger = page.getByText('Game Modes');
-  await expect(trigger).toBeVisible();
-  const daily = page.locator('header').getByRole('link', { name: 'Daily' });
+  // The links row is gone on phone — the hamburger left of the wordmark
+  // opens the nav drawer (a native <dialog>, so plain visibility
+  // assertions work; no opacity polling needed).
+  const menuBtn = page.getByRole('button', { name: 'Menu' });
+  await expect(menuBtn).toBeVisible();
+  await menuBtn.tap();
 
-  // Tap opens the dropdown (menu opacity → 1, so the item is tappable).
-  await trigger.tap();
-  await expect.poll(() => popOpacity(daily)).toBeGreaterThan(0.5);
+  const daily = page.getByRole('dialog').getByRole('link', { name: 'Daily' });
+  await expect(daily).toBeVisible();
 
-  // Tapping Daily navigates and the menu closes (route-change dismissal).
+  // Tapping Daily navigates and closes the drawer.
   await daily.tap();
   await expect(page).toHaveURL(/\/daily$/);
-  await expect.poll(() => popOpacity(daily)).toBeLessThan(0.5);
+  await expect(page.getByRole('dialog')).toBeHidden();
 });
 
 test('mobile streamlined game: the HOME icon exits home mid-game', async ({
