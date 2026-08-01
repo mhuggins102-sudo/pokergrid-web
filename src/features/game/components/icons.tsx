@@ -44,11 +44,13 @@ export function ScoringIcon({ size = 15 }: { size?: number }) {
       aria-hidden="true"
       focusable="false"
     >
-      <line x1="5" y1="5" x2="5" y2="16" />
-      <line x1="9.7" y1="5" x2="9.7" y2="16" />
-      <line x1="14.3" y1="5" x2="14.3" y2="16" />
-      <line x1="19" y1="5" x2="19" y2="16" />
-      <line x1="2.8" y1="18.5" x2="21.2" y2="9.5" />
+      <line x1="5" y1="6.5" x2="5" y2="17.5" />
+      <line x1="9.7" y1="6.5" x2="9.7" y2="17.5" />
+      <line x1="14.3" y1="6.5" x2="14.3" y2="17.5" />
+      <line x1="19" y1="6.5" x2="19" y2="17.5" />
+      {/* Slash midpoint matches the strokes' center so it crosses the
+          bundle rather than drooping under it. */}
+      <line x1="3" y1="17" x2="21" y2="7" />
     </svg>
   );
 }

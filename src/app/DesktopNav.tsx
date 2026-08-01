@@ -517,11 +517,12 @@ export function DesktopNav() {
                 strokeLinejoin="round"
                 aria-hidden="true"
               >
-                {/* Card back — the deck's artwork: a single card showing
-                    its decorated back (inset inner frame). Deliberately
-                    NOT a fan, which now belongs to the Hands icon. */}
-                <rect x="6.5" y="4" width="11" height="16" rx="2" />
-                <rect x="9.25" y="6.75" width="5.5" height="10.5" rx="1" />
+                {/* Card back — the deck's artwork: a single SQUARE card
+                    (PokerGrid's cards are square) showing its decorated
+                    back (inset inner frame). Deliberately NOT a fan,
+                    which now belongs to the Hands icon. */}
+                <rect x="5" y="5" width="14" height="14" rx="2" />
+                <rect x="8.5" y="8.5" width="7" height="7" rx="1" />
               </svg>
               <span className={styles.drawerQuickCaption}>{skinLabel}</span>
             </button>
