@@ -21,6 +21,14 @@ export interface DialogProps {
    * only start when the touched scroller is already at its top.
    */
   dragToClose?: boolean;
+  /**
+   * Where initial focus lands on open. 'auto' (default) is the platform
+   * behavior — the first focusable control, which paints its focus ring.
+   * 'panel' focuses the dialog itself so no control opens pre-highlighted
+   * (the nav drawer); the focus trap is unaffected and Tab reaches the
+   * controls normally.
+   */
+  initialFocus?: 'auto' | 'panel';
 }
 
 /**
@@ -37,15 +45,23 @@ export function Dialog({
   hideHeader = false,
   dismissible = true,
   dragToClose = false,
+  initialFocus = 'auto',
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (open && !el.open) el.showModal();
-    else if (!open && el.open) el.close();
-  }, [open]);
+    if (open && !el.open) {
+      el.showModal();
+      // Re-seat initial focus on the panel itself (the dialog carries
+      // tabIndex={-1}) so showModal's first-control auto-focus doesn't
+      // open with a highlighted button.
+      if (initialFocus === 'panel') el.focus();
+    } else if (!open && el.open) {
+      el.close();
+    }
+  }, [open, initialFocus]);
 
   // showModal() makes the page behind inert but does NOT stop touch
   // scrolling it — a flick on the dialog otherwise pans the main
@@ -168,6 +184,9 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
+      // Focusable for initialFocus='panel'; -1 keeps it out of the tab
+      // order, and the dialog's own outline is suppressed in CSS.
+      tabIndex={-1}
       className={[styles.dialog, className].filter(Boolean).join(' ')}
       onClose={handleClose}
       onClick={handleClick}

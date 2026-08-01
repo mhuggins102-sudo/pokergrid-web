@@ -37,6 +37,9 @@ export function Drawer({
       className={[styles.drawer, className].filter(Boolean).join(' ')}
       hideHeader={hideHeader}
       dismissible={dismissible}
+      // Land initial focus on the panel, not the first quick-action
+      // button — the drawer shouldn't open with a highlighted control.
+      initialFocus="panel"
     >
       {children}
     </Dialog>

@@ -457,6 +457,12 @@
     display: none;
   }
 
+  /* In-game, the masthead rule moves ABOVE the details row: the title
+     bar (wordmark + hamburger) ends at the line, and the score /
+     Hands / Scoring row reads as part of the gameplay area below it.
+     The row bleeds through the header's side padding so the rule runs
+     the full viewport width, and it carries the header's bottom
+     padding itself (the bar's own is dropped below). */
   .gameRow {
     display: flex;
     grid-row: 2;
@@ -466,6 +472,14 @@
     gap: 10px;
     min-width: 0;
     min-height: 44px;
+    border-top: var(--masthead-rule, 1px solid var(--rule));
+    margin: 0 calc(-1 * var(--space-lg));
+    padding: 4px var(--space-lg) 6px;
+  }
+
+  .bar.gameRowActive {
+    border-bottom: none;
+    padding-bottom: 0;
   }
 
   /* The corner belongs to the hamburger here — ◐'s flip lives in the
@@ -483,14 +497,12 @@
    non-game phone header and the full-height PWA case stay untouched. */
 @media (max-width: 767px) and (max-height: 780px) {
   /* The top padding + row-gap now match the base phone header, so only
-     the bottom padding (and the details-row height) tighten further here
-     to hand the short-viewport board its last few px. */
-  .bar.gameRowActive {
-    padding-bottom: 3px;
-  }
-
+     the details row's own bottom padding (it carries the header's,
+     since the rule moved above it) and height tighten further here to
+     hand the short-viewport board its last few px. */
   .bar.gameRowActive .gameRow {
     min-height: 40px;
+    padding-bottom: 3px;
   }
 }
 
