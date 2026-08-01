@@ -433,16 +433,9 @@
   color: var(--tier-tone, var(--ink-2));
 }
 
-/* Unplayed rows: a muted dash where the score would sit… */
-.rowDash {
-  display: inline-block;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink-3);
-  transition: opacity 130ms ease;
-}
-
-/* …swapped for a small Start link while the row is hovered/focused. */
+/* Unplayed rows: a permanent Start link in the score cell — every
+   width (the old desktop hover-reveal + "–" dash swap is gone; the
+   phone arrangement is now the shared one). */
 .rowStart {
   position: absolute;
   top: 50%;
@@ -455,29 +448,6 @@
   background: var(--accent);
   color: var(--on-primary, var(--on-accent, #fff));
   text-decoration: none;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 130ms ease;
-}
-
-.row:focus-within .rowStart {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.row:focus-within .rowDash {
-  opacity: 0;
-}
-
-@media (hover: hover) {
-  .row:hover .rowStart {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .row:hover .rowDash {
-    opacity: 0;
-  }
 }
 
 .rowStart:focus-visible {
@@ -604,6 +574,13 @@
   align-items: center;
   gap: 12px;
   margin-top: 6px;
+}
+
+/* List view's rows carry their own permanent Start, so the panel's
+   button is redundant there (every width); calendar view has no
+   in-list Start, so the panel keeps it. */
+.detailUnplayed:not(.detailUnplayedCal) .startBtn {
+  display: none;
 }
 
 .detailNotPlayed {
@@ -833,28 +810,8 @@
     max-height: 262px;
   }
 
-  /* Unplayed rows: the Start affordance sits permanently in the score
-     cell (replacing the hover-only reveal + the "–" dash). */
-  .rowStart {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .rowDash {
-    display: none;
-  }
-
-  /* The row already covers Start, so the detail panel's own button is
-     redundant here… */
-  .detailUnplayed .startBtn {
-    display: none;
-  }
-
-  /* …but calendar view has no in-list Start affordance, so the panel's
-     button returns beside "Not played" (the desktop arrangement). */
-  .detailUnplayedCal .startBtn {
-    display: inline-flex;
-  }
+  /* (Row Start visibility and the detail panel's list/calendar Start
+     split are base rules now — shared by every width.) */
 
   /* Drop the date from the detail panel — the score (or "Not played")
      takes the top slot instead. The reveal toggles float to the panel's
