@@ -845,9 +845,15 @@
   }
 
   /* The row already covers Start, so the detail panel's own button is
-     redundant here. */
+     redundant here… */
   .detailUnplayed .startBtn {
     display: none;
+  }
+
+  /* …but calendar view has no in-list Start affordance, so the panel's
+     button returns beside "Not played" (the desktop arrangement). */
+  .detailUnplayedCal .startBtn {
+    display: inline-flex;
   }
 
   /* Drop the date from the detail panel — the score (or "Not played")
