@@ -19,6 +19,7 @@ import {
   styleFor,
 } from '../../../lib/bonusCardCategory';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { HandsIcon } from './icons';
 import { isBackendConfigured } from '../../../lib/supabaseRpc';
 import { Button, useTapPopover } from '../../../design/primitives';
 import { useStatsStore } from '../../progress/statsStore';
@@ -204,7 +205,7 @@ export function ScoringPanel({
               aria-label="Hand values"
               {...handsPop.toggleProps}
             >
-              ⓘ
+              <HandsIcon size={14} />
             </button>
             <div className={styles.handsPop} role="tooltip">
               <HandValuesTable investBoost={investBoost} />
