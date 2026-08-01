@@ -90,6 +90,19 @@ const monthDates = (month: string, todayISO: string): string[] => {
 const weekdayOf = (iso: string): string =>
   WEEKDAY_NAME[new Date(toUTC(iso)).getUTCDay()];
 
+// List ↔ calendar view, remembered across visits. A page-local
+// preference, so plain (guarded) localStorage rather than the settings
+// store.
+type ArchiveView = 'list' | 'cal';
+const VIEW_KEY = 'pokergrid:archive-view';
+const storedView = (): ArchiveView => {
+  try {
+    return localStorage.getItem(VIEW_KEY) === 'cal' ? 'cal' : 'list';
+  } catch {
+    return 'list';
+  }
+};
+
 const longDate = (iso: string): string => {
   const [y, m, d] = iso.split('-').map(Number);
   return `${MONTH_NAME[m - 1]} ${d}, ${y}`;
@@ -120,6 +133,37 @@ export function DailyArchivePage() {
   const monthMenu = monthMenuOpen || monthTap.open;
 
   const dates = useMemo(() => monthDates(month, today), [month, today]);
+
+  const [view, setView] = useState<ArchiveView>(storedView);
+  const pickView = (v: ArchiveView) => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* private mode — the toggle still works for this visit */
+    }
+  };
+
+  // Calendar cells: leading blanks align the 1st to its weekday column,
+  // then every day of the month — days outside the published window
+  // (future / pre-launch) render inert.
+  const calendar = useMemo(() => {
+    const [y, m] = month.split('-').map(Number);
+    const first = toUTC(`${month}-01`);
+    const lead = new Date(first).getUTCDay();
+    const cells: { iso: string; day: number; open: boolean }[] = [];
+    for (let t = first; ; t += dayMs) {
+      const dt = new Date(t);
+      if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1) break;
+      const iso = toISO(t);
+      cells.push({
+        iso,
+        day: dt.getUTCDate(),
+        open: iso <= today && iso >= DAILY_LAUNCH_ISO,
+      });
+    }
+    return { lead, cells };
+  }, [month, today]);
 
   // Selected-day data (real RPCs; every hook keys on `sel`).
   const rank = useArchiveRank(sel);
@@ -162,7 +206,9 @@ export function DailyArchivePage() {
       ro?.disconnect();
       window.removeEventListener('resize', sync);
     };
-  }, []);
+    // `view` re-runs the sync when the calendar ↔ list toggle remounts
+    // the scroll area (its ref is null while the calendar shows).
+  }, [view]);
 
   // Phone: keep the toggled section in view. Turning one ON grows the
   // panel below the fold → scroll its BOTTOM into view; turning the last
@@ -248,51 +294,183 @@ export function DailyArchivePage() {
       <div className={styles.columns}>
         {/* ---- Archive list ---- */}
         <div className={styles.listPanel}>
-          <div
-            ref={monthTap.wrapRef}
-            className={styles.monthWrap}
-            tabIndex={0}
-            onMouseEnter={() => setMonthMenuOpen(true)}
-            onMouseLeave={() => setMonthMenuOpen(false)}
-            onFocus={() => setMonthMenuOpen(true)}
-            onBlur={e => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setMonthMenuOpen(false);
-              }
-            }}
-          >
-            {/* Touch: tap the label / caret to toggle the menu (hover
-                can't). Empty on fine pointers, where hover/focus drive
-                it. */}
-            <span className={styles.monthLabel} {...monthTap.toggleProps}>
-              {monthLabel(month)}
-            </span>
-            <span
-              className={styles.monthCaret}
-              aria-hidden="true"
-              {...monthTap.toggleProps}
-            >
-              ▾
-            </span>
+          {/* Head row: the month picker (label + caret grouped LEFT) and
+              the list ↔ calendar view toggle in the freed right space. */}
+          <div className={styles.listHead}>
             <div
-              className={`${styles.monthMenu} ${
-                monthMenu ? styles.monthMenuOpen : ''
-              }`}
+              ref={monthTap.wrapRef}
+              className={styles.monthWrap}
+              tabIndex={0}
+              onMouseEnter={() => setMonthMenuOpen(true)}
+              onMouseLeave={() => setMonthMenuOpen(false)}
+              onFocus={() => setMonthMenuOpen(true)}
+              onBlur={e => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setMonthMenuOpen(false);
+                }
+              }}
             >
-              {months.map(m => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`${styles.monthItem} ${
-                    m === month ? styles.monthItemOn : ''
-                  }`}
-                  onClick={() => pickMonth(m)}
+              {/* Touch: tap the label / caret to toggle the menu (hover
+                  can't). Empty on fine pointers, where hover/focus drive
+                  it. */}
+              <span className={styles.monthLabel} {...monthTap.toggleProps}>
+                {monthLabel(month)}
+              </span>
+              <span
+                className={styles.monthCaret}
+                aria-hidden="true"
+                {...monthTap.toggleProps}
+              >
+                ▾
+              </span>
+              <div
+                className={`${styles.monthMenu} ${
+                  monthMenu ? styles.monthMenuOpen : ''
+                }`}
+              >
+                {months.map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`${styles.monthItem} ${
+                      m === month ? styles.monthItemOn : ''
+                    }`}
+                    onClick={() => pickMonth(m)}
+                  >
+                    {monthLabel(m)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div
+              className={styles.viewToggle}
+              role="group"
+              aria-label="Archive view"
+            >
+              <button
+                type="button"
+                className={`${styles.viewBtn} ${
+                  view === 'list' ? styles.viewBtnOn : ''
+                }`}
+                aria-label="List view"
+                aria-pressed={view === 'list'}
+                onClick={() => pickView('list')}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="15"
+                  height="15"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
                 >
-                  {monthLabel(m)}
-                </button>
-              ))}
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="4" y1="18" x2="20" y2="18" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className={`${styles.viewBtn} ${
+                  view === 'cal' ? styles.viewBtnOn : ''
+                }`}
+                aria-label="Calendar view"
+                aria-pressed={view === 'cal'}
+                onClick={() => pickView('cal')}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="15"
+                  height="15"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="4" y="5" width="16" height="16" rx="2" />
+                  <line x1="4" y1="10" x2="20" y2="10" />
+                  <line x1="9" y1="3" x2="9" y2="7" />
+                  <line x1="15" y1="3" x2="15" y2="7" />
+                </svg>
+              </button>
             </div>
           </div>
+
+          {view === 'cal' ? (
+            <div className={styles.calWrap}>
+              <div className={styles.calHead} aria-hidden="true">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                  <span key={i}>{d}</span>
+                ))}
+              </div>
+              <div className={styles.calGrid}>
+                {Array.from({ length: calendar.lead }, (_, i) => (
+                  <span key={`pad-${i}`} />
+                ))}
+                {calendar.cells.map(({ iso, day, open }) => {
+                  if (!open) {
+                    return (
+                      <span key={iso} className={styles.calVoid}>
+                        <span className={styles.calDay}>{day}</span>
+                      </span>
+                    );
+                  }
+                  const play = plays[iso];
+                  const recipe = recipeFor(iso);
+                  const target = dailyTargetFor(
+                    recipe.difficulty,
+                    recipe.twist
+                  );
+                  const tier = play
+                    ? tierForRun({ score: play.score, target, won: play.won })
+                    : null;
+                  const on = iso === sel;
+                  return (
+                    <button
+                      key={iso}
+                      type="button"
+                      onClick={() => setSel(iso)}
+                      aria-current={on || undefined}
+                      aria-label={`${longDate(iso)} — ${
+                        play && tier
+                          ? `${play.score} points, tier ${tier}`
+                          : 'not played'
+                      }`}
+                      className={[
+                        styles.calCell,
+                        on ? styles.calCellOn : null,
+                        !play ? styles.calCellOpen : null,
+                        iso === today ? styles.calCellToday : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      <span className={styles.calDay}>{day}</span>
+                      {play && tier && (
+                        <>
+                          <span className={styles.calScore}>{play.score}</span>
+                          <span
+                            className={styles.calTier}
+                            style={
+                              {
+                                '--tier-tone': TIER_TONE[tier],
+                              } as React.CSSProperties
+                            }
+                          >
+                            {tier}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
           <div className={styles.dateScroll} ref={scrollRef}>
             {dates.map(iso => {
               const play = plays[iso];
@@ -388,6 +566,7 @@ export function DailyArchivePage() {
               );
             })}
           </div>
+          )}
         </div>
 
         {/* ---- Selected day result ---- */}
