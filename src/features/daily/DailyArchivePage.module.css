@@ -216,10 +216,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 2px;
-  min-height: 54px;
-  padding: 4px 2px 5px;
+  justify-content: center;
+  gap: 1px;
+  /* SQUARE date boxes: height tracks the 7-col track width instead of
+     a fixed minimum (which ran taller than wide and padded the panel
+     with dead space below the last row). The gap/padding are shaved so
+     a played cell's day + score + tier stack fits the square even at
+     the desktop column's ~41px tracks (content growing past the ratio
+     would stretch its whole row). */
+  aspect-ratio: 1;
+  padding: 2px;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
   background: transparent;
@@ -290,8 +296,8 @@
 .calVoid {
   display: flex;
   justify-content: center;
-  min-height: 54px;
-  padding-top: 5px;
+  align-items: center;
+  aspect-ratio: 1;
   opacity: 0.35;
 }
 
