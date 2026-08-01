@@ -192,19 +192,17 @@
   display: none;
 }
 
-/* Phone-only hamburger (nav-drawer trigger), first in the nameplate
-   cluster. Borderless — `.left` is a nameplate, not a button rail; the
-   bordered 34px recipe stays on the `.right` cluster. Hidden ≥768,
-   where the center nav shows instead. */
+/* Phone-only hamburger (nav-drawer trigger) in the `.right` corner slot
+   — the bordered 34px recipe the ◐ toggle wears (◐ itself is
+   phone-hidden; its flip lives in the drawer's quick actions). Hidden
+   ≥768, where the center nav + ◐ show instead. */
 .menuBtn {
   display: none;
   width: 34px;
   height: 34px;
   flex: none;
-  /* The .left flex is baseline-aligned (wordmark + label). */
-  align-self: center;
   padding: 0;
-  border: none;
+  border: 1px solid var(--rule);
   border-radius: var(--radius-icon, 50%);
   background: transparent;
   color: var(--ink-2);
@@ -216,6 +214,7 @@
 @media (hover: hover) {
   .menuBtn:hover {
     color: var(--ink);
+    border-color: var(--ink-3);
   }
 }
 
@@ -271,107 +270,60 @@
   margin: 10px 0;
 }
 
-.drawerDisplay {
+/* Quick-action icon row (top of the drawer): three cycling switches —
+   appearance / theme / deck skin — each an icon over a caption naming
+   the current value. Taps cycle in place; the drawer stays open. */
+.drawerQuick {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.drawerQuickBtn {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.drawerCtlLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-2);
-  padding: 2px 10px 0;
-}
-
-/* Segmented quick switches — the SettingsPage .seg recipe at drawer
-   density. */
-.drawerSeg {
-  display: flex;
-  background: var(--paper-sunken);
-  border-radius: var(--radius-md);
-  padding: 3px;
-  margin: 0 10px;
-}
-
-.drawerSegBtn {
-  flex: 1;
-  min-height: 34px;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.drawerSegBtn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.drawerSegBtnOn {
-  background: var(--paper-raised);
-  color: var(--ink);
-  box-shadow: var(--shadow-sm);
-}
-
-.drawerChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 10px;
-}
-
-.drawerChip {
-  border: 1px solid var(--rule);
-  background: transparent;
-  border-radius: var(--radius-chip);
-  padding: 6px 11px;
-  font-family: var(--font-body);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-
-.drawerChip:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.drawerChipOn {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-
-.homeBtn {
-  display: none;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-icon, 50%);
-  border: 1px solid var(--rule);
-  background: transparent;
-  color: var(--ink-2);
-  cursor: pointer;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  padding: 9px 2px 7px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  min-width: 0;
 }
 
 @media (hover: hover) {
-  .homeBtn:hover {
+  .drawerQuickBtn:hover {
     color: var(--ink);
     border-color: var(--ink-3);
   }
 }
 
-.homeBtn:focus-visible {
+.drawerQuickBtn:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 1px;
+}
+
+.drawerQuickGlyph {
+  font-size: 18px;
+  line-height: 19px;
+}
+
+.drawerQuickIcon {
+  display: block;
+}
+
+.drawerQuickCaption {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
 .themeToggle {
@@ -516,9 +468,10 @@
     min-height: 44px;
   }
 
-  .homeBtn {
-    display: inline-flex;
-    flex: none;
+  /* The corner belongs to the hamburger here — ◐'s flip lives in the
+     drawer's quick actions on phones. */
+  .themeToggle {
+    display: none;
   }
 }
 
