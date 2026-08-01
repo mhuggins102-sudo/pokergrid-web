@@ -269,12 +269,21 @@
   margin: 10px 0;
 }
 
-/* Quick-action icon row (top of the drawer): three cycling switches —
-   appearance / theme / deck skin — each an icon over a caption naming
-   the current value. Taps cycle in place; the drawer stays open. */
+/* Quick-settings block pinned to the drawer's BOTTOM (the drawer body
+   is a flex column; the auto margin does the pinning) with its own
+   top rule. */
+.drawerFoot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+/* The 2×2 cycling switches — theme / light-dark over dock / deck skin —
+   each an icon over a caption naming the current value. Taps cycle in
+   place; the drawer stays open. */
 .drawerQuick {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
 }
 

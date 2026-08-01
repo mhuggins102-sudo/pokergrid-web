@@ -91,13 +91,27 @@
 }
 
 /* Phone: the grid centers in the VISIBLE window (info row → dock) by
-   plain area-centering — no nudge. The old +4px margin-top compensated
-   for the pre-drawer header chrome (links row, then an in-game divider
-   below the details row); after the header rework the window reads
-   symmetric at area-center for the default Split dock (measured 98/98
-   at 390×844; Classic within 4px). If the chrome changes again,
-   re-measure and reintroduce a phone-scoped margin-top here — flex
-   centers the margin-box, so a margin of m shifts the board m/2. */
+   plain area-centering — no base nudge. The old +4px margin-top
+   compensated for the pre-drawer header chrome; after the header
+   rework the window measures symmetric at area-center across the full
+   matrix (widths 390/393 × heights 660–844 × dock layouts) with ONE
+   exception, corrected below. If chrome changes again, re-measure and
+   adjust — flex centers the margin-box, so a margin of m shifts the
+   board m/2. */
+
+/* The exception: on FULL-HEIGHT phones the docked bonus strip's 4px
+   breath (its margin above the merged dock) sits below the board area,
+   so every strip-carrying layout — Classic, Hand stack, Center stage —
+   measures 4px more below than above (e.g. 96/100 at 390×844). Split
+   keeps its bonus cards inside the dock (no strip, no breath) and
+   measures symmetric, so it exempts itself via .dockSplit. Below 781px
+   the short-viewport bonus reclaim drops the breath and everything
+   measures symmetric unnudged. */
+@media (max-width: 767px) and (min-height: 781px) {
+  .layout:not(.dockSplit) .boardFrame {
+    margin-top: 4px;
+  }
+}
 
 /* Tutorial coach: a floating card pinned OVER the app header + score
    strip — the two elements no tutorial move ever needs — so the board
