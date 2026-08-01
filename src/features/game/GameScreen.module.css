@@ -90,28 +90,14 @@
   );
 }
 
-/* Phone: center the grid in the VISIBLE window — from the header
-   separator down to the bonus strip. Two fixed-chrome asymmetries push
-   a plain-centered board off (both measured constant across every dock
-   layout and viewport):
-     • .boardArea stops ~12px SHORT of the bonus strip (the .layout gap
-       + the docked strip's breathing margin) — space below the area
-       that centering-within-the-area never sees → board reads low.
-     • .main adds ~8px padding-top ABOVE .boardArea, between the
-       separator and the area → board reads high from the separator.
-   Net window asymmetry = 12 − 8 = 4px more below than above once the
-   board is area-centered. A margin-top shifts the board's border-box
-   DOWN by half the margin (flex centers the margin-box), so 4px splits
-   that 4px exactly: the blank space from the separator to the grid and
-   from the grid to the bonus strip reads equal in every dock layout.
-   The board is JS-measured (never CSS-sized) — this nudges POSITION
-   only. Phone-scoped (column family <768); the desk tree uses
-   .deskBoard, untouched. */
-@media (max-width: 767px) {
-  .boardFrame {
-    margin-top: 4px;
-  }
-}
+/* Phone: the grid centers in the VISIBLE window (info row → dock) by
+   plain area-centering — no nudge. The old +4px margin-top compensated
+   for the pre-drawer header chrome (links row, then an in-game divider
+   below the details row); after the header rework the window reads
+   symmetric at area-center for the default Split dock (measured 98/98
+   at 390×844; Classic within 4px). If the chrome changes again,
+   re-measure and reintroduce a phone-scoped margin-top here — flex
+   centers the margin-box, so a margin of m shifts the board m/2. */
 
 /* Tutorial coach: a floating card pinned OVER the app header + score
    strip — the two elements no tutorial move ever needs — so the board
@@ -435,15 +421,8 @@
     padding-bottom: var(--space-xs);
   }
 
-  /* Re-center for the short viewport: the bonus reclaim above dropped the
-     strip's top margin, which trimmed the space BELOW the grid by ~4px, so
-     the base 4px board nudge (calibrated for the full-height geometry)
-     now overshoots and leaves the grid sitting a touch low. Zero it here
-     so the space above and below the grid reads equal again; the tall /
-     full-height case keeps the base nudge (still centered there). */
-  .boardFrame {
-    margin-top: 0;
-  }
+  /* (No board re-center needed here since the base nudge went to zero —
+     the short viewport measures 28/28 above/below at area-center.) */
 }
 
 /* The ScoreBar's Undo, relocated into the dock: a compact icon-only

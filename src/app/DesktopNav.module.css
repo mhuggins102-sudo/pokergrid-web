@@ -193,16 +193,16 @@
 }
 
 /* Phone-only hamburger (nav-drawer trigger) in the `.right` corner slot
-   — the bordered 34px recipe the ◐ toggle wears (◐ itself is
-   phone-hidden; its flip lives in the drawer's quick actions). Hidden
-   ≥768, where the center nav + ◐ show instead. */
+   — borderless, icon only (◐ itself is phone-hidden; its flip lives in
+   the drawer's quick actions). Hidden ≥768, where the center nav + ◐
+   show instead. */
 .menuBtn {
   display: none;
   width: 34px;
   height: 34px;
   flex: none;
   padding: 0;
-  border: 1px solid var(--rule);
+  border: none;
   border-radius: var(--radius-icon, 50%);
   background: transparent;
   color: var(--ink-2);
@@ -214,7 +214,6 @@
 @media (hover: hover) {
   .menuBtn:hover {
     color: var(--ink);
-    border-color: var(--ink-3);
   }
 }
 
