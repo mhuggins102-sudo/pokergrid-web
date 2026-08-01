@@ -486,8 +486,8 @@ export function DailyArchivePage() {
               const on = iso === sel;
               return (
                 // Wrapper div (not a button): unplayed rows layer a
-                // hover/focus-revealed Start link over the right edge,
-                // and interactive elements can't nest inside a button.
+                // permanent Start link over the right edge, and
+                // interactive elements can't nest inside a button.
                 <div
                   key={iso}
                   className={`${styles.row} ${on ? styles.rowOn : ''}`}
@@ -547,14 +547,9 @@ export function DailyArchivePage() {
                           {tier}
                         </span>
                       </>
-                    ) : (
-                      // Unplayed: a quiet dash where the score would
-                      // be; hovering (or focusing) the row swaps in the
-                      // Start shortcut below.
-                      <span className={styles.rowDash} aria-hidden="true">
-                        –
-                      </span>
-                    )}
+                    ) : // Unplayed: the score cell stays empty — the
+                    // permanent Start link below overlays this edge.
+                    null}
                   </div>
                   </button>
                   {!play && (
