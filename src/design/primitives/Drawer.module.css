@@ -31,9 +31,13 @@
 
 /* Dialog's body wrapper (its class lives in Dialog.module.css, out of
    reach here) — the last child under the drawer. Let long content
-   scroll inside the fixed-height panel. */
+   scroll inside the fixed-height panel, and lay it out as a column so
+   content can pin itself to the bottom via margin-top: auto (the nav
+   drawer's quick-settings block). */
 .drawer > div:last-child {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }

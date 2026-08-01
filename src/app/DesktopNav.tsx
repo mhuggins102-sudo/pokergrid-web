@@ -11,7 +11,11 @@ import { currentDateISO } from '../game/daily/seed';
 import { Drawer, useTapPopover } from '../design/primitives';
 import { SKIN_CATALOG, skinName, skinUnlocked } from '../design/skinCatalog';
 import { usePlayerLevel } from '../features/progress/usePlayerLevel';
-import { useSettingsStore } from '../features/settings/settingsStore';
+import { DOCK_LAYOUT_LABEL } from '../features/settings/DockLayoutPreview';
+import {
+  DockLayout,
+  useSettingsStore,
+} from '../features/settings/settingsStore';
 import { useResolvedTheme } from '../features/settings/useTheme';
 import styles from './DesktopNav.module.css';
 
@@ -104,6 +108,14 @@ const LINKS = [
   { to: '/achievements', label: 'Achievements' },
   { to: '/rules', label: 'Rules' },
   { to: '/settings', label: 'Settings' },
+];
+
+// Drawer quick-action cycle order for the dock layout.
+const DOCK_CYCLE: DockLayout[] = [
+  'classic',
+  'hand-stack',
+  'center-stage',
+  'desktop',
 ];
 
 const fmtDateline = (d: Date): string => {
@@ -239,6 +251,11 @@ export function DesktopNav() {
         : 'Light';
   const familyLabel =
     settings.themeFamily === 'paper' ? 'Paper' : 'Card Room';
+  const cycleDock = () => {
+    const i = DOCK_CYCLE.indexOf(settings.dockLayout);
+    settings.set({ dockLayout: DOCK_CYCLE[(i + 1) % DOCK_CYCLE.length] });
+  };
+  const dockLabel = DOCK_LAYOUT_LABEL[settings.dockLayout];
 
   // Morning Paper's edition label follows the appearance; the strip that
   // shows it is CSS-gated to the paper themes × desktop, so this string
@@ -385,88 +402,6 @@ export function DesktopNav() {
         title="Menu"
         hideHeader
       >
-        <div className={styles.drawerQuick}>
-          <button
-            type="button"
-            className={styles.drawerQuickBtn}
-            aria-label={`Light or dark: ${appearanceLabel} — tap to switch`}
-            onClick={toggleAppearance}
-          >
-            <span className={styles.drawerQuickGlyph} aria-hidden="true">
-              ◐
-            </span>
-            <span className={styles.drawerQuickCaption}>
-              {appearanceLabel}
-            </span>
-          </button>
-          <button
-            type="button"
-            className={styles.drawerQuickBtn}
-            aria-label={`Theme: ${familyLabel} — tap to switch`}
-            onClick={() =>
-              settings.set({
-                themeFamily:
-                  settings.themeFamily === 'paper' ? 'card-room' : 'paper',
-              })
-            }
-          >
-            <svg
-              className={styles.drawerQuickIcon}
-              viewBox="0 0 24 24"
-              width="19"
-              height="19"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="4" y="4" width="7" height="7" rx="1.5" />
-              <rect x="13.5" y="4" width="7" height="7" rx="1.5" />
-              <rect x="4" y="13.5" width="7" height="7" rx="1.5" />
-              <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
-            </svg>
-            <span className={styles.drawerQuickCaption}>{familyLabel}</span>
-          </button>
-          <button
-            type="button"
-            className={styles.drawerQuickBtn}
-            aria-label={`Deck skin: ${skinLabel} — tap to cycle`}
-            onClick={cycleSkin}
-          >
-            <svg
-              className={styles.drawerQuickIcon}
-              viewBox="0 0 24 24"
-              width="19"
-              height="19"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              {/* Fanned pair of cards. */}
-              <rect
-                x="4"
-                y="5.5"
-                width="10"
-                height="14"
-                rx="2"
-                transform="rotate(-8 9 12.5)"
-              />
-              <rect
-                x="10.5"
-                y="4.5"
-                width="10"
-                height="14"
-                rx="2"
-                transform="rotate(9 15.5 11.5)"
-              />
-            </svg>
-            <span className={styles.drawerQuickCaption}>{skinLabel}</span>
-          </button>
-        </div>
-        <hr className={styles.drawerRule} />
         <nav className={styles.drawerNav} aria-label="Menu">
           <span className={styles.drawerGroupLabel}>Game modes</span>
           {MODES.map(m => (
@@ -495,6 +430,115 @@ export function DesktopNav() {
             </NavLink>
           ))}
         </nav>
+        {/* Quick settings, pinned to the drawer's bottom: a 2×2 icon
+            grid — theme / light-dark over dock / deck skin. Taps cycle
+            the value in place; the drawer stays open. */}
+        <div className={styles.drawerFoot}>
+          <div className={styles.drawerQuick}>
+            <button
+              type="button"
+              className={styles.drawerQuickBtn}
+              aria-label={`Theme: ${familyLabel} — tap to switch`}
+              onClick={() =>
+                settings.set({
+                  themeFamily:
+                    settings.themeFamily === 'paper' ? 'card-room' : 'paper',
+                })
+              }
+            >
+              <svg
+                className={styles.drawerQuickIcon}
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                <rect x="13.5" y="4" width="7" height="7" rx="1.5" />
+                <rect x="4" y="13.5" width="7" height="7" rx="1.5" />
+                <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+              </svg>
+              <span className={styles.drawerQuickCaption}>{familyLabel}</span>
+            </button>
+            <button
+              type="button"
+              className={styles.drawerQuickBtn}
+              aria-label={`Light or dark: ${appearanceLabel} — tap to switch`}
+              onClick={toggleAppearance}
+            >
+              <span className={styles.drawerQuickGlyph} aria-hidden="true">
+                ◐
+              </span>
+              <span className={styles.drawerQuickCaption}>
+                {appearanceLabel}
+              </span>
+            </button>
+            <button
+              type="button"
+              className={styles.drawerQuickBtn}
+              aria-label={`Dock layout: ${dockLabel} — tap to cycle`}
+              onClick={cycleDock}
+            >
+              <svg
+                className={styles.drawerQuickIcon}
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                {/* Screen with a docked bottom band. */}
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <line x1="4" y1="14.5" x2="20" y2="14.5" />
+              </svg>
+              <span className={styles.drawerQuickCaption}>{dockLabel}</span>
+            </button>
+            <button
+              type="button"
+              className={styles.drawerQuickBtn}
+              aria-label={`Deck skin: ${skinLabel} — tap to cycle`}
+              onClick={cycleSkin}
+            >
+              <svg
+                className={styles.drawerQuickIcon}
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                {/* Fanned pair of cards. */}
+                <rect
+                  x="4"
+                  y="5.5"
+                  width="10"
+                  height="14"
+                  rx="2"
+                  transform="rotate(-8 9 12.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="4.5"
+                  width="10"
+                  height="14"
+                  rx="2"
+                  transform="rotate(9 15.5 11.5)"
+                />
+              </svg>
+              <span className={styles.drawerQuickCaption}>{skinLabel}</span>
+            </button>
+          </div>
+        </div>
       </Drawer>
     </header>
   );

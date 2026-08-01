@@ -1638,6 +1638,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             styles.layout,
             dockLayout === 'classic' ? styles.dockClassic : null,
             dockLayout === 'center-stage' ? styles.dockStage : null,
+            // Split marks itself so board-centering CSS can tell the
+            // strip-less layout apart (see the .dockSplit nudge note).
+            dockLayout === 'desktop' ? styles.dockSplit : null,
             ui.bonusDialog ? styles.bonusOpen : null,
             // The coach yields entirely while the ♣ panel has the dock —
             // both don't fit a phone viewport, and the draw choice is
