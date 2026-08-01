@@ -71,6 +71,63 @@ async function measure(page: Page) {
 
     const layoutPad = layout ? pad(layout) : null;
 
+    // ---- Visible-INK gaps (phone): what the eye actually measures. ----
+    // The info row's box bottom lies 3–6px below its chips' borders (it
+    // carries the header's padding), and the borderless merged bonus
+    // strip's first ink sits inside its own padding — so box symmetry
+    // and visible symmetry differ. Ink edge = min/max over descendants
+    // that draw a border/background/text, bounded to the root's box
+    // (anchored popovers escape it).
+    const drawsInk = (el: Element) => {
+      const s = getComputedStyle(el);
+      return (
+        s.borderTopWidth !== '0px' ||
+        s.borderBottomWidth !== '0px' ||
+        (s.backgroundColor !== 'rgba(0, 0, 0, 0)' && s.backgroundColor !== 'transparent') ||
+        (el.childElementCount === 0 && (el.textContent ?? '').trim() !== '')
+      );
+    };
+    const inkEdge = (root: Element, side: 'top' | 'bottom') => {
+      const b0 = root.getBoundingClientRect();
+      let v = side === 'top' ? Infinity : -Infinity;
+      for (const el of Array.from(root.querySelectorAll('*'))) {
+        const b = el.getBoundingClientRect();
+        if (b.height <= 0 || b.top < b0.top - 1 || b.bottom > b0.bottom + 1 || !drawsInk(el))
+          continue;
+        v = side === 'top' ? Math.min(v, b.top) : Math.max(v, b.bottom);
+      }
+      return Number.isFinite(v) ? v : side === 'top' ? b0.top : b0.bottom;
+    };
+    // `_gameRow_` (hashed module class) — NOT `.bar.gameRowActive`, whose
+    // class list also contains the substring "gameRow".
+    const gameRow = pick('[class*="_gameRow_"]');
+    let inkCentering: { above: number; below: number } | null = null;
+    if (gameRow && visible(gameRow) && boardFrame && layout) {
+      // Dock cluster: topmost layout child below the frame. Split's
+      // panels are bordered at the cluster box; the strip/dock wrappers
+      // are borderless, so their ink starts at descendants.
+      let cluster: Element | null = null;
+      let clusterTop = Infinity;
+      const frameBottom = boardFrame.getBoundingClientRect().bottom;
+      for (const c of Array.from(layout.children)) {
+        if (c === boardArea) continue;
+        const b = c.getBoundingClientRect();
+        if (b.height > 0 && b.top > frameBottom - 1 && b.top < clusterTop) {
+          clusterTop = b.top;
+          cluster = c;
+        }
+      }
+      if (cluster) {
+        const clusterInk = /dtWrap/.test((cluster as HTMLElement).className)
+          ? cluster.getBoundingClientRect().top
+          : inkEdge(cluster, 'top');
+        inkCentering = {
+          above: round(inkEdge(boardFrame, 'top') - inkEdge(gameRow, 'bottom')),
+          below: round(clusterInk - inkEdge(boardFrame, 'bottom')),
+        };
+      }
+    }
+
     return {
       viewport: { w: window.innerWidth, h: window.innerHeight },
       // On mobile the layout is a flex COLUMN (one vertical rhythm); on
@@ -92,6 +149,9 @@ async function measure(page: Page) {
               below: round(box(boardArea).bottom - box(boardFrame).bottom),
             }
           : null,
+      // Phone only (needs the in-game header row): the visible ink gaps
+      // around the board — the user-facing symmetry the nudges target.
+      inkCentering,
     };
   });
 }
@@ -147,6 +207,16 @@ test('gameplay spacing is symmetric where intended', async ({ page }, testInfo) 
   if (m.boardCentering && m.layout?.display === 'flex') {
     const bound = m.viewport.w < 768 ? 14 : 2;
     expect(Math.abs(m.boardCentering.above - m.boardCentering.below)).toBeLessThanOrEqual(bound);
+  }
+
+  // 3b. Phone: the user-facing symmetry the nudges exist for — VISIBLE
+  //     ink gaps (info-row chip borders → first cell; totals chips →
+  //     first dock ink) match. Target sits at +1, not 0: the info-row
+  //     buttons' drop shadow paints ~1px below their border box, so
+  //     DOM-equal reads bottom-heavy on screen (band-scan calibrated —
+  //     see the nudge comments in GameScreen.module.css).
+  if (m.inkCentering && m.viewport.w < 768) {
+    expect(Math.abs(m.inkCentering.above - m.inkCentering.below - 1)).toBeLessThanOrEqual(2);
   }
 
   // 4. Tablet game families (unification phase 5 landed the split, phase

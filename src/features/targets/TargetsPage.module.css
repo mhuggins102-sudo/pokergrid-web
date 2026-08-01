@@ -435,7 +435,9 @@
   .explain {
     grid-template-columns: 1fr;
     gap: 12px;
-    /* Top card → same 4px buffer over .main padding as the other pages. */
-    margin-top: 4px;
+    /* Zero the desktop 20px head-gap: the flex order puts this card
+       first on phone (head hidden), so it sits at the shell's shared
+       8px below the divider-free header like every page. */
+    margin-top: 0;
   }
 }
