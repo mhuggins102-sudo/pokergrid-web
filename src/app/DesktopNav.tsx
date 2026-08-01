@@ -8,20 +8,29 @@ import {
 } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { currentDateISO } from '../game/daily/seed';
-import { useTapPopover } from '../design/primitives';
-import { useSettingsStore } from '../features/settings/settingsStore';
+import { Drawer, useTapPopover } from '../design/primitives';
+import { SKIN_CATALOG, skinName, skinUnlocked } from '../design/skinCatalog';
+import { usePlayerLevel } from '../features/progress/usePlayerLevel';
+import {
+  Appearance,
+  ThemeFamily,
+  useSettingsStore,
+} from '../features/settings/settingsStore';
 import { useResolvedTheme } from '../features/settings/useTheme';
 import styles from './DesktopNav.module.css';
 
 /**
  * THE app header (phase 4 unification; phase 6 folded the phone row into
- * the desk center-nav). Desktop/tablet (≥768): wordmark + date on the
- * left, centered links with a "Game Modes" dropdown (hover/focus on a
- * mouse, tap-toggle on touch via TapPopover), theme toggle (and a
- * page-fillable extras slot — the in-game score pill) on the right.
- * Phone (<768): the same `.center` nav becomes the second header row
- * beneath the wordmark + ◐, and the Game Modes dropdown is now touch-
- * driven; the dateline stays desk-only.
+ * the desk center-nav; phase 7 moved the phone row into a drawer).
+ * Desktop/tablet (≥768): wordmark + date on the left, centered links
+ * with a "Game Modes" dropdown (hover/focus on a mouse, tap-toggle on
+ * touch via TapPopover), theme toggle (and a page-fillable extras slot —
+ * the in-game score pill) on the right.
+ * Phone (<768): a single header row — a hamburger button left of the
+ * wordmark opens the nav DRAWER (flat mode + page links, plus quick
+ * Display controls: appearance / theme / deck skin, so a player can
+ * restyle mid-game without leaving the run). The `.center` nav is
+ * display:none on phones; the dateline stays desk-only.
  */
 
 // Pages push transient nav content through this context; each slot
@@ -97,6 +106,19 @@ const LINKS = [
   { to: '/achievements', label: 'Achievements' },
   { to: '/rules', label: 'Rules' },
   { to: '/settings', label: 'Settings' },
+];
+
+// Drawer "Display" group options (quick in-place switches — the full
+// controls stay on the Settings page).
+const APPEARANCES: { v: Appearance; label: string }[] = [
+  { v: 'light', label: 'Light' },
+  { v: 'dark', label: 'Dark' },
+  { v: 'system', label: 'System' },
+];
+
+const FAMILIES: { v: ThemeFamily; label: string }[] = [
+  { v: 'paper', label: 'Morning Paper' },
+  { v: 'card-room', label: 'Card Room' },
 ];
 
 const fmtDateline = (d: Date): string => {
@@ -192,6 +214,26 @@ export function DesktopNav() {
   // handlers there). Reuses the existing `.modesWrapOpen` open class.
   const modes = useTapPopover('nav-modes');
 
+  // Phone nav drawer (the hamburger left of the wordmark). A Dialog, so
+  // it is NOT in the TapPopover registry — close it on route change
+  // ourselves (link taps also close, covering same-route taps).
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => setMenuOpen(false), [pathname]);
+
+  // Drawer Display group: the quick deck-skin chips — Default + every
+  // unlocked design (group entries unlock all their skins together).
+  const { level } = usePlayerLevel();
+  const skinChips = useMemo(() => {
+    const chips: { id: string | null; label: string }[] = [
+      { id: null, label: 'Default' },
+    ];
+    for (const u of SKIN_CATALOG) {
+      if (!skinUnlocked(u.skinIds[0], level)) continue;
+      for (const id of u.skinIds) chips.push({ id, label: skinName(id) });
+    }
+    return chips;
+  }, [level]);
+
   // ◐ flips light↔dark within the chosen family. Explicit appearance
   // (not 'system') so the click always visibly does something.
   const settings = useSettingsStore();
@@ -220,6 +262,31 @@ export function DesktopNav() {
         <span>{editionDate()}</span>
       </div>
       <div className={styles.left}>
+        {/* Phone-only hamburger (CSS-gated <768; stays visible in-game
+            so the drawer's Display switches are reachable mid-run). */}
+        <button
+          type="button"
+          className={styles.menuBtn}
+          aria-label="Menu"
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(true)}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="4" y1="12" x2="20" y2="12" />
+            <line x1="4" y1="18" x2="20" y2="18" />
+          </svg>
+        </button>
         <NavLink to="/" className={styles.wordmark}>
           PokerGrid
         </NavLink>
@@ -326,6 +393,97 @@ export function DesktopNav() {
           ◐
         </button>
       </div>
+
+      {/* Phone nav drawer. Links close it; the Display switches keep it
+          open so their effect shows live behind the scrim. */}
+      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title="Menu">
+        <nav className={styles.drawerNav} aria-label="Menu">
+          <span className={styles.drawerGroupLabel}>Game modes</span>
+          {MODES.map(m => (
+            <NavLink
+              key={m.to}
+              to={m.to}
+              className={({ isActive }) =>
+                `${styles.drawerLink} ${isActive ? styles.drawerLinkOn : ''}`
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              {m.label}
+            </NavLink>
+          ))}
+          <hr className={styles.drawerRule} />
+          {LINKS.map(l => (
+            <NavLink
+              key={l.to}
+              to={l.to}
+              className={({ isActive }) =>
+                `${styles.drawerLink} ${isActive ? styles.drawerLinkOn : ''}`
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              {l.label}
+            </NavLink>
+          ))}
+        </nav>
+        <hr className={styles.drawerRule} />
+        <div className={styles.drawerDisplay}>
+          <span className={styles.drawerGroupLabel}>Display</span>
+          <div
+            className={styles.drawerSeg}
+            role="group"
+            aria-label="Light or dark appearance"
+          >
+            {APPEARANCES.map(a => (
+              <button
+                key={a.v}
+                type="button"
+                className={`${styles.drawerSegBtn} ${
+                  settings.appearance === a.v ? styles.drawerSegBtnOn : ''
+                }`}
+                aria-pressed={settings.appearance === a.v}
+                onClick={() => settings.set({ appearance: a.v })}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.drawerSeg} role="group" aria-label="Theme">
+            {FAMILIES.map(f => (
+              <button
+                key={f.v}
+                type="button"
+                className={`${styles.drawerSegBtn} ${
+                  settings.themeFamily === f.v ? styles.drawerSegBtnOn : ''
+                }`}
+                aria-pressed={settings.themeFamily === f.v}
+                onClick={() => settings.set({ themeFamily: f.v })}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <span className={styles.drawerCtlLabel}>Deck skin</span>
+          <div
+            className={styles.drawerChips}
+            role="group"
+            aria-label="Deck skin"
+          >
+            {skinChips.map(c => (
+              <button
+                key={c.id ?? 'default'}
+                type="button"
+                className={`${styles.drawerChip} ${
+                  settings.deckSkin === c.id ? styles.drawerChipOn : ''
+                }`}
+                aria-pressed={settings.deckSkin === c.id}
+                onClick={() => settings.set({ deckSkin: c.id })}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Drawer>
     </header>
   );
 }
