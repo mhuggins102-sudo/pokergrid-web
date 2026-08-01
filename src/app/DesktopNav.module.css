@@ -457,12 +457,11 @@
     display: none;
   }
 
-  /* In-game, the masthead rule moves ABOVE the details row: the title
-     bar (wordmark + hamburger) ends at the line, and the score /
-     Hands / Scoring row reads as part of the gameplay area below it.
-     The row bleeds through the header's side padding so the rule runs
-     the full viewport width, and it carries the header's bottom
-     padding itself (the bar's own is dropped below). */
+  /* In-game the header runs DIVIDER-FREE: the title bar flows straight
+     into the score / Hands / Scoring row and the board below (the
+     masthead rule stays on every non-game page via the base .bar
+     border-bottom, suppressed for gameRowActive underneath). The row
+     carries the header's bottom padding itself. */
   .gameRow {
     display: flex;
     grid-row: 2;
@@ -472,9 +471,7 @@
     gap: 10px;
     min-width: 0;
     min-height: 44px;
-    border-top: var(--masthead-rule, 1px solid var(--rule));
-    margin: 0 calc(-1 * var(--space-lg));
-    padding: 4px var(--space-lg) 6px;
+    padding: 4px 0 6px;
   }
 
   .bar.gameRowActive {
