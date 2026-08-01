@@ -165,7 +165,8 @@
   flex-direction: column;
   gap: var(--space-xs);
   background: var(--paper);
-  border-top: 1px solid var(--rule);
+  /* No top rule: the dock shares the page's paper surface and reads as
+     part of it — spacing alone separates it from the board. */
   /* Bleed across .main's side padding so the bar spans edge to edge. */
   margin-left: calc(-1 * var(--space-lg));
   margin-right: calc(-1 * var(--space-lg));
@@ -388,13 +389,11 @@
 
 /* Bonus strip merged onto the dock. The strip has no chrome of its own,
    so the merge is: extend the dock's paper surface up behind it, bleed
-   to the same edges the dock does, cancel the flex gap below so the two
-   sit flush, and split them with a single hairline. The dock drops its
-   own top rule (.dockJoined) — the strip now carries the top edge. */
+   to the same edges the dock does, and cancel the flex gap below so the
+   two sit flush. No hairlines — the merged block reads as one border-
+   less surface on the page (spacing alone separates it from the board). */
 .bonusRowDocked {
   background: var(--paper);
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
   /* Same edge bleed as .dock, so the merged block spans edge to edge. */
   margin-left: calc(-1 * var(--space-lg));
   margin-right: calc(-1 * var(--space-lg));
@@ -407,11 +406,6 @@
      margin. */
   margin-top: var(--space-xs);
   padding: var(--space-sm) var(--space-lg);
-}
-
-.dockJoined {
-  /* The strip above supplies the merged block's top edge + divider. */
-  border-top: none;
 }
 
 /* Short phone viewports (Safari's toolbars stay up during a game — the

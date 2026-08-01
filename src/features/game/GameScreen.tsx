@@ -1707,8 +1707,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               yield space — and the held cards staying visible is
               exactly what the swap decision wants. */}
           {dockLayout !== 'desktop' && bonusRowShown && (
-            // Streamlined merges this strip onto the dock (shared surface,
-            // one hairline divider) via .bonusRowDocked — see the CSS.
+            // Streamlined merges this strip onto the dock (one shared
+            // border-less surface) via .bonusRowDocked — see the CSS.
             // Off keeps the historical unstyled wrapper exactly.
             <div className={streamlined ? styles.bonusRowDocked : styles.bonusRowSlot}>
               <BonusCardStrip
@@ -1736,11 +1736,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           <div
             className={`${styles.dock} ${
               dockLayout === 'hand-stack' ? styles.dockHandPad : ''
-            }${
-              // Streamlined + a strip above → the dock drops its own top
-              // rule so the merged block reads as one surface (the strip
-              // now carries the top edge + divider).
-              streamlined && bonusRowShown ? ' ' + styles.dockJoined : ''
             }${
               // Streamlined dock carries an extra ↺ that steals row width —
               // the marker scopes the perk/Discard sizing that keeps every
