@@ -667,7 +667,11 @@ export function DailyArchivePage() {
               </Link>
             </div>
           ) : (
-            <div className={styles.detailUnplayed}>
+            <div
+              className={`${styles.detailUnplayed} ${
+                view === 'cal' ? styles.detailUnplayedCal : ''
+              }`}
+            >
               <span className={styles.detailNotPlayed}>Not played</span>
               <Link to={`/daily/${sel}`} className={styles.startBtn}>
                 Start ▸
