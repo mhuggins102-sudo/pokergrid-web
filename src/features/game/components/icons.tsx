@@ -19,15 +19,17 @@ export function HandsIcon({ size = 15 }: { size?: number }) {
       aria-hidden="true"
       focusable="false"
     >
-      {/* Back card: top + right edge peeking out, tilted. */}
-      <path d="M13.5 4.2 18.9 5.65a1.6 1.6 0 0 1 1.14 1.96L17.5 16.5" />
+      {/* Back card: tilted, peeking out — its bottom-right corner arcs
+          back and the bottom edge runs INTO the front card so the two
+          read as one fan, not floating strokes. */}
+      <path d="M13.2 4.15 18.9 5.65a1.6 1.6 0 0 1 1.14 1.96L17.8 15.8a1.6 1.6 0 0 1-1.96 1.14L14 16.45" />
       {/* Front card, upright. */}
       <rect x="4.5" y="5.5" width="9.5" height="14" rx="1.8" />
     </svg>
   );
 }
 
-/** A miniature scoring ledger — header band over two total columns. */
+/** Tally marks — four strokes and the counting slash. */
 export function ScoringIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
@@ -42,9 +44,11 @@ export function ScoringIcon({ size = 15 }: { size?: number }) {
       aria-hidden="true"
       focusable="false"
     >
-      <rect x="4" y="4.5" width="16" height="15" rx="1.8" />
-      <line x1="4" y1="9.75" x2="20" y2="9.75" />
-      <line x1="12" y1="9.75" x2="12" y2="19.5" />
+      <line x1="5" y1="5" x2="5" y2="16" />
+      <line x1="9.7" y1="5" x2="9.7" y2="16" />
+      <line x1="14.3" y1="5" x2="14.3" y2="16" />
+      <line x1="19" y1="5" x2="19" y2="16" />
+      <line x1="2.8" y1="18.5" x2="21.2" y2="9.5" />
     </svg>
   );
 }

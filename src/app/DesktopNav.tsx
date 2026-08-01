@@ -517,23 +517,11 @@ export function DesktopNav() {
                 strokeLinejoin="round"
                 aria-hidden="true"
               >
-                {/* Fanned pair of cards. */}
-                <rect
-                  x="4"
-                  y="5.5"
-                  width="10"
-                  height="14"
-                  rx="2"
-                  transform="rotate(-8 9 12.5)"
-                />
-                <rect
-                  x="10.5"
-                  y="4.5"
-                  width="10"
-                  height="14"
-                  rx="2"
-                  transform="rotate(9 15.5 11.5)"
-                />
+                {/* Card back — the deck's artwork: a single card showing
+                    its decorated back (inset inner frame). Deliberately
+                    NOT a fan, which now belongs to the Hands icon. */}
+                <rect x="6.5" y="4" width="11" height="16" rx="2" />
+                <rect x="9.25" y="6.75" width="5.5" height="10.5" rx="1" />
               </svg>
               <span className={styles.drawerQuickCaption}>{skinLabel}</span>
             </button>
