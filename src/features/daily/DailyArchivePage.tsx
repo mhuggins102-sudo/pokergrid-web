@@ -234,6 +234,36 @@ export function DailyArchivePage() {
     // the scroll area (its ref is null while the calendar shows).
   }, [view]);
 
+  // List view: park the scroll so the SELECTED row is visible whenever
+  // the list (re)appears — the calendar → list toggle and the ?d=
+  // deep-link landing both need it. Runs on view switches only, never
+  // on row taps (the row is already on screen then), and scrolls the
+  // container alone, not the page.
+  const selRowRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (view !== 'list') return;
+    requestAnimationFrame(() => {
+      const sc = scrollRef.current;
+      const row = selRowRef.current;
+      if (!sc || !row) return;
+      // Rect delta, not offsetTop — the scroller isn't positioned, so
+      // the row's offsetParent is a higher ancestor.
+      const delta =
+        row.getBoundingClientRect().top -
+        sc.getBoundingClientRect().top -
+        (sc.clientHeight - row.clientHeight) / 2;
+      sc.scrollTop = Math.max(0, sc.scrollTop + delta);
+    });
+  }, [view]);
+
+  // A NEW date selection closes any open phone reveal (leaderboard /
+  // distribution) — a no-op when already closed, and when one was open
+  // the detailView effect below scrolls back to the list. Desktop
+  // always shows both panels, so resetting is invisible there.
+  useEffect(() => {
+    setDetailView(null);
+  }, [sel]);
+
   // Phone: keep the toggled section in view. Turning one ON grows the
   // panel below the fold → scroll its BOTTOM into view; turning the last
   // one OFF → scroll back to the top of the PAGE. Skip the first run so a
@@ -616,6 +646,7 @@ export function DailyArchivePage() {
                 // interactive elements can't nest inside a button.
                 <div
                   key={iso}
+                  ref={on ? selRowRef : undefined}
                   className={`${styles.row} ${on ? styles.rowOn : ''}`}
                 >
                   <button
