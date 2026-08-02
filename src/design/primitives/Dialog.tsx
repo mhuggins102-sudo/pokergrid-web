@@ -22,11 +22,12 @@ export interface DialogProps {
    */
   dragToClose?: boolean;
   /**
-   * Where initial focus lands on open. 'auto' (default) is the platform
-   * behavior — the first focusable control, which paints its focus ring.
-   * 'panel' focuses the dialog itself so no control opens pre-highlighted
-   * (the nav drawer); the focus trap is unaffected and Tab reaches the
-   * controls normally.
+   * Where initial focus lands on open. 'panel' (default) focuses the
+   * dialog itself so no control opens pre-highlighted — showModal's
+   * platform behavior would land on the first focusable (usually the
+   * header ×) and paint its focus ring on every open. The focus trap is
+   * unaffected and Tab reaches the controls normally. 'auto' restores
+   * the platform first-control focus for dialogs that want it.
    */
   initialFocus?: 'auto' | 'panel';
 }
@@ -45,7 +46,7 @@ export function Dialog({
   hideHeader = false,
   dismissible = true,
   dragToClose = false,
-  initialFocus = 'auto',
+  initialFocus = 'panel',
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 

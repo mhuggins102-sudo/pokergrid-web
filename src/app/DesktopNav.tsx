@@ -3,6 +3,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from 'react';
@@ -67,11 +68,14 @@ export function NavExtrasProvider({ children }: { children: ReactNode }) {
 }
 
 /** Mount `node` into the desktop nav's right-hand slot for this
- *  component's lifetime. */
+ *  component's lifetime. Layout effect, not effect: the teleported
+ *  node must land in the SAME pre-paint pass as the page's own mount,
+ *  or the first painted frame lacks it and the header visibly grows a
+ *  frame later (the archive-revisit "board slides down" jank). */
 export function useNavExtras(node: ReactNode): void {
   const ctx = useContext(NavExtrasContext);
   const setExtras = ctx?.setExtras;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!setExtras) return;
     setExtras(node);
     return () => setExtras(null);
@@ -90,7 +94,7 @@ export function useNavExtras(node: ReactNode): void {
 export function useNavGameRow(node: ReactNode): void {
   const ctx = useContext(NavExtrasContext);
   const setGameRow = ctx?.setGameRow;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!setGameRow) return;
     setGameRow(node);
     return () => setGameRow(null);
