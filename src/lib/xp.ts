@@ -21,21 +21,21 @@ export const BASE_WIN_XP: Record<Difficulty, number> = {
   extreme: 55,
 };
 
-// Skill kicker layered on ANY win (Free Play or Daily). Wins are always
-// A / S / SS (tierForRun); losses (B / C / D) earn no tier bonus.
+// Skill kicker layered on an S/SS win (Free Play or Daily). A-tier wins
+// take only the base value; losses (B / C / D) earn no tier bonus.
 export const TIER_WIN_BONUS: Record<Tier, number> = {
   SS: 50,
   S: 20,
-  A: 5,
+  A: 0,
   B: 0,
   C: 0,
   D: 0,
 };
 
 export const FIRST_WIN_PER_DIFFICULTY_XP = 50; // one-time, ×4
-export const CHALLENGE_FIRST_CLEAR_XP = 100; // one-time, per challenge
-export const ACHIEVEMENT_XP = 75; // one-time, per achievement
-export const TARGETS_UP_LEVEL_XP = 25; // per new highest level reached
+export const CHALLENGE_FIRST_CLEAR_XP = 150; // one-time, per challenge
+export const ACHIEVEMENT_XP = 100; // one-time, per achievement
+export const TARGETS_UP_LEVEL_XP = 50; // per new highest level reached
 export const DAILY_PLAY_XP = 15; // playing a daily (win or lose)
 export const DAILY_BEAT_XP = 25; // additionally, beating its target
 
@@ -62,9 +62,15 @@ export interface DailyXpPlay {
 // XP earning categories — the buckets a total splits into. Diffing two
 // bucket snapshots (before vs after a run) yields exactly what THIS game
 // earned per source, which drives the end-of-game "+N XP" breakdown.
+// Wins split per difficulty and the tier kicker per tier so the
+// breakdown rows can NAME them ("Medium Win", "Skill Tier SS").
 export type XpBucket =
-  | 'win'
-  | 'tier'
+  | 'win-easy'
+  | 'win-medium'
+  | 'win-hard'
+  | 'win-extreme'
+  | 'tier-SS'
+  | 'tier-S'
   | 'firstWin'
   | 'challenge'
   | 'achievement'
@@ -72,8 +78,12 @@ export type XpBucket =
   | 'daily';
 
 export const XP_BUCKET_LABEL: Record<XpBucket, string> = {
-  win: 'Win',
-  tier: 'Skill tier',
+  'win-easy': 'Easy Win',
+  'win-medium': 'Medium Win',
+  'win-hard': 'Hard Win',
+  'win-extreme': 'Extreme Win',
+  'tier-SS': 'Skill Tier SS',
+  'tier-S': 'Skill Tier S',
   firstWin: 'First win',
   challenge: 'Challenge cleared',
   achievement: 'Achievement',
@@ -83,8 +93,12 @@ export const XP_BUCKET_LABEL: Record<XpBucket, string> = {
 
 // Stable render order for the breakdown list.
 export const XP_BUCKET_ORDER: XpBucket[] = [
-  'win',
-  'tier',
+  'win-easy',
+  'win-medium',
+  'win-hard',
+  'win-extreme',
+  'tier-SS',
+  'tier-S',
   'firstWin',
   'daily',
   'challenge',
@@ -92,9 +106,25 @@ export const XP_BUCKET_ORDER: XpBucket[] = [
   'targets',
 ];
 
+/**
+ * The row label for a bucket's earnings. Static except `targets`, whose
+ * row counts the levels climbed this run: "Targets Up (+2 Levels)".
+ */
+export const xpRowLabel = (bucket: XpBucket, xp: number): string => {
+  if (bucket === 'targets') {
+    const n = Math.round(xp / TARGETS_UP_LEVEL_XP);
+    return `Targets Up (+${n} ${n === 1 ? 'Level' : 'Levels'})`;
+  }
+  return XP_BUCKET_LABEL[bucket];
+};
+
 const emptyBuckets = (): Record<XpBucket, number> => ({
-  win: 0,
-  tier: 0,
+  'win-easy': 0,
+  'win-medium': 0,
+  'win-hard': 0,
+  'win-extreme': 0,
+  'tier-SS': 0,
+  'tier-S': 0,
   firstWin: 0,
   challenge: 0,
   achievement: 0,
@@ -114,15 +144,16 @@ export const xpBuckets = (
   const b = emptyBuckets();
 
   // Free Play: base win value + first-win-per-difficulty milestone + the
-  // per-win tier kicker. tierCounts is free-play-only and, since every win
-  // is A/S/SS, its A/S/SS buckets ARE the win-by-tier counts.
+  // per-win tier kicker (S/SS only). tierCounts is free-play-only and,
+  // since every win is A/S/SS, its S/SS buckets ARE the win-by-tier
+  // counts.
   for (const d of DIFFICULTIES) {
     const wins = stats.byDifficulty[d].wins;
-    b.win += wins * BASE_WIN_XP[d];
+    b[`win-${d}`] += wins * BASE_WIN_XP[d];
     if (wins > 0) b.firstWin += FIRST_WIN_PER_DIFFICULTY_XP;
     const tc = stats.tierCounts[d];
-    b.tier +=
-      tc.SS * TIER_WIN_BONUS.SS + tc.S * TIER_WIN_BONUS.S + tc.A * TIER_WIN_BONUS.A;
+    b['tier-SS'] += tc.SS * TIER_WIN_BONUS.SS;
+    b['tier-S'] += tc.S * TIER_WIN_BONUS.S;
   }
 
   // One-time collections.
@@ -137,7 +168,10 @@ export const xpBuckets = (
     if (p.won) {
       b.daily += DAILY_BEAT_XP;
       const target = dailyTargetFor(p.difficulty, p.twist);
-      b.tier += TIER_WIN_BONUS[tierForRun({ score: p.score, target, won: true })];
+      const tier = tierForRun({ score: p.score, target, won: true });
+      if (tier === 'SS' || tier === 'S') {
+        b[`tier-${tier}`] += TIER_WIN_BONUS[tier];
+      }
     }
   }
 
@@ -160,9 +194,10 @@ export const dailyPlayXpBuckets = (
   };
   if (play.won) {
     const target = dailyTargetFor(play.difficulty, play.twist);
-    const t =
-      TIER_WIN_BONUS[tierForRun({ score: play.score, target, won: true })];
-    if (t > 0) out.tier = t;
+    const tier = tierForRun({ score: play.score, target, won: true });
+    if (tier === 'SS' || tier === 'S') {
+      out[`tier-${tier}`] = TIER_WIN_BONUS[tier];
+    }
   }
   return out;
 };

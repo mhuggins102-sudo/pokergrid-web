@@ -16,6 +16,7 @@ import {
   levelInfoFor,
   xpBuckets,
   xpForStats,
+  xpRowLabel,
 } from '../xp';
 
 const withDiff = (
@@ -67,13 +68,12 @@ describe('xp — earning', () => {
   });
 
   test('a single Medium A-tier free-play win', () => {
-    // one Medium win, tier A
+    // one Medium win, tier A — A pays no skill kicker.
     const stats = withDiff(EMPTY_STATS, 'medium', 1, { A: 1 });
     const xp = xpForStats(stats, []);
-    // base 20 + first-win 50 + tier A 5
-    expect(xp).toBe(
-      BASE_WIN_XP.medium + FIRST_WIN_PER_DIFFICULTY_XP + TIER_WIN_BONUS.A
-    );
+    // base 20 + first-win 50 (TIER_WIN_BONUS.A is 0)
+    expect(TIER_WIN_BONUS.A).toBe(0);
+    expect(xp).toBe(BASE_WIN_XP.medium + FIRST_WIN_PER_DIFFICULTY_XP);
   });
 
   test('extreme SS win is worth the most per game', () => {
@@ -110,9 +110,31 @@ describe('xp — earning', () => {
     // Per-source delta = exactly what this one run earned.
     const bBefore = xpBuckets(before, []);
     const bAfter = xpBuckets(after, []);
-    expect(bAfter.win - bBefore.win).toBe(BASE_WIN_XP.medium);
+    expect(bAfter['win-medium'] - bBefore['win-medium']).toBe(
+      BASE_WIN_XP.medium
+    );
     expect(bAfter.firstWin - bBefore.firstWin).toBe(FIRST_WIN_PER_DIFFICULTY_XP);
-    expect(bAfter.tier - bBefore.tier).toBe(TIER_WIN_BONUS.A);
+    // An A-tier win pays no skill kicker in either tier bucket.
+    expect(bAfter['tier-S'] - bBefore['tier-S']).toBe(0);
+    expect(bAfter['tier-SS'] - bBefore['tier-SS']).toBe(0);
+  });
+
+  test('S/SS wins land in their own tier buckets with named labels', () => {
+    const stats = withDiff(EMPTY_STATS, 'hard', 2, { SS: 1, S: 1 });
+    const b = xpBuckets(stats, []);
+    expect(b['tier-SS']).toBe(TIER_WIN_BONUS.SS);
+    expect(b['tier-S']).toBe(TIER_WIN_BONUS.S);
+    expect(xpRowLabel('tier-SS', b['tier-SS'])).toBe('Skill Tier SS');
+    expect(xpRowLabel('win-hard', b['win-hard'])).toBe('Hard Win');
+  });
+
+  test('targets row label counts the levels climbed', () => {
+    expect(xpRowLabel('targets', TARGETS_UP_LEVEL_XP)).toBe(
+      'Targets Up (+1 Level)'
+    );
+    expect(xpRowLabel('targets', 2 * TARGETS_UP_LEVEL_XP)).toBe(
+      'Targets Up (+2 Levels)'
+    );
   });
 
   test('daily plays: show-up + beat + tier bonus', () => {
