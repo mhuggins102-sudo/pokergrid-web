@@ -9,6 +9,7 @@ import { useSettingsStore } from '../../settings/settingsStore';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
 import styles from './BonusDrawModal.module.css';
+import { ArrowLeft } from '../../../design/primitives';
 
 /**
  * The desktop ♣ Bonus draw as the mockup's fixed-overlay modal
@@ -180,7 +181,7 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
                   className={styles.decline}
                   onClick={() => dispatch({ type: 'BONUS_BACK' })}
                 >
-                  ← Back to card select
+                  <ArrowLeft size={12} /> Back to card select
                 </button>
               </div>
             )}

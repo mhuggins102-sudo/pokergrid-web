@@ -244,8 +244,9 @@ export function ResultView({ onReplay }: ResultViewProps) {
         </Link>
       )
     ) : mode.kind === 'daily' ? (
-      // One play per day — the commit action moves the player on.
-      <Link to="/daily/archive" className={styles.commitLink}>
+      // One play per day — the commit action moves the player on. ?d=
+      // lands the archive back on this date (month + selection).
+      <Link to={`/daily/archive?d=${mode.dateISO}`} className={styles.commitLink}>
         <Button variant="primary" className={styles.commitButton}>
           Daily archive
         </Button>

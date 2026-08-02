@@ -3,6 +3,7 @@ import { ACHIEVEMENTS, AchievementTier } from '../../game/achievements';
 import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import styles from './AchievementsPage.module.css';
+import { Chevron } from '../../design/primitives';
 
 /*
  * The trophy case at every tier (phase 3 convergence), per
@@ -85,7 +86,7 @@ function AchievementSection({
       >
         {head}
         <span className={styles.sectionCaret} aria-hidden="true">
-          ▾
+          <Chevron size={14} />
         </span>
       </button>
       {open && grid}

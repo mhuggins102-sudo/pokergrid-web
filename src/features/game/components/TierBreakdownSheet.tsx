@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { Sheet } from '../../../design/primitives';
+import { ArrowRight, Sheet } from '../../../design/primitives';
 import { Tier } from '../../../lib/stats';
 import styles from './TierBreakdownSheet.module.css';
 
@@ -74,7 +74,7 @@ export function TierBreakdownSheet({
     score !== undefined ? (
       <div className={`${styles.row} ${styles.you}`}>
         <span className={styles.tier} aria-hidden="true">
-          →
+          <ArrowRight size={13} />
         </span>
         <span className={styles.label}>Your score</span>
         <span className={styles.req}>{score}</span>

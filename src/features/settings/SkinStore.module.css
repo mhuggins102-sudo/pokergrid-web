@@ -353,6 +353,8 @@
 }
 
 .groupCaret {
+  display: inline-flex;
+  align-items: center;
   color: var(--ink-3);
   transition: transform 160ms ease;
 }

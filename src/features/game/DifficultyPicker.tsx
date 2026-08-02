@@ -16,6 +16,7 @@ import {
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
 import styles from './DifficultyPicker.module.css';
+import { ArrowRight } from '../../design/primitives';
 
 /*
  * The Free Play entry at every tier (phase 3 convergence), per
@@ -151,7 +152,7 @@ export function DifficultyPicker() {
   );
   const startLink = (
     <Link to={startTo} className={styles.startBtn}>
-      Start game <span aria-hidden="true">→</span>
+      Start game <ArrowRight size={15} />
     </Link>
   );
 

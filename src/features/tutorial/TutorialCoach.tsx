@@ -1,4 +1,4 @@
-import { Button } from '../../design/primitives';
+import { ArrowRight, Button } from '../../design/primitives';
 import { useTier } from '../../app/useTier';
 import { TutorialStep } from './tutorialSteps';
 import styles from './TutorialCoach.module.css';
@@ -67,7 +67,9 @@ export function TutorialCoach({
         </p>
         <div className={styles.deskFoot}>
           {step.kind === 'action' && (
-            <span className={styles.deskYourMove}>→ your move</span>
+            <span className={styles.deskYourMove}>
+              <ArrowRight size={12} /> your move
+            </span>
           )}
           <span className={styles.deskFootSpacer} />
           <button
@@ -94,7 +96,9 @@ export function TutorialCoach({
           Tutorial · {index + 1}/{count}
         </span>
         {step.kind === 'action' && (
-          <span className={styles.yourMove}>→ your move</span>
+          <span className={styles.yourMove}>
+            <ArrowRight size={12} /> your move
+          </span>
         )}
         <span className={styles.headSpacer} />
         <button type="button" className={styles.skip} onClick={onSkip}>

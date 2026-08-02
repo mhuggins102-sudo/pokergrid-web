@@ -115,7 +115,8 @@
 }
 
 .caret {
-  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
   opacity: 0.55;
 }
 
@@ -278,9 +279,10 @@
   border-top: 1px solid var(--rule);
 }
 
-/* The 2×2 cycling switches — theme / light-dark over dock / deck skin —
-   each an icon over a caption naming the current value. Taps cycle in
-   place; the drawer stays open. */
+/* The quick-settings grid — theme / light-dark, dock / deck skin
+   (cyclers), then Line-totals / Sound (on-off toggles) — each an icon
+   over a caption naming the current value. Taps apply in place; the
+   drawer stays open. */
 .drawerQuick {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
