@@ -47,10 +47,10 @@ describe('xp — level curve', () => {
   });
 
   test('levelInfoFor reports within-level progress and caps at max', () => {
-    const mid = levelInfoFor(105); // level 3 (150) not reached; level 2 floor 60
+    const mid = levelInfoFor(130); // level 3 (200) not reached; level 2 floor 60
     expect(mid.level).toBe(2);
-    expect(mid.xpIntoLevel).toBe(45); // 105 - 60
-    expect(mid.levelSpan).toBe(90); // 150 - 60
+    expect(mid.xpIntoLevel).toBe(70); // 130 - 60
+    expect(mid.levelSpan).toBe(140); // 200 - 60
     expect(mid.progress).toBeCloseTo(0.5, 1);
 
     const max = levelInfoFor(999999);
@@ -58,6 +58,20 @@ describe('xp — level curve', () => {
     expect(max.atMax).toBe(true);
     expect(max.levelSpan).toBeNull();
     expect(max.progress).toBe(1);
+  });
+
+  test('curve shape: first win pops L2, no one-game leapfrogs, benchmarks hold', () => {
+    // First win (base + milestone ≥ 60) reaches Level 2 instantly…
+    expect(levelFromXp(60)).toBe(2);
+    // …but even a monster opener (Extreme SS + first win = 155) can't
+    // cross two levels…
+    expect(levelFromXp(155)).toBe(2);
+    // …and only a freak achievement-laden opener grazes Level 3.
+    expect(levelFromXp(355)).toBe(3);
+    // The tuning benchmark (see the XP rework discussion): a seasoned
+    // all-modes player at ~5,985 lifetime XP sits at Level 14.
+    expect(levelFromXp(5985)).toBe(14);
+    expect(levelFromXp(15000)).toBe(MAX_LEVEL);
   });
 });
 

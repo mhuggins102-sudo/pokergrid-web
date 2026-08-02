@@ -225,6 +225,41 @@
 
 /* ---- Phone nav drawer content (rendered in the <dialog> top layer,
    so no width gating is needed here — only the trigger is gated). ---- */
+/* Player ident in the drawer's top-right corner: OUT of flow (absolute
+   against the dialog panel) so the nav keeps its exact position. Top
+   aligns with the GAME MODES label's text (body padding 16 + label
+   padding 4); right matches the panel's 24px side padding. */
+.drawerIdent {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+  pointer-events: none;
+}
+
+.drawerIdentName {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawerIdentLevel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
 .drawerNav {
   display: flex;
   flex-direction: column;

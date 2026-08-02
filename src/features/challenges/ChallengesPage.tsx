@@ -6,7 +6,7 @@ import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import { Trophy } from './Trophy';
 import styles from './ChallengesPage.module.css';
-import { ArrowRight } from '../../design/primitives';
+import { ArrowRight, useTapPopover } from '../../design/primitives';
 
 /*
  * The challenge catalog at every tier (phase 3 convergence), per
@@ -38,6 +38,11 @@ export function ChallengesPage() {
   // Phone-only per-card expansion — single-open (opening one closes any
   // other), so the list never grows into a long scroll of open cards.
   const [openId, setOpenId] = useState<ChallengeId | null>(null);
+  // Trophy-tier requirements popover on the medal tally: hover on fine
+  // pointers, tap-toggle on touch (the archive month-menu pattern).
+  const medalsTap = useTapPopover('challenge-medals');
+  const [medalsHover, setMedalsHover] = useState(false);
+  const medalsOpen = medalsHover || medalsTap.open;
   const toggle = (id: ChallengeId) =>
     setOpenId(cur => (cur === id ? null : id));
 
@@ -74,20 +79,65 @@ export function ChallengesPage() {
         </span>
         {/* The pairs are decorative (aria-hidden) — the container names
             the counts, and the per-card trophies keep their img roles
-            unduplicated. */}
+            unduplicated. Hover (fine pointers) / tap (touch) reveals the
+            tier requirements; thresholds mirror tierForRun. */}
         <span
-          className={styles.medalTally}
-          role="img"
-          aria-label={`Trophies: ${medalCount('gold')} gold, ${medalCount(
-            'silver'
-          )} silver, ${medalCount('bronze')} bronze`}
+          ref={medalsTap.wrapRef}
+          className={`${styles.medalTallyWrap} ${
+            medalsOpen ? styles.medalInfoOpen : ''
+          }`}
+          tabIndex={0}
+          onMouseEnter={() => setMedalsHover(true)}
+          onMouseLeave={() => setMedalsHover(false)}
+          onFocus={() => setMedalsHover(true)}
+          onBlur={e => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setMedalsHover(false);
+            }
+          }}
+          {...medalsTap.toggleProps}
         >
-          {(['gold', 'silver', 'bronze'] as const).map(metal => (
-            <span key={metal} className={styles.medal} aria-hidden="true">
-              <Trophy kind={metal} size={15} />
-              <span className={styles.medalCount}>{medalCount(metal)}</span>
-            </span>
-          ))}
+          <span
+            className={styles.medalTally}
+            role="img"
+            aria-label={`Trophies: ${medalCount('gold')} gold, ${medalCount(
+              'silver'
+            )} silver, ${medalCount('bronze')} bronze`}
+          >
+            {(['gold', 'silver', 'bronze'] as const).map(metal => (
+              <span key={metal} className={styles.medal} aria-hidden="true">
+                <Trophy kind={metal} size={15} />
+                <span className={styles.medalCount}>{medalCount(metal)}</span>
+              </span>
+            ))}
+          </span>
+          <div className={styles.medalInfoPop} role="tooltip">
+            <div className={styles.medalInfoTitle}>Trophy tiers</div>
+            <div className={styles.medalInfoRow}>
+              <span className={styles.medalInfoIcon} aria-hidden="true">
+                <Trophy kind="gold" size={14} />
+              </span>
+              <span>
+                <b>Gold</b> — SS win: 1.6× the target or better
+              </span>
+            </div>
+            <div className={styles.medalInfoRow}>
+              <span className={styles.medalInfoIcon} aria-hidden="true">
+                <Trophy kind="silver" size={14} />
+              </span>
+              <span>
+                <b>Silver</b> — S win: 1.3× the target
+              </span>
+            </div>
+            <div className={styles.medalInfoRow}>
+              <span className={styles.medalInfoIcon} aria-hidden="true">
+                <Trophy kind="bronze" size={14} />
+              </span>
+              <span>
+                <b>Bronze</b> — any other win
+              </span>
+            </div>
+          </div>
         </span>
       </div>
 

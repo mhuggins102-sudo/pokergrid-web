@@ -42,10 +42,14 @@ export const DAILY_BEAT_XP = 25; // additionally, beating its target
 // ---- Level curve ------------------------------------------------------
 
 // Cumulative XP required to REACH each level. Index i → level i+1
-// (LEVEL_XP[0] = 0 = level 1 = the start). Easy early, steep top.
+// (LEVEL_XP[0] = 0 = level 1 = the start). Shaped so the FIRST win
+// (≥60 XP with its milestone) still pops Level 2 instantly — the
+// onboarding hook — but no single game can leapfrog two levels: even a
+// monster opener (Extreme SS + first win ≈ 155) stays at Level 2.
+// Steepens toward the top.
 export const LEVEL_XP = [
-  0, 60, 150, 280, 450, 680, 970, 1320, 1750, 2250, 2850, 3550, 4350, 5300,
-  6400, 7700, 9200, 10900, 12900, 15000,
+  0, 60, 200, 400, 680, 1020, 1420, 1880, 2400, 2980, 3620, 4320, 5000, 5700,
+  6700, 7900, 9300, 11000, 12900, 15000,
 ];
 
 export const MAX_LEVEL = LEVEL_XP.length; // 20
