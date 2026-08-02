@@ -186,6 +186,12 @@
 }
 
 .decline {
+  /* inline-flex: browsers may wrap a line between an inline SVG (the
+     back arrow) and its text; a flex row can't. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   border: none;
   background: transparent;
   padding: 2px 6px;

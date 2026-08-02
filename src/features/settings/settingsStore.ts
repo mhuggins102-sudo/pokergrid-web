@@ -50,16 +50,26 @@ export interface Settings {
   deckSkin: string | null;
 }
 
+// Phone-first defaults: a fresh visitor's very first open decides the
+// starting look — phones get the Morning Paper night edition with a
+// bare board (rails off), wider screens keep the Card Room following
+// the OS appearance. Only genuinely new profiles are affected: persist
+// stores the full settings object once anything is changed, and stored
+// keys always win over these defaults on hydrate.
+const phoneFirst =
+  typeof window !== 'undefined' &&
+  !!window.matchMedia?.('(max-width: 767px)').matches;
+
 export const DEFAULT_SETTINGS: Settings = {
-  // New players start on the Card Room look, following the OS appearance.
-  themeFamily: 'card-room',
-  appearance: 'system',
+  themeFamily: phoneFirst ? 'paper' : 'card-room',
+  appearance: phoneFirst ? 'dark' : 'system',
   sounds: true,
   // 'desktop' = the Split arrangement on phones; the desk/desk-lite forks
   // render it as their compact (Classic) dock — one default, both tiers.
   dockLayout: 'desktop',
-  // Live line totals ride the board edge from the first game.
-  lineRails: true,
+  // Live line totals ride the board edge from the first game on wide
+  // screens; the phone-first board starts bare.
+  lineRails: !phoneFirst,
   // Desktop chips default ON — the mockup's default. Migration-safe:
   // persist merges stored keys over these defaults, so profiles saved
   // before this key existed simply pick up `true`.
