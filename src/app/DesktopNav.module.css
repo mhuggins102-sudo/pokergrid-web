@@ -427,22 +427,16 @@
     grid-template-columns: 1fr auto;
     /* row-gap only matters in-game, where .gameRow adds row 2. */
     gap: 2px 10px;
-    padding: 4px var(--space-lg) 6px;
+    /* 9/1 centers the title row between the screen top and the first
+       content ink on content pages (measured 18.3 / 17.7; the old
+       divider-era 4/6 sat 13.3 / 22.7), and the SAME 9px top applies
+       in-game so the wordmark sits at one position everywhere — the
+       board pays the ~5px on short viewports. */
+    padding: 9px var(--space-lg) 1px;
     /* Phone runs divider-free on EVERY page (the masthead rule stays on
        tablet/desktop): the header's opaque paper surface alone marks the
        sticky boundary while content scrolls beneath. */
     border-bottom: none;
-  }
-
-  /* Center the title row between the screen top and the first content
-     ink below it. With the divider-era 4/6 padding the row measured
-     13.3px above vs 22.7px below (bar pb + the shell's 8px) on content
-     pages — re-split the same total to 9/1. In-game keeps 4/0: the
-     details row carries the header's lower half there and the title
-     row already measures centered (~13.3 / 13.7). */
-  .bar:not(.gameRowActive) {
-    padding-top: 9px;
-    padding-bottom: 1px;
   }
 
   .menuBtn {
