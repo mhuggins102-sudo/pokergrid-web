@@ -2,8 +2,58 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { ACHIEVEMENTS, AchievementTier } from '../../game/achievements';
 import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
+import { Trophy } from '../challenges/Trophy';
 import styles from './AchievementsPage.module.css';
-import { Chevron } from '../../design/primitives';
+import { Chevron, useTapPopover } from '../../design/primitives';
+
+// The two trophy-counter achievements explain the medal system on
+// hover (fine pointers) / tap (touch) — what earns gold, silver,
+// bronze. Thresholds mirror tierForRun (lib/stats): SS ≥ 1.6× target,
+// S ≥ 1.3×, A = any other win.
+const MEDAL_INFO_IDS = new Set(['challenge-trophies-5', 'challenge-golds-3']);
+
+function MedalRequirements({ id, children }: { id: string; children: ReactNode }) {
+  const tap = useTapPopover(`ach-medals-${id}`);
+  const [hover, setHover] = useState(false);
+  const open = hover || tap.open;
+  return (
+    <div
+      ref={tap.wrapRef}
+      className={`${styles.medalInfoWrap} ${open ? styles.medalInfoOpen : ''}`}
+      tabIndex={0}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onFocus={() => setHover(true)}
+      onBlur={e => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setHover(false);
+      }}
+      {...tap.toggleProps}
+    >
+      {children}
+      <div className={styles.medalInfoPop} role="tooltip">
+        <div className={styles.medalInfoTitle}>Trophy tiers</div>
+        <div className={styles.medalInfoRow}>
+          <Trophy kind="gold" size={14} />
+          <span>
+            <b>Gold</b> — SS win: 1.6× the target or better
+          </span>
+        </div>
+        <div className={styles.medalInfoRow}>
+          <Trophy kind="silver" size={14} />
+          <span>
+            <b>Silver</b> — S win: 1.3× the target
+          </span>
+        </div>
+        <div className={styles.medalInfoRow}>
+          <Trophy kind="bronze" size={14} />
+          <span>
+            <b>Bronze</b> — any other win
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /*
  * The trophy case at every tier (phase 3 convergence), per
@@ -184,7 +234,7 @@ export function AchievementsPage() {
             <div className={styles.grid}>
               {items.map(a => {
                 const on = earned.has(a.id);
-                return (
+                const card = (
                   <div
                     key={a.id}
                     className={`${styles.card} ${on ? styles.cardOn : ''}`}
@@ -199,6 +249,13 @@ export function AchievementsPage() {
                       </div>
                     </div>
                   </div>
+                );
+                return MEDAL_INFO_IDS.has(a.id) ? (
+                  <MedalRequirements key={a.id} id={a.id}>
+                    {card}
+                  </MedalRequirements>
+                ) : (
+                  card
                 );
               })}
             </div>
