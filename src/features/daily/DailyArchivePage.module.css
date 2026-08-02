@@ -193,6 +193,42 @@
    warm "still open" tint; future / pre-launch days render inert. */
 .calWrap {
   padding: 12px 14px 16px;
+  /* Swipe paging: vertical pans stay the browser's; horizontal ones
+     are ours (the JS drag-follow preventDefaults once locked). Clip
+     the grid while it follows the finger / slides in. */
+  touch-action: pan-y;
+  overflow: hidden;
+}
+
+/* Swipe-commit entry: the new month's grid slides in from the side the
+   gesture came from. */
+.calSlideRight {
+  animation: cal-slide-right 190ms ease;
+}
+
+.calSlideLeft {
+  animation: cal-slide-left 190ms ease;
+}
+
+@keyframes cal-slide-right {
+  from {
+    transform: translateX(44px);
+    opacity: 0.4;
+  }
+}
+
+@keyframes cal-slide-left {
+  from {
+    transform: translateX(-44px);
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calSlideRight,
+  .calSlideLeft {
+    animation: none;
+  }
 }
 
 .calHead {
@@ -608,16 +644,20 @@
   font-size: 26px;
   font-weight: 680;
   color: var(--ink-2);
+  white-space: nowrap;
 }
 
 .startBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: var(--accent);
   color: var(--on-primary, var(--on-accent, #fff));
   border-radius: var(--radius-button);
-  padding: 9px 18px;
+  /* Narrow enough that "Not played" + this + the corner toggle share
+     the phone panel row without wrapping (the SVG triangle is a touch
+     wider than the old ▸ glyph). */
+  padding: 9px 14px;
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;

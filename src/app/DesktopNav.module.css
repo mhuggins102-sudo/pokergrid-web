@@ -229,6 +229,10 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Minimum breath before the pinned quick-settings foot: matches the
+     mid-nav .drawerRule's margin, so on short viewports (auto margin
+     at zero) both dividers sit the same distance from their links. */
+  margin-bottom: 10px;
 }
 
 .drawerGroupLabel {
@@ -428,6 +432,17 @@
        tablet/desktop): the header's opaque paper surface alone marks the
        sticky boundary while content scrolls beneath. */
     border-bottom: none;
+  }
+
+  /* Center the title row between the screen top and the first content
+     ink below it. With the divider-era 4/6 padding the row measured
+     13.3px above vs 22.7px below (bar pb + the shell's 8px) on content
+     pages — re-split the same total to 9/1. In-game keeps 4/0: the
+     details row carries the header's lower half there and the title
+     row already measures centered (~13.3 / 13.7). */
+  .bar:not(.gameRowActive) {
+    padding-top: 9px;
+    padding-bottom: 1px;
   }
 
   .menuBtn {
