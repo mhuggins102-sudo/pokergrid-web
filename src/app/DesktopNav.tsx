@@ -12,6 +12,7 @@ import { currentDateISO } from '../game/daily/seed';
 import { Chevron, Drawer, useTapPopover } from '../design/primitives';
 import { SKIN_CATALOG, skinName, skinUnlocked } from '../design/skinCatalog';
 import { usePlayerLevel } from '../features/progress/usePlayerLevel';
+import { useHandle } from '../features/daily/sync/handleStore';
 import { DOCK_LAYOUT_LABEL } from '../features/settings/DockLayoutPreview';
 import {
   DockLayout,
@@ -234,7 +235,9 @@ export function DesktopNav() {
 
   // Drawer quick actions: the deck-skin cycle order — Default + every
   // unlocked design (group entries unlock all their skins together).
-  const { level } = usePlayerLevel();
+  // xp + handle feed the drawer's top-right ident.
+  const { level, xp } = usePlayerLevel();
+  const handle = useHandle();
   const skinCycle = useMemo(() => {
     const order: (string | null)[] = [null];
     for (const u of SKIN_CATALOG) {
@@ -410,6 +413,15 @@ export function DesktopNav() {
         title="Menu"
         hideHeader
       >
+        {/* Player ident, pinned to the drawer's top-right corner OUT of
+            flow so the nav below keeps its exact position. Screen name
+            only when one is saved; the level line always. */}
+        <div className={styles.drawerIdent}>
+          {handle && <span className={styles.drawerIdentName}>{handle}</span>}
+          <span className={styles.drawerIdentLevel}>
+            Level {level} · {xp.toLocaleString()} XP
+          </span>
+        </div>
         <nav className={styles.drawerNav} aria-label="Menu">
           <span className={styles.drawerGroupLabel}>Game modes</span>
           {MODES.map(m => (
