@@ -7,25 +7,23 @@
 /* ONE header at every tier: DesktopNav, with its own phone (<768),
    condensed-tablet, and desktop variants. Phase 5 retired the classic
    scrolling header (and the classic-chrome flag) — DesktopNav serves
-   the tablet game surfaces too. */
+   the tablet game surfaces too.
+
+   Locked to the top of the viewport at EVERY width (phase 7 shipped it
+   on phones; tablet/desktop joined later): the document is the scroll
+   container (the shell only sets min-height), so sticky pins to the
+   viewport top; the opaque --paper background keeps scrolled content
+   from showing through (the masthead rule marks the boundary at
+   tablet/desktop; phones run divider-free), and the z-index sits above
+   page content (incl. the z-40 nav menus) but below toasts (100). The
+   game screens are height-locked with nothing to scroll, so this is
+   inert there. */
 .desktopHeader {
   display: block;
   background: var(--paper);
-}
-
-/* Phone (<768): lock the header to the top of the viewport so it stays
-   fully visible while a page scrolls (phase 7). The document is the
-   scroll container (the shell only sets min-height), so sticky pins to
-   the viewport top; the opaque --paper background above keeps scrolled
-   content from showing through, and the z-index sits above page content
-   but below toasts (100). The game screen is dvh-locked with nothing to
-   scroll, so this is inert there. Desktop/tablet are untouched. */
-@media (max-width: 767px) { /* below bp-tablet */
-  .desktopHeader {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .main {
