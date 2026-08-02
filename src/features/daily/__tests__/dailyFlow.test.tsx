@@ -131,7 +131,7 @@ describe('daily flow', () => {
     // Nothing played: every listed day carries a Start shortcut, and
     // the selected day's detail panel offers Start too.
     expect(screen.getByText('Not played')).toBeInTheDocument();
-    expect(screen.getAllByText('Start ▸').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Start').length).toBeGreaterThanOrEqual(2);
   });
 
   it("selecting a played day opens its result detail in place", () => {
@@ -153,7 +153,7 @@ describe('daily flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'June 2026' }));
     fireEvent.click(screen.getByText(score).closest('button')!);
     expect(screen.getByText('Monday, June 1, 2026')).toBeInTheDocument();
-    expect(screen.getByText('View full result →')).toBeInTheDocument();
+    expect(screen.getByText('View full result')).toBeInTheDocument();
   });
 
   it('future dates bounce to today', () => {

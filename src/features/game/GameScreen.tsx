@@ -1338,7 +1338,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     };
     const endgame = computeEndgameRows(state.bonusCards, purpleInputs);
     const playAgain = () =>
-      mode.kind === 'daily' ? navigate('/daily/archive') : onReplay();
+      mode.kind === 'daily'
+        ? navigate(`/daily/archive?d=${mode.dateISO}`)
+        : onReplay();
     const deskBoard = board({
       // No completion sweep on desktop (revision item 11).
       sweepSlots: NO_SWEEP,
@@ -1749,7 +1751,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     className={styles.commitButton}
                     onClick={() =>
                       mode.kind === 'daily'
-                        ? navigate('/daily/archive')
+                        ? navigate(`/daily/archive?d=${mode.dateISO}`)
                         : onReplay()
                     }
                   >
@@ -2079,7 +2081,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           className={styles.dtStackBtn}
                           onClick={() =>
                             mode.kind === 'daily'
-                              ? navigate('/daily/archive')
+                              ? navigate(`/daily/archive?d=${mode.dateISO}`)
                               : onReplay()
                           }
                         >

@@ -624,7 +624,11 @@ export function DesktopResultDialog({
           )}
           <div className={styles.footer}>
             {isDaily ? (
-              <Link to="/daily/archive" className={styles.primaryBtn}>
+              // ?d= lands the archive back on this date.
+              <Link
+                to={`/daily/archive?d=${mode.dateISO}`}
+                className={styles.primaryBtn}
+              >
                 Daily Archive
               </Link>
             ) : isTargets ? (

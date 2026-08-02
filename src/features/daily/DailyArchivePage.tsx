@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { currentDateISO } from '../../game/daily/seed';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { findChallenge } from '../../game/challenges';
 import { Tier, tierForRun } from '../../lib/stats';
 import { difficultyColors } from '../../design/tokens';
 import { isBackendConfigured, type TopScoreEntry } from '../../lib/supabaseRpc';
-import { useTapPopover, useTapPopoverCloseAll } from '../../design/primitives';
+import {
+  ArrowRight,
+  Chevron,
+  TriangleRight,
+  useTapPopover,
+  useTapPopoverCloseAll,
+} from '../../design/primitives';
 import { useTier } from '../../app/useTier';
 import { DAILY_LAUNCH_ISO, dayMs, toISO, toUTC } from './dailyDates';
 import { usePlaysStore } from './sync/playsStore';
@@ -120,8 +126,21 @@ export function DailyArchivePage() {
   // chart-toggle pattern). null = neither shown. ≥768 shows both inline.
   const [detailView, setDetailView] = useState<'dist' | 'board' | null>(null);
   const months = useMemo(() => publishedMonths(today), [today]);
-  const [month, setMonth] = useState(() => monthOf(today));
-  const [sel, setSel] = useState(today);
+  // Return-with-context: /daily/archive?d=YYYY-MM-DD (the daily result
+  // screen's archive buttons pass the date they came from) seeds the
+  // initial selection + month, so "View full result" round-trips back
+  // to the same day. Also makes any date deep-linkable.
+  const [search] = useSearchParams();
+  const returnD = search.get('d');
+  const returnDate =
+    returnD &&
+    /^\d{4}-\d{2}-\d{2}$/.test(returnD) &&
+    returnD >= DAILY_LAUNCH_ISO &&
+    returnD <= today
+      ? returnD
+      : null;
+  const [month, setMonth] = useState(() => monthOf(returnDate ?? today));
+  const [sel, setSel] = useState(returnDate ?? today);
   // Fine pointers open the month menu on hover / :focus-within (the JS
   // state below). Touch can't hover, so the TapPopover primitive adds a
   // tap-to-toggle on coarse pointers WITHOUT touching fine-pointer
@@ -286,6 +305,47 @@ export function DailyArchivePage() {
     closeAllPopovers();
   };
 
+  // Calendar swipe: a horizontal swipe on the month grid pages between
+  // months (left = newer, right = older — `months` is newest-first),
+  // clamped at the published range. Native listeners for the same
+  // reason as Dialog's drag-to-close; the 2:1 direction guard leaves
+  // vertical page scrolling and plain taps alone.
+  const calWrapRef = useRef<HTMLDivElement | null>(null);
+  const pickMonthRef = useRef(pickMonth);
+  pickMonthRef.current = pickMonth;
+  useEffect(() => {
+    const el = calWrapRef.current;
+    if (!el) return;
+    let sx = 0;
+    let sy = 0;
+    let live = false;
+    const start = (e: TouchEvent) => {
+      const t = e.touches[0];
+      sx = t.clientX;
+      sy = t.clientY;
+      live = true;
+    };
+    const end = (e: TouchEvent) => {
+      if (!live) return;
+      live = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx;
+      const dy = t.clientY - sy;
+      if (Math.abs(dx) < 48 || Math.abs(dx) < 2 * Math.abs(dy)) return;
+      const idx = months.indexOf(month);
+      const next = dx < 0 ? idx - 1 : idx + 1;
+      if (next >= 0 && next < months.length) {
+        pickMonthRef.current(months[next]);
+      }
+    };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchend', end);
+    return () => {
+      el.removeEventListener('touchstart', start);
+      el.removeEventListener('touchend', end);
+    };
+  }, [months, month, view]);
+
   return (
     <div className={styles.wrap}>
       <div className={styles.eyebrow}>Daily · Archive</div>
@@ -321,7 +381,7 @@ export function DailyArchivePage() {
                 aria-hidden="true"
                 {...monthTap.toggleProps}
               >
-                ▾
+                <Chevron size={14} />
               </span>
               <div
                 className={`${styles.monthMenu} ${
@@ -406,7 +466,7 @@ export function DailyArchivePage() {
           </div>
 
           {view === 'cal' ? (
-            <div className={styles.calWrap}>
+            <div className={styles.calWrap} ref={calWrapRef}>
               <div className={styles.calHead} aria-hidden="true">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                   <span key={i}>{d}</span>
@@ -559,7 +619,7 @@ export function DailyArchivePage() {
                   </button>
                   {!play && (
                     <Link to={`/daily/${iso}`} className={styles.rowStart}>
-                      Start ▸
+                      Start <TriangleRight size={10} />
                     </Link>
                   )}
                 </div>
@@ -663,7 +723,7 @@ export function DailyArchivePage() {
                 {selTier}
               </span>
               <Link to={`/daily/${sel}`} className={styles.detailLink}>
-                View full result →
+                View full result <ArrowRight size={13} />
               </Link>
             </div>
           ) : (
@@ -674,7 +734,7 @@ export function DailyArchivePage() {
             >
               <span className={styles.detailNotPlayed}>Not played</span>
               <Link to={`/daily/${sel}`} className={styles.startBtn}>
-                Start ▸
+                Start <TriangleRight size={11} />
               </Link>
             </div>
           )}

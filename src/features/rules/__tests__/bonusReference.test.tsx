@@ -22,7 +22,7 @@ describe('bonus card reference', () => {
     expect(screen.getByText(/Grid achievement · \d+/)).toBeInTheDocument();
     expect(screen.getByText(/Mega Destroy/)).toBeInTheDocument();
 
-    expect(screen.getByRole('link', { name: '← How to Play' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'How to Play' })).toHaveAttribute(
       'href',
       '/rules'
     );

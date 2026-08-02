@@ -14,6 +14,7 @@ import {
   readPlayedDatesLite,
 } from '../daily/streak';
 import styles from './HomePage.module.css';
+import { ArrowRight } from '../../design/primitives';
 
 // Quick Start row — one-tap Free Play at each difficulty (every tier).
 // Full names (not initials) so Easy/Extreme never collide; color coding
@@ -121,16 +122,20 @@ export function HomePage() {
             ? 'Pick any difficulty and play as many grids as you would like.'
             : "Pick any difficulty and play as many boards as you like. Doesn't touch the daily leaderboard."}
         </span>
-        <span className={styles.modeLink}>Choose a difficulty →</span>
+        <span className={styles.modeLink}>
+          Choose a difficulty <ArrowRight size={13} />
+        </span>
       </Link>
       <Link to="/challenges" className={styles.modeCard}>
         <span className={styles.modeTitle}>Challenges</span>
         <span className={styles.modeBlurb}>
           {isPhone
-            ? 'Ten twisted rule sets — No Discards, Short Deck, Poker Purist, etc.'
-            : 'Ten twisted rule sets — No Discards, Short Deck, Poker Purist and more. Beat them all for the sweep.'}
+            ? 'Eleven twisted rule sets — No Discards, Short Deck, Poker Purist, etc.'
+            : 'Eleven twisted rule sets — No Discards, Short Deck, Poker Purist and more. Beat them all for the sweep.'}
         </span>
-        <span className={styles.modeLink}>{LIVE_CHALLENGES.length} modes to beat →</span>
+        <span className={styles.modeLink}>
+          {LIVE_CHALLENGES.length} modes to beat <ArrowRight size={13} />
+        </span>
       </Link>
       <Link to="/stats" className={styles.modeCard}>
         <span className={styles.modeTitle}>Stats</span>
@@ -139,7 +144,9 @@ export function HomePage() {
             ? 'Scores, win rates, and tier ratings; filter by difficulty and mode.'
             : 'Best scores, win rate, and tier ratings by difficulty, filtered by mode and level.'}
         </span>
-        <span className={styles.modeLink}>See your stats →</span>
+        <span className={styles.modeLink}>
+          See your stats <ArrowRight size={13} />
+        </span>
       </Link>
     </>
   );
@@ -213,7 +220,7 @@ export function HomePage() {
                   {todayTier}
                 </span>
                 <Link to={`/daily/${today}`} className={styles.heroResultLink}>
-                  View full result →
+                  View full result <ArrowRight size={13} />
                 </Link>
               </div>
             ) : (
@@ -221,11 +228,13 @@ export function HomePage() {
                 {/* Phone shortens the label so the compact button stays on
                     one line in the narrowed left column. */}
                 {isPhone ? 'Play now' : "Play today's puzzle"}{' '}
-                <span aria-hidden="true">→</span>
+                <span aria-hidden="true">
+                  <ArrowRight size={15} />
+                </span>
               </Link>
             )}
             <Link to="/daily/archive" className={styles.heroArchive}>
-              Browse the archive <span aria-hidden="true">→</span>
+              Browse the archive <ArrowRight size={14} />
             </Link>
           </div>
         </div>
@@ -283,7 +292,7 @@ export function HomePage() {
               Play a guided practice deal that walks you through every move.
             </span>
             <Link to="/tutorial" className={styles.modeLink}>
-              Start the tutorial →
+              Start the tutorial <ArrowRight size={13} />
             </Link>
           </div>
         ) : (
@@ -293,7 +302,7 @@ export function HomePage() {
               The whole game is 25 cards, 10 poker hands, one target.
             </span>
             <Link to="/rules" className={styles.modeLink}>
-              Read the rules →
+              Read the rules <ArrowRight size={13} />
             </Link>
           </div>
         )}

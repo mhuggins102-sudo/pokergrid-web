@@ -11,6 +11,7 @@ import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from './targetsStore';
 import styles from './TargetsPage.module.css';
+import { ArrowLeft, ArrowRight } from '../../design/primitives';
 
 /*
  * The Targets-Up entry at every tier (phase 3 convergence). No
@@ -181,7 +182,9 @@ export function TargetsPage() {
           )}
           <Link to="/targets/play" className={styles.startBtn}>
             {save ? `Continue — level ${level}` : 'Start the climb'}{' '}
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true">
+              <ArrowRight size={15} />
+            </span>
           </Link>
         </div>
       </div>
@@ -202,11 +205,11 @@ export function TargetsPage() {
               >
                 {explainSlide === 0 ? (
                   <>
-                    Reward tiers <span aria-hidden="true">→</span>
+                    Reward tiers <ArrowRight size={13} />
                   </>
                 ) : (
                   <>
-                    <span aria-hidden="true">←</span> How it works
+                    <ArrowLeft size={13} /> How it works
                   </>
                 )}
               </button>

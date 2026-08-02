@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Button, Sheet } from '../../../design/primitives';
+import { Button, Sheet, TriangleRight } from '../../../design/primitives';
 import { HandRank } from '../../../game/hands';
 import { INVEST_HANDS } from '../../../game/invest';
 import { sfxWheelSpin } from '../../../lib/sfx';
@@ -66,7 +66,7 @@ export function InvestWheel({
         <p className="text-body">Spinning for a hand to boost…</p>
         <div className={styles.window} style={{ height: VISIBLE * ITEM_H }}>
           <span className={styles.pointer} aria-hidden="true">
-            ▶
+            <TriangleRight size={13} />
           </span>
           <div className={styles.highlight} style={{ height: ITEM_H }} />
           <motion.div

@@ -295,8 +295,8 @@
   .sectionCaret {
     order: 1;
     align-self: center;
+    display: inline-flex;
     margin-left: 4px;
-    font-size: 11px;
     color: var(--ink-3);
     transition: transform 0.16s ease;
   }

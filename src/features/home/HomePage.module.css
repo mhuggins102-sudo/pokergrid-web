@@ -201,6 +201,9 @@
 .heroArchive {
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 15px;
   font-weight: 600;
   color: var(--ink-3);
@@ -255,6 +258,9 @@
 .heroResultLink {
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--ink-3);
@@ -433,7 +439,12 @@
   color: var(--ink-2);
 }
 
+/* inline-flex: browsers may break a line BEFORE an inline SVG (the
+   arrow) even under nowrap; a flex row cannot wrap. */
 .modeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 13px;
   font-weight: 600;
   color: var(--accent);

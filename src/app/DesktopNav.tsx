@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { currentDateISO } from '../game/daily/seed';
-import { Drawer, useTapPopover } from '../design/primitives';
+import { Chevron, Drawer, useTapPopover } from '../design/primitives';
 import { SKIN_CATALOG, skinName, skinUnlocked } from '../design/skinCatalog';
 import { usePlayerLevel } from '../features/progress/usePlayerLevel';
 import { DOCK_LAYOUT_LABEL } from '../features/settings/DockLayoutPreview';
@@ -29,9 +29,10 @@ import styles from './DesktopNav.module.css';
  * Phone (<768): a single header row — wordmark + page label on the
  * left, a hamburger in the top-right corner (the old ◐ slot; ◐ and the
  * in-game HOME icon are gone on phones). The hamburger opens the nav
- * DRAWER from the right: three cycling quick-action icons (appearance /
- * theme / deck skin — restyle mid-game without leaving the run) over
- * the flat mode + page links. The `.center` nav is display:none on
+ * DRAWER from the right: the flat mode + page links, with a quick-
+ * settings grid pinned at the bottom (theme / light-dark / dock / deck
+ * skin cyclers plus Line-totals + Sound toggles — restyle mid-game
+ * without leaving the run). The `.center` nav is display:none on
  * phones; the dateline stays desk-only.
  */
 
@@ -310,7 +311,10 @@ export function DesktopNav() {
             // pointers, where hover/focus drive it.
             {...modes.toggleProps}
           >
-            Game Modes <span className={styles.caret}>▾</span>
+            Game Modes{' '}
+            <span className={styles.caret}>
+              <Chevron size={12} />
+            </span>
           </span>
           <div className={styles.modesMenu}>
             {MODES.map(m => (
@@ -525,6 +529,71 @@ export function DesktopNav() {
                 <rect x="8.5" y="8.5" width="7" height="7" rx="1" />
               </svg>
               <span className={styles.drawerQuickCaption}>{skinLabel}</span>
+            </button>
+            <button
+              type="button"
+              className={styles.drawerQuickBtn}
+              aria-label={`Line totals: ${
+                settings.lineRails ? 'On' : 'Off'
+              } — tap to switch`}
+              onClick={() => settings.set({ lineRails: !settings.lineRails })}
+            >
+              <svg
+                className={styles.drawerQuickIcon}
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                {/* Board square with the line-total rails riding its
+                    right + bottom edges. */}
+                <rect x="4" y="4" width="12" height="12" rx="2" />
+                <line x1="19.5" y1="6" x2="19.5" y2="14" />
+                <line x1="6" y1="19.5" x2="14" y2="19.5" />
+              </svg>
+              <span className={styles.drawerQuickCaption}>
+                Rails {settings.lineRails ? 'on' : 'off'}
+              </span>
+            </button>
+            <button
+              type="button"
+              className={styles.drawerQuickBtn}
+              aria-label={`Sound: ${
+                settings.sounds ? 'On' : 'Off'
+              } — tap to switch`}
+              onClick={() => settings.set({ sounds: !settings.sounds })}
+            >
+              <svg
+                className={styles.drawerQuickIcon}
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                {/* Speaker; waves when on, a slash when muted. */}
+                <path d="M5 9.5v5h3l4 3.5v-12L8 9.5z" />
+                {settings.sounds ? (
+                  <>
+                    <path d="M15.5 9.5a3.6 3.6 0 0 1 0 5" />
+                    <path d="M17.8 7.5a6.6 6.6 0 0 1 0 9" />
+                  </>
+                ) : (
+                  <line x1="15" y1="9.5" x2="20" y2="14.5" />
+                )}
+              </svg>
+              <span className={styles.drawerQuickCaption}>
+                Sound {settings.sounds ? 'on' : 'off'}
+              </span>
             </button>
           </div>
         </div>

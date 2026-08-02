@@ -88,6 +88,31 @@
   white-space: nowrap;
 }
 
+/* Gold / silver / bronze counts riding the right end of the progress
+   row, split from the beaten label by a hairline. Same height as the
+   label, so the bar's padding still sets the row height. */
+.medalTally {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 16px;
+  border-left: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+
+.medal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.medalCount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---- Challenge cards ---- */
 
 .grid {
@@ -289,6 +314,11 @@
        (and the phone header divider gone) this is the page's first
        element, sitting at the shell's shared 8px like every page. */
     margin-top: 0;
+  }
+
+  .medalTally {
+    gap: 8px;
+    padding-left: 10px;
   }
 
   .grid {

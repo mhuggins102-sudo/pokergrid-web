@@ -6,6 +6,7 @@ import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
 import { Trophy } from './Trophy';
 import styles from './ChallengesPage.module.css';
+import { ArrowRight } from '../../design/primitives';
 
 /*
  * The challenge catalog at every tier (phase 3 convergence), per
@@ -25,6 +26,14 @@ export function ChallengesPage() {
   const tiers = useStatsStore(s => s.stats.challengeTiers);
   const doneCount = LIVE_CHALLENGES.filter(c => done.includes(c.id)).length;
   const pct = Math.round((doneCount / LIVE_CHALLENGES.length) * 100);
+  // Medal tally for the progress row: best-win tier per beaten
+  // challenge mapped through trophyForTier (SS gold, S silver, A
+  // bronze; pre-trophy wins are beaten but unmedaled).
+  const medalCount = (metal: 'gold' | 'silver' | 'bronze') =>
+    LIVE_CHALLENGES.filter(c => {
+      const tier = done.includes(c.id) ? tiers[c.id] : undefined;
+      return tier != null && trophyForTier(tier) === metal;
+    }).length;
   const isPhone = useTier() === 'phone';
   // Phone-only per-card expansion — single-open (opening one closes any
   // other), so the list never grows into a long scroll of open cards.
@@ -40,8 +49,8 @@ export function ChallengesPage() {
           <h1 className={styles.title}>Twisted rule sets</h1>
         </div>
         <p className={styles.lede}>
-          Every challenge plays on the Hard ruleset with one rule bent. All ten
-          are open from the start — clear them all for the{' '}
+          Every challenge plays on the Hard ruleset with one rule bent. All are
+          open from the start — clear them all for the{' '}
           <Link to="/achievements" className={styles.ledeLink}>
             Challenge Sweep
           </Link>{' '}
@@ -62,6 +71,23 @@ export function ChallengesPage() {
         </div>
         <span className={styles.progressLabel}>
           {doneCount} of {LIVE_CHALLENGES.length} beaten
+        </span>
+        {/* The pairs are decorative (aria-hidden) — the container names
+            the counts, and the per-card trophies keep their img roles
+            unduplicated. */}
+        <span
+          className={styles.medalTally}
+          role="img"
+          aria-label={`Trophies: ${medalCount('gold')} gold, ${medalCount(
+            'silver'
+          )} silver, ${medalCount('bronze')} bronze`}
+        >
+          {(['gold', 'silver', 'bronze'] as const).map(metal => (
+            <span key={metal} className={styles.medal} aria-hidden="true">
+              <Trophy kind={metal} size={15} />
+              <span className={styles.medalCount}>{medalCount(metal)}</span>
+            </span>
+          ))}
         </span>
       </div>
 
@@ -114,7 +140,7 @@ export function ChallengesPage() {
                   to={`/challenges/${challenge.id}`}
                   className={styles.play}
                 >
-                  Play <span aria-hidden="true">→</span>
+                  Play <ArrowRight size={13} />
                 </Link>
               </div>
             </>

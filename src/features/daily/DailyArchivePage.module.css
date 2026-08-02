@@ -80,7 +80,8 @@
 }
 
 .monthCaret {
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
   color: var(--ink-3);
 }
 
@@ -453,6 +454,9 @@
   top: 50%;
   right: 14px;
   transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
   font-weight: 700;
   padding: 5px 11px;
@@ -566,13 +570,17 @@
   color: var(--tier-tone, var(--ink-2));
 }
 
-/* Quiet reachability link to the full stored result (board + math). */
+/* Quiet reachability link to the full stored result (board + math).
+   inline-flex, not nowrap: browsers still break before an inline SVG
+   (the arrow) under nowrap; a flex row can't wrap at all. */
 .detailLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--ink-3);
   text-decoration: none;
-  white-space: nowrap;
 }
 
 @media (hover: hover) {

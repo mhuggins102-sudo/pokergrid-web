@@ -1,5 +1,5 @@
 import { CSSProperties, createContext, useContext, useState } from 'react';
-import { Sheet } from '../../design/primitives';
+import { Chevron, Sheet } from '../../design/primitives';
 import { SuitKey } from '../../design/deckSkins';
 import {
   SKIN_CATALOG,
@@ -231,7 +231,9 @@ function UnlockedEntry({
             {unlock.skinIds.length} designs · tap to choose
           </span>
         </span>
-        <span className={styles.groupCaret} aria-hidden="true">▾</span>
+        <span className={styles.groupCaret} aria-hidden="true">
+          <Chevron size={15} />
+        </span>
         <Magnify id={unlock.skinIds[0]} />
       </summary>
       <div className={styles.groupGrid}>

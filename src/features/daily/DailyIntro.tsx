@@ -12,6 +12,7 @@ import { useTier } from '../../app/useTier';
 import { DAILY_LAUNCH_ISO, dayMs, toUTC } from './dailyDates';
 import { useDailyStreak } from './useDailyStreak';
 import styles from './DailyIntro.module.css';
+import { ArrowRight } from '../../design/primitives';
 
 /*
  * The daily intro at every tier (phase 3 convergence) — the mockup's
@@ -161,11 +162,13 @@ export function DailyIntro({
 
           <button type="button" className={styles.cta} onClick={onPlay}>
             {isToday ? "Play today's puzzle" : 'Play this puzzle'}{' '}
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true">
+              <ArrowRight size={16} />
+            </span>
           </button>
           <div className={styles.archiveRow}>
             <Link to="/daily/archive" className={styles.archiveLink}>
-              Browse the archive →
+              Browse the archive <ArrowRight size={14} />
             </Link>
           </div>
         </div>

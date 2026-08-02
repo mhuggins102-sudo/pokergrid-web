@@ -1,3 +1,5 @@
+export { ArrowLeft, ArrowRight, TriangleRight } from './Arrow';
+export type { ArrowProps } from './Arrow';
 export { Button } from './Button';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button';
 export { Chevron } from './Chevron';

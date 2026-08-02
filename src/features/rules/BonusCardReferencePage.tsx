@@ -13,6 +13,7 @@ import {
   styleFor,
 } from '../../lib/bonusCardCategory';
 import styles from './BonusCardReferencePage.module.css';
+import { ArrowLeft } from '../../design/primitives';
 
 const GROUP_ORDER: BonusCategory[] = [
   'hand',
@@ -73,7 +74,7 @@ export function BonusCardReferencePage() {
     <section className={styles.wrap}>
       <header>
         <Link to="/rules" className={styles.back}>
-          ← How to Play
+          <ArrowLeft size={13} /> How to Play
         </Link>
         <h1 className="text-title">Bonus card reference</h1>
         <p className="text-body" style={{ color: 'var(--ink-2)' }}>
