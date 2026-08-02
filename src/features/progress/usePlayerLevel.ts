@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   DailyXpPlay,
   LevelInfo,
-  XP_BUCKET_LABEL,
   XP_BUCKET_ORDER,
   XpBucket,
   dailyPlayXpBuckets,
   levelInfoFor,
   xpBuckets,
   xpForStats,
+  xpRowLabel,
 } from '../../lib/xp';
 import { skinUnlocked } from '../../design/skinCatalog';
 import { usePlaysStore } from '../daily/sync/playsStore';
@@ -104,7 +104,7 @@ export function useXpEarned(
       twist: mode.recipe.twist,
     });
     const items = XP_BUCKET_ORDER.filter(b => (buckets[b] ?? 0) > 0).map(
-      bucket => ({ bucket, label: XP_BUCKET_LABEL[bucket], xp: buckets[bucket]! })
+      bucket => ({ bucket, label: xpRowLabel(bucket, buckets[bucket]!), xp: buckets[bucket]! })
     );
     return { total: items.reduce((sum, i) => sum + i.xp, 0), items };
   }
@@ -112,7 +112,7 @@ export function useXpEarned(
   const after = xpBuckets(stats, toDailyXpPlays(plays));
   const items = XP_BUCKET_ORDER.map(bucket => ({
     bucket,
-    label: XP_BUCKET_LABEL[bucket],
+    label: xpRowLabel(bucket, after[bucket] - pre[bucket]),
     xp: after[bucket] - pre[bucket],
   })).filter(i => i.xp > 0);
   const total = items.reduce((sum, i) => sum + i.xp, 0);
