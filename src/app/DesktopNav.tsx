@@ -580,7 +580,7 @@ export function DesktopNav() {
                 strokeLinejoin="round"
                 aria-hidden="true"
               >
-                {/* Speaker; waves when on, a slash when muted. */}
+                {/* Speaker; waves when on, an × when muted. */}
                 <path d="M5 9.5v5h3l4 3.5v-12L8 9.5z" />
                 {settings.sounds ? (
                   <>
@@ -588,7 +588,10 @@ export function DesktopNav() {
                     <path d="M17.8 7.5a6.6 6.6 0 0 1 0 9" />
                   </>
                 ) : (
-                  <line x1="15" y1="9.5" x2="20" y2="14.5" />
+                  <>
+                    <line x1="15.5" y1="10" x2="19.5" y2="14" />
+                    <line x1="19.5" y1="10" x2="15.5" y2="14" />
+                  </>
                 )}
               </svg>
               <span className={styles.drawerQuickCaption}>

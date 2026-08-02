@@ -154,6 +154,11 @@ export function DailyArchivePage() {
   const dates = useMemo(() => monthDates(month, today), [month, today]);
 
   const [view, setView] = useState<ArchiveView>(storedView);
+  // Swipe-committed month changes slide the calendar grid in from the
+  // gesture's side; menu picks don't (null).
+  const [slideFrom, setSlideFrom] = useState<'left' | 'right' | null>(null);
+  const calWrapRef = useRef<HTMLDivElement | null>(null);
+  const calGridRef = useRef<HTMLDivElement | null>(null);
   const pickView = (v: ArchiveView) => {
     setView(v);
     try {
@@ -291,6 +296,9 @@ export function DailyArchivePage() {
   const maxCount = Math.max(1, ...bins.map(binCount));
 
   const pickMonth = (m: string) => {
+    // Menu picks don't slide; a committing swipe re-sets the direction
+    // right after calling this (same batch, its write wins).
+    setSlideFrom(null);
     setMonth(m);
     const newest = monthDates(m, today)[0];
     if (newest) setSel(newest);
@@ -307,10 +315,14 @@ export function DailyArchivePage() {
 
   // Calendar swipe: a horizontal swipe on the month grid pages between
   // months (left = newer, right = older — `months` is newest-first),
-  // clamped at the published range. Native listeners for the same
-  // reason as Dialog's drag-to-close; the 2:1 direction guard leaves
-  // vertical page scrolling and plain taps alone.
-  const calWrapRef = useRef<HTMLDivElement | null>(null);
+  // clamped at the published range. The grid FOLLOWS the finger once
+  // the gesture locks horizontal (8px direction lock, the Dialog
+  // drag-to-close pattern), and the incoming month slides in from the
+  // matching side (the keyed .calGrid's calSlide* animation). Native
+  // listeners because React's synthetic touchmove is passive — the
+  // horizontal lock preventDefaults so an intentional side-swipe never
+  // scrolls the page; .calWrap's touch-action: pan-y leaves vertical
+  // swipes to the browser as before.
   const pickMonthRef = useRef(pickMonth);
   pickMonthRef.current = pickMonth;
   useEffect(() => {
@@ -319,30 +331,67 @@ export function DailyArchivePage() {
     let sx = 0;
     let sy = 0;
     let live = false;
+    let axis: 'x' | 'y' | null = null;
+    const grid = () => calGridRef.current;
+    const atEnd = (dx: number) => {
+      const idx = months.indexOf(month);
+      const next = dx < 0 ? idx - 1 : idx + 1;
+      return next < 0 || next >= months.length;
+    };
     const start = (e: TouchEvent) => {
       const t = e.touches[0];
       sx = t.clientX;
       sy = t.clientY;
       live = true;
+      axis = null;
+      const g = grid();
+      if (g) g.style.transition = '';
+    };
+    const move = (e: TouchEvent) => {
+      if (!live) return;
+      const t = e.touches[0];
+      const dx = t.clientX - sx;
+      const dy = t.clientY - sy;
+      if (!axis && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (axis !== 'x') return;
+      // Locked horizontal: this gesture is ours — no page scroll.
+      e.preventDefault();
+      const g = grid();
+      // Rubber-band hard at the range ends (no month there to show).
+      if (g) g.style.transform = `translateX(${dx * (atEnd(dx) ? 0.25 : 0.85)}px)`;
     };
     const end = (e: TouchEvent) => {
       if (!live) return;
       live = false;
+      const g = grid();
       const t = e.changedTouches[0];
       const dx = t.clientX - sx;
-      const dy = t.clientY - sy;
-      if (Math.abs(dx) < 48 || Math.abs(dx) < 2 * Math.abs(dy)) return;
-      const idx = months.indexOf(month);
-      const next = dx < 0 ? idx - 1 : idx + 1;
-      if (next >= 0 && next < months.length) {
-        pickMonthRef.current(months[next]);
+      const commit = axis === 'x' && Math.abs(dx) >= 48 && !atEnd(dx);
+      if (commit) {
+        if (g) g.style.transform = '';
+        const idx = months.indexOf(month);
+        pickMonthRef.current(months[dx < 0 ? idx - 1 : idx + 1]);
+        // After pickMonth (which resets the direction for menu picks),
+        // so the batched final value is this gesture's direction.
+        setSlideFrom(dx < 0 ? 'right' : 'left');
+      } else if (g && axis === 'x') {
+        // Spring back.
+        g.style.transition = 'transform 160ms ease';
+        g.style.transform = 'translateX(0)';
       }
+      axis = null;
     };
     el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
     el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
     return () => {
       el.removeEventListener('touchstart', start);
+      el.removeEventListener('touchmove', move);
       el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
     };
   }, [months, month, view]);
 
@@ -472,7 +521,19 @@ export function DailyArchivePage() {
                   <span key={i}>{d}</span>
                 ))}
               </div>
-              <div className={styles.calGrid}>
+              {/* Keyed by month so a swipe commit remounts the grid with
+                  the directional slide-in animation. */}
+              <div
+                key={month}
+                ref={calGridRef}
+                className={`${styles.calGrid} ${
+                  slideFrom === 'right'
+                    ? styles.calSlideRight
+                    : slideFrom === 'left'
+                      ? styles.calSlideLeft
+                      : ''
+                }`}
+              >
                 {Array.from({ length: calendar.lead }, (_, i) => (
                   <span key={`pad-${i}`} />
                 ))}
