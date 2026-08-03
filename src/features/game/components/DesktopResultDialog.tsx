@@ -138,7 +138,10 @@ export function DesktopResultDialog({
     report,
     shapley
   );
-  const levelUp = useLevelUp(viewOnly);
+  // `open` gates the ack: the dialog mounts (hooks and all) while
+  // still closed, and burning the watermark there would mark the
+  // celebration seen without ever rendering it.
+  const levelUp = useLevelUp(viewOnly, open);
   // XP this run earned, split by source. In the archive view (viewOnly)
   // the hook reconstructs the recorded daily play's own XP from its
   // score/won record instead of the live before/after diff.

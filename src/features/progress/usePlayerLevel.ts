@@ -120,19 +120,24 @@ export function useXpEarned(
 }
 
 /**
- * One-time seed of the level-up acknowledgement watermark. On a fresh
- * install (levelAckd === null) it snaps to the player's CURRENT derived
- * level, so an existing record doesn't replay a flood of old "Level X
- * reached" banners — only genuinely new levels announce themselves.
- * Mount once, high in the tree.
+ * Seeds and self-heals the level-up acknowledgement watermark. On a
+ * fresh install (levelAckd === null) it snaps to the player's CURRENT
+ * derived level, so an existing record doesn't replay a flood of old
+ * "Level X reached" banners — only genuinely new levels announce
+ * themselves. And when the watermark sits ABOVE the derived level —
+ * a level-curve retune demoted the player — it clamps back down, so
+ * the next genuine crossing celebrates instead of being swallowed by
+ * a level the old curve already "saw". Mount once, high in the tree.
  */
 export function useSeedProgression(): void {
   const { level } = usePlayerLevel();
   const levelAckd = useProgressionStore(s => s.levelAckd);
   const ackLevel = useProgressionStore(s => s.ackLevel);
+  const clampAck = useProgressionStore(s => s.clampAck);
   useEffect(() => {
     if (levelAckd === null) ackLevel(level);
-  }, [levelAckd, level, ackLevel]);
+    else if (levelAckd > level) clampAck(level);
+  }, [levelAckd, level, ackLevel, clampAck]);
 }
 
 /**
@@ -146,19 +151,27 @@ export function useSeedProgression(): void {
  * celebrates or acks — the same guard every result-recording hook has,
  * so an unrelated level crossing (say, the boot-time achievement sync)
  * can't paint its banner over an old game.
+ *
+ * `active` is the host dialog's open flag: the ack must only be burned
+ * while the banner can actually RENDER — the result dialog mounts (and
+ * runs hooks) while still closed, and acking there would mark the
+ * celebration seen without ever showing it.
  */
-export function useLevelUp(viewOnly: boolean = false): number | null {
+export function useLevelUp(
+  viewOnly: boolean = false,
+  active: boolean = true
+): number | null {
   const { level } = usePlayerLevel();
   const levelAckd = useProgressionStore(s => s.levelAckd);
   const ackLevel = useProgressionStore(s => s.ackLevel);
   const [shown, setShown] = useState<number | null>(null);
   useEffect(() => {
-    if (viewOnly) return;
+    if (viewOnly || !active) return;
     if (shown === null && levelAckd !== null && level > levelAckd) {
       setShown(level);
       ackLevel(level);
     }
-  }, [viewOnly, level, levelAckd, shown, ackLevel]);
+  }, [viewOnly, active, level, levelAckd, shown, ackLevel]);
   return viewOnly ? null : shown;
 }
 
