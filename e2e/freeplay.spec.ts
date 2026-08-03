@@ -22,8 +22,12 @@ test('achievements are reachable from the home tile', async ({ page }) => {
   await expect(page).toHaveURL(/\/achievements/);
   // Titles differ by tier (desk "The trophy case"; the phone density
   // pass drops the title for a progress bar), but every tier shows the
-  // earned count and the tier sections.
-  await expect(page.getByText(/0 (of \d+ earned|\/ \d+)/).first()).toBeVisible();
+  // earned count and the tier sections. Scoped to main: the header's
+  // closed nav drawer also carries an "N / M XP" string (the ident's
+  // level-progress popover), which an unscoped .first() would find.
+  await expect(
+    page.locator('main').getByText(/0 (of \d+ earned|\/ \d+)/).first()
+  ).toBeVisible();
   await expect(page.getByText('Milestones')).toBeVisible();
 });
 

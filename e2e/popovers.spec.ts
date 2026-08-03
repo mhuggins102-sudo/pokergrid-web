@@ -50,6 +50,60 @@ test('mobile header: the hamburger drawer opens and routes into Daily', async ({
   await expect(page.getByRole('dialog')).toBeHidden();
 });
 
+test('mobile drawer: ident tap shows level progress; a right swipe closes it', async ({
+  page,
+}, testInfo) => {
+  const vp = page.viewportSize();
+  test.skip(
+    !testInfo.project.use.hasTouch || !vp || vp.width >= 768,
+    'phone header drawer is the <768 touch case'
+  );
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Menu' }).tap();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('link', { name: 'Daily' })).toBeVisible();
+
+  // The ident (Level + XP block) opens the progress-to-next-level
+  // popover on tap. Locate the tooltip node itself: the text rows'
+  // own classes contain "Pop", which would stop popOpacity's closest()
+  // walk at a child whose OWN opacity is always 1.
+  const pop = dialog.locator('[role="tooltip"]');
+  await expect(pop).toContainText(/XP to Level|Max level/);
+  expect(await popOpacity(pop)).toBe(0);
+  await dialog.getByRole('button', { name: /Level \d/ }).tap();
+  await expect.poll(() => popOpacity(pop)).toBe(1);
+
+  // Swipe the panel rightward — the dismiss drag slides it out and
+  // closes the drawer. Synthetic TouchEvents drive Dialog's native
+  // listeners directly (Playwright's touchscreen has no drag).
+  await dialog.evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    const x0 = rect.left + 40;
+    const y0 = rect.top + rect.height / 2;
+    const fire = (type: string, x: number) => {
+      const touch = new Touch({
+        identifier: 1,
+        target: el,
+        clientX: x,
+        clientY: y0,
+      });
+      el.dispatchEvent(
+        new TouchEvent(type, {
+          touches: type === 'touchend' ? [] : [touch],
+          changedTouches: [touch],
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    };
+    fire('touchstart', x0);
+    for (let i = 1; i <= 6; i++) fire('touchmove', x0 + i * 25);
+    fire('touchend', x0 + 150);
+  });
+  await expect(dialog).toBeHidden();
+});
+
 test('mobile streamlined game: the wordmark exits home mid-game', async ({
   page,
 }, testInfo) => {
