@@ -96,7 +96,8 @@ export function Dialog({
     const el = ref.current;
     if (!el || !open || !dragToClose) return;
     const horizontal = dragAxis === 'x';
-    let start = 0;
+    let startX = 0;
+    let startY = 0;
     let startT = 0;
     let delta = 0;
     let mode: 'idle' | 'drag' | 'scroll' = 'scroll';
@@ -114,8 +115,6 @@ export function Dialog({
       return null;
     };
 
-    const point = (t: Touch) => (horizontal ? t.clientX : t.clientY);
-
     const onStart = (e: TouchEvent) => {
       if (closeTimer !== undefined) return;
       if (e.touches.length !== 1) return;
@@ -131,18 +130,29 @@ export function Dialog({
       const sc = horizontal ? null : scrollerOf(e.target);
       mode = sc && sc.scrollTop > 0 ? 'scroll' : 'idle';
       delta = 0;
-      start = point(e.touches[0]);
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
       startT = Date.now();
     };
     const onMove = (e: TouchEvent) => {
       if (mode === 'scroll' || closeTimer !== undefined) return;
-      const d = point(e.touches[0]) - start;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      const d = horizontal ? dx : dy;
+      const cross = horizontal ? dy : dx;
       if (mode === 'idle') {
-        if (d > 8) mode = 'drag';
-        else if (d < -8) {
+        if (Math.abs(d) <= 8 && Math.abs(cross) <= 8) return;
+        // Axis-exclusive: only a clearly dismiss-ward gesture arms the
+        // drag. Anything mostly cross-axis — or moving away from the
+        // dismissal edge — stays a native scroll for the WHOLE gesture,
+        // so a diagonal can never scroll the list and slide the panel
+        // at once.
+        if (d <= 8 || Math.abs(cross) > d) {
           mode = 'scroll';
           return;
-        } else return;
+        }
+        mode = 'drag';
       }
       delta = Math.max(0, d);
       el.style.transition = 'none';
