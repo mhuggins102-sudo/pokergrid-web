@@ -1,9 +1,18 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { ACHIEVEMENTS, AchievementTier } from '../../game/achievements';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ACHIEVEMENTS,
+  Achievement,
+  AchievementTier,
+} from '../../game/achievements';
 import { useTier } from '../../app/useTier';
 import { useStatsStore } from '../progress/statsStore';
+import { usePlaysStore } from '../daily/sync/playsStore';
+import {
+  AchievementProgress,
+  achievementProgressMap,
+} from './achievementProgress';
 import styles from './AchievementsPage.module.css';
-import { Chevron } from '../../design/primitives';
+import { Chevron, useTapPopover } from '../../design/primitives';
 
 /*
  * The trophy case at every tier (phase 3 convergence), per
@@ -44,6 +53,69 @@ const TIER_META: Array<{
 
 // SVG ring: r=15.5 → circumference ≈ 97.4.
 const RING = 97.4;
+
+// One achievement card. Unearned cards whose requirement accumulates
+// across games (the achievementProgressMap set) grow a progress popover:
+// hover / focus on fine pointers, tap-toggle on touch — the Challenges
+// medal-tally pattern. Earned and single-run cards render inert.
+function AchievementCard({
+  a,
+  on,
+  progress,
+}: {
+  a: Achievement;
+  on: boolean;
+  progress?: AchievementProgress;
+}) {
+  const tap = useTapPopover(`ach-${a.id}`);
+  const [hover, setHover] = useState(false);
+  const inner = (
+    <div className={styles.cardInner}>
+      <span className={styles.medal} aria-hidden="true">
+        {on ? '★' : '○'}
+      </span>
+      <div className={styles.cardBody}>
+        <div className={styles.cardName}>{a.name}</div>
+        <div className={styles.cardDesc}>{a.description}</div>
+      </div>
+    </div>
+  );
+  if (on || !progress) {
+    return (
+      <div className={`${styles.card} ${on ? styles.cardOn : ''}`}>{inner}</div>
+    );
+  }
+  const open = hover || tap.open;
+  const popId = `ach-pop-${a.id}`;
+  return (
+    <div
+      ref={tap.wrapRef}
+      className={`${styles.card} ${styles.cardPeek} ${
+        open ? styles.cardPopOpen : ''
+      }`}
+      tabIndex={0}
+      aria-describedby={popId}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onFocus={() => setHover(true)}
+      onBlur={e => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setHover(false);
+        }
+      }}
+      {...tap.toggleProps}
+    >
+      {inner}
+      <div className={styles.cardPop} role="tooltip" id={popId}>
+        <div className={styles.cardPopTitle}>Progress</div>
+        <div className={styles.cardPopText}>{progress.text}</div>
+        {progress.detail && (
+          <div className={styles.cardPopText}>{progress.detail}</div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // Phone: each tier is its own accordion container — the head (title +
 // subtitle + earned count) is the tappable summary; the card grid is
@@ -95,12 +167,18 @@ function AchievementSection({
 }
 
 export function AchievementsPage() {
-  const done = useStatsStore(s => s.stats.achievementsDone);
-  const earned = new Set(done);
+  const stats = useStatsStore(s => s.stats);
+  const plays = usePlaysStore(s => s.plays);
+  const earned = new Set(stats.achievementsDone);
   const doneCount = ACHIEVEMENTS.filter(a => earned.has(a.id)).length;
   const total = ACHIEVEMENTS.length;
   const pct = total ? doneCount / total : 0;
   const isPhone = useTier() === 'phone';
+  // Cumulative-progress copy for the unearned-card popovers.
+  const progress = useMemo(
+    () => achievementProgressMap(stats, plays),
+    [stats, plays]
+  );
   // Phone accordion: all tiers closed on load, single-open.
   const [openTier, setOpenTier] = useState<AchievementTier | null>(null);
 
@@ -182,25 +260,14 @@ export function AchievementsPage() {
           );
           const grid = (
             <div className={styles.grid}>
-              {items.map(a => {
-                const on = earned.has(a.id);
-                return (
-                  <div
-                    key={a.id}
-                    className={`${styles.card} ${on ? styles.cardOn : ''}`}
-                  >
-                    <div className={styles.cardInner}>
-                      <span className={styles.medal} aria-hidden="true">
-                        {on ? '★' : '○'}
-                      </span>
-                      <div className={styles.cardBody}>
-                        <div className={styles.cardName}>{a.name}</div>
-                        <div className={styles.cardDesc}>{a.description}</div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {items.map(a => (
+                <AchievementCard
+                  key={a.id}
+                  a={a}
+                  on={earned.has(a.id)}
+                  progress={progress[a.id]}
+                />
+              ))}
             </div>
           );
           if (isPhone) {

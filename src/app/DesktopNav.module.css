@@ -260,6 +260,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* XP on its own line, matching the result popup's +XP line (.xpGain in
+   DesktopResultDialog: body font, 13.5/700, warn). */
+.drawerIdentXp {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--warn);
+  font-variant-numeric: tabular-nums;
+}
+
 .drawerNav {
   display: flex;
   flex-direction: column;
@@ -296,11 +305,6 @@
     background: color-mix(in srgb, var(--accent) 12%, transparent);
     color: var(--accent);
   }
-}
-
-.drawerLinkOn {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
 }
 
 .drawerRule {

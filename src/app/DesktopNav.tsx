@@ -415,22 +415,24 @@ export function DesktopNav() {
       >
         {/* Player ident, pinned to the drawer's top-right corner OUT of
             flow so the nav below keeps its exact position. Screen name
-            only when one is saved; the level line always. */}
+            only when one is saved; the level and XP lines always (XP
+            echoing the result popup's warm +XP styling). */}
         <div className={styles.drawerIdent}>
           {handle && <span className={styles.drawerIdentName}>{handle}</span>}
-          <span className={styles.drawerIdentLevel}>
-            Level {level} · {xp.toLocaleString()} XP
+          <span className={styles.drawerIdentLevel}>Level {level}</span>
+          <span className={styles.drawerIdentXp}>
+            {xp.toLocaleString()} XP
           </span>
         </div>
+        {/* No current-page highlight here (NavLink still marks it via
+            aria-current) — an accent bar would run beneath the ident. */}
         <nav className={styles.drawerNav} aria-label="Menu">
           <span className={styles.drawerGroupLabel}>Game modes</span>
           {MODES.map(m => (
             <NavLink
               key={m.to}
               to={m.to}
-              className={({ isActive }) =>
-                `${styles.drawerLink} ${isActive ? styles.drawerLinkOn : ''}`
-              }
+              className={styles.drawerLink}
               onClick={() => setMenuOpen(false)}
             >
               {m.label}
@@ -441,9 +443,7 @@ export function DesktopNav() {
             <NavLink
               key={l.to}
               to={l.to}
-              className={({ isActive }) =>
-                `${styles.drawerLink} ${isActive ? styles.drawerLinkOn : ''}`
-              }
+              className={styles.drawerLink}
               onClick={() => setMenuOpen(false)}
             >
               {l.label}
