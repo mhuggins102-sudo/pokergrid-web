@@ -404,9 +404,13 @@
    is a flex column; the auto margin does the pinning) with its own
    top rule. */
 /* Quick settings flow as the next section right under the nav — the
-   divider sits under Settings (not pinned to the drawer's bottom). */
+   divider sits under Settings (not pinned to the drawer's bottom).
+   16px matches the measured line→TEXT gap of the nav links (7px rule
+   margin + the 38px row's centering inset ≈ 15.75px), so the first
+   button row reads the same distance from its divider as the links
+   read from theirs. */
 .drawerFoot {
-  padding-top: 7px;
+  padding-top: 16px;
   border-top: 1px solid var(--rule);
 }
 

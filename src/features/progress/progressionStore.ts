@@ -13,6 +13,11 @@ interface ProgressionStore {
   // null = not yet seeded (see useSeedProgression).
   levelAckd: number | null;
   ackLevel: (level: number) => void;
+  // Lower-only counterpart: pulls a watermark stranded ABOVE the
+  // current derived level back down (a level-curve retune can demote
+  // players — a stale higher watermark would silently swallow their
+  // next several level-up banners).
+  clampAck: (level: number) => void;
   reset: () => void;
 }
 
@@ -25,6 +30,12 @@ export const useProgressionStore = create<ProgressionStore>()(
           s.levelAckd !== null && s.levelAckd >= level
             ? s
             : { levelAckd: level }
+        ),
+      clampAck: level =>
+        set(s =>
+          s.levelAckd !== null && s.levelAckd > level
+            ? { levelAckd: level }
+            : s
         ),
       reset: () => set({ levelAckd: null }),
     }),
