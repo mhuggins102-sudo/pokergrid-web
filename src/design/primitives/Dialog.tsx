@@ -16,11 +16,18 @@ export interface DialogProps {
    */
   dismissible?: boolean;
   /**
-   * Touch drag-down dismisses the dialog (Sheet sets this in its
-   * bottom-sheet form). Inner scrollable content keeps priority: drags
-   * only start when the touched scroller is already at its top.
+   * Touch drag dismisses the dialog (Sheet sets this in its
+   * bottom-sheet form; Drawer with dragAxis='x'). Inner scrollable
+   * content keeps priority: vertical drags only start when the touched
+   * scroller is already at its top.
    */
   dragToClose?: boolean;
+  /**
+   * Dismiss-drag direction: 'y' (drag down — the bottom Sheet) or 'x'
+   * (drag right — the right-anchored Drawer). Read only with
+   * dragToClose.
+   */
+  dragAxis?: 'x' | 'y';
   /**
    * Where initial focus lands on open. 'panel' (default) focuses the
    * dialog itself so no control opens pre-highlighted — showModal's
@@ -46,6 +53,7 @@ export function Dialog({
   hideHeader = false,
   dismissible = true,
   dragToClose = false,
+  dragAxis = 'y',
   initialFocus = 'panel',
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -76,19 +84,23 @@ export function Dialog({
     };
   }, [open]);
 
-  // Swipe-down to dismiss. Native listeners because React's synthetic
-  // touchmove is passive (preventDefault would be ignored). A drag only
+  // Swipe to dismiss (down for the Sheet, right for the Drawer —
+  // dragAxis). Native listeners because React's synthetic touchmove is
+  // passive (preventDefault would be ignored). A vertical drag only
   // arms when the touched scroll container is at its top, so lists
-  // inside the sheet still scroll naturally.
+  // inside the sheet still scroll naturally; the horizontal axis has
+  // no competing scroll direction.
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   useEffect(() => {
     const el = ref.current;
     if (!el || !open || !dragToClose) return;
-    let startY = 0;
+    const horizontal = dragAxis === 'x';
+    let start = 0;
     let startT = 0;
-    let dy = 0;
+    let delta = 0;
     let mode: 'idle' | 'drag' | 'scroll' = 'scroll';
+    let closeTimer: number | undefined;
 
     const scrollerOf = (t: EventTarget | null): HTMLElement | null => {
       let n = t instanceof HTMLElement ? t : null;
@@ -102,7 +114,10 @@ export function Dialog({
       return null;
     };
 
+    const point = (t: Touch) => (horizontal ? t.clientX : t.clientY);
+
     const onStart = (e: TouchEvent) => {
+      if (closeTimer !== undefined) return;
       if (e.touches.length !== 1) return;
       // A dialog stacked INSIDE this one (a card sheet opened from a
       // details sheet) lives in this dialog's DOM subtree, so its
@@ -113,15 +128,15 @@ export function Dialog({
         mode = 'scroll';
         return;
       }
-      const sc = scrollerOf(e.target);
+      const sc = horizontal ? null : scrollerOf(e.target);
       mode = sc && sc.scrollTop > 0 ? 'scroll' : 'idle';
-      dy = 0;
-      startY = e.touches[0].clientY;
+      delta = 0;
+      start = point(e.touches[0]);
       startT = Date.now();
     };
     const onMove = (e: TouchEvent) => {
-      if (mode === 'scroll') return;
-      const d = e.touches[0].clientY - startY;
+      if (mode === 'scroll' || closeTimer !== undefined) return;
+      const d = point(e.touches[0]) - start;
       if (mode === 'idle') {
         if (d > 8) mode = 'drag';
         else if (d < -8) {
@@ -129,25 +144,36 @@ export function Dialog({
           return;
         } else return;
       }
-      dy = Math.max(0, d);
+      delta = Math.max(0, d);
       el.style.transition = 'none';
-      el.style.transform = `translateY(${dy}px)`;
+      el.style.transform = horizontal
+        ? `translateX(${delta}px)`
+        : `translateY(${delta}px)`;
       e.preventDefault();
     };
     const onEnd = () => {
-      if (mode !== 'drag') {
+      if (mode !== 'drag' || closeTimer !== undefined) {
         mode = 'scroll';
         return;
       }
-      const fast = dy / Math.max(1, Date.now() - startT) > 0.45;
-      if (dy > 90 || (fast && dy > 30)) {
-        onCloseRef.current();
+      const fast = delta / Math.max(1, Date.now() - startT) > 0.45;
+      if (delta > 90 || (fast && delta > 30)) {
+        if (horizontal) {
+          // Finish the slide before closing — el.close() from a
+          // mid-drag offset would snap the panel away. The effect
+          // cleanup (open flips false) clears the inline styles.
+          el.style.transition = 'transform 140ms ease';
+          el.style.transform = 'translateX(100%)';
+          closeTimer = window.setTimeout(() => onCloseRef.current(), 140);
+        } else {
+          onCloseRef.current();
+        }
       } else {
         el.style.transition = 'transform 180ms ease';
         el.style.transform = '';
       }
       mode = 'scroll';
-      dy = 0;
+      delta = 0;
     };
 
     el.addEventListener('touchstart', onStart, { passive: true });
@@ -159,10 +185,11 @@ export function Dialog({
       el.removeEventListener('touchmove', onMove);
       el.removeEventListener('touchend', onEnd);
       el.removeEventListener('touchcancel', onEnd);
+      window.clearTimeout(closeTimer);
       el.style.transform = '';
       el.style.transition = '';
     };
-  }, [open, dragToClose]);
+  }, [open, dragToClose, dragAxis]);
 
   const handleClick = (e: React.MouseEvent<HTMLDialogElement>) => {
     // A click on the backdrop targets the <dialog> element itself.

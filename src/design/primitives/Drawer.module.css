@@ -9,6 +9,9 @@
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   border-right: none;
   padding-right: env(safe-area-inset-right);
+  /* Vertical pans stay native (the body list scrolls); horizontal
+     gestures reach the swipe-right dismiss drag. */
+  touch-action: pan-y;
   /* Entry slide as an ANIMATION whose resting state is the visible
      panel — reduced motion collapses it to instant, never invisible. */
   animation: drawer-in 200ms ease;
@@ -40,4 +43,8 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Tighter sides than the shared dialog-body 24px — the narrow panel
+     gives that spacing back to its content. */
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
 }

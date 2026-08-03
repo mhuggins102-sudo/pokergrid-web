@@ -14,11 +14,11 @@ export interface DrawerProps {
 }
 
 /**
- * Left-anchored slide-out panel (the phone nav drawer). Same
+ * Right-anchored slide-out panel (the phone nav drawer). Same
  * native-<dialog> semantics as Dialog — focus trap, Escape, scrim,
- * body scroll lock — restyled to hug the left screen edge at full
- * height. Never passes dragToClose: Dialog's drag axis is vertical
- * (the Sheet's dismiss-down), which is wrong for a side panel.
+ * body scroll lock — restyled to hug the right screen edge at full
+ * height. Swiping the panel rightward dismisses it (Dialog's dismiss
+ * drag on the 'x' axis), matching the edge it slides in from.
  */
 export function Drawer({
   open,
@@ -37,6 +37,8 @@ export function Drawer({
       className={[styles.drawer, className].filter(Boolean).join(' ')}
       hideHeader={hideHeader}
       dismissible={dismissible}
+      dragToClose={dismissible !== false}
+      dragAxis="x"
       // Land initial focus on the panel, not the first quick-action
       // button — the drawer shouldn't open with a highlighted control.
       initialFocus="panel"

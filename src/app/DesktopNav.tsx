@@ -235,9 +235,15 @@ export function DesktopNav() {
 
   // Drawer quick actions: the deck-skin cycle order — Default + every
   // unlocked design (group entries unlock all their skins together).
-  // xp + handle feed the drawer's top-right ident.
-  const { level, xp } = usePlayerLevel();
+  // The level info + handle feed the drawer ident and its
+  // progress-to-next-level popover (hover on fine pointers, tap on
+  // touch — the union pattern).
+  const { level, xp, atMax, xpIntoLevel, levelSpan, progress } =
+    usePlayerLevel();
   const handle = useHandle();
+  const identTap = useTapPopover('drawer-ident');
+  const [identHover, setIdentHover] = useState(false);
+  const identOpen = identHover || identTap.open;
   const skinCycle = useMemo(() => {
     const order: (string | null)[] = [null];
     for (const u of SKIN_CATALOG) {
@@ -413,19 +419,70 @@ export function DesktopNav() {
         title="Menu"
         hideHeader
       >
-        {/* Player ident, pinned to the drawer's top-right corner OUT of
-            flow so the nav below keeps its exact position. Screen name
-            only when one is saved; the level and XP lines always (XP
-            echoing the result popup's warm +XP styling). */}
-        <div className={styles.drawerIdent}>
-          {handle && <span className={styles.drawerIdentName}>{handle}</span>}
-          <span className={styles.drawerIdentLevel}>Level {level}</span>
-          <span className={styles.drawerIdentXp}>
-            {xp.toLocaleString()} XP
-          </span>
+        {/* Player ident above the nav, IN flow so the link rows below
+            can't run beneath it. Screen name only when one is saved;
+            the level and XP lines always (XP echoing the result
+            popup's warm +XP styling). Pressing anywhere on it reveals
+            progress to the next level. */}
+        <div
+          ref={identTap.wrapRef}
+          className={`${styles.drawerIdent} ${
+            identOpen ? styles.drawerIdentOpen : ''
+          }`}
+          onMouseEnter={() => setIdentHover(true)}
+          onMouseLeave={() => setIdentHover(false)}
+          onFocus={() => setIdentHover(true)}
+          onBlur={e => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setIdentHover(false);
+            }
+          }}
+        >
+          <button
+            type="button"
+            className={styles.drawerIdentBtn}
+            aria-describedby="drawer-ident-pop"
+            {...identTap.toggleProps}
+          >
+            {handle && <span className={styles.drawerIdentName}>{handle}</span>}
+            <span className={styles.drawerIdentLevel}>Level {level}</span>
+            <span className={styles.drawerIdentXp}>
+              {xp.toLocaleString()} XP
+            </span>
+          </button>
+          {/* Progress to the next level — the SkinStore header's
+              level bar in miniature. */}
+          <div
+            className={styles.drawerIdentPop}
+            role="tooltip"
+            id="drawer-ident-pop"
+          >
+            <div className={styles.drawerIdentPopRow}>
+              <span className={styles.drawerIdentPopLevel}>
+                Level {level}
+              </span>
+              <span className={styles.drawerIdentPopXp}>
+                {atMax || levelSpan == null
+                  ? 'Max level'
+                  : `${xpIntoLevel.toLocaleString()} / ${levelSpan.toLocaleString()} XP`}
+              </span>
+            </div>
+            <div className={styles.drawerIdentTrack}>
+              <div
+                className={styles.drawerIdentFill}
+                style={{ width: `${Math.round(progress * 100)}%` }}
+              />
+            </div>
+            {!atMax && levelSpan != null && (
+              <div className={styles.drawerIdentPopNext}>
+                {(levelSpan - xpIntoLevel).toLocaleString()} XP to Level{' '}
+                {level + 1}
+              </div>
+            )}
+          </div>
         </div>
-        {/* No current-page highlight here (NavLink still marks it via
-            aria-current) — an accent bar would run beneath the ident. */}
+        {/* No current-page highlight on the links (NavLink still marks
+            the active page via aria-current). */}
         <nav className={styles.drawerNav} aria-label="Menu">
           <span className={styles.drawerGroupLabel}>Game modes</span>
           {MODES.map(m => (
