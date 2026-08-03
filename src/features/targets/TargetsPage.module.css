@@ -321,11 +321,29 @@
   font-weight: 700;
 }
 
+/* Phone flip card: both bodies share one grid cell so the card holds
+   the TALLER face's height on both slides — flipping must not resize
+   the container. */
+.explainBodies {
+  display: grid;
+}
+
+.explainBodies > .explainBody {
+  grid-area: 1 / 1;
+}
+
+.explainBodyOff {
+  visibility: hidden;
+}
+
 /* Phone flip-card head: the explainer title with a green "read on" link
    in the top-right that advances to the other face. */
 .explainHead {
   display: flex;
-  align-items: baseline;
+  /* Center, not baseline: the read-on button leads with an SVG on the
+     back face, whose bottom-edge baseline would grow the row ~2px
+     between faces — the card must not change height on flip. */
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }

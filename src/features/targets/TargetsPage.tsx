@@ -214,23 +214,33 @@ export function TargetsPage() {
                 )}
               </button>
             </div>
-            <p className={styles.explainBody}>
-              {explainSlide === 0 ? (
-                <>
-                  Each level is one full game. Beat the target to advance; the
-                  next level&apos;s target is {TARGETS_UP_STEP} higher, and the
-                  ruleset stiffens with it. Lose once — miss a single target —
-                  and the run ends where it stands.
-                </>
-              ) : (
-                <>
-                  Finish a level at <strong>S tier</strong> (1.3× the target)
-                  to earn a reward: supercharge a card from your final board
-                  for the next deck, or power up a held bonus card.{' '}
-                  <strong>SS tier</strong> (1.6×) earns both.
-                </>
-              )}
-            </p>
+            {/* Both bodies stay mounted, stacked in one grid cell, so
+                the card keeps the TALLER face's height on both slides —
+                flipping must not resize the container. */}
+            <div className={styles.explainBodies}>
+              <p
+                className={`${styles.explainBody} ${
+                  explainSlide === 0 ? '' : styles.explainBodyOff
+                }`}
+                aria-hidden={explainSlide !== 0 || undefined}
+              >
+                Each level is one full game. Beat the target to advance; the
+                next level&apos;s target is {TARGETS_UP_STEP} higher, and the
+                ruleset stiffens with it. Lose once — miss a single target —
+                and the run ends where it stands.
+              </p>
+              <p
+                className={`${styles.explainBody} ${
+                  explainSlide === 1 ? '' : styles.explainBodyOff
+                }`}
+                aria-hidden={explainSlide !== 1 || undefined}
+              >
+                Finish a level at <strong>S tier</strong> (1.3× the target) to
+                earn a reward: supercharge a card from your final board for
+                the next deck, or power up a held bonus card.{' '}
+                <strong>SS tier</strong> (1.6×) earns both.
+              </p>
+            </div>
           </section>
         </div>
       ) : (

@@ -84,7 +84,10 @@ describe('daily flow', () => {
     expect(await screen.findByText(/submitting…/i)).toBeInTheDocument();
   });
 
-  it('is deterministic: the same date deals the same board', () => {
+  // Two full seeded games back to back — ~4s alone, so the default 5s
+  // budget tips over under parallel full-suite load. Real time, not a
+  // hang: give it room.
+  it('is deterministic: the same date deals the same board', { timeout: 15000 }, () => {
     const scores: string[] = [];
     for (let run = 0; run < 2; run++) {
       usePlaysStore.setState({ plays: {} });
