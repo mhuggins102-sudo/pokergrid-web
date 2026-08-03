@@ -360,9 +360,9 @@
      must fit a small phone's dvh with no scrolling): the 38px link
      rows carry the rhythm, no extra gap. */
   gap: 0;
-  /* Minimum breath before the pinned quick-settings foot: matches the
-     mid-nav .drawerRule's margin, so on short viewports (auto margin
-     at zero) both dividers sit the same distance from their links. */
+  /* Breath before the quick-settings divider — matches the mid-nav
+     .drawerRule's margin so both dividers sit the same distance from
+     their links. */
   margin-bottom: 7px;
 }
 
@@ -403,9 +403,10 @@
 /* Quick-settings block pinned to the drawer's BOTTOM (the drawer body
    is a flex column; the auto margin does the pinning) with its own
    top rule. */
+/* Quick settings flow as the next section right under the nav — the
+   divider sits under Settings (not pinned to the drawer's bottom). */
 .drawerFoot {
-  margin-top: auto;
-  padding-top: 10px;
+  padding-top: 7px;
   border-top: 1px solid var(--rule);
 }
 
