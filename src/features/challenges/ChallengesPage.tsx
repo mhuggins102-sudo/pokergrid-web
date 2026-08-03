@@ -87,9 +87,16 @@ export function ChallengesPage() {
             medalsOpen ? styles.medalInfoOpen : ''
           }`}
           tabIndex={0}
-          onMouseEnter={() => setMedalsHover(true)}
+          // Hover/focus open only on FINE pointers: touch browsers
+          // emulate mouseenter on tap, which would pin the popover open
+          // past the toggle (a second tap could never close it).
+          onMouseEnter={() => {
+            if (!medalsTap.coarse) setMedalsHover(true);
+          }}
           onMouseLeave={() => setMedalsHover(false)}
-          onFocus={() => setMedalsHover(true)}
+          onFocus={() => {
+            if (!medalsTap.coarse) setMedalsHover(true);
+          }}
           onBlur={e => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) {
               setMedalsHover(false);

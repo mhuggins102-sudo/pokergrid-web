@@ -244,6 +244,15 @@ export function DesktopNav() {
   const identTap = useTapPopover('drawer-ident');
   const [identHover, setIdentHover] = useState(false);
   const identOpen = identHover || identTap.open;
+  // The tap-opened progress popover is a glance, not a mode: it
+  // dismisses itself after a beat (the drawer stays open), and tapping
+  // the ident again toggles it closed. Hover-open (fine pointers)
+  // closes on mouse-out as usual, so no timer there.
+  useEffect(() => {
+    if (!identTap.open) return;
+    const t = window.setTimeout(identTap.close, 2500);
+    return () => window.clearTimeout(t);
+  }, [identTap.open, identTap.close]);
   const skinCycle = useMemo(() => {
     const order: (string | null)[] = [null];
     for (const u of SKIN_CATALOG) {
@@ -424,14 +433,21 @@ export function DesktopNav() {
             the level and XP lines always (XP echoing the result
             popup's warm +XP styling). Pressing anywhere on it reveals
             progress to the next level. */}
+        {/* Hover/focus open only on FINE pointers: touch browsers
+            emulate mouseenter on tap, which would pin the popover open
+            past the toggle (a second tap could never close it). */}
         <div
           ref={identTap.wrapRef}
           className={`${styles.drawerIdent} ${
             identOpen ? styles.drawerIdentOpen : ''
           }`}
-          onMouseEnter={() => setIdentHover(true)}
+          onMouseEnter={() => {
+            if (!identTap.coarse) setIdentHover(true);
+          }}
           onMouseLeave={() => setIdentHover(false)}
-          onFocus={() => setIdentHover(true)}
+          onFocus={() => {
+            if (!identTap.coarse) setIdentHover(true);
+          }}
           onBlur={e => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) {
               setIdentHover(false);

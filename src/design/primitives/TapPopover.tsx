@@ -168,6 +168,9 @@ export interface TapPopoverHandle {
   /** Spread onto the TRIGGER: carries the tap onClick on coarse, empty on
    *  fine (so a mouse trigger gains nothing). */
   toggleProps: { onClick?: () => void };
+  /** Programmatic dismiss (e.g. an auto-close timer). Stable identity;
+   *  also blurs any focus inside the wrap, like every other close. */
+  close: () => void;
 }
 
 export function useTapPopover(id: string): TapPopoverHandle {
@@ -249,8 +252,8 @@ export function useTapPopover(id: string): TapPopoverHandle {
     [coarse, toggle]
   );
   return useMemo(
-    () => ({ open, coarse, wrapRef, toggleProps }),
-    [open, coarse, wrapRef, toggleProps]
+    () => ({ open, coarse, wrapRef, toggleProps, close }),
+    [open, coarse, wrapRef, toggleProps, close]
   );
 }
 

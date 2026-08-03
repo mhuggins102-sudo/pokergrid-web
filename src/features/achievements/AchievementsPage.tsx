@@ -95,9 +95,16 @@ function AchievementCard({
       }`}
       tabIndex={0}
       aria-describedby={popId}
-      onMouseEnter={() => setHover(true)}
+      // Hover/focus open only on FINE pointers: touch browsers emulate
+      // mouseenter on tap, which would pin the popover open past the
+      // toggle (a second tap could never close it).
+      onMouseEnter={() => {
+        if (!tap.coarse) setHover(true);
+      }}
       onMouseLeave={() => setHover(false)}
-      onFocus={() => setHover(true)}
+      onFocus={() => {
+        if (!tap.coarse) setHover(true);
+      }}
       onBlur={e => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) {
           setHover(false);
