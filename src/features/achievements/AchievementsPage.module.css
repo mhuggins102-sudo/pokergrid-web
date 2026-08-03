@@ -232,6 +232,71 @@
   margin-top: 3px;
 }
 
+/* ---- Progress popover on unearned cumulative cards (the Challenges
+   medal-tally pattern: hover / focus on fine pointers, tap on touch). ---- */
+
+.cardPeek {
+  position: relative;
+  cursor: help;
+}
+
+.cardPeek:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Anchored below the card, LEFT-aligned; narrower than the card at
+   every tier so it can't overflow the grid's right edge. Text wraps
+   (Full Slate's remaining-card list needs to). */
+.cardPop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 24px));
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 10px 13px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  z-index: 30;
+}
+
+/* The open card lifts to full strength and above its siblings: its
+   unearned 0.72 dim is a stacking context, which would both fade the
+   popover (opacity multiplies) and trap it beneath the NEXT card. */
+.cardPopOpen {
+  opacity: 1;
+  z-index: 31;
+}
+
+.cardPopOpen .cardPop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.cardPopTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  padding-bottom: 5px;
+}
+
+.cardPopText {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
 /* Phone (<768): single-column cards, softer tally. Everything ≥768 is
    untouched. */
 @media (max-width: 767px) { /* below bp-tablet */
