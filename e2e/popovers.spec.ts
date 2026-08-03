@@ -69,10 +69,24 @@ test('mobile drawer: ident tap shows level progress; a right swipe closes it', a
   // own classes contain "Pop", which would stop popOpacity's closest()
   // walk at a child whose OWN opacity is always 1.
   const pop = dialog.locator('[role="tooltip"]');
+  const ident = dialog.getByRole('button', { name: /Level \d/ });
   await expect(pop).toContainText(/XP to Level|Max level/);
   expect(await popOpacity(pop)).toBe(0);
-  await dialog.getByRole('button', { name: /Level \d/ }).tap();
+  await ident.tap();
   await expect.poll(() => popOpacity(pop)).toBe(1);
+
+  // Tapping the ident again toggles it closed (touch emulates
+  // mouseenter — the hover half of the union must not pin it open).
+  await ident.tap();
+  await expect.poll(() => popOpacity(pop)).toBe(0);
+
+  // Reopened, it dismisses itself after ~2.5s while the drawer stays.
+  await ident.tap();
+  await expect.poll(() => popOpacity(pop)).toBe(1);
+  await expect
+    .poll(() => popOpacity(pop), { timeout: 5000 })
+    .toBe(0);
+  await expect(dialog.getByRole('link', { name: 'Daily' })).toBeVisible();
 
   // Swipe the panel rightward — the dismiss drag slides it out and
   // closes the drawer. Synthetic TouchEvents drive Dialog's native

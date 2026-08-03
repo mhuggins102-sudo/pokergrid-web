@@ -231,7 +231,7 @@
 .drawerIdent {
   position: relative;
   align-self: flex-end;
-  margin: 2px 0 8px;
+  margin: 0 0 6px;
 }
 
 .drawerIdentBtn {
@@ -356,11 +356,14 @@
 .drawerNav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  /* Tight rows (the ident above the nav costs height — everything
+     must fit a small phone's dvh with no scrolling): the 38px link
+     rows carry the rhythm, no extra gap. */
+  gap: 0;
   /* Minimum breath before the pinned quick-settings foot: matches the
      mid-nav .drawerRule's margin, so on short viewports (auto margin
      at zero) both dividers sit the same distance from their links. */
-  margin-bottom: 10px;
+  margin-bottom: 7px;
 }
 
 .drawerGroupLabel {
@@ -375,7 +378,7 @@
 .drawerLink {
   display: flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 38px;
   padding: 0 10px;
   border-radius: var(--radius-sm);
   font-size: 15px;
@@ -394,7 +397,7 @@
 .drawerRule {
   border: none;
   border-top: 1px solid var(--rule);
-  margin: 10px 0;
+  margin: 7px 0;
 }
 
 /* Quick-settings block pinned to the drawer's BOTTOM (the drawer body
@@ -402,7 +405,7 @@
    top rule. */
 .drawerFoot {
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--rule);
 }
 
@@ -421,7 +424,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 9px 2px 7px;
+  padding: 8px 2px 6px;
   border: 1px solid var(--rule);
   border-radius: var(--radius-sm);
   background: transparent;

@@ -43,8 +43,11 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  /* Tighter sides than the shared dialog-body 24px — the narrow panel
-     gives that spacing back to its content. */
+  /* Tighter sides and foot than the shared dialog-body 24px — the
+     narrow panel gives that spacing back to its content, and the
+     shorter foot helps the whole menu fit a small phone's dvh
+     without scrolling. */
   padding-left: var(--space-lg);
   padding-right: var(--space-lg);
+  padding-bottom: var(--space-lg);
 }

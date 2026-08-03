@@ -332,6 +332,11 @@
 
 .explainRead {
   flex: none;
+  /* inline-flex, not nowrap text: browsers still break a line BEFORE
+     an inline SVG, splitting the arrow from its label. */
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
