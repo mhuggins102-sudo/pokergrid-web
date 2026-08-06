@@ -265,16 +265,19 @@ export function usePhaseUI(): PhaseUI {
               disabled: !suitOK,
               onPress: () => dispatch({ type: 'BEGIN_SUIT_ACTION' }),
             });
-            if (!state.noDiscards) {
-              actions.push({
-                id: 'discard',
-                label: 'Discard',
-                // Outlined like the perk: chrome marks moves that spend
-                // the drawn card, plain text marks view-only actions.
-                variant: 'secondary',
-                onPress: () => dispatch({ type: 'DISCARD_NONE' }),
-              });
-            }
+            // Always pushed, DISABLED under a no-discards config
+            // (Extreme, the No Discards twist) — like the perk and
+            // Flip, so every dock keeps a consistent button set
+            // instead of a hole where Discard would be.
+            actions.push({
+              id: 'discard',
+              label: 'Discard',
+              // Outlined like the perk: chrome marks moves that spend
+              // the drawn card, plain text marks view-only actions.
+              variant: 'secondary',
+              disabled: state.noDiscards,
+              onPress: () => dispatch({ type: 'DISCARD_NONE' }),
+            });
             // Double Duty: rotate the two-way card so its bottom half
             // becomes active; the next two deck cards are burned unseen.
             // Disabled (not hidden) after a flip / when fewer than two
@@ -556,7 +559,9 @@ export function usePhaseUI(): PhaseUI {
           }
         }
         return togglePhase(
-          'Slip & Slide — build a chain of neighboring cards',
+          // Short enough for one line in every dock (Split's banner
+          // reserve is two 13px lines at ~157px).
+          'Slip & Slide — chain neighboring cards',
           [...tappable],
           selected,
           idx => dispatch({ type: 'TOGGLE_SIDE_SLIDE_PICK', slot: idx }),
@@ -614,7 +619,7 @@ export function usePhaseUI(): PhaseUI {
 
       case 'awaiting-special-rewind':
         return togglePhase(
-          `Rewind — pick ${REWIND_PICK_MIN}–${REWIND_PICK_MAX} cards to return to the deck`,
+          `Rewind — return ${REWIND_PICK_MIN}–${REWIND_PICK_MAX} cards to the deck`,
           phase.slots,
           phase.selected,
           idx => dispatch({ type: 'TOGGLE_REWIND_TARGET', slot: idx }),

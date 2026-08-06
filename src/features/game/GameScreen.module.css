@@ -304,6 +304,13 @@
   min-height: 48px;
 }
 
+/* Mid-action (banner showing): the stack carries banner + action row
+   + Cancel — one more row than the pin was tuned for. A compact
+   Cancel keeps the whole shape inside the 126px dock pin. */
+.actionStackBanner .commitButton {
+  min-height: 44px;
+}
+
 .actionRow {
   display: flex;
   gap: var(--space-xs);
@@ -346,6 +353,27 @@
   width: 100%;
   max-width: 130px;
   min-height: 44px;
+}
+
+/* Classic: the banner is a direct dock child (its own line above the
+   card row) — kill the base .dockText flex-grow so it can't absorb
+   the dock column's slack. */
+.dockClassic .dock > .dockText {
+  flex: none;
+  text-align: left;
+  padding: 0 2px;
+}
+
+/* Classic mid-action height recovery: the standalone banner line adds
+   ~18px; a smaller deck card (56 → 44, dropping the row to its 44px
+   button height) plus a compact Cancel pay it back so the board
+   doesn't shrink on short viewports. */
+.dockClassic .dockBannerOn [class*='cardSlot'] {
+  width: 44px;
+}
+
+.dockClassic .dockBannerOn .commitButton {
+  min-height: 36px;
 }
 
 /* Center-stage, Double Duty: Flip takes Discard's slot, and Discard +
@@ -393,6 +421,18 @@
    nudging the board). Roughly: one banner line + the stage gap. */
 .stageHasBanner .stageWell [class*='cardSlot'] {
   width: 56px;
+}
+
+/* Mid-action the shrunken well frees the side columns a little, but
+   the column tops out ~139px — no width fits "Choose destination" on
+   one nowrap line. Let the label wrap inside the button's 44px
+   instead (overrides the streamlined nowrap below). */
+.dockStreamlined .stageHasBanner .stageBtn,
+.stageHasBanner .stageBtn {
+  max-width: 150px;
+  font-size: 14px;
+  white-space: normal;
+  line-height: 1.15;
 }
 
 /* The desktop side panel; smaller screens get the in-flow bonus row. */
@@ -1100,6 +1140,14 @@
   width: 76px;
 }
 
+/* Mid-action height recovery: the banner + Confirm/Cancel stack runs
+   ~36px taller than the resting 2×2 grid, and on short viewports the
+   board pays for every extra px. Shrinking the deck card 76 → 40
+   (aspect 1:1) pays the whole bill — the center-stage trick. */
+.dockBannerOn .dtStage [class*='cardSlot'] {
+  width: 40px;
+}
+
 /* mirrors .deskActions */
 .dtActions {
   flex: 1;
@@ -1113,6 +1161,10 @@
 
 .dtStackBtn {
   width: 100%;
+  /* Compact like .dtGridBtn — the mid-action stack (Confirm / ± rank
+     buttons) must fit inside the dock's 177px pin; the Button
+     primitive's 44px would grow the dock and shrink the board. */
+  min-height: 36px;
 }
 
 /* The perk button wears the amber "spend" dressing (mirrors .deskPerkBtn). */
@@ -1357,6 +1409,10 @@
     flex-direction: column;
     gap: var(--space-sm);
     justify-content: center;
+    /* Pinned to the awaiting-action shape (Place + perk + button row)
+       so swapping in a special phase's banner + Confirm + Cancel
+       doesn't SHRINK the rail and slide the bonus panel below. */
+    min-height: 140px;
   }
 
   .deskStackBtn {
