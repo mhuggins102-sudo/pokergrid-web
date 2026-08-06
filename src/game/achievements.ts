@@ -306,15 +306,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     tier: 'challenge',
     name: 'Trophy Case',
     description:
-      'Earn silver or gold trophies (S or SS wins) on 7 different Challenges.',
-    conditionMet: ({ milestone }) => milestone.challengeSilverPlus >= 7,
+      'Earn silver or gold trophies (S or SS wins) on 5 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeSilverPlus >= 5,
   },
   {
     id: 'challenge-golds-3',
     tier: 'challenge',
     name: 'Gold Standard',
-    description: 'Earn gold trophies (SS wins) on 5 different Challenges.',
-    conditionMet: ({ milestone }) => milestone.challengeGold >= 5,
+    description: 'Earn gold trophies (SS wins) on 3 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeGold >= 3,
   },
 
   // ---------- Milestones ----------

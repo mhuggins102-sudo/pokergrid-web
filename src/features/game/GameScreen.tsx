@@ -1510,28 +1510,35 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                             : styles.deskStackBtn
                         )
                       )}
-                      <div className={styles.deskBtnRow}>
-                        {discardAction ? (
-                          actionBtn(discardAction)
-                        ) : (
-                          <Button variant="secondary" disabled>
-                            Discard
+                      {/* Hidden mid-action (a suit perk or green card is
+                          targeting — ui.banner — or the ♣ modal is up):
+                          the rail then leads with the banner + Confirm /
+                          Cancel, and Discard / Undo don't apply — the
+                          dockUndoBtn gate, same condition. */}
+                      {!ui.banner && !ui.bonusDialog && (
+                        <div className={styles.deskBtnRow}>
+                          {discardAction ? (
+                            actionBtn(discardAction)
+                          ) : (
+                            <Button variant="secondary" disabled>
+                              Discard
+                            </Button>
+                          )}
+                          <Button
+                            variant="secondary"
+                            disabled={!canUndo || flight !== null}
+                            onClick={() => dispatch({ type: 'UNDO' })}
+                            aria-label={`Undo (${Math.max(
+                              0,
+                              maxUndos - state.undoCount
+                            )} left)`}
+                          >
+                            {/* Icon-only in the compressed desk-lite rail
+                                so Discard keeps a full-word button. */}
+                            {family === 'desk-lite' ? '↺' : '↺ Undo'}
                           </Button>
-                        )}
-                        <Button
-                          variant="secondary"
-                          disabled={!canUndo || flight !== null}
-                          onClick={() => dispatch({ type: 'UNDO' })}
-                          aria-label={`Undo (${Math.max(
-                            0,
-                            maxUndos - state.undoCount
-                          )} left)`}
-                        >
-                          {/* Icon-only in the compressed desk-lite rail
-                              so Discard keeps a full-word button. */}
-                          {family === 'desk-lite' ? '↺' : '↺ Undo'}
-                        </Button>
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1854,38 +1861,44 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     {dtExtraActions.length > 0 ? (
                       // Double Duty: Flip takes Discard's slot beside the
                       // deck, and Discard drops onto a compact icon row
-                      // with Undo (trash + ↺ glyphs, side by side).
+                      // with Undo (trash + ↺ glyphs, side by side). This
+                      // branch ALSO carries the confirm-style green-card
+                      // phases (Mega Destroy, Shuffle, …) — there the
+                      // icon row hides like every other dock's mid-action
+                      // gate, leaving just the phase's Confirm button.
                       <>
                         {dtExtraActions.map(a => actionBtn(a, styles.stageBtn))}
-                        <div className={styles.stageIconRow}>
-                          <Button
-                            variant="secondary"
-                            className={styles.stageIconBtn}
-                            disabled={
-                              !discardAction ||
-                              discardAction.disabled ||
-                              flight !== null
-                            }
-                            onClick={discardAction?.onPress}
-                            aria-label="Discard"
-                          >
-                            {trashIcon}
-                          </Button>
-                          {maxUndos > 0 && (
+                        {!ui.banner && !ui.bonusDialog && (
+                          <div className={styles.stageIconRow}>
                             <Button
                               variant="secondary"
                               className={styles.stageIconBtn}
-                              disabled={!canUndo || flight !== null}
-                              onClick={() => dispatch({ type: 'UNDO' })}
-                              aria-label={`Undo (${Math.max(
-                                0,
-                                maxUndos - state.undoCount
-                              )} left)`}
+                              disabled={
+                                !discardAction ||
+                                discardAction.disabled ||
+                                flight !== null
+                              }
+                              onClick={discardAction?.onPress}
+                              aria-label="Discard"
                             >
-                              ↺
+                              {trashIcon}
                             </Button>
-                          )}
-                        </div>
+                            {maxUndos > 0 && (
+                              <Button
+                                variant="secondary"
+                                className={styles.stageIconBtn}
+                                disabled={!canUndo || flight !== null}
+                                onClick={() => dispatch({ type: 'UNDO' })}
+                                aria-label={`Undo (${Math.max(
+                                  0,
+                                  maxUndos - state.undoCount
+                                )} left)`}
+                              >
+                                ↺
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </>
                     ) : (
                       <>
