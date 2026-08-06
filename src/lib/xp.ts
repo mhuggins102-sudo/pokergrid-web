@@ -34,6 +34,11 @@ export const TIER_WIN_BONUS: Record<Tier, number> = {
 
 export const FIRST_WIN_PER_DIFFICULTY_XP = 50; // one-time, ×4
 export const CHALLENGE_FIRST_CLEAR_XP = 150; // one-time, per challenge
+// Best-trophy kicker per challenge: Silver (S win) adds one step (200
+// total), Gold (SS) adds another on top (250 total). Derived from the
+// stored best tier, so upgrading a beaten challenge yields exactly the
+// difference.
+export const CHALLENGE_TROPHY_STEP_XP = 50;
 export const ACHIEVEMENT_XP = 100; // one-time, per achievement
 export const TARGETS_UP_LEVEL_XP = 50; // per new highest level reached
 export const DAILY_PLAY_XP = 15; // playing a daily (win or lose)
@@ -77,6 +82,8 @@ export type XpBucket =
   | 'tier-S'
   | 'firstWin'
   | 'challenge'
+  | 'challenge-silver'
+  | 'challenge-gold'
   | 'achievement'
   | 'targets'
   | 'daily';
@@ -90,6 +97,8 @@ export const XP_BUCKET_LABEL: Record<XpBucket, string> = {
   'tier-S': 'Skill Tier S',
   firstWin: 'First win',
   challenge: 'Challenge cleared',
+  'challenge-silver': 'Challenge Trophy — Silver',
+  'challenge-gold': 'Challenge Trophy — Gold',
   achievement: 'Achievement',
   targets: 'Targets-Up level',
   daily: 'Daily',
@@ -106,6 +115,8 @@ export const XP_BUCKET_ORDER: XpBucket[] = [
   'firstWin',
   'daily',
   'challenge',
+  'challenge-silver',
+  'challenge-gold',
   'achievement',
   'targets',
 ];
@@ -131,6 +142,8 @@ const emptyBuckets = (): Record<XpBucket, number> => ({
   'tier-S': 0,
   firstWin: 0,
   challenge: 0,
+  'challenge-silver': 0,
+  'challenge-gold': 0,
   achievement: 0,
   targets: 0,
   daily: 0,
@@ -160,8 +173,22 @@ export const xpBuckets = (
     b['tier-S'] += tc.S * TIER_WIN_BONUS.S;
   }
 
-  // One-time collections.
-  b.challenge += stats.challengesDone.length * CHALLENGE_FIRST_CLEAR_XP;
+  // One-time collections. The trophy kickers read the BEST recorded win
+  // tier per beaten challenge (Silver = S or better, Gold = SS —
+  // cumulative, so gold implies silver and an upgrade diffs cleanly).
+  // Iterate challengesDone, not challengeTiers: stale ids of removed
+  // challenges can linger in the tiers map, and pre-trophy wins have no
+  // tier entry at all (flat clear value only).
+  for (const id of stats.challengesDone) {
+    b.challenge += CHALLENGE_FIRST_CLEAR_XP;
+    const tier = stats.challengeTiers[id];
+    if (tier === 'SS' || tier === 'S') {
+      b['challenge-silver'] += CHALLENGE_TROPHY_STEP_XP;
+    }
+    if (tier === 'SS') {
+      b['challenge-gold'] += CHALLENGE_TROPHY_STEP_XP;
+    }
+  }
   b.achievement += stats.achievementsDone.length * ACHIEVEMENT_XP;
   // Every Targets-Up level reached is worth its kicker once.
   b.targets += stats.targetsUpBest * TARGETS_UP_LEVEL_XP;

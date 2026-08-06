@@ -370,11 +370,10 @@
     transform: rotate(180deg);
   }
 
-  /* Divider between the head and the revealed grid (only when open). */
+  /* Breath between the head and the revealed grid (only when open) —
+     no divider line, just space. */
   .sectionCardOpen .sectionToggle {
     margin-bottom: 12px;
-    padding-bottom: 11px;
-    border-bottom: 1px solid var(--rule);
   }
 
   /* Uniform two-row section heads: title (+ per-tier count) on row 1,

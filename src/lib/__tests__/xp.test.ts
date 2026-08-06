@@ -4,6 +4,7 @@ import {
   ACHIEVEMENT_XP,
   BASE_WIN_XP,
   CHALLENGE_FIRST_CLEAR_XP,
+  CHALLENGE_TROPHY_STEP_XP,
   DAILY_BEAT_XP,
   DAILY_PLAY_XP,
   FIRST_WIN_PER_DIFFICULTY_XP,
@@ -109,6 +110,48 @@ describe('xp — earning', () => {
       2 * CHALLENGE_FIRST_CLEAR_XP +
         1 * ACHIEVEMENT_XP +
         3 * TARGETS_UP_LEVEL_XP
+    );
+  });
+
+  test('challenge trophies add tier steps: 150 clear / 200 silver / 250 gold', () => {
+    const stats: Stats = {
+      ...EMPTY_STATS,
+      challengesDone: [
+        'no-discards', // gold (SS): 150 + 50 + 50 = 250
+        'short-deck', // silver (S): 150 + 50 = 200
+        'gridlock', // pre-trophy legacy win, no tier: flat 150
+      ] as Stats['challengesDone'],
+      challengeTiers: {
+        'no-discards': 'SS',
+        'short-deck': 'S',
+      } as Stats['challengeTiers'],
+    };
+    const b = xpBuckets(stats, []);
+    expect(b.challenge).toBe(3 * CHALLENGE_FIRST_CLEAR_XP);
+    expect(b['challenge-silver']).toBe(2 * CHALLENGE_TROPHY_STEP_XP);
+    expect(b['challenge-gold']).toBe(1 * CHALLENGE_TROPHY_STEP_XP);
+    expect(xpForStats(stats, [])).toBe(250 + 200 + 150);
+    // A stale tier entry for a challenge that is NOT in challengesDone
+    // must not pay out.
+    const stale: Stats = {
+      ...stats,
+      challengeTiers: {
+        ...stats.challengeTiers,
+        scatter: 'SS',
+      } as Stats['challengeTiers'],
+    };
+    expect(xpForStats(stale, [])).toBe(250 + 200 + 150);
+  });
+
+  test('trophy rows carry their tier in the label', () => {
+    expect(xpRowLabel('challenge', CHALLENGE_FIRST_CLEAR_XP)).toBe(
+      'Challenge cleared'
+    );
+    expect(xpRowLabel('challenge-silver', CHALLENGE_TROPHY_STEP_XP)).toBe(
+      'Challenge Trophy — Silver'
+    );
+    expect(xpRowLabel('challenge-gold', CHALLENGE_TROPHY_STEP_XP)).toBe(
+      'Challenge Trophy — Gold'
     );
   });
 
