@@ -1593,7 +1593,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // moves into each dock arrangement as a compact icon-only button next
   // to the discard action. Same accounting and disabled condition as
   // ScoreBar's (the dock's flight guard added, as the sibling dock
-  // buttons carry it); gated on maxUndos > 0, mirroring ScoreBar.
+  // buttons carry it). Rendered even at maxUndos 0 (Extreme) —
+  // permanently disabled, so every dock keeps a consistent button set.
   // Hidden while a suit action is armed (ui.banner shows the targeting
   // instruction): the dock then leads with the banner + Cancel, and the ↺
   // squeezing in beside them reads as noise — the classic layout drops it
@@ -1601,7 +1602,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Icon-only (↺) in every arrangement — a compact 44px square that
   // equalizes its height with the Discard / perk siblings via .dockUndo.
   const dockUndoBtn = () =>
-    streamlined && maxUndos > 0 && !ui.banner && !ui.bonusDialog ? (
+    streamlined && !ui.banner && !ui.bonusDialog ? (
       <Button
         key="dock-undo"
         size="sm"
@@ -1736,6 +1737,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // the marker scopes the perk/Discard sizing that keeps every
               // perk label (♦ Destroy is the widest) on one line.
               streamlined ? ' ' + styles.dockStreamlined : ''
+            }${
+              // Mid-action (banner up): height-recovery trims so the
+              // banner line doesn't grow the dock on short viewports
+              // (there the board pays 1:1 for every extra dock px).
+              ui.banner ? ' ' + styles.dockBannerOn : ''
             }`}
           >
             {finished ? (
@@ -1783,13 +1789,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 );
                 return (
                   <>
+                    {/* Banner on its own full-width line — inside the
+                        row it fought the nowrap Confirm for width and
+                        wrapped into a crushed multi-line column. */}
+                    {banner}
                     <div className={styles.dockRow}>
                       <NextCardWell
                         onPeekDeck={() => setPeekOpen(true)}
                         instantLayout={instantLayout}
                         flight={flight}
                       />
-                      {banner}
                       {dd ? (
                         // Suit perk → Flip (grows into the slack the
                         // icon Discard frees) → trash Discard.
@@ -1883,20 +1892,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                             >
                               {trashIcon}
                             </Button>
-                            {maxUndos > 0 && (
-                              <Button
-                                variant="secondary"
-                                className={styles.stageIconBtn}
-                                disabled={!canUndo || flight !== null}
-                                onClick={() => dispatch({ type: 'UNDO' })}
-                                aria-label={`Undo (${Math.max(
-                                  0,
-                                  maxUndos - state.undoCount
-                                )} left)`}
-                              >
-                                ↺
-                              </Button>
-                            )}
+                            <Button
+                              variant="secondary"
+                              className={styles.stageIconBtn}
+                              disabled={!canUndo || flight !== null}
+                              onClick={() => dispatch({ type: 'UNDO' })}
+                              aria-label={`Undo (${Math.max(
+                                0,
+                                maxUndos - state.undoCount
+                              )} left)`}
+                            >
+                              ↺
+                            </Button>
                           </div>
                         )}
                       </>
@@ -1906,8 +1913,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           actionBtn(discardAction, styles.stageBtn)}
                         {/* Undo hides while a suit action is targeting or
                             the ♣ bonus modal is up — matching the other
-                            buttons. */}
-                        {maxUndos > 0 && !ui.banner && !ui.bonusDialog && (
+                            buttons. Rendered even at maxUndos 0
+                            (Extreme), permanently disabled. */}
+                        {!ui.banner && !ui.bonusDialog && (
                           <Button
                             variant="secondary"
                             className={styles.stageBtn}
@@ -1960,7 +1968,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   stacked
                   flight={flight}
                 />
-                <div className={styles.actionStack}>
+                <div
+                  className={`${styles.actionStack} ${
+                    ui.banner ? styles.actionStackBanner : ''
+                  }`}
+                >
                   {banner}
                   {commitAction?.id === 'place' &&
                     (state.doubleDuty ? (
@@ -2076,7 +2088,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </div>
                 ) : null}
               </div>
-              <div className={styles.dtDock}>
+              <div
+                className={`${styles.dtDock}${
+                  ui.banner ? ' ' + styles.dockBannerOn : ''
+                }`}
+              >
                 {finished ? (
                   <div className={styles.dtStage}>
                     <div className={styles.dtActions}>
