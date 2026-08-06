@@ -1103,6 +1103,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     <Button
       key={a.id}
       variant={a.variant}
+      aria-label={a.ariaLabel}
       // While an auto-placed card poses in the well (or a Spiraling hop
       // is travelling), the dock pauses — committing then would act on
       // the drawn card while a card is still in motion.
@@ -1123,6 +1124,29 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       {a.label}
     </Button>
   );
+
+  // Column-stacked extras (stage side / split stack / desk rail) render
+  // Plus/Minus's ± as ONE side-by-side row — stacked full-width they'd
+  // add a whole extra row over the dock pins and shrink the board.
+  const extrasWithPairedPm = (
+    actions: typeof ui.actions,
+    btnCls?: string
+  ): ReactNode => {
+    const plus = actions.find(a => a.id === 'plus');
+    const minus = actions.find(a => a.id === 'minus');
+    if (!plus || !minus) return actions.map(a => actionBtn(a, btnCls));
+    return (
+      <>
+        <div className={styles.pmPairRow}>
+          {actionBtn(plus, btnCls)}
+          {actionBtn(minus, btnCls)}
+        </div>
+        {actions
+          .filter(a => a !== plus && a !== minus)
+          .map(a => actionBtn(a, btnCls))}
+      </>
+    );
+  };
 
   const commitBtn = (variantOverride?: 'secondary') =>
     commitAction &&
@@ -1502,14 +1526,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     />
                     <div className={styles.deskActions}>
                       {deskBanner}
-                      {stackActions.map(a =>
-                        actionBtn(
-                          a,
-                          a.id === 'perk'
-                            ? `${styles.deskStackBtn} ${styles.deskPerkBtn}`
-                            : styles.deskStackBtn
-                        )
-                      )}
+                      {stackActions.some(a => a.id === 'plus')
+                        ? // Plus/Minus: the ± pair rides one row (a perk
+                          // never coexists with it — different phases).
+                          extrasWithPairedPm(stackActions, styles.deskStackBtn)
+                        : stackActions.map(a =>
+                            actionBtn(
+                              a,
+                              a.id === 'perk'
+                                ? `${styles.deskStackBtn} ${styles.deskPerkBtn}`
+                                : styles.deskStackBtn
+                            )
+                          )}
                       {/* Hidden mid-action (a suit perk or green card is
                           targeting — ui.banner — or the ♣ modal is up):
                           the rail then leads with the banner + Confirm /
@@ -1876,7 +1904,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       // icon row hides like every other dock's mid-action
                       // gate, leaving just the phase's Confirm button.
                       <>
-                        {dtExtraActions.map(a => actionBtn(a, styles.stageBtn))}
+                        {extrasWithPairedPm(dtExtraActions, styles.stageBtn)}
                         {!ui.banner && !ui.bonusDialog && (
                           <div className={styles.stageIconRow}>
                             <Button
@@ -2168,10 +2196,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         <>
                           {/* Targeting extras (a Confirm, ± adjusters)
                               stack above Cancel so the affirmative action
-                              leads. */}
-                          {dtExtraActions.map(a =>
-                            actionBtn(a, styles.dtStackBtn)
-                          )}
+                              leads — the ± pair shares one row. */}
+                          {extrasWithPairedPm(dtExtraActions, styles.dtStackBtn)}
                           {/* Suit-perk targeting: only the Cancel button —
                               Discard / Undo don't apply mid-selection. Slim
                               (dtGridBtn, not the taller commitButton) so
