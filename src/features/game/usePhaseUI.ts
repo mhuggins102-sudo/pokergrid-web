@@ -28,6 +28,8 @@ export type CellRole = 'next' | 'target' | 'selected' | null;
 export interface PhaseAction {
   id: string;
   label: string;
+  /** Accessible name when the visible label is terse (e.g. "+1"). */
+  ariaLabel?: string;
   variant: 'primary' | 'secondary' | 'ghost' | 'danger';
   disabled?: boolean;
   onPress: () => void;
@@ -643,15 +645,20 @@ export function usePhaseUI(): PhaseUI {
           ...fromSets(EMPTY_SET, new Set([phase.target])),
           isTappable: () => false,
           actions: [
+            // Terse labels so the pair fits SIDE BY SIDE in every dock
+            // (stacked full-width ± rows grew the dock and shrank the
+            // board); the banner names the action, aria keeps "rank".
             {
               id: 'plus',
-              label: '+1 rank',
+              label: '+1',
+              ariaLabel: '+1 rank',
               variant: 'primary',
               onPress: () => dispatch({ type: 'RESOLVE_PLUS_MINUS', delta: 1 }),
             },
             {
               id: 'minus',
-              label: '−1 rank',
+              label: '−1',
+              ariaLabel: '−1 rank',
               variant: 'secondary',
               onPress: () => dispatch({ type: 'RESOLVE_PLUS_MINUS', delta: -1 }),
             },

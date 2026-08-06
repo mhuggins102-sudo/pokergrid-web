@@ -355,6 +355,20 @@
   min-height: 44px;
 }
 
+/* Plus/Minus: the ± buttons share one row instead of stacking — a
+   second full-width row would outgrow the dock pins and shrink the
+   board. Heights come from the per-dock button class. */
+.pmPairRow {
+  display: flex;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.pmPairRow > * {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Classic: the banner is a direct dock child (its own line above the
    card row) — kill the base .dockText flex-grow so it can't absorb
    the dock column's slack. */
