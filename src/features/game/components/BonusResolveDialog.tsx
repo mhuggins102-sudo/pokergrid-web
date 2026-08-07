@@ -2,6 +2,7 @@ import { CSSProperties, useState } from 'react';
 import { BonusCard, SPOTLIGHT_ID } from '../../../game/bonusCards';
 import { categoryIconStyle, styleFor } from '../../../lib/bonusCardCategory';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { bonusCardLiveContext } from '../bonusCardLiveContext';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
 import { DetailSheet } from './BonusCardStrip';
@@ -75,11 +76,14 @@ export function BonusResolvePanel({ ui }: { ui: BonusDialogUI }) {
 
   // THE held-card details sheet, reused verbatim — a card being
   // offered reads identically to one already in hand (name + mult in
-  // the title, category line, description).
+  // the title, category line, description) INCLUDING the live-context
+  // lines (perks spent, jokers trashed, …), so a pick isn't blind to
+  // run-state counters the board can't show.
   const infoSheet = (
     <DetailSheet
       detail={info ? { card: info, index: 0 } : null}
       onClose={() => setInfo(null)}
+      liveContext={card => bonusCardLiveContext(card, state)}
     />
   );
 

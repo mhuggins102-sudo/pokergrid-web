@@ -149,12 +149,36 @@
   outline-offset: 2px;
 }
 
+/* Kicker row: category label left, the (rare) run-state stat badge
+   right. On the ~195px desktop tiles the kicker yields (ellipsis) so
+   the badge never clips. */
+.optionTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
 .optionCat {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--tone, var(--ink-2));
+}
+
+.optionStat {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .optionTitle {

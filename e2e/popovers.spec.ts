@@ -118,6 +118,49 @@ test('mobile drawer: ident tap shows level progress; a right swipe closes it', a
   await expect(dialog).toBeHidden();
 });
 
+test('mobile challenges: medal popover re-opens right after a scroll dismissal', async ({
+  page,
+}, testInfo) => {
+  const vp = page.viewportSize();
+  test.skip(
+    !testInfo.project.use.hasTouch || !vp || vp.width >= 768,
+    'touch popover machinery is the <768 touch case'
+  );
+
+  await page.goto('/challenges');
+  const wrap = page.locator('[class*="medalTallyWrap"]');
+  const pop = page
+    .locator('[role="tooltip"]')
+    .filter({ hasText: 'Trophy tiers' });
+  await wrap.tap();
+  await expect.poll(() => popOpacity(pop)).toBe(1);
+
+  // Dismiss by SCROLLING (a real touch drag via CDP — pointerdown with
+  // no click). This used to leave the provider's click-swallow armed
+  // for 700ms, eating the next genuine tap anywhere in the app.
+  const cdp = await page.context().newCDPSession(page);
+  const pt = (x: number, y: number) => [{ x, y }];
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: pt(200, 600),
+  });
+  for (let i = 1; i <= 5; i++) {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: pt(200, 600 - i * 50),
+    });
+  }
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  });
+  await expect.poll(() => popOpacity(pop)).toBeLessThan(1);
+
+  // The immediate re-tap must open the popover again.
+  await wrap.tap();
+  await expect.poll(() => popOpacity(pop)).toBe(1);
+});
+
 test('mobile streamlined game: the wordmark exits home mid-game', async ({
   page,
 }, testInfo) => {

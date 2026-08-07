@@ -6,17 +6,17 @@ import {
   toneLabelFor,
 } from '../../../lib/bonusCardCategory';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { bonusCardDrawStat } from '../bonusCardLiveContext';
 import { useGameSession } from '../GameSessionProvider';
 import { BonusDialogUI } from '../usePhaseUI';
 import styles from './BonusDrawModal.module.css';
 import { ArrowLeft } from '../../../design/primitives';
 
 /**
- * The desktop ♣ Bonus draw as the mockup's fixed-overlay modal
- * (design-refs/desktop/Play.dc.html lines 203–226). Same phase-UI
- * contract as the mobile in-dock BonusResolvePanel — pick / replace /
- * decline all dispatch the existing reducer actions; only the shell
- * differs. Desktop-only: mobile keeps BonusResolvePanel untouched.
+ * The ♣ Bonus draw as the mockup's fixed-overlay modal
+ * (design-refs/desktop/Play.dc.html lines 203–226) — BOTH forks render
+ * it now (the in-dock BonusResolvePanel is no longer mounted). Pick /
+ * replace / decline all dispatch the existing reducer actions.
  */
 export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
   // Colorblind assist (phase 4 port): glyph beside each option title,
@@ -88,6 +88,10 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
             <div className={styles.options}>
               {ui.drawn.map((card, i) => {
                 const cat = styleFor(card);
+                // Run-state counter behind the card's condition (perks
+                // spent, jokers trashed, deck payout) — the one thing
+                // the board-peek gesture can't reveal mid-pick.
+                const stat = bonusCardDrawStat(card, state);
                 return (
                   <button
                     key={`${card.id}-${i}`}
@@ -97,8 +101,13 @@ export function BonusDrawModal({ ui }: { ui: BonusDialogUI }) {
                     onClick={() => pick(i)}
                     aria-label={`Keep: ${card.title}`}
                   >
-                    <span className={styles.optionCat}>
-                      {toneLabelFor(card)}
+                    <span className={styles.optionTop}>
+                      <span className={styles.optionCat}>
+                        {toneLabelFor(card)}
+                      </span>
+                      {stat && (
+                        <span className={styles.optionStat}>{stat}</span>
+                      )}
                     </span>
                     <span className={styles.optionTitle}>
                       {assist && (

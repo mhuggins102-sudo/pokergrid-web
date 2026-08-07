@@ -1,7 +1,11 @@
 import { seededRng } from '../../../game/deck';
-import { newGame } from '../../../game/state';
+import { Card } from '../../../game/cards';
+import { GameState, newGame } from '../../../game/state';
 import { BONUS_DECK_POOL } from '../../../game/bonusCards';
-import { bonusCardLiveContext } from '../bonusCardLiveContext';
+import {
+  bonusCardDrawStat,
+  bonusCardLiveContext,
+} from '../bonusCardLiveContext';
 
 const cardById = (id: string) => {
   const c = BONUS_DECK_POOL.find(c => c.id === id);
@@ -83,5 +87,66 @@ describe('bonusCardLiveContext', () => {
       final: true,
     });
     expect(frugal.some(l => l.startsWith('Paid out: ×1.5'))).toBe(true);
+  });
+});
+
+describe('bonusCardDrawStat (draw-tile corner badge)', () => {
+  const fresh = newGame('easy', seededRng(7));
+  const joker: Card = { kind: 'joker' };
+  const someCard = fresh.deck[0];
+  const statState = {
+    ...fresh,
+    perkSpent: Array(12).fill(someCard),
+    discards: [joker, someCard, joker],
+  } as GameState;
+
+  it('shows perk budgets for Burnout and Frugal', () => {
+    expect(bonusCardDrawStat(cardById('burnout-x1_25'), statState)).toBe(
+      '12 / 22 perks'
+    );
+    expect(bonusCardDrawStat(cardById('frugal-x1_5'), statState)).toBe(
+      '12 / 14 perks'
+    );
+  });
+
+  it('counts trashed jokers, with singular/plural', () => {
+    expect(bonusCardDrawStat(cardById('trash-joker-x1_25'), statState)).toBe(
+      '2 jokers trashed'
+    );
+    const one = { ...statState, discards: [joker, someCard] } as GameState;
+    expect(bonusCardDrawStat(cardById('trash-joker-x1_25'), one)).toBe(
+      '1 joker trashed'
+    );
+  });
+
+  it('projects the Speedrun payout from the deck count', () => {
+    const n = statState.deck.length;
+    const proj = Math.pow(1.04, n)
+      .toFixed(2)
+      .replace(/0+$/, '')
+      .replace(/\.$/, '');
+    expect(bonusCardDrawStat(cardById('deck-bank-x1_05'), statState)).toBe(
+      `${n} left → ×${proj}`
+    );
+  });
+
+  it('is null for every card without an invisible run-state counter', () => {
+    const badgeIds = new Set([
+      'burnout-x1_25',
+      'frugal-x1_5',
+      'trash-joker-x1_25',
+      'deck-bank-x1_05',
+    ]);
+    for (const card of BONUS_DECK_POOL) {
+      if (badgeIds.has(card.id)) continue;
+      expect(bonusCardDrawStat(card, statState)).toBeNull();
+    }
+  });
+
+  it('tolerates a minimal mocked state (no grid/deck/discards)', () => {
+    const minimal = { bonusCards: [] } as unknown as GameState;
+    expect(bonusCardDrawStat(cardById('burnout-x1_25'), minimal)).toBeNull();
+    expect(bonusCardDrawStat(cardById('trash-joker-x1_25'), minimal)).toBeNull();
+    expect(bonusCardDrawStat(cardById('deck-bank-x1_05'), minimal)).toBeNull();
   });
 });

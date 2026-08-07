@@ -230,6 +230,43 @@ export const bonusCardLiveContext = (
   return out;
 };
 
+/**
+ * SHORT draw-time stat for the pick tiles: the run-state counter behind
+ * a card's condition that the player can't read off the board (the
+ * draw popup's peek gesture already covers board-visible conditions).
+ * Null for every other card — the badge should read as signal, not
+ * chrome — and null when a state slice is absent (unit fixtures mock a
+ * minimal session state).
+ */
+export const bonusCardDrawStat = (
+  card: BonusCard,
+  state: GameState
+): string | null => {
+  const base = baseId(card);
+  if (base === 'burnout-x1_25') {
+    // Threshold mirrors the card's gridEffect: fires at >= 22.
+    return state.perkSpent ? `${state.perkSpent.length} / 22 perks` : null;
+  }
+  if (base === 'frugal-x1_5') {
+    // Budget framing: fires at <= 14 — see the card's gridEffect.
+    return state.perkSpent ? `${state.perkSpent.length} / 14 perks` : null;
+  }
+  if (base === 'trash-joker-x1_25') {
+    if (!state.discards) return null;
+    const n = state.discards.filter(isJoker).length;
+    return `${n} joker${n === 1 ? '' : 's'} trashed`;
+  }
+  if (base === 'deck-bank-x1_05') {
+    // The count is peekable on the deck well; the compounding payout
+    // is the real decision input.
+    if (!state.deck) return null;
+    const n = state.deck.length;
+    const mult = n > 0 ? Math.pow(card.multValue ?? 1.04, n) : 1;
+    return `${n} left → ×${trimMult(mult)}`;
+  }
+  return null;
+};
+
 // Lines where the card's lineEffect fires, in R1→R5, C1→C5 order.
 const firingLines = (card: BonusCard, ctxs: LineContext[]): LineContext[] =>
   ctxs.filter(ctx => {
