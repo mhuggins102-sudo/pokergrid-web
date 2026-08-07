@@ -156,7 +156,7 @@ const DESKTOP: Record<string, Builder> = {
   // suit-colored top-left — the old centered pip + blend-mode rank
   // collided on wide ranks ("10").
   D16: ({ G, R }) => ({ extra: 'border:1px solid var(--hairline)', layers: [L('position:absolute;bottom:4cqh;right:4cqw;font-size:64cqh;line-height:1;opacity:.9', G), L('position:absolute;top:6cqh;left:8cqw;font:700 34cqh var(--font-body);line-height:1;letter-spacing:-.03em', R)] }),
-  D21: ({ C, G, R }) => ({ extra: 'border:1px solid var(--hairline)', layers: [L(`position:absolute;inset:6cqmin;border-radius:5cqmin;border:2.5cqmin solid ${C};opacity:.4`, ''), L(rSans, R), L(pipBR, G)] }),
+  D21: ({ C, G, R }) => ({ extra: 'border:1px solid var(--hairline)', layers: [L(`position:absolute;inset:3cqmin;border-radius:3cqmin;border:2.5cqmin solid ${C};opacity:.4`, ''), L(rSans, R), L(pipBR, G)] }),
   // Ticket: a genuinely die-cut ticket — fine sawtooth teeth run down the
   // LEFT and RIGHT edges (the same edges that carry the punched half-circle
   // notches; top and bottom are straight cuts). The wrap paints an ink-toned
@@ -174,7 +174,7 @@ const DESKTOP: Record<string, Builder> = {
   W1: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:linear-gradient(145deg,var(--card-face) 8%,color-mix(in srgb,${C} 32%,var(--card-face)) 96%)`, layers: [L(rSans, R), L(pipBR, G)] }),
   W2: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:linear-gradient(160deg,var(--card-face),color-mix(in srgb,${C} 45%,var(--card-face)))`, layers: [L(rSans, R), L(pipBR, G)] }),
   W3: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:radial-gradient(circle at 78% 82%,color-mix(in srgb,${C} 42%,var(--card-face)),var(--card-face) 72%)`, layers: [L(rSans, R), L(pipBR, G)] }),
-  D41c: ({ G, R }) => ({ extra: 'border:1px solid var(--hairline)', layers: [L('position:absolute;inset:5cqmin;border:2.5cqmin double var(--warn);border-radius:3cqmin;opacity:.7', ''), L(rSerif, R), L(pipBR, G), L(wm(0.08), G)] }),
+  D41c: ({ G, R }) => ({ extra: 'border:1px solid var(--hairline)', layers: [L('position:absolute;inset:3cqmin;border:2.5cqmin double var(--warn);border-radius:3cqmin;opacity:.7', ''), L(rSerif, R), L(pipBR, G), L(wm(0.08), G)] }),
   // Offset rings (all sizes): the emboss ring drops to the bottom-right
   // with a visible breathing margin off the card edge (pip centered
   // inside), freeing a clean top-left for the rank — the old centered
