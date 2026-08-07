@@ -6,6 +6,12 @@ import '@fontsource-variable/fraunces/index.css';
 import '@fontsource-variable/inter/index.css';
 // Card Room's body font (Morning Paper keeps Inter).
 import '@fontsource-variable/space-grotesk/index.css';
+// Deck-skin display fonts (used only on skinned card faces).
+import '@fontsource/special-elite/index.css';
+import '@fontsource/press-start-2p/index.css';
+import '@fontsource/share-tech-mono/index.css';
+import '@fontsource/unifrakturmaguntia/index.css';
+import '@fontsource/pirata-one/index.css';
 import './design/reset.css';
 import './design/tokens.css';
 import './design/typography.css';

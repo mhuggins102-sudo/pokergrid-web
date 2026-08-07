@@ -147,8 +147,112 @@ const CLAY_BG = 'border:1px solid var(--hairline);background:' + [
 ].join(',');
 const CLAY_INK = 'color:#4a2513;text-shadow:0 .5cqmin 1.6cqmin rgba(70,35,15,.45)';
 
+// ── PROTOTYPE material (X1–X5, uncommitted design exploration) ──
+// Arcade pixel pips: 7-wide bitmaps painted as a box-shadow sprite (one
+// base cell + offset copies). Suit-fixed phosphor palette.
+const PIX_SPRITE: Record<SuitKey, string[]> = {
+  h: ['.##.##.', '#######', '#######', '.#####.', '..###..', '...#...'],
+  d: ['...#...', '..###..', '.#####.', '#######', '.#####.', '..###..', '...#...'],
+  s: ['...#...', '..###..', '.#####.', '#######', '#######', '...#...', '..###..'],
+  c: ['..###..', '.#####.', '#######', '##.#.##', '...#...', '..###..'],
+};
+const PIX_COL: Record<SuitKey, string> = { h: '#ff5252', d: '#40c4ff', c: '#69f0ae', s: '#f5f5f5' };
+const pxSprite = (k: SuitKey): string => {
+  const bitmap = PIX_SPRITE[k];
+  const col = PIX_COL[k];
+  const cell = 3.2;
+  const cols = bitmap[0].length;
+  const rows = bitmap.length;
+  const shadows: string[] = [];
+  bitmap.forEach((row, y) => {
+    [...row].forEach((ch, x) => {
+      if (ch === '#' && !(x === 0 && y === 0)) {
+        shadows.push(`${(x * cell).toFixed(1)}cqmin ${(y * cell).toFixed(1)}cqmin ${col}`);
+      }
+    });
+  });
+  const bg = bitmap[0][0] === '#' ? col : 'transparent';
+  return `position:absolute;right:calc(8cqw + ${((cols - 1) * cell).toFixed(1)}cqmin);bottom:calc(7cqh + ${((rows - 1) * cell).toFixed(1)}cqmin);width:${cell}cqmin;height:${cell}cqmin;background:${bg};box-shadow:${shadows.join(',')};filter:drop-shadow(0 0 2cqmin ${col})`;
+};
+// Ransom-note letter mix: font / tint / tilt cycled per character, seeded
+// by the rank so every rank cuts its letters from different publications.
+const RANSOM_FONTS = ["'Special Elite',Courier,monospace", "'UnifrakturMaguntia',serif", "'Pirata One',serif", 'Georgia,serif'];
+const RANSOM_SIZES = [26, 27, 27, 26];
+const RANSOM_TINTS = ['#ffffff', '#ffe9a8', '#dfe8ff', '#ffd9d9'];
+const RANSOM_ROTS = [-7, 6, -4, 8];
+
 // ── DESKTOP builders (44 skins) ──
 const DESKTOP: Record<string, Builder> = {
+  // X1 Ransom: every rank character is a cut-out letter on its own tilted
+  // paper scrap; the pip is a round sticker. Scrap layers carry glyphs, so
+  // the joker keeps only the plain newsprint face + default star.
+  X1: ({ C, G, R }) => {
+    const seed = R.charCodeAt(0);
+    const scraps = R.split('').map((ch, i) => {
+      const f = (seed + i) % RANSOM_FONTS.length;
+      return L(
+        `position:absolute;top:${6 + (i % 2) * 4}cqh;left:${7 + i * 21}cqw;padding:1.5cqmin 2.5cqmin;background:${RANSOM_TINTS[(seed + i) % 4]};border:0.8cqmin solid #26231d;transform:rotate(${RANSOM_ROTS[(seed + i) % 4]}deg);font:400 ${RANSOM_SIZES[f]}cqh ${RANSOM_FONTS[f]};line-height:1.15;color:#26231d;box-shadow:1.2cqmin 1.2cqmin 0 rgba(38,35,29,.3)`,
+        ch
+      );
+    });
+    return {
+      extra: 'border:1px solid var(--hairline);background:linear-gradient(155deg,#f1ecdf,#e7e1d1)',
+      layers: [
+        ...scraps,
+        L(`position:absolute;bottom:6cqh;right:6cqw;font-size:22cqh;line-height:1;color:${C};background:#fffef9;padding:2.5cqmin;border-radius:50%;border:0.8cqmin solid #26231d;transform:rotate(7deg);box-shadow:1cqmin 1cqmin 0 rgba(38,35,29,.3)`, G),
+      ],
+    };
+  },
+  // X2 Blueprint: drafting-blue sheet, fine white grid, mono rank, pip in
+  // a dashed construction circle with crosshair. Fixed palette.
+  X2: ({ G, R }) => ({
+    extra: 'border:1px solid #0f3a6e;background:linear-gradient(145deg,#1c5aa6,#14497f)',
+    layers: [
+      L('position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 0.4cqmin,transparent 0.4cqmin 10cqmin),repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 0.4cqmin,transparent 0.4cqmin 10cqmin)', ''),
+      L('position:absolute;inset:3.5cqmin;border:0.5cqmin solid rgba(234,242,255,.75)', ''),
+      L('position:absolute;right:2cqw;bottom:calc(6cqh + 19.75cqmin);width:46cqmin;height:0.5cqmin;background:rgba(234,242,255,.4)', ''),
+      L('position:absolute;right:calc(6cqw + 19.75cqmin);bottom:2cqh;width:0.5cqmin;height:46cqmin;background:rgba(234,242,255,.4)', ''),
+      L("position:absolute;right:6cqw;bottom:6cqh;width:40cqmin;height:40cqmin;border-radius:50%;border:0.5cqmin dashed rgba(234,242,255,.6);display:flex;align-items:center;justify-content:center;font-size:19cqh;line-height:1;color:#eaf2ff", G),
+      L("position:absolute;top:7cqh;left:8cqw;font:400 32cqh 'Share Tech Mono',monospace;line-height:1;color:#eaf2ff", R),
+      L("position:absolute;bottom:4cqh;left:8cqw;font:400 6.5cqh 'Share Tech Mono',monospace;letter-spacing:.14em;color:rgba(234,242,255,.55)", 'SCALE 1:1'),
+    ],
+  }),
+  // X3 Typewriter: ruled index card, red heading rule, distressed typed
+  // rank, pip as a rotated rubber stamp in the suit ink.
+  X3: ({ C, G, R }) => ({
+    extra: 'border:1px solid var(--hairline);background:linear-gradient(#fdfaf1,#f4efdf)',
+    layers: [
+      L('position:absolute;left:0;right:0;top:30cqh;bottom:0;background:repeating-linear-gradient(180deg,transparent 0 13cqh,rgba(29,95,160,.22) 13cqh calc(13cqh + 0.5cqmin))', ''),
+      L('position:absolute;left:0;right:0;top:25cqh;height:0.7cqmin;background:rgba(190,60,60,.6)', ''),
+      L("position:absolute;top:4cqh;left:8cqw;font:400 30cqh 'Special Elite',Courier,monospace;line-height:1.2;color:#2e2c26;transform:rotate(-2deg);text-shadow:0.35cqmin 0 rgba(46,44,38,.4)", R),
+      L(`position:absolute;bottom:7cqh;right:7cqw;font-size:19cqh;line-height:1;color:${C};border:1cqmin solid ${C};border-radius:2.5cqmin;padding:2cqmin 2.5cqmin;opacity:.75;transform:rotate(6deg)`, G),
+    ],
+  }),
+  // X4 Arcade: CRT black, scanlines, pixel font with phosphor glow, pip as
+  // an actual box-shadow pixel sprite. Fixed palette.
+  X4: ({ k, R }) => ({
+    extra: 'border:1px solid #000;background:radial-gradient(circle at 50% 38%,#181822,#0b0b12 82%)',
+    layers: [
+      L(`position:absolute;top:9cqh;left:8cqw;font:400 21cqh 'Press Start 2P',monospace;line-height:1;color:${PIX_COL[k]};text-shadow:0 0 3cqmin ${PIX_COL[k]}`, R),
+      L(pxSprite(k), ''),
+      L('position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.05) 0 0.8cqmin,transparent 0.8cqmin 2.6cqmin);pointer-events:none', ''),
+    ],
+  }),
+  // X5 Gothic: parchment, woodcut double frame with corner diamonds
+  // (glyph-less — they survive the joker harvest), blackletter rank.
+  X5: ({ C, G, R }) => ({
+    extra: 'border:1px solid var(--hairline);background:linear-gradient(160deg,#f4ebd3,#e7d9b4)',
+    layers: [
+      L('position:absolute;inset:2.5cqmin;border:1.3cqmin solid #3b2f1a', ''),
+      L('position:absolute;inset:6cqmin;border:0.45cqmin solid rgba(59,47,26,.5)', ''),
+      L('position:absolute;top:3.2cqmin;left:3.2cqmin;width:3cqmin;height:3cqmin;background:#3b2f1a;transform:rotate(45deg)', ''),
+      L('position:absolute;top:3.2cqmin;right:3.2cqmin;width:3cqmin;height:3cqmin;background:#3b2f1a;transform:rotate(45deg)', ''),
+      L('position:absolute;bottom:3.2cqmin;left:3.2cqmin;width:3cqmin;height:3cqmin;background:#3b2f1a;transform:rotate(45deg)', ''),
+      L('position:absolute;bottom:3.2cqmin;right:3.2cqmin;width:3cqmin;height:3cqmin;background:#3b2f1a;transform:rotate(45deg)', ''),
+      L(`position:absolute;top:6cqh;left:10cqw;font:400 42cqh 'UnifrakturMaguntia',serif;line-height:1;color:${C}`, R),
+      L(`position:absolute;bottom:8cqh;right:10cqw;font-size:23cqh;line-height:1;color:${C}`, G),
+    ],
+  }),
   D05a: ({ C, G, R }) => ({ extra: 'border:1px solid var(--hairline)', layers: [idx(['top', 'left'], C, R, G, 22), idx(['bottom', 'right'], C, R, G, 22)] }),
   D06c: ({ C, G, R }) => ({ extra: 'border:1px solid var(--hairline)', layers: [L('position:absolute;top:5cqh;left:7cqw;font:680 20cqh var(--font-display);color:' + C, R), L('position:absolute;top:5cqh;right:7cqw;font:680 20cqh var(--font-display);color:' + C, R), L('position:absolute;bottom:5cqh;left:7cqw;font:680 20cqh var(--font-display);transform:rotate(180deg);color:' + C, R), L('position:absolute;bottom:5cqh;right:7cqw;font:680 20cqh var(--font-display);transform:rotate(180deg);color:' + C, R), L(wm(0.1), G)] }),
   // Corner split (all sizes): the jumbo pip sits bottom-right with a small
@@ -299,6 +403,10 @@ export const SKINS: SkinMeta[] = [
   { id: 'AR3', name: 'Bauhaus', family: 'Art' },
   { id: 'AR4', name: 'Impression', family: 'Art' },
   { id: 'AR5', name: 'Pop art', family: 'Art' },
+  // The X1–X5 prototype builders above are staged but deliberately NOT
+  // listed here: absent from SKINS they are invisible to the app (no
+  // SKIN_IDS entry, not equippable, no catalog slot required). Chosen
+  // designs get their SKINS + skinCatalog registration when approved.
 ];
 
 export const SKIN_IDS: string[] = SKINS.map((s) => s.id);
