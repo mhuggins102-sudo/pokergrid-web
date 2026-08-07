@@ -167,7 +167,10 @@ const DESKTOP: Record<string, Builder> = {
   // can't follow the cut).
   D24: ({ G, R }) => ({ extra: `background:color-mix(in srgb,var(--ink) 58%,var(--card-face));clip-path:${TICKET_CLIP}`, layers: [L(`position:absolute;inset:2cqmin;background:var(--card-face);clip-path:${TICKET_CLIP};border-radius:max(0px,calc(var(--radius-sm,8px) - 2cqmin))`), L(rSans, R), L(pipBR, G)] }),
   D27b: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:linear-gradient(150deg,var(--card-face),color-mix(in srgb,${C} 18%,var(--card-face)))`, layers: [L(rSans, R), L(pipBR, G)] }),
-  D27c: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:color-mix(in srgb,${C} 12%,var(--card-face))`, layers: [L('position:absolute;inset:5cqmin;border-radius:4cqmin;border:2cqmin solid var(--card-face)', ''), L(rSans, R), L(pipBR, G), L(wm(0.1), G)] }),
+  // Frame ring in the SUIT ink (both color modes; the joker rebuild
+  // swaps C for the joker purple) — the old card-face ring was nearly
+  // invisible against the washed face.
+  D27c: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:color-mix(in srgb,${C} 12%,var(--card-face))`, layers: [L(`position:absolute;inset:5cqmin;border-radius:4cqmin;border:2cqmin solid ${C}`, ''), L(rSans, R), L(pipBR, G), L(wm(0.1), G)] }),
   W1: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:linear-gradient(145deg,var(--card-face) 8%,color-mix(in srgb,${C} 32%,var(--card-face)) 96%)`, layers: [L(rSans, R), L(pipBR, G)] }),
   W2: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:linear-gradient(160deg,var(--card-face),color-mix(in srgb,${C} 45%,var(--card-face)))`, layers: [L(rSans, R), L(pipBR, G)] }),
   W3: ({ C, G, R }) => ({ extra: `border:1px solid var(--hairline);background:radial-gradient(circle at 78% 82%,color-mix(in srgb,${C} 42%,var(--card-face)),var(--card-face) 72%)`, layers: [L(rSans, R), L(pipBR, G)] }),
