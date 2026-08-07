@@ -119,14 +119,21 @@ describe('bonusCardDrawStat (draw-tile corner badge)', () => {
     );
   });
 
-  it('projects the Speedrun payout from the deck count', () => {
-    const n = statState.deck.length;
+  it('projects the Speedrun ceiling from the POST-pick deck count', () => {
+    // The next card draws right after the pick, so the most the card
+    // can be worth is deck − 1.
+    const n = statState.deck.length - 1;
     const proj = Math.pow(1.04, n)
       .toFixed(2)
       .replace(/0+$/, '')
       .replace(/\.$/, '');
     expect(bonusCardDrawStat(cardById('deck-bank-x1_05'), statState)).toBe(
       `${n} left → ×${proj}`
+    );
+    // Empty-deck clamp: never negative, ×1 floor.
+    const empty = { ...statState, deck: [] } as GameState;
+    expect(bonusCardDrawStat(cardById('deck-bank-x1_05'), empty)).toBe(
+      '0 left → ×1'
     );
   });
 

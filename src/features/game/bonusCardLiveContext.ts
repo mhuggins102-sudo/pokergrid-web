@@ -257,10 +257,12 @@ export const bonusCardDrawStat = (
     return `${n} joker${n === 1 ? '' : 's'} trashed`;
   }
   if (base === 'deck-bank-x1_05') {
-    // The count is peekable on the deck well; the compounding payout
-    // is the real decision input.
+    // The compounding payout is the real decision input — and the
+    // next turn's card draws the moment the pick resolves, so the
+    // deck can never END above N−1: show that ceiling, not the
+    // pick-time count.
     if (!state.deck) return null;
-    const n = state.deck.length;
+    const n = Math.max(0, state.deck.length - 1);
     const mult = n > 0 ? Math.pow(card.multValue ?? 1.04, n) : 1;
     return `${n} left → ×${trimMult(mult)}`;
   }
