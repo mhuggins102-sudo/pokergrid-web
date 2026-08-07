@@ -65,8 +65,13 @@ function MiniFace({
   const four = !useSettingsStore(s => s.twoColorDeck);
   const mobile = useTier() === 'phone';
   const face = skinFace(id, rank, suit, four, mobile);
+  // Keyed remount on (skin, tier): the unlock teaser can swap `id` on a
+  // live instance, and re-diffing a different skin's inline styles onto
+  // surviving spans drops shorthand-covered longhands — see SkinnedFace
+  // in CardFace.tsx.
   return (
     <span
+      key={`${id}-${mobile ? 'm' : 'd'}`}
       className={className}
       style={{ ...face.wrap, width: size, height: size, flex: 'none' }}
       aria-hidden="true"
