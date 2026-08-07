@@ -125,19 +125,35 @@ export function TapPopoverProvider({ children }: { children: ReactNode }) {
   );
 
   // The persistent swallow: one capture-phase click listener for the whole
-  // app. When armed by an outside dismissal, it eats exactly the next click
-  // — in the CAPTURE phase, on document, so it stops before reaching any
-  // target handler (React attaches at the root container, below document).
+  // app. When armed by an outside dismissal, it eats the click that SAME
+  // tap produces — in the CAPTURE phase, on document, so it stops before
+  // reaching any target handler (React attaches at the root container,
+  // below document).
+  //   The arming tap doesn't always produce a click, though — a SCROLL
+  // dismisses the popover with pointerdown + move and no click, which
+  // used to leave the flag armed for the 700ms timer and silently eat
+  // the user's next genuine tap (reported as "the trophy popover won't
+  // open"). So the swallow now belongs to exactly one gesture: any NEW
+  // pointerdown disarms it first — capture runs before useTapPopover's
+  // bubble-phase outside-dismiss handler, so a tap that dismisses a
+  // popover still re-arms for its own click — and the swallow itself
+  // ignores stale arms past wasRecentDismiss's 400ms window.
   useEffect(() => {
+    const disarm = () => {
+      swallowArmed.current = false;
+    };
     const swallow = (e: MouseEvent) => {
       if (!swallowArmed.current) return;
       swallowArmed.current = false;
       window.clearTimeout(swallowTimer.current);
+      if (Date.now() - outsideDismissAt.current > 400) return;
       e.stopPropagation();
       e.preventDefault();
     };
+    document.addEventListener('pointerdown', disarm, true);
     document.addEventListener('click', swallow, true);
     return () => {
+      document.removeEventListener('pointerdown', disarm, true);
       document.removeEventListener('click', swallow, true);
       window.clearTimeout(swallowTimer.current);
     };
