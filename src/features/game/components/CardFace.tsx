@@ -69,6 +69,13 @@ const suitColor = (suit: Suit, twoColorDeck: boolean): string =>
 // is an absolutely-positioned span (some with nested corner-index spans).
 // The wrap fills the (parent-sized) cell — height:100% overrides its square
 // aspect-ratio so it tracks the grid cell exactly.
+//
+// MUST be rendered with a key that changes with (skin, tier): diffing two
+// different skins' styles onto surviving spans lets a re-applied shorthand
+// (`font`, `background`) reset a longhand (`line-height`,
+// `background-origin`) that React skips as "unchanged" — mid-game skin
+// switches then misrender placed cards until remount (worst on Ivory/C2,
+// whose whole design is two line-height:1 centered text layers).
 function SkinnedFace({
   face,
   skin,
@@ -113,7 +120,13 @@ export function CardFace({ card }: { card: Card }) {
     // the theme default keeps the classic purple star.
     const jokerFace = activeSkin ? skinJokerFace(activeSkin, mobile) : null;
     if (jokerFace) {
-      return <SkinnedFace face={jokerFace} skin={activeSkin!} />;
+      return (
+        <SkinnedFace
+          key={`${activeSkin}-${mobile ? 'm' : 'd'}`}
+          face={jokerFace}
+          skin={activeSkin!}
+        />
+      );
     }
     return (
       <div className={`${styles.card} ${styles.joker}`}>
@@ -164,7 +177,11 @@ export function CardFace({ card }: { card: Card }) {
       mobile
     );
     return (
-      <SkinnedFace face={face} skin={activeSkin}>
+      <SkinnedFace
+        key={`${activeSkin}-${mobile ? 'm' : 'd'}`}
+        face={face}
+        skin={activeSkin}
+      >
         {card.supercharge && (
           <span
             className={`${styles.charge} ${

@@ -68,8 +68,12 @@ function SkinPreview({
   // Preview the layout this device actually renders in-game (phone → mobile).
   const mobile = useTier() === 'phone';
   const face = skinFace(id, 'A', suit, four, mobile);
+  // Keyed remount on (skin, tier): re-diffing a different skin's inline
+  // styles onto surviving spans drops shorthand-covered longhands
+  // (line-height, background-origin) — see SkinnedFace in CardFace.tsx.
   return (
     <span
+      key={`${id}-${mobile ? 'm' : 'd'}`}
       className={className ? `${styles.preview} ${className}` : styles.preview}
       style={{ ...face.wrap, width: size, height: size, ...style }}
       aria-hidden="true"
