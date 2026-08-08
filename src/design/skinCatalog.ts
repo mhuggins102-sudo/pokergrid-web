@@ -74,6 +74,11 @@ const NAME_OVERRIDES: Record<string, string> = {
   AR3: 'Bauhaus',
   AR4: 'Impression',
   AR5: 'Pop art',
+  // Typography round
+  X1: 'Ransom',
+  X2: 'Blueprint',
+  X3: 'Typewriter',
+  X4: 'Arcade',
 };
 
 const nameOf = (id: string): string =>
@@ -101,7 +106,8 @@ export interface SkinUnlock {
 export const SKIN_CATALOG: SkinUnlock[] = [
   { id: 'twin', name: nameOf('D05a'), level: 1, skinIds: ['D05a'] },
   { id: 'quad', name: nameOf('D06c'), level: 2, skinIds: ['D06c'] },
-  { id: 'ticket', name: nameOf('D24'), level: 3, skinIds: ['D24'] },
+  // Ticket stub + typed index card — the paper-ephemera pair.
+  { id: 'ticket', name: 'Paper & Print', level: 3, skinIds: ['D24', 'X3'] },
   { id: 'bigpip', name: nameOf('D16'), level: 4, skinIds: ['D16'] },
   { id: 'emboss', name: 'Emboss', level: 5, skinIds: ['D42', 'D42a'] },
   { id: 'bamboo', name: 'Bamboo', level: 6, skinIds: ['D62c', 'C2'] },
@@ -136,14 +142,18 @@ export const SKIN_CATALOG: SkinUnlock[] = [
   { id: 'music-1', name: 'Music · Set 1', level: 16, skinIds: ['MU1', 'MU4'] },
   {
     id: 'art-2',
+    // Blueprint joins the design-movement set — drafting alongside
+    // De Stijl and Bauhaus.
     name: 'Art · Set 2',
     level: 17,
-    skinIds: ['AR2', 'AR3', 'AR5'],
+    skinIds: ['AR2', 'AR3', 'AR5', 'X2'],
   },
   { id: 'music-2', name: 'Music · Set 2', level: 18, skinIds: ['MU2', 'MU3'] },
-  // Fixed-palette fluorescents — loud, off-theme, so a high unlock.
-  { id: 'neon', name: 'Neon', level: 19, skinIds: ['EX6', 'EX16', 'EX17'] },
-  { id: 'wanted', name: 'Wanted', level: 20, skinIds: ['D51a', 'N1', 'N2'] },
+  // Fixed-palette glow decks — loud, off-theme, so a high unlock.
+  // Arcade's CRT phosphor rides with the fluorescents.
+  { id: 'neon', name: 'Neon', level: 19, skinIds: ['EX6', 'EX16', 'EX17', 'X4'] },
+  // Ransom note joins the outlaw paper wall.
+  { id: 'wanted', name: 'Wanted', level: 20, skinIds: ['D51a', 'N1', 'N2', 'X1'] },
 ];
 
 // id → level lookup (every skin across all entries).
