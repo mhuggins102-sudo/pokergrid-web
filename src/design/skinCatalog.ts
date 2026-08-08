@@ -167,7 +167,9 @@ export const skinUnlockLevel = (skinId: string): number =>
 // Playtest override: treat every store entry as unlocked so all card
 // designs can be equipped regardless of player level. OFF for release —
 // flip to true (and nothing else) when a full-catalog review is needed.
-export const UNLOCK_ALL_FOR_TESTING = false;
+// TEMPORARILY ON for the typography-round skin review — flip back to
+// false before release.
+export const UNLOCK_ALL_FOR_TESTING = true;
 
 /** Is a skin unlocked at the player's current level? */
 export const skinUnlocked = (skinId: string, playerLevel: number): boolean =>
