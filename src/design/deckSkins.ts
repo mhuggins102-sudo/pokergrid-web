@@ -78,9 +78,13 @@ type Builder = (ctx: Ctx) => { extra: string; layers: Layer[] };
 const COURT_FIG: Record<string, string> = { K: '\u265A', Q: '\u265B', J: '\u265E' };
 const oldTimey = (mobile: boolean): Builder => ({ C, G, R }) => {
   const fig = COURT_FIG[R];
+  // Both rules ride near the edge in a deep bronze — mixed toward the
+  // printed card-black (NOT --ink, which flips light in dark themes and
+  // would wash the frame out on the cream face). Outer double rule
+  // stays clearly dominant over the thin inner keyline.
   const frame = [
-    L('position:absolute;inset:4cqmin;border:1.5cqmin double var(--warn);border-radius:3cqmin', ''),
-    L('position:absolute;inset:8cqmin;border:.7cqmin solid var(--warn);border-radius:2cqmin;opacity:.6', ''),
+    L('position:absolute;inset:2.5cqmin;border:2.2cqmin double color-mix(in srgb,var(--warn) 72%,var(--card-black));border-radius:2.5cqmin', ''),
+    L('position:absolute;inset:6.5cqmin;border:1cqmin solid color-mix(in srgb,var(--warn) 72%,var(--card-black));border-radius:2cqmin;opacity:.5', ''),
   ];
   const center = fig
     ? L(`position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${mobile ? 68 : 58}cqh;line-height:1;color:${C}`, fig)
