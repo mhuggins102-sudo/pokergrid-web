@@ -210,6 +210,15 @@
   text-decoration: none;
 }
 
+/* The arrow must never flex away: on the phone grid, a played day's big
+   score+badge widens the left column until the link box runs 14px short
+   of its content — the nowrap text holds and the (shrinkable) svg was
+   what collapsed to zero width. Rigid, it overflows into the column gap
+   instead, which the end-aligned bottom row has to spare. */
+.heroArchive svg {
+  flex: none;
+}
+
 @media (hover: hover) {
   .heroArchive:hover {
     color: var(--ink);
