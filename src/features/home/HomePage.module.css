@@ -727,13 +727,19 @@
     font-size: 14px;
   }
 
-  /* Browse the archive: bottom-right, dropped to the foot of its row so
-     it lines up with the CTA/score on the left. Never wraps — the row
-     has the room once the score block's column stays content-sized. */
+  /* Browse the archive: pinned to the body's bottom-right padding corner
+     rather than end-aligned in its grid track. When a played day's score
+     block widens the left column, the link's box outgrows its track, and
+     engines disagree on where an overflowing end-aligned item spills —
+     Chromium keeps the right edge on the content line, iOS Safari pushes
+     it PAST the padding. Absolute positioning sidesteps the race: same
+     spot in both states, immune to the score's width, still above the
+     stretched CTA (base rule's z-index). Offsets mirror .heroBody's
+     phone padding (16px 20px). */
   .heroArchive {
-    grid-area: archive;
-    justify-self: end;
-    align-self: end;
+    position: absolute;
+    right: 20px;
+    bottom: 16px;
     font-size: 13px;
     white-space: nowrap;
   }
