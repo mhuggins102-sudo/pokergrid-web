@@ -117,17 +117,20 @@ const settleWorker = (
  * found, install failed (redundant), install stuck — falls through to
  * the purge IN THE SAME CYCLE.
  *
- * ATTEMPT 2+ — the reload came straight back here, so whatever the
- * network handed attempt 1 didn't converge. The observed culprit: a
- * CDN/edge cache serving the PREVIOUS build's sw.js for hours (the
- * pokergrid.app zone stamps max-age=14400 over the worker script,
- * overriding the origin's no-cache), which re-poisons the client on
- * every re-registration. Counter it by registering the worker through
- * a NEVER-SEEN URL — /sw.js?pgheal=<now> — a unique query is a
- * distinct cache key at every layer, so this always pulls the CURRENT
- * build's worker from origin. If even that doesn't activate, fall
- * through to the full purge (unregister + clear Cache Storage) and a
- * controllerless reload.
+ * ATTEMPT 2+ — the reload came straight back here, so attempt 1's
+ * "success" did NOT converge, and a successfully-activated worker can
+ * still be the problem: the SPA catch-all answers a DELETED chunk URL
+ * with 200 + index.html, so a worker that installs across a deploy
+ * boundary precaches HTML under .js URLs and activates cleanly — then
+ * every load throws the MIME-type chunk error. (This is how the
+ * "Updating…" screen once looped forever: each cycle re-trusted
+ * another poisoned activation.) So from the second attempt on, trust
+ * NOTHING: unregister every registration, clear Cache Storage, and
+ * reload controllerless — HTML and sw.js are no-cache at the edge, so
+ * the reborn page boots the live build from origin and re-registers a
+ * fresh worker in the background. If a rapid-deploy window poisons
+ * that one too, the next episode purges again — the overlay is
+ * bounded at one 15s cycle per recurrence, never a loop.
  *
  * Best-effort throughout: any step can reject (private mode, denied
  * storage) — we reload regardless, which is still better than the
@@ -160,20 +163,10 @@ const dropStaleWorkerAndReload = async (): Promise<void> => {
               // Install failed or stalled — escalate to the purge now
               // rather than reloading into the same stale worker.
             }
-          } else {
-            // Cache-busted re-registration: always fetches the live
-            // build's worker, no matter how stale the edge copy of
-            // the plain /sw.js URL is.
-            try {
-              const reg = await navigator.serviceWorker.register(
-                `/sw.js?pgheal=${Date.now()}`,
-                { updateViaCache: 'none' }
-              );
-              if ((await settleWorker(reg, 4000)) === 'activated') return;
-            } catch {
-              // fall through to the purge
-            }
           }
+          // Attempt 2+ (or an attempt 1 that didn't activate): clean
+          // slate, no activation-trust — see the poisoned-install note
+          // in the ladder comment above.
           await Promise.all(regs.map(r => r.unregister()));
         }
         if ('caches' in window) {
