@@ -1,1 +1,18 @@
+# Cloudflare Pages routing.
+#
+# ORDER MATTERS — the /assets/* rule must come before the SPA catch-all.
+#
+# Missing hashed assets MUST 404, never fall into the SPA catch-all:
+# real files are served before redirects run, so this rule only fires
+# for /assets URLs that no longer exist (a previous build's chunks).
+# Without it, a service worker installing across a deploy boundary gets
+# 200 + index.html for its dead precache URLs, "successfully" caches
+# HTML under .js paths, and activates — every load then throws the
+# MIME-type chunk error and the "Updating PokerGrid" overlay loops,
+# because the self-heal ladder only escalates to a purge when an
+# install FAILS. An honest 404 makes the poisoned install fail, which
+# both prevents the bad cache and lets the recovery escalate.
+/assets/* /404.html 404
+
+# SPA catch-all: every app route serves the shell.
 /* /index.html 200
