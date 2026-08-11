@@ -52,8 +52,8 @@ describe('achievementProgressMap', () => {
     expect(map['perfect-every-difficulty']?.text).toBe(
       'No SS win yet at: Easy, Medium, Hard, Extreme'
     );
-    expect(map['wins-25']?.text).toBe('0 / 25 wins (free play + daily)');
-    expect(map['wins-100']?.text).toBe('0 / 100 wins (free play + daily)');
+    expect(map['wins-25']?.text).toBe('0 / 25 wins');
+    expect(map['wins-100']?.text).toBe('0 / 100 wins');
     expect(map['full-bonus-hand']?.text).toBe(
       `0 / ${BONUS_DECK_POOL.length} bonus cards scored`
     );
@@ -85,11 +85,18 @@ describe('achievementProgressMap', () => {
     );
   });
 
-  it('combines free-play and daily wins for the win milestones', () => {
+  it('combines wins from every mode for the win milestones', () => {
+    // 12 free-play + 2 daily + 1 challenge beaten + a best Targets Up
+    // run that cleared 2 levels = 17.
     const plays = playsOf(play('2026-01-01', true), play('2026-01-03', true));
-    const map = achievementProgressMap(statsWith({ wins: 12 }), plays);
-    expect(map['wins-25']?.text).toBe('14 / 25 wins (free play + daily)');
-    expect(map['wins-100']?.text).toBe('14 / 100 wins (free play + daily)');
+    const stats = statsWith({
+      wins: 12,
+      challengesDone: [LIVE_CHALLENGES[0].id],
+      targetsUpBest: 2,
+    });
+    const map = achievementProgressMap(stats, plays);
+    expect(map['wins-25']?.text).toBe('17 / 25 wins');
+    expect(map['wins-100']?.text).toBe('17 / 100 wins');
   });
 
   it('derives challenge counts from beaten ids and best-win tiers', () => {
@@ -213,9 +220,7 @@ describe('AchievementsPage progress popovers', () => {
     // Single-open accordion: opening Milestones closes Daily Puzzles.
     openSection(/Milestones/);
     expect(screen.getAllByRole('tooltip')).toHaveLength(5);
-    expect(
-      screen.getByText('0 / 25 wins (free play + daily)')
-    ).toBeInTheDocument();
+    expect(screen.getByText('0 / 25 wins')).toBeInTheDocument();
   });
 
   it('drops the popover once the achievement is earned', () => {

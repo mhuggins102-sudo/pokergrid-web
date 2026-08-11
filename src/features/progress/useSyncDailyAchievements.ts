@@ -5,15 +5,18 @@ import { cumulativeInputsFrom } from './cumulativeInputs';
 import { useStatsStore } from './statsStore';
 
 /**
- * Keep the cumulative achievements (Daily-Puzzle tier + the combined-win
- * milestones) in sync with the local daily plays and free-play wins.
+ * Keep the cumulative achievements (Daily-Puzzle tier + the win
+ * milestones, which count every mode) in sync with the local daily
+ * plays and the stats store.
  *
  * This is the silent catch-up path: it records achievements earned by
  * dailies played before the feature shipped (or merged in from another
- * device) without a toast. The end-of-game 🏆 notification for a daily
- * finish comes from useRecordResult's daily branch, which runs the same
+ * device) without a toast, and picks up milestone crossings no per-run
+ * path announces — a Targets Up win pushing the total past a threshold,
+ * for instance. The end-of-game 🏆 notification for a daily finish
+ * comes from useRecordResult's daily branch, which runs the same
  * cumulative check via cumulativeInputsFrom. recordAchievement is
- * idempotent, so the two writers converge.
+ * idempotent, so the writers converge.
  */
 export function useSyncDailyAchievements(): void {
   const plays = usePlaysStore(s => s.plays);

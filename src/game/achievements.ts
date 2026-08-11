@@ -1,4 +1,3 @@
-import { isJoker } from './cards';
 import { HandRank } from './hands';
 import { ScoreReport, scoreGrid, timeTrialAdjust } from './scoring';
 import type { GameState } from './state';
@@ -53,15 +52,13 @@ const LOW_OR_NONE: Set<HandRank> = new Set<HandRank>([
   'THREE_OF_A_KIND',
 ]);
 
-// Retired ids ('easy-overshot', 'easy-soloist') may linger in saved
-// stats.achievementsDone — they stay there (and keep their one-time XP)
-// but no longer render anywhere, since every surface filters through
-// this catalog.
+// Retired ids ('easy-overshot', 'easy-soloist', 'jokerless', 'no-swap')
+// may linger in saved stats.achievementsDone — they stay there (and keep
+// their one-time XP) but no longer render anywhere, since every surface
+// filters through this catalog.
 export type AchievementId =
   | 'balanced'
   | 'dynamite'
-  | 'jokerless'
-  | 'no-swap'
   | 'grid-only'
   | 'line-only'
   | 'low-hands'
@@ -99,11 +96,11 @@ export type AchievementId =
 // total past the threshold. Separating this from the raw Stats type
 // keeps src/game/ from importing src/ui/.
 export interface MilestoneInputs {
-  // Per-difficulty Free Play wins (post-run).
+  // Per-difficulty wins across every mode (post-run).
   winsByDifficulty: Record<Difficulty, number>;
-  // Per-difficulty SS-tier Free Play wins (post-run).
+  // Per-difficulty SS-tier wins across every mode (post-run).
   ssByDifficulty: Record<Difficulty, number>;
-  // Total Free Play wins across all difficulties (post-run).
+  // Total wins across every mode and difficulty (post-run).
   totalWins: number;
   // Number of completed Challenges and the size of the catalog.
   challengesCompleted: number;
@@ -235,23 +232,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: 'Score 500+ without any single row or column worth 100+.',
     scoreTarget: 500,
     conditionMet: ({ report }) => report.lines.every(l => l.total < 100),
-  },
-  {
-    id: 'jokerless',
-    tier: 'hard-extreme',
-    name: 'Jokerless',
-    description: 'Score 500+ with no joker on the grid at game end.',
-    scoreTarget: 500,
-    conditionMet: ({ state }) =>
-      !state.grid.some(c => c !== null && isJoker(c)),
-  },
-  {
-    id: 'no-swap',
-    tier: 'hard-extreme',
-    name: 'No Swap',
-    description: 'Score 500+ without swapping out a bonus card at the cap.',
-    scoreTarget: 500,
-    conditionMet: ({ state }) => !state.swappedBonus,
   },
   {
     id: 'high-hands',
@@ -396,7 +376,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'win-every-difficulty',
     tier: 'milestone',
     name: 'Globetrotter',
-    description: 'Win a game at each difficulty (free play or daily).',
+    description: 'Win a game at each difficulty.',
     conditionMet: ({ milestone }) => {
       const w = milestone.winsByDifficulty;
       return w.easy > 0 && w.medium > 0 && w.hard > 0 && w.extreme > 0;
@@ -406,8 +386,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'perfect-every-difficulty',
     tier: 'milestone',
     name: 'Perfectionist',
-    description:
-      'Win with Perfect (SS rating) at each difficulty (free play or daily).',
+    description: 'Win with Perfect (SS rating) at each difficulty.',
     conditionMet: ({ milestone }) => {
       const s = milestone.ssByDifficulty;
       return s.easy > 0 && s.medium > 0 && s.hard > 0 && s.extreme > 0;
@@ -417,14 +396,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'wins-25',
     tier: 'milestone',
     name: 'Quarter Century',
-    description: 'Win 25+ games, free play and daily puzzles combined.',
+    description: 'Win 25+ games across all modes.',
     conditionMet: ({ milestone }) => milestone.totalWins >= 25,
   },
   {
     id: 'wins-100',
     tier: 'milestone',
     name: 'Centurion',
-    description: 'Win 100+ games, free play and daily puzzles combined.',
+    description: 'Win 100+ games across all modes.',
     conditionMet: ({ milestone }) => milestone.totalWins >= 100,
   },
   {
@@ -454,8 +433,10 @@ export const CHALLENGES_TOTAL = LIVE_CHALLENGES.length;
 //     qualifying event IS a Challenge win.
 //   - variant: only a run carrying the matching twist — that Challenge
 //     itself or a Daily with the same twist in its recipe.
-//   - milestone: Free Play only (the daily path reaches the same
-//     milestones through earnedCumulativeAchievements).
+//   - milestone: Free Play and Challenge runs (the win tallies span
+//     every mode, so a Challenge win can cross one). Daily crossings
+//     ride the cumulative path with a this-run overlay, and Targets Up
+//     wins are picked up by the silent sync pass.
 const modeAllowedFor = (
   ach: Achievement,
   ctx: AchievementCheckCtx
@@ -474,7 +455,7 @@ const modeAllowedFor = (
       activeVariant === ach.variantId
     );
   }
-  if (ach.tier === 'milestone') return mode === 'free';
+  if (ach.tier === 'milestone') return mode === 'free' || mode === 'challenge';
   // easy-medium / hard-extreme
   return (mode === 'free' || mode === 'daily') && activeVariant === null;
 };
@@ -518,11 +499,10 @@ export interface CumulativeInputs {
   // Daily puzzles won (all-time) and the longest consecutive-date streak.
   dailyWins: number;
   dailyBestStreak: number;
-  // Free-play wins + daily wins — the combined total the win milestones
-  // now count.
+  // Wins across every mode — the total the win milestones count.
   totalWins: number;
-  // Combined free-play + daily wins / SS-tier wins per difficulty — feed
-  // the Globetrotter and Perfectionist milestones (so dailies count too).
+  // Per-difficulty wins / SS-tier wins across every mode — feed the
+  // Globetrotter and Perfectionist milestones.
   winsByDifficulty: Record<Difficulty, number>;
   ssByDifficulty: Record<Difficulty, number>;
 }
