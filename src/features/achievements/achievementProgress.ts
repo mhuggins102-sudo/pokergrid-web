@@ -11,7 +11,7 @@ import { cumulativeInputsFrom } from '../progress/cumulativeInputs';
  * across games — surfaced in the unearned-card popovers on the
  * Achievements page. The counting mirrors the award paths exactly:
  * cumulativeInputsFrom for the daily / total-win / per-difficulty
- * milestones (free play + daily combined) and the per-run milestone
+ * milestones (wins across every mode) and the per-run milestone
  * builder (useRecordResult) for the challenge and bonus-card ones.
  * Single-run feats have no meaningful "progress" and get no entry.
  */
@@ -85,8 +85,8 @@ export function achievementProgressMap(
     };
   }
 
-  out['wins-25'] = { text: `${c.totalWins} / 25 wins (free play + daily)` };
-  out['wins-100'] = { text: `${c.totalWins} / 100 wins (free play + daily)` };
+  out['wins-25'] = { text: `${c.totalWins} / 25 wins` };
+  out['wins-100'] = { text: `${c.totalWins} / 100 wins` };
 
   // Full Slate. Intersecting with the pool keeps stale ids in
   // bonusCardStats from inflating the count, and the remaining-names

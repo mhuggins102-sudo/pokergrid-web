@@ -88,7 +88,7 @@ describe('difficulty tiers earn on any twist-free run', () => {
 
   it('awards Hard/Extreme on a twist-free Hard daily', () => {
     expect(
-      earn('no-swap', {
+      earn('balanced', {
         mode: 'daily',
         state: stateWith({ difficulty: 'hard' }),
         report: reportWith(520),
@@ -98,7 +98,7 @@ describe('difficulty tiers earn on any twist-free run', () => {
 
   it('still blocks Hard/Extreme on Challenge runs (Hard ruleset + twist)', () => {
     expect(
-      earn('no-swap', {
+      earn('balanced', {
         mode: 'challenge',
         activeVariant: 'short-deck',
         state: stateWith({ difficulty: 'hard' }),
@@ -120,6 +120,17 @@ describe('difficulty tiers earn on any twist-free run', () => {
     const m = { ...milestone, totalWins: 30 };
     expect(earn('wins-25', { mode: 'daily', milestone: m })).toBe(false);
     expect(earn('wins-25', { mode: 'free', milestone: m })).toBe(true);
+  });
+
+  it('awards milestones from Challenge runs (wins span every mode)', () => {
+    const m = { ...milestone, totalWins: 30 };
+    expect(
+      earn('wins-25', {
+        mode: 'challenge',
+        activeVariant: 'short-deck',
+        milestone: m,
+      })
+    ).toBe(true);
   });
 });
 

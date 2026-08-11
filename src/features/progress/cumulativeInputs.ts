@@ -3,6 +3,7 @@ import {
   CumulativeInputs,
   earnedCumulativeAchievements,
 } from '../../game/achievements';
+import { difficultyForLevel } from '../../game/challenges';
 import type { Difficulty } from '../../game/rules';
 import type { Stats } from '../../lib/stats';
 import { dailyByDifficulty, dailyWinSummary } from '../daily/dailyStats';
@@ -19,9 +20,19 @@ const perDifficulty = (
 
 /**
  * Build the cumulative-achievement inputs from the daily plays map plus
- * the free-play stats. Shared by the silent app-wide catch-up effect
- * (useSyncDailyAchievements) and the end-of-game toast path
- * (useRecordResult's daily branch) so both always agree on what counts.
+ * the stats store — the win milestones count every mode. Shared by the
+ * silent app-wide catch-up effect (useSyncDailyAchievements), the
+ * end-of-game paths (useRecordResult), and the Achievements page's
+ * progress popovers, so all of them always agree on what counts.
+ *
+ * Mode coverage is bounded by what the save actually stores:
+ *   - Free Play / Daily: every win, per difficulty (full fidelity).
+ *   - Challenges: one win per challenge beaten (repeat wins aren't
+ *     stored). All challenges run the Hard ruleset, so they count as
+ *     Hard wins — and an SS trophy as a Hard SS win.
+ *   - Targets Up: only the best run's high-water mark persists —
+ *     reaching level N means levels 1..N were each won, mapped onto
+ *     the difficulty each level runs at.
  */
 export const cumulativeInputsFrom = (
   plays: DailyPlaysMap,
@@ -29,17 +40,30 @@ export const cumulativeInputsFrom = (
 ): CumulativeInputs => {
   const daily = dailyWinSummary(plays);
   const dailyDiff = dailyByDifficulty(plays);
+  const challengeWins = stats.challengesDone.length;
+  const challengeSS = Object.values(stats.challengeTiers).filter(
+    t => t === 'SS'
+  ).length;
+  const targetsUpWins = perDifficulty(() => 0);
+  for (let level = 1; level <= stats.targetsUpBest; level++) {
+    targetsUpWins[difficultyForLevel(level)] += 1;
+  }
   return {
     dailyWins: daily.wins,
     dailyBestStreak: daily.bestStreak,
-    totalWins: stats.wins + daily.wins,
-    // Free-play + daily, per difficulty, so dailies count toward the
-    // Globetrotter / Perfectionist milestones.
+    totalWins: stats.wins + daily.wins + challengeWins + stats.targetsUpBest,
     winsByDifficulty: perDifficulty(
-      d => stats.byDifficulty[d].wins + dailyDiff[d].wins
+      d =>
+        stats.byDifficulty[d].wins +
+        dailyDiff[d].wins +
+        (d === 'hard' ? challengeWins : 0) +
+        targetsUpWins[d]
     ),
     ssByDifficulty: perDifficulty(
-      d => stats.tierCounts[d].SS + dailyDiff[d].ssWins
+      d =>
+        stats.tierCounts[d].SS +
+        dailyDiff[d].ssWins +
+        (d === 'hard' ? challengeSS : 0)
     ),
   };
 };

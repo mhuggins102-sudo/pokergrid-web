@@ -35,12 +35,12 @@ const TIER_META: Array<{
   {
     tier: 'easy-medium',
     label: 'Easy / Medium',
-    note: 'Earned on Easy or Medium · Free Play or Daily, no twist',
+    note: 'Earned on Easy or Medium · no variants',
   },
   {
     tier: 'hard-extreme',
     label: 'Hard / Extreme',
-    note: 'Earned on Hard or Extreme · Free Play or Daily, no twist',
+    note: 'Earned on Hard or Extreme · no variants',
   },
   { tier: 'daily', label: 'Daily Puzzles', note: 'Cumulative across daily plays' },
   {
@@ -51,7 +51,7 @@ const TIER_META: Array<{
   {
     tier: 'variant',
     label: 'Variants',
-    note: 'Feats with a twist active · Challenge runs or twisted Dailies',
+    note: 'Earned when variants are active',
   },
   { tier: 'milestone', label: 'Milestones', note: 'Long-term goals across all modes' },
 ];

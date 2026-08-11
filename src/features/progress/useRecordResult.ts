@@ -7,7 +7,6 @@ import {
 } from '../../game/achievements';
 import { BONUS_DECK_POOL, baseId } from '../../game/bonusCards';
 import { LIVE_CHALLENGES, challengeWon } from '../../game/challenges';
-import { Difficulty } from '../../game/rules';
 import { ScoreReport } from '../../game/scoring';
 import {
   RunRecord,
@@ -21,7 +20,10 @@ import {
 } from '../../lib/stats';
 import { usePlaysStore } from '../daily/sync/playsStore';
 import { useGameSession } from '../game/GameSessionProvider';
-import { newlyEarnedFromDailyFinish } from './cumulativeInputs';
+import {
+  cumulativeInputsFrom,
+  newlyEarnedFromDailyFinish,
+} from './cumulativeInputs';
 import { useStatsStore } from './statsStore';
 
 export interface RecordedResult {
@@ -40,8 +42,6 @@ export interface ChallengeTrophy {
   /** True on the challenge's first-ever win; false on an upgrade. */
   first: boolean;
 }
-
-const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
 
 // Guards recording across COMPONENTS, not just re-renders: mobile's
 // ResultView and desktop's result dialog both call this hook, and a
@@ -174,14 +174,20 @@ export function useRecordResult(
         : [];
     for (const id of cumulativeIds) store.recordAchievement(id);
 
+    // Win tallies span every mode (free play, daily, challenges,
+    // Targets Up) via the same helper the cumulative path and the
+    // progress popovers use. For a daily run the plays map doesn't hold
+    // THIS run yet, but that's fine — milestones aren't evaluated on
+    // the daily per-run path (the overlay-aware cumulative check above
+    // owns them).
+    const combined = cumulativeInputsFrom(
+      usePlaysStore.getState().plays,
+      after
+    );
     const milestone = {
-      winsByDifficulty: Object.fromEntries(
-        DIFFICULTIES.map(d => [d, after.byDifficulty[d].wins])
-      ) as Record<Difficulty, number>,
-      ssByDifficulty: Object.fromEntries(
-        DIFFICULTIES.map(d => [d, after.tierCounts[d].SS])
-      ) as Record<Difficulty, number>,
-      totalWins: after.wins,
+      winsByDifficulty: combined.winsByDifficulty,
+      ssByDifficulty: combined.ssByDifficulty,
+      totalWins: combined.totalWins,
       // Count only LIVE catalog entries — a wins list carrying a
       // since-hidden challenge mustn't fire Challenge Sweep early.
       challengesCompleted: after.challengesDone.filter(id =>
