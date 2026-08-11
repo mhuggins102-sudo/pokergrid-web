@@ -50,7 +50,11 @@
       }
     </script>
     <!-- Pre-CSS backgrounds so a slow (or failed) stylesheet never
-         flashes a white page — each theme's --paper surface, inline. -->
+         flashes a white page — each theme's --paper surface, inline.
+         The boot splash below them is the static markup inside #root:
+         visible from the first frame of any cold or recovering boot
+         (React replaces it on mount), so a slow start — including the
+         boot watchdog's 6s window — never reads as a dead blank page. -->
     <style>
       html {
         background: #faf7f1;
@@ -63,6 +67,37 @@
       }
       html[data-theme='card-room-dark'] {
         background: #131210;
+      }
+      .bootSplash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        font: 600 14px system-ui, -apple-system, sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #1a1a16;
+        opacity: 0.55;
+      }
+      html[data-theme='paper-dark'] .bootSplash,
+      html[data-theme='card-room-dark'] .bootSplash {
+        color: #efe9d8;
+      }
+      .bootSpin {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 3px solid currentColor;
+        border-top-color: transparent;
+        animation: pg-boot-spin 800ms linear infinite;
+      }
+      @keyframes pg-boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
     <!-- viewport-fit=cover extends the layout under notch/home-indicator
@@ -84,7 +119,12 @@
     <title>PokerGrid</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="bootSplash" aria-hidden="true">
+        <span class="bootSpin"></span>
+        PokerGrid
+      </div>
+    </div>
     <!-- Boot watchdog: if the app hasn't mounted shortly after load, a
          stale/poisoned cache is almost certainly serving HTML where JS
          should be (the service worker keeps doing so across refreshes,
