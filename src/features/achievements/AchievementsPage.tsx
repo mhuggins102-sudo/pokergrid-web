@@ -34,15 +34,15 @@ const TIER_META: Array<{
 }> = [
   {
     tier: 'easy-medium',
-    label: 'Easy / Medium',
+    label: 'Low Stakes',
     note: 'Earned on Easy or Medium · no variants',
   },
   {
     tier: 'hard-extreme',
-    label: 'Hard / Extreme',
+    label: 'High Stakes',
     note: 'Earned on Hard or Extreme · no variants',
   },
-  { tier: 'daily', label: 'Daily Puzzles', note: 'Cumulative across daily plays' },
+  { tier: 'daily', label: 'Daily Grids', note: 'Cumulative across daily plays' },
   {
     tier: 'challenge',
     label: 'Challenges',
@@ -50,7 +50,7 @@ const TIER_META: Array<{
   },
   {
     tier: 'variant',
-    label: 'Variants',
+    label: 'Twists',
     note: 'Earned when variants are active',
   },
   { tier: 'milestone', label: 'Milestones', note: 'Long-term goals across all modes' },

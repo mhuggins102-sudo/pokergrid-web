@@ -213,11 +213,11 @@ describe('AchievementsPage progress popovers', () => {
     render(<AchievementsPage />);
     expect(screen.queryAllByRole('tooltip')).toHaveLength(0);
 
-    openSection(/Daily Puzzles/);
+    openSection(/Daily Grids/);
     expect(screen.getAllByRole('tooltip')).toHaveLength(2);
     expect(screen.getByText('0 / 20 daily puzzles won')).toBeInTheDocument();
 
-    // Single-open accordion: opening Milestones closes Daily Puzzles.
+    // Single-open accordion: opening Milestones closes Daily Grids.
     openSection(/Milestones/);
     expect(screen.getAllByRole('tooltip')).toHaveLength(5);
     expect(screen.getByText('0 / 25 wins')).toBeInTheDocument();
@@ -228,7 +228,7 @@ describe('AchievementsPage progress popovers', () => {
       stats: statsWith({ achievementsDone: ['daily-20'] }),
     });
     render(<AchievementsPage />);
-    openSection(/Daily Puzzles/);
+    openSection(/Daily Grids/);
     expect(screen.getAllByRole('tooltip')).toHaveLength(1);
     expect(screen.queryByText('0 / 20 daily puzzles won')).toBeNull();
   });
