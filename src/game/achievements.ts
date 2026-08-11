@@ -1,19 +1,24 @@
 import { isJoker } from './cards';
 import { HandRank } from './hands';
-import { ScoreReport } from './scoring';
+import { ScoreReport, scoreGrid, timeTrialAdjust } from './scoring';
 import type { GameState } from './state';
 import { LIVE_CHALLENGES } from './challenges';
+import type { ChallengeId } from './challenges';
 import type { Difficulty } from './rules';
 
 // ============================================================================
 // Achievements — passive accomplishments earned through play.
 //
-// Five tiers:
-//   - 'easy-medium'  : Free Play on Easy or Medium only.
-//   - 'hard-extreme' : Free Play on Hard or Extreme only.
+// Six tiers:
+//   - 'easy-medium'  : any twist-free game on Easy or Medium — Free Play
+//                      or a Daily whose recipe rolled no twist.
+//   - 'hard-extreme' : same, on Hard or Extreme.
 //   - 'daily'        : cumulative across Daily Puzzle plays.
 //   - 'challenge'    : Challenge-flavored goals (catalog sweep + trophy
 //                      counters) — earnable from Challenge runs.
+//   - 'variant'      : single-run feats scoped to one specific twist
+//                      (variantId) — earnable from that Challenge run or
+//                      a Daily carrying the same twist.
 //   - 'milestone'    : longer-term cumulative goals (wins across modes,
 //                      etc.) plus a couple of one-shot prowess
 //                      achievements that don't fit a single-difficulty
@@ -36,6 +41,7 @@ export type AchievementTier =
   | 'hard-extreme'
   | 'daily'
   | 'challenge'
+  | 'variant'
   | 'milestone';
 
 // Pair, Two Pair, and Three of a Kind — and anything that scored nothing
@@ -47,6 +53,10 @@ const LOW_OR_NONE: Set<HandRank> = new Set<HandRank>([
   'THREE_OF_A_KIND',
 ]);
 
+// Retired ids ('easy-overshot', 'easy-soloist') may linger in saved
+// stats.achievementsDone — they stay there (and keep their one-time XP)
+// but no longer render anywhere, since every surface filters through
+// this catalog.
 export type AchievementId =
   | 'balanced'
   | 'dynamite'
@@ -58,9 +68,9 @@ export type AchievementId =
   | 'high-hands'
   | 'gaps-and-glory'
   | 'full-spectrum'
-  | 'easy-overshot'
   | 'easy-grand'
-  | 'easy-soloist'
+  | 'easy-waste-not'
+  | 'easy-triple-crown'
   // Daily puzzles
   | 'daily-first'
   | 'daily-20'
@@ -72,6 +82,10 @@ export type AchievementId =
   | 'all-challenges'
   | 'challenge-trophies-5'
   | 'challenge-golds-3'
+  // Variants (per-twist single-run feats)
+  | 'variant-bull-market'
+  | 'variant-time-trial'
+  | 'variant-double-duty'
   // Milestones
   | 'win-every-difficulty'
   | 'perfect-every-difficulty'
@@ -115,10 +129,13 @@ export interface AchievementCheckCtx {
   state: GameState;
   report: ScoreReport;
   milestone: MilestoneInputs;
-  // Which play mode produced this run. Achievements only count from
-  // Free Play, except for 'all-challenges' which fires when the
-  // qualifying Challenge run clears the last entry in the catalog.
-  mode: 'free' | 'targets-up' | 'challenge';
+  // Which play mode produced this run. Which tiers a mode can award is
+  // decided by modeAllowedFor below.
+  mode: 'free' | 'targets-up' | 'challenge' | 'daily';
+  // The variant shaping this run, if any: the Challenge's own id on a
+  // Challenge run, the recipe twist on a twisted Daily. Null on Free
+  // Play and twist-free Dailies.
+  activeVariant: ChallengeId | null;
 }
 
 export interface Achievement {
@@ -129,19 +146,31 @@ export interface Achievement {
   // Optional — undefined for milestones whose floor isn't a single
   // per-run score.
   scoreTarget?: number;
+  // Variant tier only: the twist this achievement is scoped to. The run
+  // qualifies when its activeVariant matches — that Challenge itself or
+  // a Daily carrying the same twist.
+  variantId?: ChallengeId;
   conditionMet: (ctx: AchievementCheckCtx) => boolean;
 }
 
+// Points the Bull Market ♣ invest perk contributed to the final score:
+// the full report minus a re-score of the same board without the
+// accumulated handBoost. The options mirror the final-report options the
+// result surfaces pass, so the diff is exact even if a future variant
+// combines invests with bonus cards or the clock.
+const investedPoints = (state: GameState, report: ScoreReport): number => {
+  if (Object.keys(state.handBoost ?? {}).length === 0) return 0;
+  const without = scoreGrid(state.grid, state.bonusCards, {
+    deckRemaining: state.deck.length,
+    discards: state.discards,
+    perkSpent: state.perkSpent,
+    timeAdjust: timeTrialAdjust(state),
+  });
+  return report.total - without.total;
+};
+
 export const ACHIEVEMENTS: Achievement[] = [
   // ---------- Easy / Medium tier ----------
-  {
-    id: 'easy-overshot',
-    tier: 'easy-medium',
-    name: 'Overshot',
-    description: 'Score 750+ points.',
-    scoreTarget: 750,
-    conditionMet: () => true,
-  },
   {
     id: 'easy-grand',
     tier: 'easy-medium',
@@ -151,13 +180,23 @@ export const ACHIEVEMENTS: Achievement[] = [
     conditionMet: () => true,
   },
   {
-    id: 'easy-soloist',
+    id: 'easy-waste-not',
     tier: 'easy-medium',
-    name: 'Soloist',
-    description: 'Score 500+ with no joker on the grid at game end.',
-    scoreTarget: 500,
-    conditionMet: ({ state }) =>
-      !state.grid.some(c => c !== null && isJoker(c)),
+    name: 'Waste Not',
+    description: 'Score 750+ with 15+ cards still in the deck at game end.',
+    scoreTarget: 750,
+    conditionMet: ({ state }) => state.deck.length >= 15,
+  },
+  {
+    id: 'easy-triple-crown',
+    tier: 'easy-medium',
+    name: 'Triple Crown',
+    description: 'Score 750+ with 3+ straight or royal flushes on the grid.',
+    scoreTarget: 750,
+    conditionMet: ({ report }) =>
+      report.lines.filter(
+        l => l.hand === 'STRAIGHT_FLUSH' || l.hand === 'ROYAL_FLUSH'
+      ).length >= 3,
   },
 
   // ---------- Hard / Extreme tier ----------
@@ -317,6 +356,41 @@ export const ACHIEVEMENTS: Achievement[] = [
     conditionMet: ({ milestone }) => milestone.challengeGold >= 3,
   },
 
+  // ---------- Variants ----------
+  // Single-run feats inside one specific twist — the Challenge run or a
+  // Daily whose recipe rolled the same twist (variantId gating).
+  {
+    id: 'variant-bull-market',
+    tier: 'variant',
+    variantId: 'bull-market',
+    name: 'Bull Run',
+    description:
+      'Bull Market — score 500+ with 300+ points coming from ♣ investments.',
+    scoreTarget: 500,
+    conditionMet: ({ state, report }) => investedPoints(state, report) >= 300,
+  },
+  {
+    id: 'variant-time-trial',
+    tier: 'variant',
+    variantId: 'time-trial',
+    name: 'Lightning Round',
+    description: 'Time Trial — score 500+ finishing in under 1:30.',
+    scoreTarget: 500,
+    conditionMet: ({ state }) => state.elapsedMs < 90_000,
+  },
+  {
+    id: 'variant-double-duty',
+    tier: 'variant',
+    variantId: 'double-duty',
+    name: 'Flipping Out',
+    description: 'Double Duty — score 500+ with 10 or more cards flipped.',
+    scoreTarget: 500,
+    // Every flip burns exactly two deck cards (the reducer refuses a
+    // flip when fewer than 2 remain), and UNDO restores them — so
+    // burned.length / 2 is the honest flip count.
+    conditionMet: ({ state }) => state.burned.length >= 20,
+  },
+
   // ---------- Milestones ----------
   {
     id: 'win-every-difficulty',
@@ -371,36 +445,51 @@ export const findAchievement = (id: AchievementId): Achievement | undefined =>
 // the catalog directly.
 export const CHALLENGES_TOTAL = LIVE_CHALLENGES.length;
 
-// Achievements only earn on Free Play runs, with an exception for the
-// Challenge tier ('all-challenges' and the two trophy counters): their
-// qualifying event IS a Challenge win, so they fire on challenge runs
-// too.
+// Which runs can award which tiers:
+//   - easy-medium / hard-extreme: any twist-free run — Free Play or a
+//     Daily whose recipe rolled no twist. The activeVariant check also
+//     keeps them off Challenge runs (every Challenge runs on the Hard
+//     ruleset AND is itself a variant).
+//   - challenge: Free Play or Challenge runs — the trophy counters'
+//     qualifying event IS a Challenge win.
+//   - variant: only a run carrying the matching twist — that Challenge
+//     itself or a Daily with the same twist in its recipe.
+//   - milestone: Free Play only (the daily path reaches the same
+//     milestones through earnedCumulativeAchievements).
 const modeAllowedFor = (
   ach: Achievement,
-  mode: AchievementCheckCtx['mode']
+  ctx: AchievementCheckCtx
 ): boolean => {
+  const { mode, activeVariant } = ctx;
   // Daily-tier achievements are cumulative over the plays map, recorded
   // by earnedCumulativeAchievements — never by the per-run engine.
   if (ach.tier === 'daily') return false;
   if (ach.tier === 'challenge') {
     return mode === 'free' || mode === 'challenge';
   }
-  return mode === 'free';
+  if (ach.tier === 'variant') {
+    return (
+      (mode === 'challenge' || mode === 'daily') &&
+      ach.variantId !== undefined &&
+      activeVariant === ach.variantId
+    );
+  }
+  if (ach.tier === 'milestone') return mode === 'free';
+  // easy-medium / hard-extreme
+  return (mode === 'free' || mode === 'daily') && activeVariant === null;
 };
 
 // Earned iff the achievement's tier-specific gating passes AND the
 // per-tier condition fires. Easy-Medium / Hard-Extreme tiers require a
-// matching Free Play difficulty plus a score floor; Challenges and
-// Milestones run the condition directly and ignore per-difficulty /
-// score gating. Every tier additionally requires modeAllowedFor —
-// without it Hard-tier achievements would fire on Challenge runs
-// because every Challenge runs on the Hard ruleset.
+// matching difficulty plus a score floor; Challenges and Milestones run
+// the condition directly and ignore per-difficulty / score gating;
+// Variants add their own score floor on top of the twist match.
 export const achievementEarned = (
   ach: Achievement,
   ctx: AchievementCheckCtx
 ): boolean => {
-  const { state, report, mode } = ctx;
-  if (!modeAllowedFor(ach, mode)) return false;
+  const { state, report } = ctx;
+  if (!modeAllowedFor(ach, ctx)) return false;
   if (
     ach.tier === 'easy-medium' &&
     state.difficulty !== 'easy' &&

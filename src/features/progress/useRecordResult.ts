@@ -55,8 +55,11 @@ const recordedStates = new WeakSet<object>();
  * ResultScreen's recording effect. Free play records a full RunRecord
  * (with Shapley attribution) and evaluates achievements; challenges
  * record completion on a win (and can fire the all-challenges
- * milestone); Targets-Up records only the best-level high-water mark
- * (its save lifecycle lives with the rewards flow).
+ * milestone plus Variant feats); dailies check the cumulative
+ * thresholds and run the per-run engine (difficulty tiers when
+ * twist-free, Variant feats when twisted); Targets-Up records only the
+ * best-level high-water mark (its save lifecycle lives with the
+ * rewards flow).
  */
 export function useRecordResult(
   report: ScoreReport,
@@ -87,7 +90,18 @@ export function useRecordResult(
         ? 'free'
         : mode.kind === 'challenge'
           ? 'challenge'
-          : 'targets-up';
+          : mode.kind === 'daily'
+            ? 'daily'
+            : 'targets-up';
+    // The twist shaping this run: the Challenge's own id, or a twisted
+    // Daily's recipe twist. Gates the twist-free (easy/medium +
+    // hard/extreme) tiers and matches the Variant tier's variantId.
+    const activeVariant =
+      mode.kind === 'challenge'
+        ? mode.id
+        : mode.kind === 'daily'
+          ? (mode.recipe.twist ?? null)
+          : null;
 
     // Per-card attribution with any -pwrN suffix stripped.
     const attribution = state.bonusCards.map((c, i) => ({
@@ -134,35 +148,31 @@ export function useRecordResult(
       store.recordTargetsUp(mode.level);
     }
 
-    // Daily finishes skip the per-run engine (its achievements are all
-    // free/challenge-gated) but can cross a cumulative threshold — first
-    // daily win, a streak, a combined-win milestone. Check against an
-    // overlay that includes THIS run (the play is saved by ResultView's
-    // later effect) so the newly crossed ones surface in the 🏆 callout;
-    // useSyncDailyAchievements would otherwise record them silently.
-    if (mode.kind === 'daily') {
-      const ids = newlyEarnedFromDailyFinish(
-        usePlaysStore.getState().plays,
-        {
-          dateISO: mode.dateISO,
-          score: report.total,
-          won,
-          recipe: mode.recipe,
-          completedAt: Date.now(),
-          state,
-        },
-        before
-      );
-      for (const id of ids) store.recordAchievement(id);
-      if (ids.length > 0) {
-        setNewAchievements(
-          ids.flatMap(id => ACHIEVEMENTS.filter(a => a.id === id))
-        );
-      }
-      return;
-    }
-
     if (achMode === 'targets-up') return;
+
+    // Daily finishes can cross a cumulative threshold — first daily win,
+    // a streak, a combined-win milestone. Check against an overlay that
+    // includes THIS run (the play is saved by ResultView's later effect)
+    // so the newly crossed ones surface in the 🏆 callout;
+    // useSyncDailyAchievements would otherwise record them silently.
+    // The per-run engine below then runs on top: a twist-free daily can
+    // earn the difficulty tiers, a twisted one its Variant feats.
+    const cumulativeIds =
+      mode.kind === 'daily'
+        ? newlyEarnedFromDailyFinish(
+            usePlaysStore.getState().plays,
+            {
+              dateISO: mode.dateISO,
+              score: report.total,
+              won,
+              recipe: mode.recipe,
+              completedAt: Date.now(),
+              state,
+            },
+            before
+          )
+        : [];
+    for (const id of cumulativeIds) store.recordAchievement(id);
 
     const milestone = {
       winsByDifficulty: Object.fromEntries(
@@ -193,12 +203,25 @@ export function useRecordResult(
       totalBonusCardsInPool: BONUS_DECK_POOL.length,
     };
 
-    const ctx: AchievementCheckCtx = { state, report, milestone, mode: achMode };
+    const ctx: AchievementCheckCtx = {
+      state,
+      report,
+      milestone,
+      mode: achMode,
+      activeVariant,
+    };
     const earned = ACHIEVEMENTS.filter(
-      a => !before.achievementsDone.includes(a.id) && achievementEarned(a, ctx)
+      a =>
+        !before.achievementsDone.includes(a.id) &&
+        !cumulativeIds.includes(a.id) &&
+        achievementEarned(a, ctx)
     );
     for (const a of earned) store.recordAchievement(a.id);
-    if (earned.length > 0) setNewAchievements(earned);
+    const announced = [
+      ...cumulativeIds.flatMap(id => ACHIEVEMENTS.filter(a => a.id === id)),
+      ...earned,
+    ];
+    if (announced.length > 0) setNewAchievements(announced);
   }, [mode, setup, state, report, shapley, won, viewOnly]);
 
   return { won, tier, newAchievements, challengeTrophy };
