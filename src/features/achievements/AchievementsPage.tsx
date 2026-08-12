@@ -42,18 +42,26 @@ const TIER_META: Array<{
     label: 'High Stakes',
     note: 'Earned on Hard or Extreme · no variants',
   },
-  { tier: 'daily', label: 'Daily Grids', note: 'Cumulative across daily plays' },
+  {
+    tier: 'daily',
+    label: 'The Daily Grind',
+    note: 'Cumulative across daily plays',
+  },
   {
     tier: 'challenge',
-    label: 'Challenges',
+    label: 'The Circuit',
     note: 'Trophy goals across the Challenge catalog',
   },
   {
     tier: 'variant',
-    label: 'Twists',
+    label: "Dealer's Choice",
     note: 'Earned when variants are active',
   },
-  { tier: 'milestone', label: 'Milestones', note: 'Long-term goals across all modes' },
+  {
+    tier: 'milestone',
+    label: 'The Long Run',
+    note: 'Long-term goals across all modes',
+  },
 ];
 
 // SVG ring: r=15.5 → circumference ≈ 97.4.
