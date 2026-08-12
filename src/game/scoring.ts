@@ -70,8 +70,9 @@ export interface ScoreOptions {
   // FINAL score surfaces pass it — the live score stays board-only.
   timeAdjust?: number;
   // Nut Low: score every line as a 2-7 lowball hand (LOW_HAND_VALUE
-  // table — BUSTED lines cost 25, like the unfinished penalty). Always
-  // paired with a no-bonus-card game (state.lowball mirrors
+  // table — a pair or worse BUSTS for -50, and the mode's unfinished
+  // lines cost the same -50 instead of INCOMPLETE_LINE_PENALTY).
+  // Always paired with a no-bonus-card game (state.lowball mirrors
   // noBonusCards), so line/grid multipliers stay 1 in practice.
   lowball?: boolean;
 }
@@ -213,7 +214,11 @@ export const scoreGrid = (
     // incomplete); ctx.hand keeps the high evaluation — see ScoredLine.
     const lowHand = lowball ? evaluateLowLine(ctx.cards) : undefined;
     if (!ctx.hand) {
-      const total = incomplete && !ignorePenalty ? INCOMPLETE_LINE_PENALTY : 0;
+      // Nut Low's unfinished lines cost the same -50 a busted hand does.
+      const penalty = lowball
+        ? LOW_HAND_VALUE.BUSTED
+        : INCOMPLETE_LINE_PENALTY;
+      const total = incomplete && !ignorePenalty ? penalty : 0;
       return {
         ...ctx,
         lowHand,

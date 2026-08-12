@@ -489,6 +489,8 @@ const reportStats = (s: Stats): string => {
             targetOverride: findChallenge('nut-low').scoreTarget,
             noBonusCards: true,
             lowball: true,
+            noJokers: true,
+            deckLimit: findChallenge('nut-low').deckLimit,
           })
         );
       }

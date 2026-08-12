@@ -5,6 +5,7 @@ import {
   ScoreReport,
   ScoredLine,
 } from '../../../game/scoring';
+import { LOW_HAND_VALUE } from '../../../game/lowHands';
 import { Chevron, Sheet } from '../../../design/primitives';
 import { lineHandLabel, lineLabel } from '../handLabels';
 import {
@@ -99,7 +100,15 @@ function LineRow({
         ) : line.incomplete ? (
           <div className={`${styles.calcRow} ${styles.penalty}`}>
             <span>Unfinished at game end</span>
-            <span>{line.total !== 0 ? line.total : INCOMPLETE_LINE_PENALTY}</span>
+            {/* Landed penalties read from the total; the live fallback
+                uses the mode's own penalty (Nut Low: Busted's -50). */}
+            <span>
+              {line.total !== 0
+                ? line.total
+                : line.lowHand !== undefined
+                  ? LOW_HAND_VALUE.BUSTED
+                  : INCOMPLETE_LINE_PENALTY}
+            </span>
           </div>
         ) : (
           <div className={`${styles.calcRow} ${styles.muted}`}>

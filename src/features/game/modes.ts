@@ -85,6 +85,9 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               mode.id === 'bull-market' ||
               mode.id === 'nut-low',
             lowball: mode.id === 'nut-low',
+            // Nut Low's Hard ruleset is jokerless: the joker goes first,
+            // then the catalog's deckLimit (40) trims 12 random standards.
+            noJokers: mode.id === 'nut-low',
             initialBonusCards:
               mode.id === 'three-tricks'
                 ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
@@ -136,7 +139,9 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
         start: rng =>
           newGame(difficulty, rng, {
             targetOverride: target,
-            deckLimit: twist === 'short-deck' ? 45 : undefined,
+            // Deck-trimming twists carry their size on the catalog entry
+            // (Short Deck 45, Nut Low 40); everything else stays full.
+            deckLimit: twist ? findChallenge(twist).deckLimit : undefined,
             noDiscards: twist === 'no-discards',
             randomPerks: twist === 'short-circuit',
             noBonusCards:
@@ -145,6 +150,10 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               twist === 'bull-market' ||
               twist === 'nut-low',
             lowball: twist === 'nut-low',
+            // Nut Low dailies: Hard plays jokerless like the challenge;
+            // Easy/Medium keep their jokers in the random trim pool, so
+            // the 40-card deck may hold 0..2 of them.
+            noJokers: twist === 'nut-low' && difficulty === 'hard',
             // The Three Tricks trio is seeded off the date (its own
             // salt) so it's globally identical without sharing the
             // deck's rng stream.

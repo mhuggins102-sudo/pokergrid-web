@@ -142,18 +142,15 @@ describe('2-7 lowball evaluation — no joker', () => {
     );
   });
 
-  it('scores exactly one pair as One Pair — even a pair of aces', () => {
+  it('busts ANY pair and every heavier count hand', () => {
     expectLow(
       [C('2', 'S'), C('2', 'H'), C('5', 'D'), C('8', 'C'), C('K', 'S')],
-      'ONE_PAIR'
+      'BUSTED'
     );
     expectLow(
       [C('A', 'S'), C('A', 'H'), C('4', 'D'), C('7', 'C'), C('9', 'S')],
-      'ONE_PAIR'
+      'BUSTED'
     );
-  });
-
-  it('busts two pair and every heavier count hand', () => {
     expectLow(
       [C('2', 'S'), C('2', 'H'), C('5', 'D'), C('5', 'C'), C('K', 'S')],
       'BUSTED'
@@ -201,18 +198,18 @@ describe('2-7 lowball evaluation — joker resolves LOW', () => {
     expectLow([C('4', 'S'), C('5', 'H'), C('7', 'D'), JK, JK], 'THE_NUTS');
   });
 
-  it('cannot unmake an existing pair', () => {
+  it('cannot unmake an existing pair — the line stays busted', () => {
     expectLow(
       [C('K', 'S'), C('K', 'H'), C('Q', 'D'), C('J', 'C'), JK],
-      'ONE_PAIR'
+      'BUSTED'
     );
   });
 });
 
 describe('the lowball value ladder', () => {
-  it('mirrors the high game values, 150 down, with Busted at -25', () => {
+  it('runs 150 down to 5 with Busted at -50 — no zero-point hand', () => {
     expect(Object.values(LOW_HAND_VALUE).sort((a, b) => b - a)).toEqual([
-      150, 120, 90, 70, 50, 40, 30, 20, 12, 5, 0, -25,
+      150, 120, 90, 70, 50, 40, 30, 20, 12, 5, -50,
     ]);
   });
 });
