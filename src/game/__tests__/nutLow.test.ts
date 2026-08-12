@@ -1,7 +1,8 @@
+import { Card, isJoker } from '../cards';
 import { seededRng } from '../deck';
 import { LIVE_CHALLENGES, findChallenge } from '../challenges';
 import { dailyTargetFor, recipeFor } from '../daily/recipe';
-import { newGame } from '../state';
+import { GameState, newGame } from '../state';
 import { setupForMode } from '../../features/game/modes';
 
 // The real challenge configuration, mirroring modes.ts's 'nut-low' case.
@@ -10,7 +11,17 @@ const nutLowGame = (seed = 7) =>
     targetOverride: findChallenge('nut-low').scoreTarget,
     noBonusCards: true,
     lowball: true,
+    noJokers: true,
+    deckLimit: findChallenge('nut-low').deckLimit,
   });
+
+// Every physical card the deal touched: still in the deck, already on
+// the grid, or in hand as the drawn card.
+const allCards = (s: GameState): Card[] => [
+  ...s.deck,
+  ...s.grid.filter((c): c is Card => c !== null),
+  ...(s.drawn ? [s.drawn] : []),
+];
 
 describe('Nut Low — newGame wiring', () => {
   it('sets the lowball flag and strips every bonus card', () => {
@@ -22,8 +33,18 @@ describe('Nut Low — newGame wiring', () => {
     expect(s.handBoost).toEqual({});
   });
 
-  it('standard games stay high-hand scored', () => {
-    expect(newGame('hard', seededRng(7)).lowball).toBe(false);
+  it('deals a 40-card deck with no joker anywhere', () => {
+    for (const seed of [1, 7, 42]) {
+      const cards = allCards(nutLowGame(seed));
+      expect(cards).toHaveLength(40);
+      expect(cards.some(isJoker)).toBe(false);
+    }
+  });
+
+  it('standard games stay high-hand scored with a full deck', () => {
+    const plain = newGame('hard', seededRng(7));
+    expect(plain.lowball).toBe(false);
+    expect(allCards(plain)).toHaveLength(53); // 52 + Hard's 1 joker
   });
 
   it('setupForMode wires the challenge route', () => {
@@ -33,6 +54,37 @@ describe('Nut Low — newGame wiring', () => {
     expect(s.lowball).toBe(true);
     expect(s.noBonusCards).toBe(true);
     expect(s.target).toBe(400);
+    const cards = allCards(s);
+    expect(cards).toHaveLength(40);
+    expect(cards.some(isJoker)).toBe(false);
+  });
+
+  it('daily twists trim to 40 — Hard jokerless, Easy jokers in the pool', () => {
+    // Hand-built recipes (Nut Low isn't in the rotation yet): the daily
+    // wiring must mirror the challenge on Hard, and on Easy the 14
+    // random removals come from the full 54-card deck — jokers merely
+    // MAY survive.
+    const hard = setupForMode({
+      kind: 'daily',
+      dateISO: '2026-06-01',
+      recipe: { difficulty: 'hard', twist: 'nut-low' },
+    }).start(seededRng(5));
+    expect(hard.lowball).toBe(true);
+    expect(hard.target).toBe(400);
+    expect(allCards(hard)).toHaveLength(40);
+    expect(allCards(hard).some(isJoker)).toBe(false);
+
+    const easy = setupForMode({
+      kind: 'daily',
+      dateISO: '2026-06-01',
+      recipe: { difficulty: 'easy', twist: 'nut-low' },
+    }).start(seededRng(5));
+    expect(easy.lowball).toBe(true);
+    expect(easy.target).toBe(400);
+    expect(allCards(easy)).toHaveLength(40);
+    const jokers = allCards(easy).filter(isJoker).length;
+    expect(jokers).toBeGreaterThanOrEqual(0);
+    expect(jokers).toBeLessThanOrEqual(2);
   });
 });
 

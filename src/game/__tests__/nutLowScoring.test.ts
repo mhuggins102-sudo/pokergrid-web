@@ -55,7 +55,7 @@ describe('scoreGrid under the lowball option', () => {
     expect(threeSuitNuts.total).toBe(150);
   });
 
-  it('a busted line costs 25', () => {
+  it('a busted line costs 50', () => {
     const row0 = row0Of(
       gridWithRow0([
         C('2', 'H'), C('2', 'C'), C('5', 'D'), C('5', 'S'), C('K', 'H'),
@@ -65,30 +65,30 @@ describe('scoreGrid under the lowball option', () => {
     expect(row0.lowHand).toBe('BUSTED');
     // hand keeps the HIGH evaluation — completeness checks stay intact.
     expect(row0.hand).toBe('TWO_PAIR');
-    expect(row0.base).toBe(-25);
-    expect(row0.total).toBe(-25);
+    expect(row0.base).toBe(-50);
+    expect(row0.total).toBe(-50);
   });
 
-  it('One Pair scores zero, whatever its suits', () => {
+  it('a single pair busts too — no hand scores zero', () => {
     const row0 = row0Of(
       gridWithRow0([
         C('2', 'H'), C('2', 'C'), C('5', 'D'), C('8', 'S'), C('K', 'H'),
       ]),
       true
     );
-    expect(row0.lowHand).toBe('ONE_PAIR');
-    expect(row0.base).toBe(0);
-    expect(row0.flat).toBe(0);
-    expect(row0.total).toBe(0);
+    expect(row0.lowHand).toBe('BUSTED');
+    expect(row0.total).toBe(-50);
   });
 
-  it('keeps the incomplete-line penalty rules', () => {
+  it("unfinished lines cost the mode's own -50", () => {
     const empty = emptyGrid();
-    expect(scoreGrid(empty, [], { lowball: true }).total).toBe(-250);
+    expect(scoreGrid(empty, [], { lowball: true }).total).toBe(-500);
     expect(
       scoreGrid(empty, [], { lowball: true, ignoreIncompletePenalty: true })
         .total
     ).toBe(0);
+    // ...while the high game keeps its -25.
+    expect(scoreGrid(empty, []).total).toBe(-250);
     // Incomplete lines carry lowHand: null (not undefined) in lowball.
     const { lines } = scoreGrid(empty, [], { lowball: true });
     for (const l of lines) expect(l.lowHand).toBeNull();

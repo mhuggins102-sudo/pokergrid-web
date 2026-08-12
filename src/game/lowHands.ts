@@ -17,14 +17,14 @@ import {
 // high (rankIndex maps A → 14), which also means A-2-3-4-5 is NOT a
 // straight here — it reads as an ace-high low.
 //
-// Twelve categories. The top of the ladder follows real 2-7 granularity —
+// Eleven categories. The top of the ladder follows real 2-7 granularity —
 // lows are named by their first two cards (a "smooth" 8-6 beats a "rough"
 // 8-7, and any 8-high beats any 9-high) — while the court-card highs
-// merge (J/Q, K/A). One Pair scores nothing, and BUSTED (two pair or
-// worse, any straight or flush) COSTS 25, the same as an unfinished
-// line. A non-straight 6-high is impossible (the only five distinct
-// ranks ≤ 6 are 2-3-4-5-6, a straight), so nothing sits between The
-// Nuts/Seven High and the eights.
+// merge (J/Q, K/A). ANY pair busts: no hand scores zero, and BUSTED
+// (a pair or worse, any straight or flush) COSTS 50, the same as an
+// unfinished line. A non-straight 6-high is impossible (the only five
+// distinct ranks ≤ 6 are 2-3-4-5-6, a straight), so nothing sits
+// between The Nuts/Seven High and the eights.
 // ============================================================================
 
 export type LowHandRank =
@@ -38,31 +38,30 @@ export type LowHandRank =
   | 'TEN_HIGH'
   | 'JACK_QUEEN_HIGH'
   | 'KING_ACE_HIGH'
-  | 'ONE_PAIR'
   | 'BUSTED';
 
 // Ordering primitive for joker resolution and tier-sorted displays —
 // higher is better, exactly like HAND_TIER in hands.ts. Matches 2-7
-// rankings (any no-pair beats One Pair; any 8-high beats any 9-high)
-// with everything from two pair down flattened into BUSTED.
+// rankings (any 8-high beats any 9-high) with every paired hand,
+// straight, and flush flattened into BUSTED.
 export const LOW_TIER: Record<LowHandRank, number> = {
   BUSTED: 0,
-  ONE_PAIR: 1,
-  KING_ACE_HIGH: 2,
-  JACK_QUEEN_HIGH: 3,
-  TEN_HIGH: 4,
-  NINE_HIGH: 5,
-  NUT_NINE: 6,
-  ROUGH_EIGHT: 7,
-  SMOOTH_EIGHT: 8,
-  NUT_EIGHT: 9,
-  SEVEN_HIGH: 10,
-  THE_NUTS: 11,
+  KING_ACE_HIGH: 1,
+  JACK_QUEEN_HIGH: 2,
+  TEN_HIGH: 3,
+  NINE_HIGH: 4,
+  NUT_NINE: 5,
+  ROUGH_EIGHT: 6,
+  SMOOTH_EIGHT: 7,
+  NUT_EIGHT: 8,
+  SEVEN_HIGH: 9,
+  THE_NUTS: 10,
 };
 
 // The high game's point ladder reassigned to the low categories — plus
-// BUSTED at the incomplete-line penalty (a busted line costs 25, same
-// as never finishing it).
+// BUSTED at Nut Low's own penalty (a busted line costs 50, same as
+// never finishing it; scoring.ts uses this value for the mode's
+// incomplete-line penalty too).
 export const LOW_HAND_VALUE: Record<LowHandRank, number> = {
   THE_NUTS: 150,
   SEVEN_HIGH: 120,
@@ -74,8 +73,7 @@ export const LOW_HAND_VALUE: Record<LowHandRank, number> = {
   TEN_HIGH: 20,
   JACK_QUEEN_HIGH: 12,
   KING_ACE_HIGH: 5,
-  ONE_PAIR: 0,
-  BUSTED: -25,
+  BUSTED: -50,
 };
 
 export const LOW_HAND_LABEL: Record<LowHandRank, string> = {
@@ -89,7 +87,6 @@ export const LOW_HAND_LABEL: Record<LowHandRank, string> = {
   TEN_HIGH: 'Ten High',
   JACK_QUEEN_HIGH: 'J/Q High',
   KING_ACE_HIGH: 'K/A High',
-  ONE_PAIR: 'One Pair',
   BUSTED: 'Busted',
 };
 
@@ -105,7 +102,6 @@ export const LOW_HAND_ORDER: LowHandRank[] = [
   'TEN_HIGH',
   'JACK_QUEEN_HIGH',
   'KING_ACE_HIGH',
-  'ONE_PAIR',
   'BUSTED',
 ];
 
@@ -127,11 +123,8 @@ const evalLowFive = (cards: StandardCard[]): LowHandRank => {
   }
   const multiset = [...counts.values()].sort((a, b) => b - a);
 
-  // Paired hands can't also be straights/flushes, so these short-circuit.
-  if (multiset[0] > 2 || (multiset[0] === 2 && multiset[1] === 2)) {
-    return 'BUSTED'; // two pair, trips, full house, quads
-  }
-  if (multiset[0] === 2) return 'ONE_PAIR';
+  // ANY pair busts — pairs upward (two pair, trips, boat, quads) too.
+  if (multiset[0] >= 2) return 'BUSTED';
 
   // Five distinct ranks from here. Flush: all five real suits equal —
   // any wild present breaks it (its suit is free to differ).

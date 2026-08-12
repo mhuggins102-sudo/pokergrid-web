@@ -5,6 +5,7 @@ import {
   ScoredLine,
   effectiveHandBase,
 } from '../../../game/scoring';
+import { LOW_HAND_VALUE } from '../../../game/lowHands';
 import { Sheet } from '../../../design/primitives';
 import { lineHandLabel, lineLabel } from '../handLabels';
 import {
@@ -206,7 +207,14 @@ export function LineDetailSheet({
                 <span className={styles.rowLabel}>
                   * Unfinished at game end
                 </span>
-                <span>{INCOMPLETE_LINE_PENALTY}</span>
+                {/* Nut Low's unfinished lines cost its Busted -50, not
+                    the high game's -25 (lowHand is null, not undefined,
+                    on incomplete lowball lines). */}
+                <span>
+                  {line.lowHand !== undefined
+                    ? LOW_HAND_VALUE.BUSTED
+                    : INCOMPLETE_LINE_PENALTY}
+                </span>
               </div>
             )}
             {gridBonusesApplied && (

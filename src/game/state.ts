@@ -557,9 +557,13 @@ export interface NewGameOptions {
   // becomes available on the drawn card.
   doubleDuty?: boolean;
   // Nut Low challenge: lines score as 2-7 lowball hands (see
-  // src/game/lowHands.ts) with a flat rainbow bonus per four-suit line.
-  // Always paired with noBonusCards = true.
+  // src/game/lowHands.ts). Always paired with noBonusCards = true.
   lowball?: boolean;
+  // Strip every joker from the deck before any deckLimit trim — Nut
+  // Low's Hard ruleset plays jokerless (a lowball joker is pure
+  // upside). Deck-construction-time only; nothing reads it after
+  // newGame.
+  noJokers?: boolean;
 }
 
 export const newGame = (
@@ -586,6 +590,7 @@ export const newGame = (
     investHands = false,
     doubleDuty = false,
     lowball = false,
+    noJokers = false,
   } = options;
   // Joker count is determined by difficulty (Easy ships 2 jokers, Hard
   // ships 1, Extreme ships 0). Targets-Up infers difficulty from level
@@ -596,6 +601,12 @@ export const newGame = (
   // Double Duty: pair every standard card with a dual identity before any
   // card leaves the deck, so the pairing covers all 52 physical cards.
   if (doubleDuty) deck = assignDualIdentities(deck, rng);
+  // Jokerless rules (Nut Low on Hard) drop the jokers BEFORE any
+  // deckLimit trim, so the trim removes exactly N random standards.
+  // Without the flag, jokers ride the shuffle into the trim pool like
+  // any other card (a trimmed Easy/Medium daily may keep 0..all of
+  // them).
+  if (noJokers) deck = deck.filter(c => !isJoker(c));
   if (deckLimit !== undefined && deckLimit < deck.length) {
     deck = deck.slice(0, deckLimit);
   }
