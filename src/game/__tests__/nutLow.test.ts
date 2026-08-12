@@ -33,10 +33,10 @@ describe('Nut Low — newGame wiring', () => {
     expect(s.handBoost).toEqual({});
   });
 
-  it('deals a 40-card deck with no joker anywhere', () => {
+  it('deals a 44-card deck with no joker anywhere', () => {
     for (const seed of [1, 7, 42]) {
       const cards = allCards(nutLowGame(seed));
-      expect(cards).toHaveLength(40);
+      expect(cards).toHaveLength(44);
       expect(cards.some(isJoker)).toBe(false);
     }
   });
@@ -55,13 +55,13 @@ describe('Nut Low — newGame wiring', () => {
     expect(s.noBonusCards).toBe(true);
     expect(s.target).toBe(400);
     const cards = allCards(s);
-    expect(cards).toHaveLength(40);
+    expect(cards).toHaveLength(44);
     expect(cards.some(isJoker)).toBe(false);
   });
 
-  it('daily twists trim to 40 — Hard jokerless, Easy jokers in the pool', () => {
+  it('daily twists trim to 44 — Hard jokerless, Easy jokers in the pool', () => {
     // Hand-built recipes (Nut Low isn't in the rotation yet): the daily
-    // wiring must mirror the challenge on Hard, and on Easy the 14
+    // wiring must mirror the challenge on Hard, and on Easy the 10
     // random removals come from the full 54-card deck — jokers merely
     // MAY survive.
     const hard = setupForMode({
@@ -71,7 +71,7 @@ describe('Nut Low — newGame wiring', () => {
     }).start(seededRng(5));
     expect(hard.lowball).toBe(true);
     expect(hard.target).toBe(400);
-    expect(allCards(hard)).toHaveLength(40);
+    expect(allCards(hard)).toHaveLength(44);
     expect(allCards(hard).some(isJoker)).toBe(false);
 
     const easy = setupForMode({
@@ -81,7 +81,7 @@ describe('Nut Low — newGame wiring', () => {
     }).start(seededRng(5));
     expect(easy.lowball).toBe(true);
     expect(easy.target).toBe(400);
-    expect(allCards(easy)).toHaveLength(40);
+    expect(allCards(easy)).toHaveLength(44);
     const jokers = allCards(easy).filter(isJoker).length;
     expect(jokers).toBeGreaterThanOrEqual(0);
     expect(jokers).toBeLessThanOrEqual(2);

@@ -189,11 +189,11 @@ export const CHALLENGES: Challenge[] = [
     id: 'nut-low',
     name: 'Nut Low',
     synopsis: 'Twist: Lines score as 2-7 lowball hands',
-    goal: 'Score 400+ points with the table flipped: every line scores as a deuce-to-seven LOW hand, so 7-5-4-3-2 — "The Nuts" — is the best line in the game. Aces are always high (A-2-3-4-5 is just ace-high), and a busted line — ANY pair, straight, or flush — costs 50, same as an unfinished line. The deck is trimmed to 40 cards: no joker, and 12 more removed at random. No bonus cards. Tap Hand values for the full table.',
+    goal: 'Score 400+ points with the table flipped: every line scores as a deuce-to-seven LOW hand, so 7-5-4-3-2 — "The Nuts" — is the best line in the game. Aces are always high (A-2-3-4-5 is just ace-high), and a busted line — ANY pair, straight, or flush — costs 50, same as an unfinished line. The deck is trimmed to 44 cards: no joker, and 8 more removed at random. No bonus cards. Tap Hand values for the full table.',
     scoreTarget: 400,
-    // 40 cards after the joker strip (noJokers in modes.ts): the joker
-    // plus 12 random standards are gone before play.
-    deckLimit: 40,
+    // 44 cards after the joker strip (noJokers in modes.ts): the joker
+    // plus 8 random standards are gone before play.
+    deckLimit: 44,
     // Enforced at newGame (lowball + noBonusCards + noJokers): scoring
     // swaps to the 2-7 table (src/game/lowHands.ts) and the bonus deck
     // is stripped. Hitting the score target is the only end-state check.
