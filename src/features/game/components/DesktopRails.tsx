@@ -42,7 +42,6 @@ import {
   LOW_HAND_LABEL,
   LOW_HAND_ORDER,
   LOW_HAND_VALUE,
-  RAINBOW_BONUS,
 } from '../../../game/lowHands';
 import { fmtMult } from '../lineBonuses';
 import { EndgameRow, linePotential } from '../lineInsights';
@@ -104,24 +103,24 @@ export function HandValuesTable({
   lowball?: boolean;
 }) {
   if (lowball) {
+    // Just the hand ladder — no rainbow / unfinished rows (playtest
+    // feedback). Busted doubles as the unfinished warning at the same
+    // -25, styled like the penalty row.
     return (
       <>
         <span className={styles.handsTitle}>Hand values</span>
         <div className={styles.handsRows}>
           {LOW_HAND_ORDER.map(hand => (
-            <div key={hand} className={styles.handsRow}>
+            <div
+              key={hand}
+              className={`${styles.handsRow}${
+                LOW_HAND_VALUE[hand] < 0 ? ` ${styles.handsPenalty}` : ''
+              }`}
+            >
               <span>{LOW_HAND_LABEL[hand]}</span>
               <b>{LOW_HAND_VALUE[hand]}</b>
             </div>
           ))}
-          <div className={styles.handsRow}>
-            <span>Rainbow line (all 4 suits)</span>
-            <b>+{RAINBOW_BONUS}</b>
-          </div>
-          <div className={`${styles.handsRow} ${styles.handsPenalty}`}>
-            <span>Unfinished line at game end</span>
-            <b>{INCOMPLETE_LINE_PENALTY}</b>
-          </div>
         </div>
       </>
     );

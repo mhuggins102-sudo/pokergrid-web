@@ -35,7 +35,7 @@ describe('scoreGrid under the lowball option', () => {
     for (const l of lines) expect(l.lowHand).toBeUndefined();
   });
 
-  it('prices the Number One at 150 with the rainbow flat on top', () => {
+  it('prices The Nuts at 150 with the rainbow flat on top', () => {
     // ♠♥♦♣♠ — all four suits → +25 rainbow.
     const row0 = row0Of(
       gridWithRow0([
@@ -43,7 +43,7 @@ describe('scoreGrid under the lowball option', () => {
       ]),
       true
     );
-    expect(row0.lowHand).toBe('NUMBER_ONE');
+    expect(row0.lowHand).toBe('THE_NUTS');
     expect(row0.base).toBe(150);
     expect(row0.flat).toBe(RAINBOW_BONUS);
     expect(row0.total).toBe(150 + RAINBOW_BONUS);
@@ -57,13 +57,14 @@ describe('scoreGrid under the lowball option', () => {
       ]),
       true
     );
-    expect(row0.lowHand).toBe('NUMBER_ONE');
+    expect(row0.lowHand).toBe('THE_NUTS');
     expect(row0.flat).toBe(0);
     expect(row0.total).toBe(150);
   });
 
-  it('a busted rainbow line still collects the +25', () => {
-    // Two pair (busted low) across all four suits.
+  it('a busted line costs 25 — rainbow or not', () => {
+    // Two pair (busted low) across all four suits: the rainbow bonus
+    // only pays on MADE hands, so the full -25 lands.
     const row0 = row0Of(
       gridWithRow0([
         C('2', 'H'), C('2', 'C'), C('5', 'D'), C('5', 'S'), C('K', 'H'),
@@ -73,7 +74,21 @@ describe('scoreGrid under the lowball option', () => {
     expect(row0.lowHand).toBe('BUSTED');
     // hand keeps the HIGH evaluation — completeness checks stay intact.
     expect(row0.hand).toBe('TWO_PAIR');
+    expect(row0.base).toBe(-25);
+    expect(row0.flat).toBe(0);
+    expect(row0.total).toBe(-25);
+  });
+
+  it('a rainbow One Pair collects the +25 on its 0 base', () => {
+    const row0 = row0Of(
+      gridWithRow0([
+        C('2', 'H'), C('2', 'C'), C('5', 'D'), C('8', 'S'), C('K', 'H'),
+      ]),
+      true
+    );
+    expect(row0.lowHand).toBe('ONE_PAIR');
     expect(row0.base).toBe(0);
+    expect(row0.flat).toBe(RAINBOW_BONUS);
     expect(row0.total).toBe(RAINBOW_BONUS);
   });
 

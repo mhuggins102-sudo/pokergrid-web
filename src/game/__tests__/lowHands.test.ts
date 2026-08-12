@@ -21,10 +21,10 @@ describe('2-7 lowball evaluation — no joker', () => {
     expectLow([C('2', 'H'), C('3', 'C'), C('4', 'D'), C('5', 'S'), null], null);
   });
 
-  it('crowns 7-5-4-3-2 offsuit as the Number One', () => {
+  it('crowns 7-5-4-3-2 offsuit as The Nuts', () => {
     expectLow(
       [C('7', 'S'), C('5', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
-      'NUMBER_ONE'
+      'THE_NUTS'
     );
   });
 
@@ -35,10 +35,10 @@ describe('2-7 lowball evaluation — no joker', () => {
     );
   });
 
-  it('reads A-2-3-4-5 as ace-high — the wheel is NOT a straight in 2-7', () => {
+  it('reads A-2-3-4-5 as an ace-high low — the wheel is NOT a straight in 2-7', () => {
     expectLow(
       [C('A', 'S'), C('2', 'H'), C('3', 'D'), C('4', 'C'), C('5', 'S')],
-      'ACE_HIGH'
+      'KING_ACE_HIGH'
     );
   });
 
@@ -52,58 +52,98 @@ describe('2-7 lowball evaluation — no joker', () => {
       'BUSTED'
     );
     expectLow(
+      [C('4', 'S'), C('5', 'H'), C('6', 'D'), C('7', 'C'), C('8', 'S')],
+      'BUSTED'
+    );
+    expectLow(
       [C('10', 'S'), C('J', 'H'), C('Q', 'D'), C('K', 'C'), C('A', 'S')],
       'BUSTED'
     );
   });
 
-  it('groups the other three 7-highs as Seven Low (7-6-5-4-3 is a straight)', () => {
+  it('groups the other three 7-highs as Seven High (all read 7-6)', () => {
     expectLow(
       [C('7', 'S'), C('6', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
-      'SEVEN_LOW'
+      'SEVEN_HIGH'
     );
     expectLow(
       [C('7', 'S'), C('6', 'H'), C('5', 'D'), C('3', 'C'), C('2', 'S')],
-      'SEVEN_LOW'
+      'SEVEN_HIGH'
     );
     expectLow(
       [C('7', 'S'), C('6', 'H'), C('5', 'D'), C('4', 'C'), C('2', 'S')],
-      'SEVEN_LOW'
+      'SEVEN_HIGH'
+    );
+  });
+
+  it('splits the eights by their second card: nut 8-5, smooth 8-6, rough 8-7', () => {
+    expectLow(
+      [C('8', 'S'), C('5', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
+      'NUT_EIGHT'
     );
     expectLow(
-      [C('7', 'S'), C('6', 'H'), C('5', 'D'), C('4', 'C'), C('3', 'S')],
+      [C('8', 'S'), C('6', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
+      'SMOOTH_EIGHT'
+    );
+    expectLow(
+      [C('8', 'S'), C('6', 'H'), C('5', 'D'), C('3', 'C'), C('2', 'S')],
+      'SMOOTH_EIGHT'
+    );
+    // 8-6-5-4-3 is NOT a straight (no 7) — still a smooth 8.
+    expectLow(
+      [C('8', 'S'), C('6', 'H'), C('5', 'D'), C('4', 'C'), C('3', 'S')],
+      'SMOOTH_EIGHT'
+    );
+    expectLow(
+      [C('8', 'S'), C('7', 'H'), C('6', 'D'), C('5', 'C'), C('2', 'S')],
+      'ROUGH_EIGHT'
+    );
+    expectLow(
+      [C('8', 'S'), C('7', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
+      'ROUGH_EIGHT'
+    );
+  });
+
+  it('splits the nines: Nut 9 is exactly 9-5-4-3-2', () => {
+    expectLow(
+      [C('9', 'S'), C('5', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
+      'NUT_NINE'
+    );
+    expectLow(
+      [C('9', 'S'), C('6', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
+      'NINE_HIGH'
+    );
+    expectLow(
+      [C('9', 'S'), C('8', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
+      'NINE_HIGH'
+    );
+    // ...but 9-8-7-6-5 is a straight.
+    expectLow(
+      [C('9', 'S'), C('8', 'H'), C('7', 'D'), C('6', 'C'), C('5', 'S')],
       'BUSTED'
     );
   });
 
-  it('categorizes each low by its highest card', () => {
-    expectLow(
-      [C('8', 'S'), C('5', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
-      'EIGHT_LOW'
-    );
-    expectLow(
-      [C('9', 'S'), C('6', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S')],
-      'NINE_LOW'
-    );
+  it('merges the top of the ladder: ten, J/Q, K/A highs', () => {
     expectLow(
       [C('10', 'S'), C('7', 'H'), C('5', 'D'), C('3', 'C'), C('2', 'S')],
-      'TEN_LOW'
+      'TEN_HIGH'
     );
     expectLow(
       [C('J', 'S'), C('8', 'H'), C('6', 'D'), C('4', 'C'), C('2', 'S')],
-      'JACK_LOW'
+      'JACK_QUEEN_HIGH'
     );
     expectLow(
       [C('Q', 'S'), C('9', 'H'), C('7', 'D'), C('4', 'C'), C('2', 'S')],
-      'QUEEN_LOW'
+      'JACK_QUEEN_HIGH'
     );
     expectLow(
       [C('K', 'S'), C('9', 'H'), C('6', 'D'), C('4', 'C'), C('2', 'S')],
-      'KING_LOW'
+      'KING_ACE_HIGH'
     );
     expectLow(
       [C('A', 'S'), C('8', 'H'), C('6', 'D'), C('4', 'C'), C('2', 'S')],
-      'ACE_HIGH'
+      'KING_ACE_HIGH'
     );
   });
 
@@ -139,31 +179,31 @@ describe('2-7 lowball evaluation — no joker', () => {
 });
 
 describe('2-7 lowball evaluation — joker resolves LOW', () => {
-  it('fills the missing card of the Number One', () => {
+  it('fills the missing card of The Nuts', () => {
     expectLow(
       [C('7', 'S'), C('5', 'H'), C('4', 'D'), C('2', 'C'), JK],
-      'NUMBER_ONE'
+      'THE_NUTS'
     );
   });
 
   it('picks a 7 over completing the 2-3-4-5-6 straight or pairing', () => {
     expectLow(
       [C('2', 'S'), C('3', 'H'), C('4', 'D'), C('5', 'C'), JK],
-      'NUMBER_ONE'
+      'THE_NUTS'
     );
   });
 
   it('dodges the flush with its suit choice', () => {
     // Four monosuited low cards: a high-hand joker would flush; a low
-    // joker takes the missing 4 in another suit for the Number One.
+    // joker takes the missing 4 in another suit for The Nuts.
     expectLow(
       [C('2', 'H'), C('3', 'H'), C('5', 'H'), C('7', 'H'), JK],
-      'NUMBER_ONE'
+      'THE_NUTS'
     );
   });
 
-  it('two jokers rebuild the Number One from 4-5-7', () => {
-    expectLow([C('4', 'S'), C('5', 'H'), C('7', 'D'), JK, JK], 'NUMBER_ONE');
+  it('two jokers rebuild The Nuts from 4-5-7', () => {
+    expectLow([C('4', 'S'), C('5', 'H'), C('7', 'D'), JK, JK], 'THE_NUTS');
   });
 
   it('cannot unmake an existing pair', () => {
@@ -202,9 +242,9 @@ describe('isRainbowLine', () => {
 });
 
 describe('the lowball value ladder', () => {
-  it('mirrors the high game values, 150 down to 0', () => {
+  it('mirrors the high game values, 150 down, with Busted at -25', () => {
     expect(Object.values(LOW_HAND_VALUE).sort((a, b) => b - a)).toEqual([
-      150, 120, 90, 70, 50, 40, 30, 20, 12, 5, 0,
+      150, 120, 90, 70, 50, 40, 30, 20, 12, 5, 0, -25,
     ]);
   });
 });
