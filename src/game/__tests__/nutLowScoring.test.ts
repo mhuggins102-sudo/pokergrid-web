@@ -1,7 +1,6 @@
 import { Card, Rank, StandardCard, Suit } from '../cards';
 import { emptyGrid, Grid, GRID_SLOTS } from '../grid';
 import { scoreGrid } from '../scoring';
-import { RAINBOW_BONUS } from '../lowHands';
 
 const C = (rank: Rank, suit: Suit): StandardCard => ({
   kind: 'standard',
@@ -35,36 +34,28 @@ describe('scoreGrid under the lowball option', () => {
     for (const l of lines) expect(l.lowHand).toBeUndefined();
   });
 
-  it('prices The Nuts at 150 with the rainbow flat on top', () => {
-    // ♠♥♦♣♠ — all four suits → +25 rainbow.
-    const row0 = row0Of(
+  it('prices The Nuts at a flat 150 — suits carry no bonus', () => {
+    const rainbowNuts = row0Of(
       gridWithRow0([
         C('7', 'S'), C('5', 'H'), C('4', 'D'), C('3', 'C'), C('2', 'S'),
       ]),
       true
     );
-    expect(row0.lowHand).toBe('THE_NUTS');
-    expect(row0.base).toBe(150);
-    expect(row0.flat).toBe(RAINBOW_BONUS);
-    expect(row0.total).toBe(150 + RAINBOW_BONUS);
-  });
-
-  it('withholds the rainbow flat from a three-suit line', () => {
-    // ♠♠♦♣♠ — three suits only.
-    const row0 = row0Of(
+    expect(rainbowNuts.lowHand).toBe('THE_NUTS');
+    expect(rainbowNuts.base).toBe(150);
+    expect(rainbowNuts.flat).toBe(0);
+    expect(rainbowNuts.total).toBe(150);
+    // Three suits, same ranks — identical score.
+    const threeSuitNuts = row0Of(
       gridWithRow0([
         C('7', 'S'), C('5', 'S'), C('4', 'D'), C('3', 'C'), C('2', 'S'),
       ]),
       true
     );
-    expect(row0.lowHand).toBe('THE_NUTS');
-    expect(row0.flat).toBe(0);
-    expect(row0.total).toBe(150);
+    expect(threeSuitNuts.total).toBe(150);
   });
 
-  it('a busted line costs 25 — rainbow or not', () => {
-    // Two pair (busted low) across all four suits: the rainbow bonus
-    // only pays on MADE hands, so the full -25 lands.
+  it('a busted line costs 25', () => {
     const row0 = row0Of(
       gridWithRow0([
         C('2', 'H'), C('2', 'C'), C('5', 'D'), C('5', 'S'), C('K', 'H'),
@@ -75,11 +66,10 @@ describe('scoreGrid under the lowball option', () => {
     // hand keeps the HIGH evaluation — completeness checks stay intact.
     expect(row0.hand).toBe('TWO_PAIR');
     expect(row0.base).toBe(-25);
-    expect(row0.flat).toBe(0);
     expect(row0.total).toBe(-25);
   });
 
-  it('a rainbow One Pair collects the +25 on its 0 base', () => {
+  it('One Pair scores zero, whatever its suits', () => {
     const row0 = row0Of(
       gridWithRow0([
         C('2', 'H'), C('2', 'C'), C('5', 'D'), C('8', 'S'), C('K', 'H'),
@@ -88,8 +78,8 @@ describe('scoreGrid under the lowball option', () => {
     );
     expect(row0.lowHand).toBe('ONE_PAIR');
     expect(row0.base).toBe(0);
-    expect(row0.flat).toBe(RAINBOW_BONUS);
-    expect(row0.total).toBe(RAINBOW_BONUS);
+    expect(row0.flat).toBe(0);
+    expect(row0.total).toBe(0);
   });
 
   it('keeps the incomplete-line penalty rules', () => {

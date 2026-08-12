@@ -78,14 +78,6 @@ function LineRow({
                 <span>+{investedBase(line).invested}</span>
               </div>
             )}
-            {/* Nut Low: the four-suit rainbow bonus is the only flat a
-                line can carry, so base + flat = total reconciles. */}
-            {line.lowHand !== undefined && line.flat > 0 && (
-              <div className={`${styles.calcRow} ${styles.invested}`}>
-                <span>Rainbow bonus</span>
-                <span>+{line.flat}</span>
-              </div>
-            )}
             {applied.map(({ card, mult, flat }, i) => (
               <div key={`${card.id}-${i}`} className={`${styles.calcRow} ${styles.bonus}`}>
                 <span>{card.title}</span>

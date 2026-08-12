@@ -1,7 +1,6 @@
 import {
   Card,
   RANKS,
-  Suit,
   SUITS,
   StandardCard,
   isJoker,
@@ -110,11 +109,6 @@ export const LOW_HAND_ORDER: LowHandRank[] = [
   'BUSTED',
 ];
 
-// Flat bonus for a complete line showing all four suits ("the Royal
-// Sampler"). Pays on any MADE hand — One Pair and better; a busted line
-// takes its full -25 with no rainbow offset (scoring.ts gates it).
-export const RAINBOW_BONUS = 25;
-
 // Evaluates 5 standard cards under 2-7 lowball rules. Supercharged cards
 // ('wild' / 'double') only exist in Targets Up runs and can never appear
 // in a Nut Low game, but this shares deck plumbing with the high
@@ -208,25 +202,3 @@ export const evaluateLowLine = (line: (Card | null)[]): LowHandRank | null => {
   return evalLowWithJokers(standards, jokers);
 };
 
-// True when a COMPLETE line shows all four suits. Jokers (and wilds)
-// count as a free suit of the player's choice. This is decided
-// independently of the joker's low-hand resolution above, and the two
-// never conflict: a flush needs the four real cards monosuited, in which
-// case distinct suits + jokers ≤ 2 and rainbow is unreachable anyway —
-// so whenever a rainbow IS reachable, the joker's flush-dodging suit
-// choice is free to complete it.
-export const isRainbowLine = (line: (Card | null)[]): boolean => {
-  if (line.length !== 5) throw new Error('Line must have exactly 5 slots');
-  if (line.some(c => c === null)) return false;
-  const cards = line as Card[];
-  const free = cards.filter(
-    c => isJoker(c) || (!isJoker(c) && c.supercharge === 'wild')
-  ).length;
-  const suits = new Set<Suit>(
-    cards
-      .filter((c): c is StandardCard => !isJoker(c))
-      .filter(c => c.supercharge !== 'wild')
-      .map(c => c.suit)
-  );
-  return suits.size + free >= 4;
-};

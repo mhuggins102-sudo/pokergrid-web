@@ -7,13 +7,7 @@ import {
 } from './bonusCards';
 import { Grid, lines } from './grid';
 import { evaluateLine, HandRank } from './hands';
-import {
-  LOW_HAND_VALUE,
-  LowHandRank,
-  RAINBOW_BONUS,
-  evaluateLowLine,
-  isRainbowLine,
-} from './lowHands';
+import { LOW_HAND_VALUE, LowHandRank, evaluateLowLine } from './lowHands';
 
 export const HAND_BASE_VALUE: Record<HandRank, number> = {
   HIGH_CARD: 0,
@@ -76,11 +70,9 @@ export interface ScoreOptions {
   // FINAL score surfaces pass it — the live score stays board-only.
   timeAdjust?: number;
   // Nut Low: score every line as a 2-7 lowball hand (LOW_HAND_VALUE
-  // table — BUSTED lines cost 25, like the unfinished penalty) with a
-  // flat +RAINBOW_BONUS on complete four-suit lines that MADE a hand
-  // (One Pair or better). Always paired with a no-bonus-card game
-  // (state.lowball mirrors noBonusCards), so line/grid multipliers
-  // stay 1 in practice.
+  // table — BUSTED lines cost 25, like the unfinished penalty). Always
+  // paired with a no-bonus-card game (state.lowball mirrors
+  // noBonusCards), so line/grid multipliers stay 1 in practice.
   lowball?: boolean;
 }
 
@@ -235,18 +227,7 @@ export const scoreGrid = (
     const base = lowball
       ? LOW_HAND_VALUE[lowHand!]
       : effectiveHandBase(ctx.hand, options.handBoost);
-    const { multiplier, flat: bonusFlat } = applyLineEffects(
-      ctx,
-      bonusCards,
-      allCtxs
-    );
-    // The rainbow bonus pays only on MADE lows (One Pair or better) —
-    // a busted line takes its full -25 with no offset.
-    const flat =
-      bonusFlat +
-      (lowball && lowHand !== 'BUSTED' && isRainbowLine(ctx.cards)
-        ? RAINBOW_BONUS
-        : 0);
+    const { multiplier, flat } = applyLineEffects(ctx, bonusCards, allCtxs);
     const total = Math.ceil(base * multiplier) + flat;
     return { ...ctx, lowHand, base, multiplier, flat, total, incomplete: false };
   });

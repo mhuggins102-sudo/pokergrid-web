@@ -138,15 +138,6 @@ export function LineDetailSheet({
                     <span>+{investedBase(line).invested}</span>
                   </div>
                 )}
-                {/* Nut Low: the four-suit rainbow bonus is the only flat
-                    a line can carry — its own row keeps base + flat =
-                    total reconciled. */}
-                {line.lowHand !== undefined && line.flat > 0 && (
-                  <div className={`${styles.row} ${styles.invested}`}>
-                    <span className={styles.rowLabel}>Rainbow bonus</span>
-                    <span>+{line.flat}</span>
-                  </div>
-                )}
                 {applied.map(({ card, mult, flat }, i) => (
                   <div key={`${card.id}-${i}`} className={`${styles.row} ${styles.bonus}`}>
                     {/* title, not name — names carry "×N (each)" suffixes
