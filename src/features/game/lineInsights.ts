@@ -128,13 +128,20 @@ export const linePotential = (
   // evaluatePartialLine never runs here.
   if (lowball) {
     if (line.hand) {
+      // A busted line's -25 is a real, landed cost — the red penalty
+      // pill (the 'dead' tone), not a muted dash.
       return {
-        tone: line.total > 0 ? 'made' : 'none',
-        label: line.total > 0 ? `+${line.total}` : '–',
+        tone: line.total > 0 ? 'made' : line.total < 0 ? 'dead' : 'none',
+        label:
+          line.total > 0
+            ? `+${line.total}`
+            : line.total < 0
+              ? String(line.total)
+              : '–',
         name: LOW_HAND_LABEL[line.lowHand ?? 'BUSTED'],
         mult: 1,
         filled,
-        value: line.total > 0 ? line.total : 0,
+        value: Math.max(line.total, 0),
       };
     }
     return { tone: 'wip', label: '–', name: 'In Progress', mult: 1, filled, value: 0 };

@@ -8,7 +8,6 @@ import {
   LOW_HAND_LABEL,
   LOW_HAND_ORDER,
   LOW_HAND_VALUE,
-  RAINBOW_BONUS,
 } from '../../../game/lowHands';
 import { HAND_LABEL } from '../handLabels';
 import railStyles from './DesktopRails.module.css';
@@ -48,24 +47,26 @@ export function HandValuesList({
   lowball?: boolean;
 }) {
   if (lowball) {
+    // Just the hand ladder — no rainbow / unfinished rows (playtest
+    // feedback). Busted doubles as the unfinished warning at the same
+    // -25, colored like the penalty row.
     return (
       <div>
-        {LOW_HAND_ORDER.map(hand => (
-          <div key={hand} style={rowStyle}>
+        {LOW_HAND_ORDER.map((hand, i) => (
+          <div
+            key={hand}
+            style={{
+              ...rowStyle,
+              ...(i === LOW_HAND_ORDER.length - 1
+                ? { borderBottom: 'none' }
+                : {}),
+              ...(LOW_HAND_VALUE[hand] < 0 ? { color: 'var(--danger)' } : {}),
+            }}
+          >
             <span>{LOW_HAND_LABEL[hand]}</span>
             <strong>{LOW_HAND_VALUE[hand]}</strong>
           </div>
         ))}
-        <div style={rowStyle}>
-          <span>Rainbow line (all 4 suits)</span>
-          <strong>+{RAINBOW_BONUS}</strong>
-        </div>
-        <div
-          style={{ ...rowStyle, borderBottom: 'none', color: 'var(--danger)' }}
-        >
-          <span>Unfinished line at game end</span>
-          <strong>{INCOMPLETE_LINE_PENALTY}</strong>
-        </div>
       </div>
     );
   }

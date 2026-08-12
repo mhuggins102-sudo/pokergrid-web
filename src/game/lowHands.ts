@@ -13,94 +13,106 @@ import {
 //
 // The sibling of hands.ts for the Nut Low challenge: every line scores as
 // a LOW hand. A hand only counts as a "low" when it has no pair, no
-// straight, and no flush; lows are ranked by their HIGHEST card, so
-// 7-5-4-3-2 is the best hand in the game. Aces are always high
-// (rankIndex maps A → 14), which also means A-2-3-4-5 is NOT a straight
-// here — it reads as ace-high.
+// straight, and no flush; lows are ranked by their HIGHEST cards, so
+// 7-5-4-3-2 ("The Nuts") is the best hand in the game. Aces are always
+// high (rankIndex maps A → 14), which also means A-2-3-4-5 is NOT a
+// straight here — it reads as an ace-high low.
 //
-// Eleven categories, mirroring the high game's HAND_BASE_VALUE ladder
-// value-for-value (150 / 120 / 90 / 70 / 50 / 40 / 30 / 20 / 12 / 5 / 0).
-// A non-straight 6-high is impossible — the only five distinct ranks ≤ 6
-// are 2-3-4-5-6, a straight — so the ladder lands on exactly eleven slots.
+// Twelve categories. The top of the ladder follows real 2-7 granularity —
+// lows are named by their first two cards (a "smooth" 8-6 beats a "rough"
+// 8-7, and any 8-high beats any 9-high) — while the court-card highs
+// merge (J/Q, K/A). One Pair scores nothing, and BUSTED (two pair or
+// worse, any straight or flush) COSTS 25, the same as an unfinished
+// line. A non-straight 6-high is impossible (the only five distinct
+// ranks ≤ 6 are 2-3-4-5-6, a straight), so nothing sits between The
+// Nuts/Seven High and the eights.
 // ============================================================================
 
 export type LowHandRank =
-  | 'NUMBER_ONE'
-  | 'SEVEN_LOW'
-  | 'EIGHT_LOW'
-  | 'NINE_LOW'
-  | 'TEN_LOW'
-  | 'JACK_LOW'
-  | 'QUEEN_LOW'
-  | 'KING_LOW'
-  | 'ACE_HIGH'
+  | 'THE_NUTS'
+  | 'SEVEN_HIGH'
+  | 'NUT_EIGHT'
+  | 'SMOOTH_EIGHT'
+  | 'ROUGH_EIGHT'
+  | 'NUT_NINE'
+  | 'NINE_HIGH'
+  | 'TEN_HIGH'
+  | 'JACK_QUEEN_HIGH'
+  | 'KING_ACE_HIGH'
   | 'ONE_PAIR'
   | 'BUSTED';
 
 // Ordering primitive for joker resolution and tier-sorted displays —
 // higher is better, exactly like HAND_TIER in hands.ts. Matches 2-7
-// rankings with everything from two pair down flattened into BUSTED.
+// rankings (any no-pair beats One Pair; any 8-high beats any 9-high)
+// with everything from two pair down flattened into BUSTED.
 export const LOW_TIER: Record<LowHandRank, number> = {
   BUSTED: 0,
   ONE_PAIR: 1,
-  ACE_HIGH: 2,
-  KING_LOW: 3,
-  QUEEN_LOW: 4,
-  JACK_LOW: 5,
-  TEN_LOW: 6,
-  NINE_LOW: 7,
-  EIGHT_LOW: 8,
-  SEVEN_LOW: 9,
-  NUMBER_ONE: 10,
+  KING_ACE_HIGH: 2,
+  JACK_QUEEN_HIGH: 3,
+  TEN_HIGH: 4,
+  NINE_HIGH: 5,
+  NUT_NINE: 6,
+  ROUGH_EIGHT: 7,
+  SMOOTH_EIGHT: 8,
+  NUT_EIGHT: 9,
+  SEVEN_HIGH: 10,
+  THE_NUTS: 11,
 };
 
-// Same point ladder as HAND_BASE_VALUE, reassigned to the low categories.
+// The high game's point ladder reassigned to the low categories — plus
+// BUSTED at the incomplete-line penalty (a busted line costs 25, same
+// as never finishing it).
 export const LOW_HAND_VALUE: Record<LowHandRank, number> = {
-  NUMBER_ONE: 150,
-  SEVEN_LOW: 120,
-  EIGHT_LOW: 90,
-  NINE_LOW: 70,
-  TEN_LOW: 50,
-  JACK_LOW: 40,
-  QUEEN_LOW: 30,
-  KING_LOW: 20,
-  ACE_HIGH: 12,
-  ONE_PAIR: 5,
-  BUSTED: 0,
+  THE_NUTS: 150,
+  SEVEN_HIGH: 120,
+  NUT_EIGHT: 90,
+  SMOOTH_EIGHT: 70,
+  ROUGH_EIGHT: 50,
+  NUT_NINE: 40,
+  NINE_HIGH: 30,
+  TEN_HIGH: 20,
+  JACK_QUEEN_HIGH: 12,
+  KING_ACE_HIGH: 5,
+  ONE_PAIR: 0,
+  BUSTED: -25,
 };
 
 export const LOW_HAND_LABEL: Record<LowHandRank, string> = {
-  NUMBER_ONE: 'Number One',
-  SEVEN_LOW: 'Seven Low',
-  EIGHT_LOW: 'Eight Low',
-  NINE_LOW: 'Nine Low',
-  TEN_LOW: 'Ten Low',
-  JACK_LOW: 'Jack Low',
-  QUEEN_LOW: 'Queen Low',
-  KING_LOW: 'King Low',
-  ACE_HIGH: 'Ace High',
+  THE_NUTS: 'The Nuts (7-5)',
+  SEVEN_HIGH: 'Seven High (7-6)',
+  NUT_EIGHT: 'Nut 8 (8-5)',
+  SMOOTH_EIGHT: 'Smooth 8 (8-6)',
+  ROUGH_EIGHT: 'Rough 8 (8-7)',
+  NUT_NINE: 'Nut 9 (9-5)',
+  NINE_HIGH: 'Nine High',
+  TEN_HIGH: 'Ten High',
+  JACK_QUEEN_HIGH: 'J/Q High',
+  KING_ACE_HIGH: 'K/A High',
   ONE_PAIR: 'One Pair',
   BUSTED: 'Busted',
 };
 
 // Best-first, for the hand-values reference tables.
 export const LOW_HAND_ORDER: LowHandRank[] = [
-  'NUMBER_ONE',
-  'SEVEN_LOW',
-  'EIGHT_LOW',
-  'NINE_LOW',
-  'TEN_LOW',
-  'JACK_LOW',
-  'QUEEN_LOW',
-  'KING_LOW',
-  'ACE_HIGH',
+  'THE_NUTS',
+  'SEVEN_HIGH',
+  'NUT_EIGHT',
+  'SMOOTH_EIGHT',
+  'ROUGH_EIGHT',
+  'NUT_NINE',
+  'NINE_HIGH',
+  'TEN_HIGH',
+  'JACK_QUEEN_HIGH',
+  'KING_ACE_HIGH',
   'ONE_PAIR',
   'BUSTED',
 ];
 
 // Flat bonus for a complete line showing all four suits ("the Royal
-// Sampler"). Stacks on any category, BUSTED included — flushes bust you,
-// suit diversity pays.
+// Sampler"). Pays on any MADE hand — One Pair and better; a busted line
+// takes its full -25 with no rainbow offset (scoring.ts gates it).
 export const RAINBOW_BONUS = 25;
 
 // Evaluates 5 standard cards under 2-7 lowball rules. Supercharged cards
@@ -138,22 +150,29 @@ const evalLowFive = (cards: StandardCard[]): LowHandRank => {
 
   // Straight: 5 consecutive rank indices. Deliberately NO wheel clause
   // (contrast hands.ts) — aces are only ever high in 2-7, so A-2-3-4-5
-  // has indices [2,3,4,5,14] and falls through to ACE_HIGH.
+  // has indices [2,3,4,5,14] and falls through to KING_ACE_HIGH.
   const uniq = cards.map(c => rankIndex(c.rank)).sort((a, b) => a - b);
   if (uniq[4] - uniq[0] === 4) return 'BUSTED';
 
-  // A qualified low — categorize by the highest card.
+  // A qualified low — categorize by the top cards, 2-7 style. The
+  // "nut" reads (x-5) pin the whole hand: below a 5 only 4-3-2 fit,
+  // so 8-5 is exactly 8-5-4-3-2 and 9-5 exactly 9-5-4-3-2.
   const high = uniq[4];
-  if (high >= 14) return 'ACE_HIGH';
-  if (high === 13) return 'KING_LOW';
-  if (high === 12) return 'QUEEN_LOW';
-  if (high === 11) return 'JACK_LOW';
-  if (high === 10) return 'TEN_LOW';
-  if (high === 9) return 'NINE_LOW';
-  if (high === 8) return 'EIGHT_LOW';
-  // high === 7 (6-high is impossible — see module comment). The nut is
-  // exactly 7-5-4-3-2; the other three 7-lows share the SEVEN_LOW slot.
-  return uniq.join(',') === '2,3,4,5,7' ? 'NUMBER_ONE' : 'SEVEN_LOW';
+  const second = uniq[3];
+  if (high >= 13) return 'KING_ACE_HIGH';
+  if (high >= 11) return 'JACK_QUEEN_HIGH';
+  if (high === 10) return 'TEN_HIGH';
+  if (high === 9) return second === 5 ? 'NUT_NINE' : 'NINE_HIGH';
+  if (high === 8) {
+    // 8-7-6-5-4 is a straight (caught above), so every second card
+    // 5/6/7 maps cleanly.
+    if (second === 5) return 'NUT_EIGHT';
+    if (second === 6) return 'SMOOTH_EIGHT';
+    return 'ROUGH_EIGHT';
+  }
+  // high === 7 (6-high is impossible — see module comment). The Nuts is
+  // exactly 7-5-4-3-2; the other three 7-highs all read 7-6.
+  return second === 5 ? 'THE_NUTS' : 'SEVEN_HIGH';
 };
 
 // Recursive joker substitution, mirroring hands.ts's evalWithJokers:
