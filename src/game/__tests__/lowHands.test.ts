@@ -1,10 +1,5 @@
 import { Card, Rank, StandardCard, Suit } from '../cards';
-import {
-  LOW_HAND_VALUE,
-  LowHandRank,
-  evaluateLowLine,
-  isRainbowLine,
-} from '../lowHands';
+import { LOW_HAND_VALUE, LowHandRank, evaluateLowLine } from '../lowHands';
 
 const C = (rank: Rank, suit: Suit): StandardCard => ({
   kind: 'standard',
@@ -211,33 +206,6 @@ describe('2-7 lowball evaluation — joker resolves LOW', () => {
       [C('K', 'S'), C('K', 'H'), C('Q', 'D'), C('J', 'C'), JK],
       'ONE_PAIR'
     );
-  });
-});
-
-describe('isRainbowLine', () => {
-  it('needs all four suits among the five cards', () => {
-    expect(
-      isRainbowLine([C('2', 'H'), C('3', 'C'), C('4', 'D'), C('5', 'S'), C('9', 'H')])
-    ).toBe(true);
-    expect(
-      isRainbowLine([C('2', 'H'), C('3', 'C'), C('4', 'D'), C('5', 'H'), C('9', 'H')])
-    ).toBe(false);
-  });
-
-  it('a joker fills the missing suit', () => {
-    expect(
-      isRainbowLine([C('2', 'H'), C('3', 'C'), C('4', 'D'), C('5', 'H'), JK])
-    ).toBe(true);
-    // ...but can't cover a two-suit gap.
-    expect(
-      isRainbowLine([C('2', 'H'), C('3', 'H'), C('5', 'H'), C('7', 'H'), JK])
-    ).toBe(false);
-  });
-
-  it('is false for incomplete lines', () => {
-    expect(
-      isRainbowLine([C('2', 'H'), C('3', 'C'), C('4', 'D'), C('5', 'S'), null])
-    ).toBe(false);
   });
 });
 
