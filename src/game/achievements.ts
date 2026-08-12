@@ -162,6 +162,7 @@ const investedPoints = (state: GameState, report: ScoreReport): number => {
     discards: state.discards,
     perkSpent: state.perkSpent,
     timeAdjust: timeTrialAdjust(state),
+    lowball: state.lowball,
   });
   return report.total - without.total;
 };

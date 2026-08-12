@@ -35,6 +35,7 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
         discards: state.discards,
         perkSpent: state.perkSpent,
         handBoost: state.handBoost,
+        lowball: state.lowball,
       }),
     [state]
   );

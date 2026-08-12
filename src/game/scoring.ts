@@ -7,6 +7,13 @@ import {
 } from './bonusCards';
 import { Grid, lines } from './grid';
 import { evaluateLine, HandRank } from './hands';
+import {
+  LOW_HAND_VALUE,
+  LowHandRank,
+  RAINBOW_BONUS,
+  evaluateLowLine,
+  isRainbowLine,
+} from './lowHands';
 
 export const HAND_BASE_VALUE: Record<HandRank, number> = {
   HIGH_CARD: 0,
@@ -30,6 +37,12 @@ export interface ScoredLine extends LineContext {
   flat: number;
   total: number;
   incomplete: boolean; // line has fewer than 5 cards
+  // Nut Low only: the line's 2-7 lowball category (null while the line
+  // is incomplete). Undefined outside lowball scoring. `hand` above
+  // still carries the HIGH evaluation in lowball mode, so every
+  // "line.hand truthy = line complete" check keeps working — display
+  // surfaces prefer lowHand when present (see lineHandLabel).
+  lowHand?: LowHandRank | null;
 }
 
 export interface ScoreReport {
@@ -62,6 +75,11 @@ export interface ScoreOptions {
   // Time Trial: the clock's flat adjustment (timeTrialAdjust). Only the
   // FINAL score surfaces pass it — the live score stays board-only.
   timeAdjust?: number;
+  // Nut Low: score every line as a 2-7 lowball hand (LOW_HAND_VALUE
+  // table) with a flat +RAINBOW_BONUS on complete four-suit lines.
+  // Always paired with a no-bonus-card game (state.lowball mirrors
+  // noBonusCards), so line/grid multipliers stay 1 in practice.
+  lowball?: boolean;
 }
 
 // ---- Time Trial (challenge) -------------------------------------------
@@ -193,17 +211,37 @@ export const scoreGrid = (
     cards: l.cards,
     hand: evaluateLine(l.cards),
   }));
+  const lowball = options.lowball ?? false;
   const scored: ScoredLine[] = allCtxs.map(ctx => {
     const filled = ctx.cards.filter(c => c !== null).length;
     const incomplete = filled < 5;
+    // Nut Low: lowHand is the line's 2-7 category (null while
+    // incomplete); ctx.hand keeps the high evaluation — see ScoredLine.
+    const lowHand = lowball ? evaluateLowLine(ctx.cards) : undefined;
     if (!ctx.hand) {
       const total = incomplete && !ignorePenalty ? INCOMPLETE_LINE_PENALTY : 0;
-      return { ...ctx, base: 0, multiplier: 1, flat: 0, total, incomplete };
+      return {
+        ...ctx,
+        lowHand,
+        base: 0,
+        multiplier: 1,
+        flat: 0,
+        total,
+        incomplete,
+      };
     }
-    const base = effectiveHandBase(ctx.hand, options.handBoost);
-    const { multiplier, flat } = applyLineEffects(ctx, bonusCards, allCtxs);
+    const base = lowball
+      ? LOW_HAND_VALUE[lowHand!]
+      : effectiveHandBase(ctx.hand, options.handBoost);
+    const { multiplier, flat: bonusFlat } = applyLineEffects(
+      ctx,
+      bonusCards,
+      allCtxs
+    );
+    const flat =
+      bonusFlat + (lowball && isRainbowLine(ctx.cards) ? RAINBOW_BONUS : 0);
     const total = Math.ceil(base * multiplier) + flat;
-    return { ...ctx, base, multiplier, flat, total, incomplete: false };
+    return { ...ctx, lowHand, base, multiplier, flat, total, incomplete: false };
   });
   const subtotal = scored.reduce((sum, s) => sum + s.total, 0);
   const incompletePenalty = scored

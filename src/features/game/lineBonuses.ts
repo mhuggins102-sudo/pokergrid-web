@@ -53,10 +53,15 @@ export const hasScoringBonusCards = (cards: BonusCard[]): boolean =>
  * Split a line's (possibly boosted) base into the hand's regular value
  * and the Bull Market ♣ invest on top. `invested` is 0 everywhere
  * outside Bull Market — line.base IS the table value then.
+ *
+ * Nut Low reports (lowHand present) price the base from the LOW table,
+ * so diffing against HAND_BASE_VALUE would fabricate an invest delta —
+ * the base is authoritative there and nothing is ever invested.
  */
 export const investedBase = (
   line: ScoredLine
 ): { raw: number; invested: number } => {
+  if (line.lowHand !== undefined) return { raw: line.base, invested: 0 };
   const raw = line.hand ? HAND_BASE_VALUE[line.hand] : 0;
   return { raw, invested: line.base - raw };
 };

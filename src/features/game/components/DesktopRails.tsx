@@ -37,7 +37,13 @@ import {
   buildModeStats,
 } from '../../stats/modeStats';
 import { ScoreTrend } from '../../stats/ScoreTrend';
-import { HAND_LABEL, lineLabel } from '../handLabels';
+import { HAND_LABEL, lineHandLabel, lineLabel } from '../handLabels';
+import {
+  LOW_HAND_LABEL,
+  LOW_HAND_ORDER,
+  LOW_HAND_VALUE,
+  RAINBOW_BONUS,
+} from '../../../game/lowHands';
 import { fmtMult } from '../lineBonuses';
 import { EndgameRow, linePotential } from '../lineInsights';
 import { DetailSheet } from './BonusCardStrip';
@@ -91,9 +97,35 @@ const HAND_ORDER: HandRank[] = [
  */
 export function HandValuesTable({
   investBoost,
+  lowball = false,
 }: {
   investBoost?: Partial<Record<HandRank, number>>;
+  /** Nut Low: show the 2-7 lowball table (+ rainbow row) instead. */
+  lowball?: boolean;
 }) {
+  if (lowball) {
+    return (
+      <>
+        <span className={styles.handsTitle}>Hand values</span>
+        <div className={styles.handsRows}>
+          {LOW_HAND_ORDER.map(hand => (
+            <div key={hand} className={styles.handsRow}>
+              <span>{LOW_HAND_LABEL[hand]}</span>
+              <b>{LOW_HAND_VALUE[hand]}</b>
+            </div>
+          ))}
+          <div className={styles.handsRow}>
+            <span>Rainbow line (all 4 suits)</span>
+            <b>+{RAINBOW_BONUS}</b>
+          </div>
+          <div className={`${styles.handsRow} ${styles.handsPenalty}`}>
+            <span>Unfinished line at game end</span>
+            <b>{INCOMPLETE_LINE_PENALTY}</b>
+          </div>
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <span className={styles.handsTitle}>Hand values</span>
@@ -139,6 +171,9 @@ export interface ScoringPanelProps {
    *  the row's own "Hands" control already owns that door — desk usage
    *  leaves it unset (the flyout shows). */
   hideHandsInfo?: boolean;
+  /** Nut Low: made lines label from the low table; partial lines carry
+   *  no anticipated hand; the ⓘ table shows lowball values. */
+  lowball?: boolean;
 }
 
 // Status column per the mockup: Empty, In Progress (partial names live
@@ -152,7 +187,7 @@ const lineStatus = (line: ScoredLine): { text: string; muted: boolean } => {
     return { text: 'Incomplete', muted: true };
   }
   if (line.hand) {
-    return { text: HAND_LABEL[line.hand], muted: line.total <= 0 };
+    return { text: lineHandLabel(line), muted: line.total <= 0 };
   }
   return { text: 'In Progress', muted: true };
 };
@@ -178,6 +213,7 @@ export function ScoringPanel({
   endgame = NO_ROWS,
   hover,
   hideHandsInfo = false,
+  lowball = false,
 }: ScoringPanelProps) {
   // Touch tap-toggle for the ⓘ hand-values fly-out (decision E). Called
   // unconditionally (hooks rule) even when the ⓘ is hidden.
@@ -208,7 +244,7 @@ export function ScoringPanel({
               <HandsIcon size={14} />
             </button>
             <div className={styles.handsPop} role="tooltip">
-              <HandValuesTable investBoost={investBoost} />
+              <HandValuesTable investBoost={investBoost} lowball={lowball} />
             </div>
           </span>
         )}
@@ -216,7 +252,13 @@ export function ScoringPanel({
       <div className={styles.lineRows}>
         {report.lines.map(line => {
           const status = lineStatus(line);
-          const p = linePotential(line, bonusCards, report.lines, handBoost);
+          const p = linePotential(
+            line,
+            bonusCards,
+            report.lines,
+            handBoost,
+            lowball
+          );
           const active = hover?.isActive(line) ?? false;
           return (
             <button
@@ -321,6 +363,8 @@ export interface EdgeRailsProps {
   /** Held cards — potentials include hand-independent multipliers. */
   bonusCards?: BonusCard[];
   handBoost?: Partial<Record<HandRank, number>>;
+  /** Nut Low: chips label from the low table, no anticipated hands. */
+  lowball?: boolean;
   hover?: LineHoverProps;
   /** The live board. */
   children: ReactNode;
@@ -340,6 +384,7 @@ export function EdgeRails({
   highlight = null,
   bonusCards = [],
   handBoost,
+  lowball = false,
   hover,
   children,
 }: EdgeRailsProps) {
@@ -372,7 +417,7 @@ export function EdgeRails({
   };
 
   const chip = (line: ScoredLine) => {
-    const p = linePotential(line, bonusCards, report.lines, handBoost);
+    const p = linePotential(line, bonusCards, report.lines, handBoost, lowball);
     const off = p.filled === 0 || (hover?.muted ?? false);
     const active = hover?.isActive(line) ?? false;
     const dim = (hover?.any ?? false) && !active;

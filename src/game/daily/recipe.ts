@@ -63,6 +63,11 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // mechanic is tuned. Also absent from ALL_TWISTS above, so the zero
   // weight is belt-and-braces for the Record type.
   spiraling: 0,
+  // Not in the daily rotation yet — Nut Low ships challenge-only while
+  // its score target is calibrated. To enter the rotation: flip this to
+  // 1, append 'nut-low' to ALL_TWISTS above, and update
+  // dailyRecipe.test.ts's local twist list + 1/N share bounds.
+  'nut-low': 0,
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {
@@ -162,9 +167,11 @@ export const recipeFor = (
 // Poker Purist strips the bonus deck entirely, so scoring is
 // multiplier-free and a flat ceiling makes more sense than scaling.
 // The difficulty's toolkit (jokers / undos / discards) still modifies
-// how hard it FEELS within the mode.
+// how hard it FEELS within the mode. Nut Low is multiplier-free for the
+// same reason, and its lowball values live on their own scale anyway.
 const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
   'poker-purist': 350,
+  'nut-low': 400,
 };
 
 // Delta applied to the difficulty's base target when a twist is active.

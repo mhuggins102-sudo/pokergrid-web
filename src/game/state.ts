@@ -340,6 +340,12 @@ export interface GameState {
   // and the UI hides the bonus card strip entirely. Scoring becomes
   // pure row + column poker math with no multiplier meta-layer.
   noBonusCards: boolean;
+  // True when the Nut Low challenge is active: lines score as 2-7
+  // lowball hands with a flat rainbow bonus (src/game/lowHands.ts,
+  // threaded through ScoreOptions.lowball), and the rails degrade to
+  // "In Progress" for partial lines — a low hand is only defined by
+  // all five cards. Always paired with noBonusCards.
+  lowball: boolean;
   // Mixed Bag challenge: lock each of the 3 hand slots to a category.
   // When set, bonusCards always has exactly 3 entries (length-fixed),
   // empty slots hold a placeholder card matching the slot's kind, and
@@ -550,6 +556,10 @@ export interface NewGameOptions {
   // identity — a derangement of the 52 ranks+suits — and FLIP_CARD
   // becomes available on the drawn card.
   doubleDuty?: boolean;
+  // Nut Low challenge: lines score as 2-7 lowball hands (see
+  // src/game/lowHands.ts) with a flat rainbow bonus per four-suit line.
+  // Always paired with noBonusCards = true.
+  lowball?: boolean;
 }
 
 export const newGame = (
@@ -575,6 +585,7 @@ export const newGame = (
     scatter = false,
     investHands = false,
     doubleDuty = false,
+    lowball = false,
   } = options;
   // Joker count is determined by difficulty (Easy ships 2 jokers, Hard
   // ships 1, Extreme ships 0). Targets-Up infers difficulty from level
@@ -731,6 +742,7 @@ export const newGame = (
     timeTrial,
     elapsedMs: 0,
     noBonusCards,
+    lowball,
     slotCategories,
     scatter,
     scatterSlot: null,
