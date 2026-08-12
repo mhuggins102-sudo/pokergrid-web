@@ -24,7 +24,8 @@ export type ChallengeId =
   | 'bull-market'
   | 'double-duty'
   | 'spiraling'
-  | 'time-trial';
+  | 'time-trial'
+  | 'nut-low';
 
 export interface Challenge {
   id: ChallengeId;
@@ -182,6 +183,17 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at the reducer level: state.spiraling reroutes ♠ from the
     // slide flow into the spiral flow. Hitting the score target is the
     // only end-state check.
+    conditionMet: () => true,
+  },
+  {
+    id: 'nut-low',
+    name: 'Nut Low',
+    synopsis: 'Twist: Lines score as 2-7 lowball hands',
+    goal: 'Score 400+ points with the table flipped: every line scores as a deuce-to-seven LOW hand, so 7-5-4-3-2 is the best line in the game. Aces are always high (A-2-3-4-5 is just ace-high), straights and flushes bust a line, and two pair or worse scores nothing. Jokers become the best LOW card instead. No bonus cards — but a completed line showing all four suits earns a +25 rainbow bonus. Tap Hand values for the full table.',
+    scoreTarget: 400,
+    // Enforced at newGame (lowball + noBonusCards): scoring swaps to the
+    // 2-7 table (src/game/lowHands.ts) and the bonus deck is stripped.
+    // Hitting the score target is the only end-state check.
     conditionMet: () => true,
   },
 ];

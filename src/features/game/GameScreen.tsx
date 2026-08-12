@@ -174,7 +174,10 @@ function debugReport(area: HTMLElement, frame: HTMLElement): void {
  * itself once the flash has played; lives here (not in GridBoard) so
  * the board's ♣-toggle remounts can't replay it.
  */
-function useLineCompletions(report: ScoreReport): ReadonlyMap<number, number> {
+function useLineCompletions(
+  report: ScoreReport,
+  lowball = false
+): ReadonlyMap<number, number> {
   const [sweep, setSweep] = useState<ReadonlyMap<number, number>>(
     () => new Map()
   );
@@ -182,10 +185,15 @@ function useLineCompletions(report: ScoreReport): ReadonlyMap<number, number> {
   const completed = useMemo(() => {
     const set = new Set<string>();
     for (const l of report.lines) {
-      if (l.hand && l.hand !== 'HIGH_CARD') set.add(lineKeyOf(l.kind, l.index));
+      // The "worthless" rank inverts under Nut Low: a High Card line is
+      // often a perfectly good low, and a BUSTED line only deserves the
+      // sweep when its rainbow bonus still scored points.
+      if (l.hand && (lowball ? l.total > 0 : l.hand !== 'HIGH_CARD')) {
+        set.add(lineKeyOf(l.kind, l.index));
+      }
     }
     return set;
-  }, [report]);
+  }, [report, lowball]);
 
   // Kept in a ref so unrelated state changes re-running the effect
   // can't cancel a pending clear (the flash must always expire).
@@ -289,6 +297,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         discards: state.discards,
         perkSpent: state.perkSpent,
         handBoost: state.handBoost,
+        lowball: state.lowball,
       }),
     [state]
   );
@@ -306,6 +315,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             discards: state.discards,
             perkSpent: state.perkSpent,
             handBoost: state.handBoost,
+            lowball: state.lowball,
             // Time Trial: the clock joins the math at game end ONLY —
             // liveReport (and ScoreBar / Shapley / card popups) stay
             // board-only; the header clock pill carries the live worth.
@@ -649,7 +659,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               className={`${styles.rowPop} ${styles.rowHandsPop}`}
               role="tooltip"
             >
-              <HandValuesTable investBoost={investBoost} />
+              <HandValuesTable investBoost={investBoost} lowball={state.lowball} />
             </div>
           </span>
           <span
@@ -678,6 +688,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 investBoost={investBoost}
                 bonusCards={state.bonusCards}
                 handBoost={state.handBoost}
+                lowball={state.lowball}
                 endgame={endgame}
                 hideHandsInfo
               />
@@ -696,6 +707,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     state.bonusCards,
     state.handBoost,
     state.investHands,
+    state.lowball,
     compactRowIcons,
     handsRowPop,
     scoringRowPop,
@@ -724,6 +736,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         discards: state.discards,
         perkSpent: state.perkSpent,
         handBoost: state.handBoost,
+        lowball: state.lowball,
       }).map(v => (v > 0 ? v : undefined)),
     [state]
   );
@@ -810,7 +823,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   );
   // Cells of a line that just completed with a scoring hand — flashed
   // as a staggered sweep on the board.
-  const sweepSlots = useLineCompletions(liveReport);
+  const sweepSlots = useLineCompletions(liveReport, state.lowball);
 
   // Tap-to-place: during normal play the pulsing next slot commits a
   // PLACE directly (same dispatch path as the dock button, so tutorial
@@ -1244,7 +1257,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 detailLine,
                 state.bonusCards,
                 activeReport.lines,
-                state.handBoost
+                state.handBoost,
+                state.lowball
               )
             : null
         }
@@ -1256,6 +1270,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         open={handsOpen}
         onClose={() => setHandsOpen(false)}
         handBoost={state.investHands ? state.handBoost : undefined}
+        lowball={state.lowball}
       />
       <ReviveSheet open={ui.reviveOpen} />
       {ui.clubInvest && (
@@ -1433,6 +1448,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       }
                       bonusCards={state.bonusCards}
                       handBoost={state.handBoost}
+                      lowball={state.lowball}
                       endgame={endgame}
                       hover={hoverCapable ? lineHover : undefined}
                     />
@@ -1459,6 +1475,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     highlight={railHighlight}
                     bonusCards={state.bonusCards}
                     handBoost={state.handBoost}
+                    lowball={state.lowball}
                     hover={hoverCapable ? lineHover : undefined}
                   >
                     {deskBoard}
@@ -1596,6 +1613,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 // cards would take precedence if a mode ever combined
                 // them (none does — investHands pairs noBonusCards).
                 <DeskHandValuesPanel handBoost={state.handBoost} />
+              ) : state.lowball ? (
+                // Nut Low: same treatment — the empty bonus slot shows
+                // the 2-7 lowball value table instead.
+                <DeskHandValuesPanel lowball />
               ) : null}
             </div>
           </div>
@@ -1717,6 +1738,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 // coloring + dashed/solid scheme (live game only).
                 bonusCards={state.bonusCards}
                 handBoost={state.investHands ? state.handBoost : undefined}
+                lowball={state.lowball}
               >
                 {/* The pulsing next slot names its action, same as the desk
                     board's deskBoard call — GridBoard sizes the label down

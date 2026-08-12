@@ -3,7 +3,7 @@ import { BonusCard } from '../../../game/bonusCards';
 import { Grid } from '../../../game/grid';
 import { HandRank } from '../../../game/hands';
 import { ScoreReport, ScoredLine } from '../../../game/scoring';
-import { HAND_LABEL, lineLabel } from '../handLabels';
+import { lineHandLabel, lineLabel } from '../handLabels';
 import { ChipTone, LinePotential, linePotential } from '../lineInsights';
 import { GridBoard } from './GridBoard';
 import styles from './LineRails.module.css';
@@ -58,6 +58,8 @@ export interface LineRailsProps {
    */
   bonusCards?: readonly BonusCard[];
   handBoost?: Partial<Record<HandRank, number>>;
+  /** Nut Low: chips label from the low table, no anticipated hands. */
+  lowball?: boolean;
 }
 
 const toneOf = (line: ScoredLine): string =>
@@ -86,7 +88,7 @@ const chipLabel = (line: ScoredLine, p: LinePotential | null): string => {
       p.label === '–' ? 'no points yet' : `${p.label} points`
     }`;
   }
-  const hand = line.hand ? HAND_LABEL[line.hand] : 'no hand';
+  const hand = line.hand ? lineHandLabel(line) : 'no hand';
   return `${lineLabel(line.kind, line.index)}: ${hand}, ${line.total} points`;
 };
 
@@ -114,6 +116,7 @@ export function LineRails({
   side = 'left',
   bonusCards,
   handBoost,
+  lowball = false,
 }: LineRailsProps) {
   const rows = report.lines.filter(l => l.kind === 'row');
   const cols = report.lines.filter(l => l.kind === 'col');
@@ -136,7 +139,7 @@ export function LineRails({
     // the partial hand's value with any gold mult), not a bare "·". Result
     // screen (no bonusCards): plain sign tone + the numeric tally.
     const p = bonusCards
-      ? linePotential(line, bonusCards, report.lines, handBoost)
+      ? linePotential(line, bonusCards, report.lines, handBoost, lowball)
       : null;
     const tone = p ? POTENTIAL_TONE[p.tone] : toneOf(line);
     const text = p ? p.label : showBase ? String(baseTotal) : chipText(line);

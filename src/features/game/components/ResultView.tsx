@@ -63,6 +63,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
       discards: state.discards,
       perkSpent: state.perkSpent,
       handBoost: state.handBoost,
+      lowball: state.lowball,
       // Time Trial: the clock joins the final math (the breakdown /
       // build helpers zero it internally for their per-card scoring).
       timeAdjust: timeTrialAdjust(state),

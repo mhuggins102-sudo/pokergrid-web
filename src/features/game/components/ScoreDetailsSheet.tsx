@@ -6,7 +6,7 @@ import {
   ScoredLine,
 } from '../../../game/scoring';
 import { Chevron, Sheet } from '../../../design/primitives';
-import { HAND_LABEL, lineLabel } from '../handLabels';
+import { lineHandLabel, lineLabel } from '../handLabels';
 import {
   appliedLineBonuses,
   fmtMult,
@@ -54,7 +54,7 @@ function LineRow({
         <Chevron direction="right" size={18} className={styles.caret} />
         <span className={styles.label}>{lineLabel(line.kind, line.index)}</span>
         {line.hand ? (
-          <span className={styles.hand}>{HAND_LABEL[line.hand]}</span>
+          <span className={styles.hand}>{lineHandLabel(line)}</span>
         ) : (
           <span className={`${styles.hand} ${styles.open}`}>
             {line.incomplete ? 'Open' : '—'}
@@ -66,7 +66,7 @@ function LineRow({
         {line.hand ? (
           <>
             <div className={styles.calcRow}>
-              <span>{HAND_LABEL[line.hand]} base</span>
+              <span>{lineHandLabel(line)} base</span>
               <span>{investedBase(line).raw}</span>
             </div>
             {/* Bull Market: the ♣ invests raise the base additively —
@@ -76,6 +76,14 @@ function LineRow({
               <div className={`${styles.calcRow} ${styles.invested}`}>
                 <span>♣ Invested</span>
                 <span>+{investedBase(line).invested}</span>
+              </div>
+            )}
+            {/* Nut Low: the four-suit rainbow bonus is the only flat a
+                line can carry, so base + flat = total reconciles. */}
+            {line.lowHand !== undefined && line.flat > 0 && (
+              <div className={`${styles.calcRow} ${styles.invested}`}>
+                <span>Rainbow bonus</span>
+                <span>+{line.flat}</span>
               </div>
             )}
             {applied.map(({ card, mult, flat }, i) => (

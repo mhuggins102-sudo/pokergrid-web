@@ -13,9 +13,11 @@ describe('dailyTargetFor', () => {
     });
   });
 
-  describe('every twist keeps the full base target — except poker-purist', () => {
+  describe('every twist keeps the full base target — except the fixed ones', () => {
+    // Poker Purist and Nut Low run multiplier-free (no bonus cards), so
+    // they carry flat targets instead of the difficulty schedule.
     const FULL_BASE_TWISTS = CHALLENGES.map(c => c.id).filter(
-      id => id !== 'poker-purist'
+      id => id !== 'poker-purist' && id !== 'nut-low'
     );
     it.each([
       ['easy', 400],
@@ -33,6 +35,12 @@ describe('dailyTargetFor', () => {
       expect(dailyTargetFor('easy', 'poker-purist')).toBe(350);
       expect(dailyTargetFor('medium', 'poker-purist')).toBe(350);
       expect(dailyTargetFor('hard', 'poker-purist')).toBe(350);
+    });
+
+    it('nut-low is 400 across all difficulties', () => {
+      expect(dailyTargetFor('easy', 'nut-low')).toBe(400);
+      expect(dailyTargetFor('medium', 'nut-low')).toBe(400);
+      expect(dailyTargetFor('hard', 'nut-low')).toBe(400);
     });
   });
 

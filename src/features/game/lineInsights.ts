@@ -6,6 +6,7 @@ import {
   isSpecialCard,
 } from '../../game/bonusCards';
 import { HandRank, evaluatePartialLine } from '../../game/hands';
+import { LOW_HAND_LABEL } from '../../game/lowHands';
 import { Grid } from '../../game/grid';
 import { Card } from '../../game/cards';
 import { ScoredLine, effectiveHandBase } from '../../game/scoring';
@@ -98,7 +99,8 @@ export const linePotential = (
   line: ScoredLine,
   cards: readonly BonusCard[],
   allLines: readonly ScoredLine[],
-  handBoost?: Partial<Record<HandRank, number>>
+  handBoost?: Partial<Record<HandRank, number>>,
+  lowball = false
 ): LinePotential => {
   const filled = line.cards.filter(c => c !== null).length;
   // Game over with the line still open: the incomplete penalty has landed
@@ -116,6 +118,26 @@ export const linePotential = (
   }
   if (filled === 0) {
     return { tone: 'none', label: '–', name: '', mult: 1, filled, value: 0 };
+  }
+  // Nut Low: this branch must come BEFORE the made-hand branches below —
+  // a complete lowball line's high `hand` is often literally HIGH_CARD
+  // (a King Low is nothing as a high hand) and would misread as the
+  // "High Card / none" chip. Partial lines have no anticipated hand at
+  // all: a 2-7 low is only defined by all five cards (any pair, straight
+  // or flush ruins it), so they degrade to the 'wip' shape and
+  // evaluatePartialLine never runs here.
+  if (lowball) {
+    if (line.hand) {
+      return {
+        tone: line.total > 0 ? 'made' : 'none',
+        label: line.total > 0 ? `+${line.total}` : '–',
+        name: LOW_HAND_LABEL[line.lowHand ?? 'BUSTED'],
+        mult: 1,
+        filled,
+        value: line.total > 0 ? line.total : 0,
+      };
+    }
+    return { tone: 'wip', label: '–', name: 'In Progress', mult: 1, filled, value: 0 };
   }
   if (line.hand && line.hand !== 'HIGH_CARD') {
     const gold = line.multiplier > 1;

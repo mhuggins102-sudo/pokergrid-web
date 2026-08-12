@@ -1,5 +1,5 @@
 import { ScoreReport } from '../../../game/scoring';
-import { HAND_LABEL, lineLabel } from '../handLabels';
+import { lineHandLabel, lineLabel } from '../handLabels';
 import styles from './LinesPanel.module.css';
 
 export interface LinesPanelProps {
@@ -26,7 +26,7 @@ export function LinesPanel({ report, title = 'Lines', bare = false }: LinesPanel
           <span className={styles.label}>{lineLabel(line.kind, line.index)}</span>
           {line.hand ? (
             <span className={styles.hand}>
-              {HAND_LABEL[line.hand]}
+              {lineHandLabel(line)}
               {line.multiplier !== 1 && (
                 <span className={styles.mult}>×{trimMult(line.multiplier)}</span>
               )}

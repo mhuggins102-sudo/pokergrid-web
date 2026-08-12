@@ -1,4 +1,5 @@
 import { HandRank } from '../../game/hands';
+import { LOW_HAND_LABEL, LowHandRank } from '../../game/lowHands';
 import { LineKind } from '../../game/grid';
 
 export const HAND_LABEL: Record<HandRank, string> = {
@@ -17,3 +18,19 @@ export const HAND_LABEL: Record<HandRank, string> = {
 
 export const lineLabel = (kind: LineKind, index: number): string =>
   `${kind === 'row' ? 'R' : 'C'}${index + 1}`;
+
+/**
+ * Mode-aware hand name for a scored line: the 2-7 low category when the
+ * report was scored under Nut Low (lowHand present), the high hand
+ * otherwise, '' when the line is empty/incomplete. `lowHand` presence
+ * marks the mode, so callers need no extra threading.
+ */
+export const lineHandLabel = (line: {
+  hand: HandRank | null;
+  lowHand?: LowHandRank | null;
+}): string =>
+  line.lowHand
+    ? LOW_HAND_LABEL[line.lowHand]
+    : line.hand
+      ? HAND_LABEL[line.hand]
+      : '';

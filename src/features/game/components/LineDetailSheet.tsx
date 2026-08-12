@@ -6,7 +6,7 @@ import {
   effectiveHandBase,
 } from '../../../game/scoring';
 import { Sheet } from '../../../design/primitives';
-import { HAND_LABEL, lineLabel } from '../handLabels';
+import { lineHandLabel, lineLabel } from '../handLabels';
 import {
   appliedLineBonuses,
   fmtMult,
@@ -93,7 +93,7 @@ export function LineDetailSheet({
         line
           ? `${forming ? '* ' : ''}${lineLabel(line.kind, line.index)} — ${
               line.hand
-                ? HAND_LABEL[line.hand]
+                ? lineHandLabel(line)
                 : forming
                   ? forming.name
                   : line.incomplete
@@ -126,7 +126,7 @@ export function LineDetailSheet({
               <>
                 <div className={styles.row}>
                   <span className={styles.rowLabel}>
-                    {HAND_LABEL[line.hand]} base
+                    {lineHandLabel(line)} base
                   </span>
                   <span>{investedBase(line).raw}</span>
                 </div>
@@ -136,6 +136,15 @@ export function LineDetailSheet({
                   <div className={`${styles.row} ${styles.invested}`}>
                     <span className={styles.rowLabel}>♣ Invested</span>
                     <span>+{investedBase(line).invested}</span>
+                  </div>
+                )}
+                {/* Nut Low: the four-suit rainbow bonus is the only flat
+                    a line can carry — its own row keeps base + flat =
+                    total reconciled. */}
+                {line.lowHand !== undefined && line.flat > 0 && (
+                  <div className={`${styles.row} ${styles.invested}`}>
+                    <span className={styles.rowLabel}>Rainbow bonus</span>
+                    <span>+{line.flat}</span>
                   </div>
                 )}
                 {applied.map(({ card, mult, flat }, i) => (

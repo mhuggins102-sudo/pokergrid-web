@@ -82,7 +82,9 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             noBonusCards:
               mode.id === 'poker-purist' ||
               mode.id === 'three-tricks' ||
-              mode.id === 'bull-market',
+              mode.id === 'bull-market' ||
+              mode.id === 'nut-low',
+            lowball: mode.id === 'nut-low',
             initialBonusCards:
               mode.id === 'three-tricks'
                 ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
@@ -140,7 +142,9 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             noBonusCards:
               twist === 'poker-purist' ||
               twist === 'three-tricks' ||
-              twist === 'bull-market',
+              twist === 'bull-market' ||
+              twist === 'nut-low',
+            lowball: twist === 'nut-low',
             // The Three Tricks trio is seeded off the date (its own
             // salt) so it's globally identical without sharing the
             // deck's rng stream.

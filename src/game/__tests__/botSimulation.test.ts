@@ -49,11 +49,13 @@
 import {
   Action,
   GameState,
+  NewGameOptions,
   newGame,
   step,
 } from '../state';
 import { Card, isJoker } from '../cards';
 import { BONUS_HAND_LIMIT, BonusCard } from '../bonusCards';
+import { findChallenge } from '../challenges';
 import {
   destroyableSlots,
   executeSlide,
@@ -121,6 +123,10 @@ const projectScore = (
     ignoreIncompletePenalty: false,
     discards: ctx.discards,
     perkSpent: ctx.perkSpent,
+    handBoost: ctx.handBoost,
+    // Nut Low calibration runs: the argmax objective IS the lowball
+    // total, so the bot needs no strategy change.
+    lowball: ctx.lowball,
   }).total;
 };
 
@@ -360,8 +366,11 @@ const pickAction = (s: GameState): Action => {
   }
 };
 
-const runOneGame = (difficulty: Difficulty): number => {
-  let s = newGame(difficulty);
+const runOneGame = (
+  difficulty: Difficulty,
+  options: NewGameOptions = {}
+): number => {
+  let s = newGame(difficulty, Math.random, options);
   const MAX_STEPS = 500;
   for (let i = 0; i < MAX_STEPS; i++) {
     if (s.phase.kind === 'game-over') break;
@@ -374,6 +383,8 @@ const runOneGame = (difficulty: Difficulty): number => {
     deckRemaining: s.deck.length,
     discards: s.discards,
     perkSpent: s.perkSpent,
+    handBoost: s.handBoost,
+    lowball: s.lowball,
   });
   return report.total;
 };
@@ -460,6 +471,34 @@ const reportStats = (s: Stats): string => {
       for (const s of allStats) {
         expect(s.n).toBe(N_GAMES);
       }
+    },
+    300_000
+  );
+
+  // Nut Low target calibration: the same bot, lowball objective (the
+  // argmax already maximizes scoreGrid().total, which IS the lowball
+  // score here). Buckets the distribution against the challenge's
+  // configured target — rerun with SIM_N to taste when retuning it.
+  test(
+    `${N_GAMES} Nut Low games (target calibration)`,
+    () => {
+      const scores: number[] = [];
+      for (let i = 0; i < N_GAMES; i++) {
+        scores.push(
+          runOneGame('hard', {
+            targetOverride: findChallenge('nut-low').scoreTarget,
+            noBonusCards: true,
+            lowball: true,
+          })
+        );
+      }
+      const stats = summarize(
+        'hard',
+        scores,
+        findChallenge('nut-low').scoreTarget
+      );
+      console.log('NUT LOW\n' + reportStats(stats));
+      expect(stats.n).toBe(N_GAMES);
     },
     300_000
   );

@@ -128,6 +128,7 @@ export function DesktopResultDialog({
       discards: state.discards,
       perkSpent: state.perkSpent,
       handBoost: state.handBoost,
+      lowball: state.lowball,
       // Time Trial: the clock joins the final math. (Shapley is immune
       // to a constant term — marginals cancel it — so sharing options
       // is safe.)
