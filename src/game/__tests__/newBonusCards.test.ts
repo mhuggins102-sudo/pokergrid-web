@@ -137,16 +137,16 @@ describe('Even Steven ×2 — lines of only 2/4/6/8/10', () => {
   });
 });
 
-describe('Stairway ×3 — ranks strictly rising in reading order', () => {
+describe('Stairway ×2 — ranks strictly ascending in reading order', () => {
   const stairway = findCard('stairway-x3');
 
-  it('triples an in-order straight (rows read left to right)', () => {
+  it('doubles an in-order straight (rows read left to right)', () => {
     const row0 = row0With(
       gridWithRow0([C('5', 'H'), C('6', 'C'), C('7', 'D'), C('8', 'S'), C('9', 'H')]),
       stairway
     );
     expect(row0.hand).toBe('STRAIGHT');
-    expect(row0.total).toBe(HAND_BASE_VALUE.STRAIGHT * 3);
+    expect(row0.total).toBe(HAND_BASE_VALUE.STRAIGHT * 2);
   });
 
   it('fires on an ordered High Card line — worth 0, by design', () => {
@@ -155,7 +155,7 @@ describe('Stairway ×3 — ranks strictly rising in reading order', () => {
       stairway
     );
     expect(row0.hand).toBe('HIGH_CARD');
-    expect(row0.multiplier).toBe(3);
+    expect(row0.multiplier).toBe(2);
     expect(row0.total).toBe(0);
   });
 
@@ -180,12 +180,12 @@ describe('Stairway ×3 — ranks strictly rising in reading order', () => {
       gridWithRow0([C('A', 'H'), C('4', 'C'), C('7', 'D'), C('9', 'S'), C('J', 'H')]),
       stairway
     );
-    expect(aceLow.multiplier).toBe(3);
+    expect(aceLow.multiplier).toBe(2);
     const aceHigh = row0With(
       gridWithRow0([C('3', 'H'), C('7', 'C'), C('9', 'D'), C('J', 'S'), C('A', 'H')]),
       stairway
     );
-    expect(aceHigh.multiplier).toBe(3);
+    expect(aceHigh.multiplier).toBe(2);
     const aceMid = row0With(
       gridWithRow0([C('3', 'H'), C('7', 'C'), C('A', 'D'), C('J', 'S'), C('K', 'H')]),
       stairway
@@ -200,7 +200,7 @@ describe('Stairway ×3 — ranks strictly rising in reading order', () => {
       gridWithRow0([C('A', 'H'), JK, C('3', 'D'), C('6', 'S'), C('8', 'H')]),
       stairway
     );
-    expect(fits.multiplier).toBe(3);
+    expect(fits.multiplier).toBe(2);
     // No rank exists strictly between A(low) and 2, and repeating A or
     // 2 breaks the uniqueness rule.
     const noFit = row0With(
@@ -215,7 +215,7 @@ describe('Stairway ×3 — ranks strictly rising in reading order', () => {
       gridWithRow0([C('9', 'H'), C('J', 'C'), C('Q', 'D'), C('K', 'S'), JK]),
       stairway
     );
-    expect(row0.multiplier).toBe(3);
+    expect(row0.multiplier).toBe(2);
   });
 
   it('a joker cannot be an ace the line already holds', () => {
@@ -230,15 +230,15 @@ describe('Stairway ×3 — ranks strictly rising in reading order', () => {
   });
 });
 
-describe('Waterfall ×3 — ranks strictly falling in reading order', () => {
+describe('Waterfall ×2 — ranks strictly descending in reading order', () => {
   const waterfall = findCard('waterfall-x3');
 
-  it('triples a descending straight row', () => {
+  it('doubles a descending straight row', () => {
     const row0 = row0With(
       gridWithRow0([C('9', 'H'), C('8', 'C'), C('7', 'D'), C('6', 'S'), C('5', 'H')]),
       waterfall
     );
-    expect(row0.total).toBe(HAND_BASE_VALUE.STRAIGHT * 3);
+    expect(row0.total).toBe(HAND_BASE_VALUE.STRAIGHT * 2);
   });
 
   it('columns read top to bottom', () => {
@@ -246,7 +246,7 @@ describe('Waterfall ×3 — ranks strictly falling in reading order', () => {
       gridWithCol0([C('K', 'H'), C('J', 'C'), C('8', 'D'), C('5', 'S'), C('2', 'H')]),
       waterfall
     );
-    expect(col0.multiplier).toBe(3);
+    expect(col0.multiplier).toBe(2);
     // The same cards bottom-to-top do NOT count as descending.
     const rising = col0With(
       gridWithCol0([C('2', 'H'), C('5', 'S'), C('8', 'D'), C('J', 'C'), C('K', 'H')]),
@@ -292,8 +292,9 @@ describe('catalog wiring', () => {
     for (const [id, mult] of [
       ['oddball-x2', 2],
       ['even-steven-x2', 2],
-      ['stairway-x3', 3],
-      ['waterfall-x3', 3],
+      // Stairway/Waterfall retuned to ×2 — ids keep their x3 tags.
+      ['stairway-x3', 2],
+      ['waterfall-x3', 2],
     ] as const) {
       const card = findCard(id);
       expect(card.lineEffect).toBeDefined();
@@ -306,8 +307,8 @@ describe('catalog wiring', () => {
 
   it('power-ups scale them on the generic ×1.2 path', () => {
     const powered = powerUpBonusCard(findCard('stairway-x3'));
-    expect(powered.multValue).toBe(3.6);
-    expect(powered.mult).toContain('×3.6');
+    expect(powered.multValue).toBe(2.4);
+    expect(powered.mult).toContain('×2.4');
     const poweredOdd = powerUpBonusCard(findCard('oddball-x2'));
     expect(poweredOdd.multValue).toBe(2.4);
   });
