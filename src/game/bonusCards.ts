@@ -759,6 +759,8 @@ const orderedLine = (line: LineContext, descending: boolean): boolean => {
   return passes(false) || passes(true);
 };
 
+// (IDs keep their original x3 tags — the values retuned to ×2 but the
+// ids are persisted in save data, per the catalog-wide convention.)
 const orderedRun = (
   key: 'stairway' | 'waterfall',
   title: string,
@@ -766,22 +768,22 @@ const orderedRun = (
   descending: boolean
 ): BonusCard => ({
   id: `${key}-x3`,
-  name: `${title} ×3 (each)`,
+  name: `${title} ×2 (each)`,
   title,
-  mult: '×3 (each)',
-  description: `Full lines whose ranks strictly ${verb} in order — rows left to right, columns top to bottom. Ace high or low; a joker fills a gap.`,
-  multValue: 3,
-  baseMultValue: 3,
+  mult: '×2 (each)',
+  description: `Lines whose ranks strictly ${verb} (rows left to right, columns top to bottom). Aces can be high or low; jokers fill gaps.`,
+  multValue: 2,
+  baseMultValue: 2,
   lineEffect: (line, card) => {
     if (!line.hand) return {};
     return orderedLine(line, descending)
-      ? { multiplier: card.multValue ?? 3 }
+      ? { multiplier: card.multValue ?? 2 }
       : {};
   },
 });
 
-const stairway = orderedRun('stairway', 'Stairway', 'rise', false);
-const waterfall = orderedRun('waterfall', 'Waterfall', 'fall', true);
+const stairway = orderedRun('stairway', 'Stairway', 'ascend', false);
+const waterfall = orderedRun('waterfall', 'Waterfall', 'descend', true);
 
 // Crossroads — was "Spiral Core". The id stays on the legacy tag so
 // LINE_LOCATION_IDS, daily-play snapshots, and any in-flight saved
