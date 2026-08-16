@@ -1,4 +1,4 @@
-import { blackjackPip, Card, isJoker, Rank, Suit } from './cards';
+import { blackjackPip, Card, isJoker, Rank, rankIndex, Suit } from './cards';
 import {
   CORNER_SLOTS,
   Grid,
@@ -653,6 +653,136 @@ const highKicker: BonusCard = {
   },
 };
 
+// Oddball / Even Steven — lines built entirely from the small odd
+// (3/5/7/9) or even (2/4/6/8/10) ranks. Jokers never block (they're
+// dropped by standardCards, the Royal Touch treatment — a joker's
+// bonus-card identity is independent of its hand-scoring resolution,
+// and a qualifying rank always exists). An all-odd line always makes
+// at least a Pair (5 cards from 4 ranks), so the ×2 always bites;
+// an all-even line can land on 2-4-6-8-10 High Card, where ×2 of a
+// 0 base is still 0 — the whiff is part of the gamble. On the
+// partial-probe path the condition reads the placed cards, so a
+// forming all-odd/all-even line lights up dashed like Suit Density.
+const ODD_RANKS = new Set<Rank>(['3', '5', '7', '9']);
+const EVEN_RANKS = new Set<Rank>(['2', '4', '6', '8', '10']);
+
+const rankParity = (
+  key: 'oddball' | 'even-steven',
+  title: string,
+  ranks: Set<Rank>,
+  listed: string
+): BonusCard => ({
+  id: `${key}-x2`,
+  name: `${title} ×2 (each)`,
+  title,
+  mult: '×2 (each)',
+  description: `Lines of only ${listed}.`,
+  multValue: 2,
+  baseMultValue: 2,
+  lineEffect: (line, card) => {
+    if (!line.hand) return {};
+    const placed = line.cards.filter(c => c !== null);
+    if (placed.length === 0) return {};
+    const qualifies = standardCards(line).every(c => ranks.has(c.rank));
+    return qualifies ? { multiplier: card.multValue ?? 2 } : {};
+  },
+});
+
+const oddball = rankParity(
+  'oddball',
+  'Oddball',
+  ODD_RANKS,
+  'odd ranks (3, 5, 7, 9)'
+);
+const evenSteven = rankParity(
+  'even-steven',
+  'Even Steven',
+  EVEN_RANKS,
+  'even ranks (2, 4, 6, 8, 10)'
+);
+
+// Stairway / Waterfall — full lines whose ranks strictly rise (or
+// fall) along the reading order: rows left→right, columns top→bottom
+// (line.cards is row-major, nothing reverses it). Rules, per the
+// design spec:
+//   - 5 unique ranks required; any repeat breaks it.
+//   - Ace counts high OR low, never mid-line — the check runs under
+//     both mappings (A=1 and A=14).
+//   - A joker fills a slot only if a legal rank EXISTS for it (its
+//     bonus-card identity is independent of hand scoring): A,🃏,3,6,8
+//     ascends (joker reads as 2); A,🃏,2,6,8 does not (nothing fits
+//     strictly between A-low and 2).
+//   - Complete lines only — the explicit null check (rather than the
+//     line.hand guard alone) keeps the card dark on the rails'
+//     partial-probe path, where a 2-card "run" would trivially
+//     qualify (the Symmetric Frame "must be full" precedent).
+// Greedy check: walk the slots tracking the previous rank; a fixed
+// card must be strictly greater, a joker takes the smallest rank the
+// mapping allows (if that collides with a later fixed card, no larger
+// assignment could help — exchange argument); trailing jokers need
+// headroom below the mapping's top rank. Clamping joker picks to
+// [minRank, maxRank] also enforces the no-repeat rule at the edges:
+// under ace-high there is no rank below 2, so 🃏,2,… can't pretend
+// the joker is a phantom "1" — only the ace-low pass (joker AS the
+// ace) can save it, and only when no other ace occupies rank 1.
+const strictlyRising = (
+  vals: readonly (number | null)[], // null = joker slot
+  minRank: number,
+  maxRank: number
+): boolean => {
+  let prev = minRank - 1;
+  for (const v of vals) {
+    const next = v ?? prev + 1;
+    if (next <= prev) return false;
+    prev = next;
+  }
+  return prev <= maxRank;
+};
+
+const orderedLine = (line: LineContext, descending: boolean): boolean => {
+  if (line.cards.some(c => c === null)) return false;
+  const cards = descending ? [...line.cards].reverse() : line.cards;
+  // Two ace mappings: A=14 (rankIndex's native read, ranks 2..14) and
+  // A=1 (ranks 1..13).
+  const passes = (aceLow: boolean): boolean =>
+    strictlyRising(
+      cards.map(c =>
+        c === null || isJoker(c)
+          ? null
+          : aceLow && c.rank === 'A'
+            ? 1
+            : rankIndex(c.rank)
+      ),
+      aceLow ? 1 : 2,
+      aceLow ? 13 : 14
+    );
+  return passes(false) || passes(true);
+};
+
+const orderedRun = (
+  key: 'stairway' | 'waterfall',
+  title: string,
+  verb: string,
+  descending: boolean
+): BonusCard => ({
+  id: `${key}-x3`,
+  name: `${title} ×3 (each)`,
+  title,
+  mult: '×3 (each)',
+  description: `Full lines whose ranks strictly ${verb} in order — rows left to right, columns top to bottom. Ace high or low; a joker fills a gap.`,
+  multValue: 3,
+  baseMultValue: 3,
+  lineEffect: (line, card) => {
+    if (!line.hand) return {};
+    return orderedLine(line, descending)
+      ? { multiplier: card.multValue ?? 3 }
+      : {};
+  },
+});
+
+const stairway = orderedRun('stairway', 'Stairway', 'rise', false);
+const waterfall = orderedRun('waterfall', 'Waterfall', 'fall', true);
+
 // Crossroads — was "Spiral Core". The id stays on the legacy tag so
 // LINE_LOCATION_IDS, daily-play snapshots, and any in-flight saved
 // states keep matching; the player-facing display copy is the only
@@ -1129,7 +1259,7 @@ export const BONUS_DECK_POOL: BonusCard[] = [
   suitDensity('D'),
   suitDensity('C'),
 
-  // Per-line conditional (8) — fire on lines whose CARDS meet a rule
+  // Per-line conditional (12) — fire on lines whose CARDS meet a rule
   rainbowLine,
   jokerLine,
   royalTouch,
@@ -1138,6 +1268,10 @@ export const BONUS_DECK_POOL: BonusCard[] = [
   blackjack,
   lowhand,
   highKicker,
+  oddball,
+  evenSteven,
+  stairway,
+  waterfall,
 
   // Grid-wide (16)
   cleanBorder,
