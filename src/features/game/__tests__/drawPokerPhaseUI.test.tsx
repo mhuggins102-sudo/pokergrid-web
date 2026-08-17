@@ -52,9 +52,9 @@ const baseState = (phase: Record<string, unknown>) => ({
 beforeEach(() => dispatch.mockClear());
 
 describe('draw-select', () => {
-  test('banners the hand count, exactly the draw action', () => {
+  test('banners the hold prompt, exactly the draw action', () => {
     probe(baseState({ kind: 'draw-select', hand: HAND, kept: [1, 2], handNo: 1 }));
-    expect(ui.banner).toBe('Hand 1 of 5 — tap cards to hold');
+    expect(ui.banner).toBe('Select cards to hold');
     expect(ui.actions.map(a => a.id)).toEqual(['draw']);
     expect(ui.actions[0].label).toBe('Draw 3');
     expect(ui.canActivateSpecials).toBe(false);
@@ -94,7 +94,7 @@ describe('draw-place', () => {
     const grid = emptyGrid();
     for (let i = 0; i < 5; i++) grid[i] = c('3', 'S');
     probe({ ...baseState(rowNullPhase), grid });
-    expect(ui.banner).toBe('Hand 2 of 5 — tap a row to place');
+    expect(ui.banner).toBe('Select placement row');
     expect(ui.actions.map(a => a.id)).toEqual(['place-hand']); // no Cancel
     expect(ui.actions[0].disabled).toBe(true);
     expect(ui.isTappable(0)).toBe(false); // filled row 0's first slot
@@ -120,7 +120,7 @@ describe('draw-place', () => {
 
   test('row picked: only that row lights up — staged unstage, open stage', () => {
     probe(baseState(rowPickedPhase));
-    expect(ui.banner).toBe('Tap cards in placing order');
+    expect(ui.banner).toBe('Select cards in placement order');
     expect(ui.roleOf(10)).toBe('selected'); // row 2 col 0 — staged
     ui.onCellTap(10);
     expect(dispatch).toHaveBeenCalledWith({ type: 'UNSTAGE_HAND_CARD', col: 0 });
@@ -164,8 +164,9 @@ describe('draw-place', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'UNSTAGE_HAND_CARD', col: 0 });
   });
 
-  test('place-hand arms only with all five staged', () => {
+  test('place-hand arms with all five staged, banner points at it', () => {
     probe(baseState({ ...rowPickedPhase, placed: [3, 0, 1, 2, 4] }));
+    expect(ui.banner).toBe('Use Place Hand to finalize');
     const place = ui.actions.find(a => a.id === 'place-hand')!;
     expect(place.disabled).toBe(false);
     place.onPress();

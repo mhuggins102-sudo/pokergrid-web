@@ -333,7 +333,7 @@ export function usePhaseUI(): PhaseUI {
         const keptSet = new Set(kept);
         return {
           ...base,
-          banner: `Hand ${handNo} of 5 — tap cards to hold`,
+          banner: 'Select cards to hold',
           ...fromSets(EMPTY_SET),
           isTappable: () => false,
           actions: [
@@ -415,8 +415,10 @@ export function usePhaseUI(): PhaseUI {
           ...base,
           banner:
             row === null
-              ? `Hand ${handNo} of 5 — tap a row to place`
-              : 'Tap cards in placing order',
+              ? 'Select placement row'
+              : allStaged
+                ? 'Use Place Hand to finalize'
+                : 'Select cards in placement order',
           // Roles come from `lit` — the quiet row-switch slots answer
           // taps but stay unhighlighted on purpose.
           ...fromSets(lit, selected),

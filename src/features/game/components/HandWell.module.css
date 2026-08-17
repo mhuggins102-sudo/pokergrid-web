@@ -1,8 +1,11 @@
 /* Five Draw's dock hand — five card slots in a row, each a toggle
  * button. Slots are SQUARE (aspect-ratio, like the grid's .cell) so
- * the dock cards look exactly like they will on the board; the basis
- * caps at 54px so the dock doesn't steal board height. No header —
- * the dock banner above the well carries the step instruction. */
+ * the dock cards look exactly like they will on the board. The 70px
+ * basis fills the dock pin's spare middle (the banner above and the
+ * commit button below are anchored by the dock's space-between, so
+ * bigger cards spend the slack without moving either); on narrow
+ * phones the row is width-bound and the squares shrink to fit. No
+ * header — the dock banner carries the step instruction. */
 
 .well {
   display: flex;
@@ -18,7 +21,7 @@
 
 .slot {
   position: relative;
-  flex: 0 1 54px;
+  flex: 0 1 70px;
   min-width: 34px;
   aspect-ratio: 1 / 1;
   padding: 0;

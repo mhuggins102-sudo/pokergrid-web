@@ -906,10 +906,21 @@ const handleDrawRedraw = (s: GameState): GameState => {
   if (s.phase.kind !== 'draw-select') return s;
   const { hand, kept, handNo } = s.phase;
   const toReplace = hand.map((_, i) => i).filter(i => !kept.includes(i));
+  // When exactly one empty row remains (the fifth hand), picking it is
+  // a formality — the phase opens with it pre-selected and the UI
+  // jumps straight to ordering the cards.
+  const emptyRows: number[] = [];
+  for (let r = 0; r < 5; r++) {
+    let empty = true;
+    for (let c = 0; c < 5; c++) {
+      if (s.grid[r * 5 + c] !== null) empty = false;
+    }
+    if (empty) emptyRows.push(r);
+  }
   const placePhase = (finalHand: Card[]): Phase => ({
     kind: 'draw-place',
     hand: finalHand,
-    row: null,
+    row: emptyRows.length === 1 ? emptyRows[0] : null,
     placed: [null, null, null, null, null],
     handNo,
   });

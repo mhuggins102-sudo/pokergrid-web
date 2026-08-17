@@ -3,6 +3,7 @@ import {
   ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -294,9 +295,32 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // DesktopResultDialog path, matching the desk families.
   const streamlined = family === 'column' && !coach;
 
+  // Five Draw: while a row is being staged, the board — and the live
+  // score, rails, and insights below — all read the grid WITH the
+  // staged hand overlaid. The reducer grid is untouched until the
+  // commit, and outside a staging phase this IS state.grid (same
+  // reference), so every other mode is byte-identical. The payoff:
+  // staging the card that completes a COLUMN (or the row itself)
+  // moves that line's rail and the overall score immediately, and
+  // taking the card back reverses it — the gradual score feedback
+  // every single-card mode gets, which Five Draw's row-at-a-time
+  // commits otherwise hide until the very end.
+  const displayGrid = useMemo(() => {
+    if (state.phase.kind !== 'draw-place' || state.phase.row === null) {
+      return state.grid;
+    }
+    const { hand, row, placed } = state.phase;
+    const g = [...state.grid];
+    for (let c = 0; c < 5; c++) {
+      const idx = placed[c];
+      if (idx !== null) g[row * 5 + c] = hand[idx];
+    }
+    return g;
+  }, [state.phase, state.grid]);
+
   const liveReport = useMemo(
     () =>
-      scoreGrid(state.grid, state.bonusCards, {
+      scoreGrid(displayGrid, state.bonusCards, {
         ignoreIncompletePenalty: true,
         deckRemaining: state.deck.length,
         discards: state.discards,
@@ -304,7 +328,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         handBoost: state.handBoost,
         lowball: state.lowball,
       }),
-    [state]
+    [state, displayGrid]
   );
 
   // Desktop keeps rendering the three-column view once the game ends
@@ -633,8 +657,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const compactRowIcons = !!(twist || mode.kind === 'targets');
   const gameDetailsRow = useMemo(() => {
     const investBoost = state.investHands ? state.handBoost : undefined;
+    // displayGrid (not state.grid): the purple progress rows agree
+    // with the Five Draw staging preview the score is showing.
     const purpleInputs = {
-      grid: state.grid,
+      grid: displayGrid,
       lines: activeReport.lines,
       deckRemaining: state.deck.length,
       discards: state.discards,
@@ -705,7 +731,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   }, [
     navPill,
     activeReport,
-    state.grid,
+    displayGrid,
     state.deck.length,
     state.discards,
     state.perkSpent,
@@ -735,7 +761,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // lines ignored); only positive values are surfaced.
   const liveShapley = useMemo(
     () =>
-      bonusShapleyValues(state.grid, state.bonusCards, {
+      // displayGrid: chip badges agree with the previewed score while
+      // a Five Draw row is being staged (same reference elsewhere).
+      bonusShapleyValues(displayGrid, state.bonusCards, {
         ignoreIncompletePenalty: true,
         deckRemaining: state.deck.length,
         discards: state.discards,
@@ -743,7 +771,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         handBoost: state.handBoost,
         lowball: state.lowball,
       }).map(v => (v > 0 ? v : undefined)),
-    [state]
+    [state, displayGrid]
   );
 
   // View-only archive revisits stay silent — no replayed place ticks,
@@ -758,22 +786,30 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const dockLayout = state.drawPoker ? 'classic' : dockLayoutSetting;
 
   // Five Draw: after Draw commits, the replacements flip into the dock
-  // one at a time (HandWell's stagger) — hold the board's row
+  // one at a time (HandWell's stagger) — hold the board's placement
   // highlights and taps until the last card has landed plus a beat, so
   // the "where to place" step doesn't compete with the reveal. Sized
   // off the actual number drawn (the kept-count of the draw-select
-  // phase just left; stand pat gets no pause).
+  // phase just left; stand pat gets no pause). Triggered on the
+  // draw-select → draw-place TRANSITION (not on row === null: the
+  // fifth hand opens with its row pre-selected), and via a LAYOUT
+  // effect so the pause lands before paint — a passive effect let the
+  // highlights flash for one frame before the pause caught up.
   const [drawRevealPause, setDrawRevealPause] = useState(false);
-  const lastKeptRef = useRef(0);
-  useEffect(() => {
+  const lastDrawRef = useRef<{ kind: string; kept: number }>({
+    kind: '',
+    kept: 0,
+  });
+  useLayoutEffect(() => {
     const ph = state.phase;
-    if (ph.kind === 'draw-select') {
-      lastKeptRef.current = ph.kept.length;
-      return;
-    }
-    if (ph.kind !== 'draw-place' || ph.row !== null) return;
+    const last = lastDrawRef.current;
+    lastDrawRef.current =
+      ph.kind === 'draw-select'
+        ? { kind: ph.kind, kept: ph.kept.length }
+        : { kind: ph.kind, kept: last.kept };
+    if (ph.kind !== 'draw-place' || last.kind !== 'draw-select') return;
     if (reduceMotion || prefersReducedMotion()) return;
-    const drawn = 5 - lastKeptRef.current;
+    const drawn = 5 - last.kept;
     if (drawn === 0) return;
     const revealMs =
       ((drawn - 1) * REVEAL_STAGGER + REVEAL_DURATION) * 1000;
@@ -1226,23 +1262,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     </span>
   );
 
-  // Five Draw: while a row is being staged, the board renders the grid
-  // WITH the staged hand cards overlaid (preview only — the reducer
-  // grid is untouched until the commit, so score/rails/insights don't
-  // move early). Everything else keeps reading state.grid.
-  const displayGrid = (() => {
-    if (state.phase.kind !== 'draw-place' || state.phase.row === null) {
-      return state.grid;
-    }
-    const { hand, row, placed } = state.phase;
-    const g = [...state.grid];
-    for (let c = 0; c < 5; c++) {
-      const idx = placed[c];
-      if (idx !== null) g[row * 5 + c] = hand[idx];
-    }
-    return g;
-  })();
-
   // The interactive board, shared by both layout forks; the desktop
   // fork layers its hover-model props on top via `extra`.
   const board = (extra?: Partial<Parameters<typeof GridBoard>[0]>) => (
@@ -1375,8 +1394,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(hover: hover)').matches;
     const lines = activeReport.lines;
+    // displayGrid: purple hover tags agree with the Five Draw staging
+    // preview activeReport is scoring (same reference elsewhere).
     const purpleInputs = {
-      grid: state.grid,
+      grid: displayGrid,
       lines,
       deckRemaining: state.deck.length,
       discards: state.discards,
@@ -1474,7 +1495,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
             );
           }
         : undefined,
-      hoverOutline: idx => ui.isTappable(idx) || boardRole(idx) === 'next',
+      hoverOutline: idx =>
+        (!drawRevealPause && ui.isTappable(idx)) || boardRole(idx) === 'next',
       // The pulsing next slot names its action (mockup line 746).
       nextSlotLabel: 'PLACE',
       // The finished board stays explorable: seated cards keep the
@@ -1804,7 +1826,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   lights the tapped card's rail chips. */}
               <MaybeRails
                 enabled={lineRails}
-                grid={state.grid}
+                grid={displayGrid}
                 // activeReport: once the game ends the chips show the FINAL
                 // math — open lines flip from dashed potential to their -25.
                 report={activeReport}

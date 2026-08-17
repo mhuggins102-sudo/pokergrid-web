@@ -54,18 +54,9 @@ export const sfxPlace = (): void => {
  *  deals around the table (the online-poker-room cadence). Fired by
  *  useGameSfx on the HandWell's reveal stagger, one call per card. */
 export const sfxDeal = (step = 0): void => {
-  const f = 740 + step * 44;
+  const f = 560 + step * 44;
   tone(f, 0, 0.035, 0.05, 'triangle', f * 0.72);
   tone(f / 2.2, 0.012, 0.05, 0.035, 'sine');
-};
-
-/** Five Draw: a whole row locked in via Place hand — a firmer settle
- *  than the single-card tick: a clack landing on a low resolving
- *  fifth, so the commit reads as bigger than any one card. */
-export const sfxLock = (): void => {
-  tone(523.25, 0, 0.07, 0.07, 'triangle', 392);
-  tone(261.63, 0.05, 0.14, 0.08, 'sine');
-  tone(196, 0.07, 0.18, 0.05, 'sine');
 };
 
 /** ♣ draw opens / bonus card kept — a small two-note chime. */
@@ -282,7 +273,6 @@ export const sfxTallyCount = (durationS: number, tier: TallyTier): void => {
 
 export type SfxName =
   | 'place'
-  | 'lock'
   | 'chime'
   | 'swap'
   | 'slide'
@@ -295,7 +285,6 @@ export type SfxName =
 
 export const SFX: Record<SfxName, () => void> = {
   place: sfxPlace,
-  lock: sfxLock,
   chime: sfxChime,
   swap: sfxSwap,
   slide: sfxSlide,
@@ -315,8 +304,10 @@ export const SFX: Record<SfxName, () => void> = {
  */
 export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   if (entry.startsWith('Joker auto-placed')) return 'joker';
-  // Five Draw's row commit — checked before the generic 'Place'.
-  if (entry.startsWith('Place hand')) return 'lock';
+  // Five Draw's row commit is deliberately voiceless — the next hand's
+  // dealing flicks are the moment's sound. Checked before the generic
+  // 'Place' so it doesn't inherit the single-card tick.
+  if (entry.startsWith('Place hand')) return null;
   if (entry.startsWith('Place')) return 'place';
   if (entry.startsWith('Hop ')) return 'swap'; // ♥
   if (entry.startsWith('Slide ')) return 'slide'; // ♠
