@@ -308,6 +308,8 @@ export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   if (entry.startsWith('Wildcard')) return 'enchant';
   if (entry.startsWith('Plus/Minus')) return 'enchant';
   if (entry.startsWith('Shuffle on')) return 'riffle';
+  // Five Draw's redraw ('Draw N'). 'Stand pat' stays silent on purpose.
+  if (entry.startsWith('Draw ')) return 'riffle';
   if (entry.startsWith('Rewind on')) return 'riffle';
   if (entry.startsWith('Revive discard')) return 'revive';
   // Double Duty two-way card rotation (+ its unseen burn).

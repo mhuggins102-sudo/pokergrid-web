@@ -68,6 +68,10 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // 1, append 'nut-low' to ALL_TWISTS above, and update
   // dailyRecipe.test.ts's local twist list + 1/N share bounds.
   'nut-low': 0,
+  // Out of the rotation — Five Draw restructures the whole play loop
+  // (dealt hands, no perks), which is structurally heavy for a daily
+  // twist. The daily wiring exists (modes.ts) if this ever flips to 1.
+  'draw-poker': 0,
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {

@@ -361,6 +361,48 @@ const pickAction = (s: GameState): Action => {
       // Bull Market's invest reveal — dismiss it (doesn't occur in the
       // Free Play simulation).
       return { type: 'RESOLVE_CLUB_INVEST' };
+    case 'draw-select': {
+      // Five Draw: hold jokers and any paired rank, redraw the rest.
+      // Toggle the first difference from that policy, then draw.
+      const { hand, kept } = s.phase;
+      const counts = new Map<string, number>();
+      for (const c of hand) {
+        if (!isJoker(c)) counts.set(c.rank, (counts.get(c.rank) ?? 0) + 1);
+      }
+      const wantKept = hand
+        .map((c, i) => ({ c, i }))
+        .filter(({ c }) => isJoker(c) || (counts.get(c.rank) ?? 0) >= 2)
+        .map(({ i }) => i);
+      const keptSet = new Set(kept);
+      const wantSet = new Set(wantKept);
+      for (let i = 0; i < hand.length; i++) {
+        if (keptSet.has(i) !== wantSet.has(i)) {
+          return { type: 'TOGGLE_HAND_KEEP', idx: i };
+        }
+      }
+      return { type: 'DRAW_REDRAW' };
+    }
+    case 'draw-place': {
+      // Five Draw: first empty row, dealt order, then commit.
+      const { row, placed } = s.phase;
+      if (row === null) {
+        for (let r = 0; r < 5; r++) {
+          let empty = true;
+          for (let c = 0; c < 5; c++) {
+            if (s.grid[r * 5 + c] !== null) empty = false;
+          }
+          if (empty) return { type: 'PLACE_HAND_ROW', row: r };
+        }
+        throw new Error('draw-place with no empty row');
+      }
+      const openCol = placed.findIndex(p => p === null);
+      if (openCol >= 0) {
+        const stagedIdx = new Set(placed.filter(p => p !== null));
+        const idx = [0, 1, 2, 3, 4].find(i => !stagedIdx.has(i))!;
+        return { type: 'STAGE_HAND_CARD', idx, col: openCol };
+      }
+      return { type: 'RESOLVE_PLACE_HAND' };
+    }
     case 'game-over':
       throw new Error('pickAction called on game-over state');
   }

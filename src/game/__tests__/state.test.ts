@@ -33,6 +33,7 @@ const baseState = (overrides: Partial<GameState>): GameState => ({
   elapsedMs: 0,
   noBonusCards: false,
   lowball: false,
+  drawPoker: false,
   scatter: false,
   scatterSlot: null,
   investHands: false,

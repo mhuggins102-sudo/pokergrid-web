@@ -12,7 +12,7 @@ import {
   spiralDestination,
   suitActionAvailable,
 } from '../../game/actions';
-import { Suit, isJoker } from '../../game/cards';
+import { Card, Suit, isJoker } from '../../game/cards';
 import { HandRank } from '../../game/hands';
 import { nextSpiralSlot } from '../../game/grid';
 import {
@@ -50,6 +50,19 @@ export interface BonusDialogUI {
   canGoBack?: boolean;
 }
 
+/** Five Draw: the dock's 5-card hand — what the HandWell renders. */
+export interface HandWellUI {
+  cards: Card[];
+  /** 'keep': toggling holds before the redraw. 'place': staging order. */
+  mode: 'keep' | 'place';
+  /** keep: held indices. place: staged indices. */
+  marked: ReadonlySet<number>;
+  /** place: 0-based column the card is seated at (null = in hand). */
+  orderOf: (idx: number) => number | null;
+  onCardTap: (idx: number) => void;
+  tappable: (idx: number) => boolean;
+}
+
 export interface PhaseUI {
   phaseKind: string;
   /** One-line instruction shown in the dock during targeting phases. */
@@ -70,6 +83,8 @@ export interface PhaseUI {
   bonusSlotPick: boolean;
   /** awaiting-action: held special cards can be activated. */
   canActivateSpecials: boolean;
+  /** Five Draw: the docked 5-card hand (null outside the mode). */
+  hand: HandWellUI | null;
   isGameOver: boolean;
 }
 
@@ -126,6 +141,7 @@ export function usePhaseUI(): PhaseUI {
       reviveOpen: false,
       bonusSlotPick: false,
       canActivateSpecials: false,
+      hand: null as HandWellUI | null,
       isGameOver: false,
       actions: [] as PhaseAction[],
       onCellTap: (_idx: number) => {},
@@ -301,6 +317,136 @@ export function usePhaseUI(): PhaseUI {
           isTappable: () => false,
           actions,
           canActivateSpecials: true,
+        };
+      }
+
+      // ---- Five Draw ----
+      case 'draw-select': {
+        // The mode's resting phase. banner stays null DELIBERATELY —
+        // the docks hide Undo whenever a banner is up, and this is the
+        // one phase where Undo must remain reachable. The HandWell's
+        // own header carries the instruction instead.
+        const { hand, kept } = phase;
+        const keptSet = new Set(kept);
+        return {
+          ...base,
+          ...fromSets(EMPTY_SET),
+          isTappable: () => false,
+          actions: [
+            {
+              id: 'draw',
+              label:
+                kept.length === hand.length
+                  ? 'Stand pat'
+                  : `Draw ${hand.length - kept.length}`,
+              ariaLabel: 'Draw',
+              variant: 'primary',
+              onPress: () => dispatch({ type: 'DRAW_REDRAW' }),
+            },
+          ],
+          hand: {
+            cards: hand,
+            mode: 'keep',
+            marked: keptSet,
+            orderOf: () => null,
+            onCardTap: idx => dispatch({ type: 'TOGGLE_HAND_KEEP', idx }),
+            tappable: () => true,
+          },
+        };
+      }
+
+      case 'draw-place': {
+        const { hand, row, placed, handNo } = phase;
+        const emptyRows: number[] = [];
+        for (let r = 0; r < 5; r++) {
+          let empty = true;
+          for (let c = 0; c < 5; c++) {
+            if (state.grid[r * 5 + c] !== null) empty = false;
+          }
+          if (empty) emptyRows.push(r);
+        }
+        const stagedIdx = new Set(
+          placed.filter((p): p is number => p !== null)
+        );
+        const lowestUnstaged = hand
+          .map((_, i) => i)
+          .find(i => !stagedIdx.has(i));
+        const allStaged = placed.every(p => p !== null);
+        const placeHandAction: PhaseAction = {
+          id: 'place-hand',
+          label: 'Place hand',
+          variant: 'primary',
+          disabled: !allStaged,
+          onPress: () => dispatch({ type: 'RESOLVE_PLACE_HAND' }),
+        };
+
+        // Cells: within the chosen row, staged cells read 'selected'
+        // (tap = unstage) and open cells 'target' (tap = stage the
+        // lowest unstaged card there); cells of OTHER empty rows stay
+        // 'target' so a tap switches rows with staging intact.
+        const tappable = new Set<number>();
+        const selected = new Set<number>();
+        for (const r of emptyRows) {
+          for (let c = 0; c < 5; c++) tappable.add(r * 5 + c);
+        }
+        if (row !== null) {
+          for (let c = 0; c < 5; c++) {
+            if (placed[c] !== null) {
+              selected.add(row * 5 + c);
+              tappable.add(row * 5 + c);
+            }
+          }
+        }
+        return {
+          ...base,
+          banner:
+            row === null
+              ? `Hand ${handNo} of 5 — tap an empty row`
+              : 'Tap your cards in placing order',
+          ...fromSets(tappable, selected),
+          isTappable: (idx: number) => tappable.has(idx),
+          onCellTap: (idx: number) => {
+            const r = Math.floor(idx / 5);
+            const c = idx % 5;
+            if (row !== null && r === row) {
+              if (placed[c] !== null) {
+                dispatch({ type: 'UNSTAGE_HAND_CARD', col: c });
+              } else if (lowestUnstaged !== undefined) {
+                dispatch({
+                  type: 'STAGE_HAND_CARD',
+                  idx: lowestUnstaged,
+                  col: c,
+                });
+              }
+              return;
+            }
+            if (emptyRows.includes(r)) {
+              dispatch({ type: 'PLACE_HAND_ROW', row: r });
+            }
+          },
+          actions: [placeHandAction, cancelAction],
+          hand: {
+            cards: hand,
+            mode: 'place',
+            marked: stagedIdx,
+            orderOf: idx => {
+              const col = placed.indexOf(idx);
+              return col >= 0 ? col : null;
+            },
+            onCardTap: idx => {
+              if (row === null) return;
+              const col = placed.indexOf(idx);
+              if (col >= 0) {
+                dispatch({ type: 'UNSTAGE_HAND_CARD', col });
+                return;
+              }
+              const openCol = placed.findIndex(p => p === null);
+              if (openCol >= 0) {
+                dispatch({ type: 'STAGE_HAND_CARD', idx, col: openCol });
+              }
+            },
+            tappable: () => row !== null,
+          },
         };
       }
 

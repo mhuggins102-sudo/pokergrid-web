@@ -89,9 +89,11 @@ describe('Nut Low — newGame wiring', () => {
 });
 
 describe('Nut Low — challenge catalog', () => {
-  it('is the last live entry and configured at a flat 400', () => {
-    const c = LIVE_CHALLENGES[LIVE_CHALLENGES.length - 1];
-    expect(c.id).toBe('nut-low');
+  it('is listed directly above Five Draw and configured at a flat 400', () => {
+    const idx = LIVE_CHALLENGES.findIndex(ch => ch.id === 'nut-low');
+    expect(idx).toBeGreaterThan(-1);
+    expect(LIVE_CHALLENGES[idx + 1]?.id).toBe('draw-poker');
+    const c = LIVE_CHALLENGES[idx];
     expect(c.name).toBe('Nut Low');
     expect(c.scoreTarget).toBe(400);
     // The daily-target rewrite (DailyDay) needs the goal to open with
