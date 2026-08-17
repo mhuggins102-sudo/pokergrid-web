@@ -27,9 +27,18 @@ describe('sfxForHistoryEntry', () => {
     expect(sfxForHistoryEntry('Flip (2 cards burned)')).toBe('flip');
   });
 
+  it('gives Five Draw its row lock, distinct from a single place', () => {
+    expect(sfxForHistoryEntry('Place hand → row 3')).toBe('lock');
+    expect(sfxForHistoryEntry('Place')).toBe('place');
+  });
+
   it('stays silent for non-action entries', () => {
     expect(sfxForHistoryEntry('Discard')).toBeNull();
     expect(sfxForHistoryEntry('Game start')).toBeNull();
+    // Five Draw's redraw voices per-card deal flicks via useGameSfx,
+    // not a one-shot mapping; stand pat is silent by design.
+    expect(sfxForHistoryEntry('Draw 3')).toBeNull();
+    expect(sfxForHistoryEntry('Stand pat')).toBeNull();
   });
 });
 
