@@ -63,6 +63,21 @@
   opacity: 0.55;
 }
 
+/* Challenge-exclusive cards (card.emblem set): the tone ring doubles —
+   the crisp 1px line plus a soft wide echo just inside it. Still a
+   ring, not a glow, per the rule above. */
+.chipExclusive {
+  box-shadow:
+    inset 0 0 0 1px var(--chip-tone, var(--rule)),
+    inset 0 0 0 3px
+      color-mix(in srgb, var(--chip-tone, var(--rule)) 35%, transparent);
+}
+
+/* The ★ before the title; inherits the chip's tone like the title. */
+.chipEmblem {
+  color: var(--chip-tone, var(--ink));
+}
+
 .chipValue {
   font-size: 12px;
   font-weight: 600;
@@ -173,6 +188,14 @@
   padding: 4px 10px 5px;
   min-height: 50px;
   gap: 2px;
+}
+
+/* The exclusive's second ring survives the docked restyle: the full
+   1px tone border stays, and the soft echo re-adds just inside it
+   (the plain docked chip cleared box-shadow above). */
+.rowDocked .chipExclusive {
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--chip-tone, var(--rule)) 35%, transparent);
 }
 
 .rowDocked .chipTitle {

@@ -34,6 +34,8 @@ export type BonusCategory =
 const LINE_LOCATION_IDS = new Set([
   'spiral-core-x1_5',
   'outer-edge-x1_25',
+  // Five Draw's exclusive starter — a location card spanning all rows.
+  'all-rows-x5',
 ]);
 
 const CONDITIONAL_IDS = new Set([

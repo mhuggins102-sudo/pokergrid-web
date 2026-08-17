@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { BONUS_DECK_POOL, SPECIAL_DECK_POOL } from '../../../game/bonusCards';
+import {
+  BONUS_DECK_POOL,
+  CHALLENGE_DECK_POOL,
+  SPECIAL_DECK_POOL,
+} from '../../../game/bonusCards';
 import { BonusCardReferencePage } from '../BonusCardReferencePage';
 
 describe('bonus card reference', () => {
@@ -11,10 +15,16 @@ describe('bonus card reference', () => {
       </MemoryRouter>
     );
 
-    // Every card in both pools appears exactly once.
-    const total = BONUS_DECK_POOL.length + SPECIAL_DECK_POOL.length;
+    // Every card in all three pools appears exactly once.
+    const total =
+      BONUS_DECK_POOL.length +
+      SPECIAL_DECK_POOL.length +
+      CHALLENGE_DECK_POOL.length;
     const entries = screen.getAllByRole('article');
     expect(entries).toHaveLength(total);
+
+    // The challenge exclusive rides its category group with its ★.
+    expect(screen.getByText(/All Rows/)).toBeInTheDocument();
 
     // Category groups render with counts; specials are present.
     expect(screen.getByText(/One-time action · \d+/)).toBeInTheDocument();

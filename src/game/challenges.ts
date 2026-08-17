@@ -204,7 +204,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'draw-poker',
     name: 'Five Draw',
     synopsis: 'Twist: Build each row from a 5-card draw',
-    goal: 'Score 500+ points playing five hands of classic 5-card draw. Each hand: hold the cards you like, redraw the rest once (hold all five to stand pat), then place all five into an empty row in the order you choose. You start holding 3 bonus cards; suit perks and discards are off — the redraw IS your discard.',
+    goal: 'Score 500+ points playing five hands of classic 5-card draw. Each hand: hold the cards you like, redraw the rest once (hold all five to stand pat), then place all five into an empty row in the order you choose. You start holding 3 bonus cards — one is always All Rows ×5 (every row’s score is multiplied), plus two that vary. Suit perks and discards are off — the redraw IS your discard.',
     scoreTarget: 500,
     // Enforced structurally at newGame (drawPoker + noBonusCards +
     // initialBonusCards): the whole run flows through the draw-select /

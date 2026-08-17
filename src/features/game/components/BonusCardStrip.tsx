@@ -38,7 +38,11 @@ export function BonusChip({
   return (
     <button
       type="button"
-      className={[styles.chip, dimmed ? styles.chipDimmed : null]
+      className={[
+        styles.chip,
+        dimmed ? styles.chipDimmed : null,
+        card.emblem ? styles.chipExclusive : null,
+      ]
         .filter(Boolean)
         .join(' ')}
       style={{ '--chip-tone': cat.borderColor } as CSSProperties}
@@ -57,6 +61,11 @@ export function BonusChip({
               {cat.icon}
             </span>{' '}
           </>
+        )}
+        {card.emblem && (
+          <span className={styles.chipEmblem} aria-hidden="true">
+            {card.emblem}{' '}
+          </span>
         )}
         {card.title}
         {card.used ? ' ✓' : ''}
@@ -240,7 +249,13 @@ export function DetailSheet({
     !card.used &&
     !isPlaceholder(card);
   return (
-    <Sheet open={detail !== null} onClose={onClose} title={card?.name ?? ''}>
+    <Sheet
+      open={detail !== null}
+      onClose={onClose}
+      // The exclusive emblem rides the sheet title too — same marker
+      // in every place the card shows its name.
+      title={card ? `${card.emblem ? `${card.emblem} ` : ''}${card.name}` : ''}
+    >
       {card && detailStyle && (
         <div
           className={styles.detailBody}
