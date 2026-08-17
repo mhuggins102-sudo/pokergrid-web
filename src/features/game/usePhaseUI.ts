@@ -53,6 +53,9 @@ export interface BonusDialogUI {
 /** Five Draw: the dock's 5-card hand — what the HandWell renders. */
 export interface HandWellUI {
   cards: Card[];
+  /** Which of the 5 hands this is — lets the well spot a fresh deal
+   *  (vs a redraw) and stagger-reveal the new arrivals. */
+  handNo: number;
   /** 'keep': toggling holds before the redraw. 'place': staging order. */
   mode: 'keep' | 'place';
   /** keep: held indices. place: staged indices. */
@@ -322,14 +325,15 @@ export function usePhaseUI(): PhaseUI {
 
       // ---- Five Draw ----
       case 'draw-select': {
-        // The mode's resting phase. banner stays null DELIBERATELY —
-        // the docks hide Undo whenever a banner is up, and this is the
-        // one phase where Undo must remain reachable. The HandWell's
-        // own header carries the instruction instead.
-        const { hand, kept } = phase;
+        // Both Five Draw phases banner (the mode has no Undo to keep
+        // reachable), so the dock renders the same three-line stack —
+        // banner / HandWell / commit row — through every step and
+        // neither it nor the board ever changes size.
+        const { hand, kept, handNo } = phase;
         const keptSet = new Set(kept);
         return {
           ...base,
+          banner: `Hand ${handNo} of 5 — tap cards to hold`,
           ...fromSets(EMPTY_SET),
           isTappable: () => false,
           actions: [
@@ -346,6 +350,7 @@ export function usePhaseUI(): PhaseUI {
           ],
           hand: {
             cards: hand,
+            handNo,
             mode: 'keep',
             marked: keptSet,
             orderOf: () => null,
@@ -380,53 +385,54 @@ export function usePhaseUI(): PhaseUI {
           onPress: () => dispatch({ type: 'RESOLVE_PLACE_HAND' }),
         };
 
-        // Cells: within the chosen row, staged cells read 'selected'
-        // (tap = unstage) and open cells 'target' (tap = stage the
-        // lowest unstaged card there); cells of OTHER empty rows stay
-        // 'target' so a tap switches rows with staging intact.
+        // Cells: before a row is chosen, only the FIRST slot of each
+        // open row offers (a whole-row wash read as "tap anywhere");
+        // once chosen, exactly that row's five slots light up — staged
+        // cells 'selected' (tap = unstage), open cells 'target' (tap =
+        // stage the lowest unstaged card there). Switching rows goes
+        // through Cancel, which clears the staging.
         const tappable = new Set<number>();
         const selected = new Set<number>();
-        for (const r of emptyRows) {
-          for (let c = 0; c < 5; c++) tappable.add(r * 5 + c);
-        }
-        if (row !== null) {
+        if (row === null) {
+          for (const r of emptyRows) tappable.add(r * 5);
+        } else {
           for (let c = 0; c < 5; c++) {
-            if (placed[c] !== null) {
-              selected.add(row * 5 + c);
-              tappable.add(row * 5 + c);
-            }
+            tappable.add(row * 5 + c);
+            if (placed[c] !== null) selected.add(row * 5 + c);
           }
         }
         return {
           ...base,
           banner:
             row === null
-              ? `Hand ${handNo} of 5 — tap an empty row`
-              : 'Tap your cards in placing order',
+              ? `Hand ${handNo} of 5 — tap a row to place`
+              : 'Tap cards in placing order',
           ...fromSets(tappable, selected),
           isTappable: (idx: number) => tappable.has(idx),
           onCellTap: (idx: number) => {
             const r = Math.floor(idx / 5);
             const c = idx % 5;
-            if (row !== null && r === row) {
-              if (placed[c] !== null) {
-                dispatch({ type: 'UNSTAGE_HAND_CARD', col: c });
-              } else if (lowestUnstaged !== undefined) {
-                dispatch({
-                  type: 'STAGE_HAND_CARD',
-                  idx: lowestUnstaged,
-                  col: c,
-                });
+            if (row === null) {
+              if (c === 0 && emptyRows.includes(r)) {
+                dispatch({ type: 'PLACE_HAND_ROW', row: r });
               }
               return;
             }
-            if (emptyRows.includes(r)) {
-              dispatch({ type: 'PLACE_HAND_ROW', row: r });
+            if (r !== row) return;
+            if (placed[c] !== null) {
+              dispatch({ type: 'UNSTAGE_HAND_CARD', col: c });
+            } else if (lowestUnstaged !== undefined) {
+              dispatch({
+                type: 'STAGE_HAND_CARD',
+                idx: lowestUnstaged,
+                col: c,
+              });
             }
           },
           actions: [placeHandAction, cancelAction],
           hand: {
             cards: hand,
+            handNo,
             mode: 'place',
             marked: stagedIdx,
             orderOf: idx => {

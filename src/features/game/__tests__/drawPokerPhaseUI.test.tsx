@@ -6,13 +6,16 @@ import { Card, Rank, Suit } from '../../../game/cards';
 /*
  * Five Draw's two phases through the usePhaseUI lens. The contracts
  * that matter:
- *  - draw-select keeps banner NULL on purpose — the docks hide
- *    Discard/Undo whenever a banner is up, and this is the mode's
- *    resting phase where Undo must stay reachable. Exactly one action
- *    ('draw'), and the HandWell toggles holds.
- *  - draw-place raises a banner (locking Undo out, like the special
- *    phases) and never offers Discard; cells route row-pick /
- *    stage / unstage; 'place-hand' only arms once all 5 are staged.
+ *  - BOTH phases banner (the mode has no undos to keep reachable), so
+ *    the dock renders the same banner + HandWell + commit stack in
+ *    every step and never changes size.
+ *  - draw-select offers exactly one action ('draw'); the HandWell
+ *    toggles holds.
+ *  - draw-place, row unpicked: ONLY the first slot of each open row
+ *    offers. Row picked: exactly that row's five slots light up
+ *    (staged = selected, open = target) — no other row responds;
+ *    switching goes through Cancel. 'place-hand' arms at 5 staged.
+ *  - Neither phase offers Discard or special activation.
  */
 
 const dispatch = vi.fn();
@@ -47,9 +50,9 @@ const baseState = (phase: Record<string, unknown>) => ({
 beforeEach(() => dispatch.mockClear());
 
 describe('draw-select', () => {
-  test('no banner (Undo stays reachable), exactly the draw action', () => {
+  test('banners the hand count, exactly the draw action', () => {
     probe(baseState({ kind: 'draw-select', hand: HAND, kept: [1, 2], handNo: 1 }));
-    expect(ui.banner).toBeNull();
+    expect(ui.banner).toBe('Hand 1 of 5 — tap cards to hold');
     expect(ui.actions.map(a => a.id)).toEqual(['draw']);
     expect(ui.actions[0].label).toBe('Draw 3');
     expect(ui.canActivateSpecials).toBe(false);
@@ -84,19 +87,25 @@ describe('draw-place', () => {
     handNo: 2,
   };
 
-  test('row unpicked: banner asks for a row, only empty rows tappable', () => {
+  test('row unpicked: only the FIRST slot of each open row offers', () => {
     // Row 0 already seated (a previous hand) — its cells must not offer.
     const grid = emptyGrid();
     for (let i = 0; i < 5; i++) grid[i] = c('3', 'S');
     probe({ ...baseState(rowNullPhase), grid });
-    expect(ui.banner).toBe('Hand 2 of 5 — tap an empty row');
+    expect(ui.banner).toBe('Hand 2 of 5 — tap a row to place');
     expect(ui.actions.map(a => a.id)).toEqual(['place-hand', 'cancel']);
     expect(ui.actions[0].disabled).toBe(true);
-    expect(ui.isTappable(2)).toBe(false); // filled row 0
-    expect(ui.isTappable(7)).toBe(true); // empty row 1
-    expect(ui.roleOf(7)).toBe('target');
-    ui.onCellTap(7);
+    expect(ui.isTappable(0)).toBe(false); // filled row 0's first slot
+    expect(ui.isTappable(5)).toBe(true); // empty row 1's first slot
+    expect(ui.roleOf(5)).toBe('target');
+    expect(ui.isTappable(7)).toBe(false); // rest of the row stays dark
+    expect(ui.roleOf(7)).toBeNull();
+    ui.onCellTap(5);
     expect(dispatch).toHaveBeenCalledWith({ type: 'PLACE_HAND_ROW', row: 1 });
+    dispatch.mockClear();
+    // A non-first cell of an open row does nothing.
+    ui.onCellTap(7);
+    expect(dispatch).not.toHaveBeenCalled();
     // Hand cards are inert until a row is chosen.
     expect(ui.hand!.tappable(0)).toBe(false);
   });
@@ -107,14 +116,15 @@ describe('draw-place', () => {
     placed: [3, null, null, null, null],
   };
 
-  test('row picked: staged cells unstage, open cells stage lowest card', () => {
+  test('row picked: only that row lights up — staged unstage, open stage', () => {
     probe(baseState(rowPickedPhase));
-    expect(ui.banner).toBe('Tap your cards in placing order');
+    expect(ui.banner).toBe('Tap cards in placing order');
     expect(ui.roleOf(10)).toBe('selected'); // row 2 col 0 — staged
     ui.onCellTap(10);
     expect(dispatch).toHaveBeenCalledWith({ type: 'UNSTAGE_HAND_CARD', col: 0 });
     dispatch.mockClear();
     expect(ui.roleOf(11)).toBe('target'); // row 2 col 1 — open
+    expect(ui.isTappable(14)).toBe(true); // all five row-2 slots offer
     ui.onCellTap(11);
     // Lowest unstaged hand index is 0 (only idx 3 is staged).
     expect(dispatch).toHaveBeenCalledWith({
@@ -123,9 +133,11 @@ describe('draw-place', () => {
       col: 1,
     });
     dispatch.mockClear();
-    // Tapping another empty row switches rows, staging carried along.
+    // Other rows are dark now — switching goes through Cancel.
+    expect(ui.isTappable(20)).toBe(false);
+    expect(ui.roleOf(20)).toBeNull();
     ui.onCellTap(20);
-    expect(dispatch).toHaveBeenCalledWith({ type: 'PLACE_HAND_ROW', row: 4 });
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
   test('hand is place-mode: taps stage at leftmost open / take back', () => {
