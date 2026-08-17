@@ -67,6 +67,7 @@ import { LineDetailSheet } from './components/LineDetailSheet';
 import { HandsIcon, ScoringIcon } from './components/icons';
 import { useAutoPlaceFlights } from './useAutoPlaceFlights';
 import { NextCardWell } from './components/NextCardWell';
+import { HandWell } from './components/HandWell';
 import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
 import { BonusCardStrip } from './components/BonusCardStrip';
@@ -1047,9 +1048,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   }
 
   // The dock's commit action (Place while deciding, Cancel while
-  // targeting); remaining actions arrange per the dock-layout setting.
+  // targeting; Five Draw's Draw / Place hand take the slot in their
+  // phases — note their ids are NOT 'place', so placeArmed below stays
+  // false and board taps route through ui.onCellTap).
   const placeAction = ui.actions.find(a => a.id === 'place');
-  const commitAction = placeAction ?? ui.actions.find(a => a.id === 'cancel');
+  const commitAction =
+    placeAction ??
+    ui.actions.find(a => a.id === 'draw') ??
+    ui.actions.find(a => a.id === 'place-hand') ??
+    ui.actions.find(a => a.id === 'cancel');
   const rowActions = ui.actions.filter(a => a !== commitAction);
 
   // Mirrors the dock's pause: while an engine flight is posing in the
@@ -1176,6 +1183,23 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     </span>
   );
 
+  // Five Draw: while a row is being staged, the board renders the grid
+  // WITH the staged hand cards overlaid (preview only — the reducer
+  // grid is untouched until the commit, so score/rails/insights don't
+  // move early). Everything else keeps reading state.grid.
+  const displayGrid = (() => {
+    if (state.phase.kind !== 'draw-place' || state.phase.row === null) {
+      return state.grid;
+    }
+    const { hand, row, placed } = state.phase;
+    const g = [...state.grid];
+    for (let c = 0; c < 5; c++) {
+      const idx = placed[c];
+      if (idx !== null) g[row * 5 + c] = hand[idx];
+    }
+    return g;
+  })();
+
   // The interactive board, shared by both layout forks; the desktop
   // fork layers its hover-model props on top via `extra`.
   const board = (extra?: Partial<Parameters<typeof GridBoard>[0]>) => (
@@ -1193,7 +1217,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       // entrances. desk-lite's CSS-sized board must never remount on ♣:
       // the remount is purely a column-resize workaround.
       key={family === 'column' && bonusOpen ? 'board-bonus' : 'board-full'}
-      grid={state.grid}
+      grid={displayGrid}
       roleOf={boardRole}
       isTappable={idx =>
         ui.isTappable(idx) ||
@@ -1527,20 +1551,28 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     className={
                       // 'center-stage' = the mockup's hero arrangement;
                       // 'hand-stack' and 'classic' both map to the
-                      // compact card-beside-buttons variant.
-                      dockLayout === 'center-stage'
-                        ? styles.deskDockStage
-                        : styles.deskDockCompact
+                      // compact card-beside-buttons variant. Five Draw
+                      // stacks the HandWell over the actions instead of
+                      // seating a single-card well beside them.
+                      ui.hand
+                        ? styles.deskDockDraw
+                        : dockLayout === 'center-stage'
+                          ? styles.deskDockStage
+                          : styles.deskDockCompact
                     }
                   >
-                    <NextCardWell
-                      onPeekDeck={() => {}}
-                      instantLayout={instantLayout}
-                      stacked
-                      meta="deck"
-                      peek="hover"
-                      flight={flight}
-                    />
+                    {ui.hand ? (
+                      <HandWell hand={ui.hand} compact />
+                    ) : (
+                      <NextCardWell
+                        onPeekDeck={() => {}}
+                        instantLayout={instantLayout}
+                        stacked
+                        meta="deck"
+                        peek="hover"
+                        flight={flight}
+                      />
+                    )}
                     <div className={styles.deskActions}>
                       {deskBanner}
                       {stackActions.some(a => a.id === 'plus')
@@ -1559,12 +1591,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           targeting — ui.banner — or the ♣ modal is up):
                           the rail then leads with the banner + Confirm /
                           Cancel, and Discard / Undo don't apply — the
-                          dockUndoBtn gate, same condition. */}
+                          dockUndoBtn gate, same condition. Five Draw has
+                          no Discard at all, so its placeholder is gated
+                          off and Undo stands alone. */}
                       {!ui.banner && !ui.bonusDialog && (
                         <div className={styles.deskBtnRow}>
                           {discardAction ? (
                             actionBtn(discardAction)
-                          ) : (
+                          ) : state.drawPoker ? null : (
                             <Button variant="secondary" disabled>
                               Discard
                             </Button>
@@ -1787,7 +1821,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // the marker scopes the perk/Discard sizing that keeps every
               // perk label (♦ Destroy is the widest) on one line.
               streamlined ? ' ' + styles.dockStreamlined : ''
-            }${
+            }${ui.hand ? ' ' + styles.dockDrawPoker : ''}${
               // Mid-action (banner up): height-recovery trims so the
               // banner line doesn't grow the dock on short viewports
               // (there the board pays 1:1 for every extra dock px).
@@ -1822,6 +1856,23 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </Button>
                 )}
               </div>
+            ) : ui.hand ? (
+              // Five Draw: ONE shared dock for all three stacked phone
+              // layouts — banner line, the 5-card HandWell, then the
+              // commit row (Draw / Place hand) with Cancel and the ↺
+              // (dockUndoBtn self-hides while a banner is up, which is
+              // exactly the draw-place lockout).
+              <>
+                {banner}
+                <HandWell hand={ui.hand} />
+                <div className={styles.commitRow}>
+                  {commitBtn(
+                    commitAction?.id === 'cancel' ? 'secondary' : undefined
+                  )}
+                  {rowActions.map(a => actionBtn(a))}
+                  {dockUndoBtn()}
+                </div>
+              </>
             ) : dockLayout === 'classic' ? (
               // Classic: slim card + meta row with the secondary actions,
               // full-width commit beneath. Double Duty: the meta row
@@ -2167,6 +2218,25 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
                         </Button>
                       )}
+                    </div>
+                  </div>
+                ) : ui.hand ? (
+                  // Five Draw on the split dock: the HandWell replaces
+                  // the well + action grid wholesale; commit + Cancel
+                  // ride beneath it, ↺ via the shared dockUndoBtn.
+                  <div className={styles.dtStage}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {banner}
+                      <HandWell hand={ui.hand} compact />
+                      <div className={styles.commitRow}>
+                        {commitBtn(
+                          commitAction?.id === 'cancel'
+                            ? 'secondary'
+                            : undefined
+                        )}
+                        {rowActions.map(a => actionBtn(a, styles.dtGridBtn))}
+                        {dockUndoBtn()}
+                      </div>
                     </div>
                   </div>
                 ) : (

@@ -209,6 +209,13 @@
   min-height: calc(120px + env(safe-area-inset-bottom));
 }
 
+/* Five Draw: the 5-card HandWell + commit row runs taller than any
+   single-card arrangement — one shared pin across all three stacked
+   layouts (the mode replaces their docks wholesale). */
+.dock.dockDrawPoker {
+  min-height: calc(152px + env(safe-area-inset-bottom));
+}
+
 .dockRow {
   display: flex;
   align-items: center;
@@ -1413,6 +1420,23 @@
 
   .deskDockCompact [class*='cardSlot'] {
     width: 82px;
+  }
+
+  /* Five Draw: the 5-card HandWell can't sit beside the button column
+     in a ~250px rail — it stacks over the actions instead (every desk
+     dock layout collapses to this shape while a hand is up). The
+     actions pin relaxes: this mode never shows the awaiting-action
+     stack the 140px pin was sized for, and the hand row itself keeps
+     the dock from collapsing at hand boundaries. */
+  .deskDockDraw {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .deskDockDraw .deskActions {
+    min-height: 0;
   }
 
   .deskActions {

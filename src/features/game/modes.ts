@@ -1,4 +1,9 @@
-import { BonusCard, SPECIAL_DECK_POOL } from '../../game/bonusCards';
+import {
+  BONUS_DECK_POOL,
+  BonusCard,
+  SPECIAL_DECK_POOL,
+  SPOTLIGHT_ID,
+} from '../../game/bonusCards';
 import { Card } from '../../game/cards';
 import { seededRng, shuffle } from '../../game/deck';
 import {
@@ -33,6 +38,24 @@ export interface ModeSetup {
   challenge: Challenge | null;
   start: (rng: () => number) => GameState;
 }
+
+// Five Draw's 3-card starter pool: the regular bonus pool minus cards
+// that are broken in this mode — Spotlight (exclusive-in-hand;
+// enforceSpotlight is skipped on the initialBonusCards path) and the
+// perk/penalty tells: Frugal (perks unreachable → an always-on ×1.5),
+// Burnout (unreachable), Patience (the grid always ends full). The
+// joker cards STAY — jokers deal into hands here, so Joker Line / Cozy
+// Joker pay off chosen placements and Trash Joker can score a joker
+// tossed in the redraw.
+const DRAW_POKER_EXCLUDED: ReadonlySet<string> = new Set([
+  SPOTLIGHT_ID,
+  'burnout-x1_25',
+  'frugal-x1_5',
+  'patience-no-penalty',
+]);
+const DRAW_POKER_BONUS_POOL: BonusCard[] = BONUS_DECK_POOL.filter(
+  c => !DRAW_POKER_EXCLUDED.has(c.id)
+);
 
 /**
  * Translate a play mode into the newGame() configuration. Mirrors the
@@ -83,15 +106,21 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               mode.id === 'poker-purist' ||
               mode.id === 'three-tricks' ||
               mode.id === 'bull-market' ||
-              mode.id === 'nut-low',
+              mode.id === 'nut-low' ||
+              mode.id === 'draw-poker',
             lowball: mode.id === 'nut-low',
             // Nut Low's Hard ruleset is jokerless: the joker goes first,
-            // then the catalog's deckLimit (40) trims 12 random standards.
+            // then the catalog's deckLimit (44) trims 8 random standards.
             noJokers: mode.id === 'nut-low',
+            // Five Draw: the whole run flows through the draw phases;
+            // its 3-card starter comes from the filtered regular pool.
+            drawPoker: mode.id === 'draw-poker',
             initialBonusCards:
               mode.id === 'three-tricks'
                 ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
-                : [],
+                : mode.id === 'draw-poker'
+                  ? shuffle(DRAW_POKER_BONUS_POOL, rng).slice(0, 3)
+                  : [],
             slotCategories:
               mode.id === 'mixed-bag'
                 ? ['special', 'in-game', 'end-game']
@@ -148,22 +177,31 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
               twist === 'poker-purist' ||
               twist === 'three-tricks' ||
               twist === 'bull-market' ||
-              twist === 'nut-low',
+              twist === 'nut-low' ||
+              twist === 'draw-poker',
             lowball: twist === 'nut-low',
             // Nut Low dailies: Hard plays jokerless like the challenge;
             // Easy/Medium keep their jokers in the random trim pool, so
-            // the 40-card deck may hold 0..2 of them.
+            // the 44-card deck may hold 0..2 of them.
             noJokers: twist === 'nut-low' && difficulty === 'hard',
-            // The Three Tricks trio is seeded off the date (its own
-            // salt) so it's globally identical without sharing the
-            // deck's rng stream.
+            // Five Draw dailies (out of rotation today, wired anyway):
+            // jokers deal into hands at the difficulty's usual count.
+            drawPoker: twist === 'draw-poker',
+            // The Three Tricks trio (and Five Draw's starter trio) is
+            // seeded off the date (its own salt) so it's globally
+            // identical without sharing the deck's rng stream.
             initialBonusCards:
               twist === 'three-tricks'
                 ? shuffle(
                     SPECIAL_DECK_POOL,
                     seededRng(seedForInitialSpecials(mode.dateISO))
                   ).slice(0, 3)
-                : [],
+                : twist === 'draw-poker'
+                  ? shuffle(
+                      DRAW_POKER_BONUS_POOL,
+                      seededRng(seedForInitialSpecials(mode.dateISO))
+                    ).slice(0, 3)
+                  : [],
             slotCategories:
               twist === 'mixed-bag'
                 ? ['special', 'in-game', 'end-game']

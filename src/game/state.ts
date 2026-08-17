@@ -269,6 +269,32 @@ export type Phase =
       selected: number[];
       returnTo: TargetReturnTo;
     }
+  // ---- Five Draw (drawPoker) — the mode's entire loop lives in these
+  // two phases; it NEVER visits 'awaiting-action' and state.drawn stays
+  // null all game (which is what disables suit perks / Discard / Flip:
+  // every one of those handlers guards on !s.drawn). No returnTo — the
+  // flow only moves forward (or rewinds via UNDO).
+  //
+  // draw-select: the dealt hand sits in the dock; `kept` are the
+  // indices the player is HOLDING. DRAW_REDRAW replaces the rest from
+  // the deck head (holding all 5 = stand pat) and moves to draw-place.
+  | {
+      kind: 'draw-select';
+      hand: Card[]; // exactly 5; may include jokers (placed manually)
+      kept: number[];
+      handNo: number; // 1..5, for banners and the history log
+    }
+  // draw-place: pick an empty row, then stage the hand into its five
+  // columns in any order. `placed[col]` is the hand index seated at
+  // column col (null = open). Staging is preview-only — the grid is
+  // untouched until RESOLVE_PLACE_HAND commits the whole row.
+  | {
+      kind: 'draw-place';
+      hand: Card[];
+      row: number | null;
+      placed: (number | null)[];
+      handNo: number;
+    }
   | { kind: 'game-over' };
 
 export interface GameState {
@@ -346,6 +372,11 @@ export interface GameState {
   // "In Progress" for partial lines — a low hand is only defined by
   // all five cards. Always paired with noBonusCards.
   lowball: boolean;
+  // True when the Five Draw challenge is active: the run is played as
+  // five hands of 5-card draw (draw-select / draw-place phases) and
+  // never visits awaiting-action; state.drawn stays null all game.
+  // Always paired with noBonusCards + initialBonusCards.
+  drawPoker: boolean;
   // Mixed Bag challenge: lock each of the 3 hand slots to a category.
   // When set, bonusCards always has exactly 3 entries (length-fixed),
   // empty slots hold a placeholder card matching the slot's kind, and
@@ -443,6 +474,13 @@ export type Action =
   | { type: 'RESOLVE_REVIVE'; discardIdx: number }
   | { type: 'TOGGLE_REWIND_TARGET'; slot: number }
   | { type: 'RESOLVE_REWIND' }
+  // Five Draw (drawPoker)
+  | { type: 'TOGGLE_HAND_KEEP'; idx: number }
+  | { type: 'DRAW_REDRAW' }
+  | { type: 'PLACE_HAND_ROW'; row: number }
+  | { type: 'STAGE_HAND_CARD'; idx: number; col: number }
+  | { type: 'UNSTAGE_HAND_CARD'; col: number }
+  | { type: 'RESOLVE_PLACE_HAND' }
   | { type: 'UNDO' };
 
 const log = (s: GameState, msg: string): GameState => ({
@@ -564,6 +602,11 @@ export interface NewGameOptions {
   // upside). Deck-construction-time only; nothing reads it after
   // newGame.
   noJokers?: boolean;
+  // Five Draw challenge: play as five hands of 5-card draw. The grid
+  // starts fully empty (no opening seat), the first hand is dealt into
+  // the draw-select phase, and drawNext never runs. Pair with
+  // noBonusCards + initialBonusCards (the 3-card starter).
+  drawPoker?: boolean;
 }
 
 export const newGame = (
@@ -591,6 +634,7 @@ export const newGame = (
     doubleDuty = false,
     lowball = false,
     noJokers = false,
+    drawPoker = false,
   } = options;
   // Joker count is determined by difficulty (Easy ships 2 jokers, Hard
   // ships 1, Extreme ships 0). Targets-Up infers difficulty from level
@@ -693,7 +737,16 @@ export const newGame = (
   let grid: Grid;
   let rest: Card[];
   let openingCard: Card | null = null;
-  if (randomGridFill > 0) {
+  // Five Draw: the first 5-card hand goes to the draw-select phase, not
+  // the grid — the board starts fully EMPTY (no opening seat; five
+  // 5-card rows need all 25 slots). Jokers deal into hands like any
+  // card here; they never auto-place because drawNext never runs.
+  let drawHand: Card[] = [];
+  if (drawPoker) {
+    drawHand = deck.slice(0, 5);
+    rest = deck.slice(5);
+    grid = emptyGrid();
+  } else if (randomGridFill > 0) {
     const initialCards = deck.slice(0, randomGridFill);
     rest = deck.slice(randomGridFill);
     // Random order over the 25 slot indices; first N positions seat
@@ -734,7 +787,9 @@ export const newGame = (
     drawn: null,
     difficulty,
     target: targetOverride ?? TARGET_BY_DIFFICULTY[difficulty],
-    phase: { kind: 'awaiting-action' },
+    phase: drawPoker
+      ? { kind: 'draw-select', hand: drawHand, kept: [], handNo: 1 }
+      : { kind: 'awaiting-action' },
     history: ['Game start'],
     past: [],
     undoCount: 0,
@@ -754,6 +809,7 @@ export const newGame = (
     elapsedMs: 0,
     noBonusCards,
     lowball,
+    drawPoker,
     slotCategories,
     scatter,
     scatterSlot: null,
@@ -765,7 +821,10 @@ export const newGame = (
     openingCard,
     rngState: 0, // placeholder — captured from `rng` below, after setup
   };
-  const started = drawNext(initial, rng);
+  // Five Draw skips drawNext entirely — the hand is already dealt into
+  // the draw-select phase, and drawNext would seat a drawn card and
+  // force awaiting-action.
+  const started = drawPoker ? initial : drawNext(initial, rng);
   // Capture the rng's CURRENT word (after all setup consumption) so the
   // in-play stream continues exactly where the setup stream left off —
   // bit-identical to the old behavior of threading one shared closure
@@ -819,6 +878,146 @@ const handleDiscardNone = (s: GameState, rng: () => number): GameState => {
   if (s.phase.kind !== 'awaiting-action' || !s.drawn || isJoker(s.drawn)) return s;
   if (s.noDiscards) return s; // No Discards challenge — reject the action.
   return drawNext(log(pushDiscard(s, activeHalf(s.drawn)), 'Discard'), rng);
+};
+
+// ---------- Five Draw (drawPoker) handlers ----------
+//
+// None of these consume rng: the deck order is fixed at newGame and the
+// redraw takes the deck head, so rngState never advances during a Five
+// Draw run — undo/redo replays are trivially identical.
+
+// Toggle whether hand[idx] is HELD through the redraw.
+const handleToggleHandKeep = (s: GameState, idx: number): GameState => {
+  if (s.phase.kind !== 'draw-select') return s;
+  if (idx < 0 || idx >= s.phase.hand.length) return s;
+  const already = s.phase.kept.includes(idx);
+  const kept = already
+    ? s.phase.kept.filter(i => i !== idx)
+    : [...s.phase.kept, idx];
+  return { ...s, phase: { ...s.phase, kept } };
+};
+
+// Commit the hold decision: replace every un-held card from the deck
+// head (ascending hand index), discarding the replaced ones — Trash
+// Joker can score a tossed joker. Holding all five stands pat. Either
+// way the flow advances to draw-place; there is no second redraw
+// (draw-place never transitions back within a hand).
+const handleDrawRedraw = (s: GameState): GameState => {
+  if (s.phase.kind !== 'draw-select') return s;
+  const { hand, kept, handNo } = s.phase;
+  const toReplace = hand.map((_, i) => i).filter(i => !kept.includes(i));
+  const placePhase = (finalHand: Card[]): Phase => ({
+    kind: 'draw-place',
+    hand: finalHand,
+    row: null,
+    placed: [null, null, null, null, null],
+    handNo,
+  });
+  if (toReplace.length === 0) {
+    return log({ ...s, phase: placePhase(hand) }, 'Stand pat');
+  }
+  // Unreachable: worst case consumes 50 of the 52+ deck cards (25
+  // placed + ≤25 redrawn), so the deck always holds enough. Defensive
+  // all the same.
+  if (toReplace.length > s.deck.length) return s;
+  const next = [...hand];
+  const discarded: Card[] = [];
+  toReplace.forEach((handIdx, k) => {
+    discarded.push(next[handIdx]);
+    next[handIdx] = s.deck[k];
+  });
+  return log(
+    {
+      ...s,
+      deck: s.deck.slice(toReplace.length),
+      discards: [...s.discards, ...discarded],
+      phase: placePhase(next),
+    },
+    `Draw ${toReplace.length}`
+  );
+};
+
+// Pick (or switch to) a fully-empty row. `placed` is column-indexed,
+// so staging survives a row switch — the preview just moves.
+const handlePlaceHandRow = (s: GameState, row: number): GameState => {
+  if (s.phase.kind !== 'draw-place') return s;
+  if (row < 0 || row >= 5) return s;
+  for (let c = 0; c < 5; c++) {
+    if (s.grid[row * 5 + c] !== null) return s;
+  }
+  if (s.phase.row === row) return s;
+  return { ...s, phase: { ...s.phase, row } };
+};
+
+// Stage hand[idx] at column col of the chosen row (preview only).
+const handleStageHandCard = (
+  s: GameState,
+  idx: number,
+  col: number
+): GameState => {
+  if (s.phase.kind !== 'draw-place' || s.phase.row === null) return s;
+  if (idx < 0 || idx >= s.phase.hand.length) return s;
+  if (col < 0 || col >= 5) return s;
+  if (s.phase.placed[col] !== null) return s;
+  if (s.phase.placed.includes(idx)) return s;
+  const placed = [...s.phase.placed];
+  placed[col] = idx;
+  return { ...s, phase: { ...s.phase, placed } };
+};
+
+// Return the card staged at column col to the hand.
+const handleUnstageHandCard = (s: GameState, col: number): GameState => {
+  if (s.phase.kind !== 'draw-place') return s;
+  if (col < 0 || col >= 5) return s;
+  if (s.phase.placed[col] === null) return s;
+  const placed = [...s.phase.placed];
+  placed[col] = null;
+  return { ...s, phase: { ...s.phase, placed } };
+};
+
+// Commit the staged row, then deal the next hand — or end the game
+// when the board is full (always true after hand 5: 5 rows × 5 = 25).
+// Follows the handleResolveRevive precedent: this fills slots WITHOUT
+// drawNext, so it owns its own end-of-game check. The log entry must
+// start with "Place" so the placement sfx mapping fires.
+const handleResolvePlaceHand = (s: GameState): GameState => {
+  if (s.phase.kind !== 'draw-place' || s.phase.row === null) return s;
+  const { hand, row, placed, handNo } = s.phase;
+  if (placed.some(p => p === null)) return s;
+  const grid = [...s.grid];
+  for (let c = 0; c < 5; c++) {
+    grid[row * 5 + c] = activeHalf(hand[placed[c]!]);
+  }
+  const seated = log({ ...s, grid }, `Place hand → row ${row + 1}`);
+  if (isFull(grid)) {
+    return {
+      ...seated,
+      drawn: null,
+      scatterSlot: null,
+      phase: { kind: 'game-over' },
+    };
+  }
+  // Deal the next hand off the deck head (jokers included — they
+  // simply arrive in the hand). The deck always holds ≥5 here; see
+  // the invariant note on handleDrawRedraw.
+  if (seated.deck.length < 5) {
+    return {
+      ...seated,
+      drawn: null,
+      scatterSlot: null,
+      phase: { kind: 'game-over' },
+    };
+  }
+  return {
+    ...seated,
+    deck: seated.deck.slice(5),
+    phase: {
+      kind: 'draw-select',
+      hand: seated.deck.slice(0, 5),
+      kept: [],
+      handNo: handNo + 1,
+    },
+  };
 };
 
 // Double Duty: rotate the drawn card 180° so its bottom half becomes the
@@ -1908,8 +2107,27 @@ const handleCancelAction = (s: GameState): GameState => {
     case 'awaiting-action':
     case 'game-over':
     case 'club-invest':
-      // (club-invest = Bull Market's committed invest reveal — no cancel.)
+    case 'draw-select':
+      // (club-invest = Bull Market's committed invest reveal — no cancel.
+      //  draw-select = Five Draw's resting phase; the redraw consumed
+      //  cards, so UNDO is the only way back.)
       return s;
+    case 'draw-place': {
+      // Clear the staging (row pick + seated cards) without touching
+      // the committed grid — a within-flow step-back, like Slide's
+      // dest→source.
+      if (s.phase.row === null && s.phase.placed.every(p => p === null)) {
+        return s;
+      }
+      return {
+        ...s,
+        phase: {
+          ...s.phase,
+          row: null,
+          placed: [null, null, null, null, null],
+        },
+      };
+    }
     case 'awaiting-target-slide-dest':
       // Back to source selection within the same slide flow.
       return {
@@ -2038,6 +2256,11 @@ const SNAP_ACTIONS = new Set<Action['type']>([
   'RESOLVE_PLUS_MINUS',
   'RESOLVE_REVIVE',
   'RESOLVE_REWIND',
+  // Five Draw commits: undo from draw-place restores the pre-redraw
+  // hand (replaced cards back on the deck head); undo from the next
+  // hand's draw-select restores the fully-staged draw-place.
+  'DRAW_REDRAW',
+  'RESOLVE_PLACE_HAND',
 ]);
 
 const handleUndo = (s: GameState): GameState => {
@@ -2200,6 +2423,24 @@ export const step = (
       break;
     case 'RESOLVE_REWIND':
       next = handleResolveRewind(state, rng);
+      break;
+    case 'TOGGLE_HAND_KEEP':
+      next = handleToggleHandKeep(state, action.idx);
+      break;
+    case 'DRAW_REDRAW':
+      next = handleDrawRedraw(state);
+      break;
+    case 'PLACE_HAND_ROW':
+      next = handlePlaceHandRow(state, action.row);
+      break;
+    case 'STAGE_HAND_CARD':
+      next = handleStageHandCard(state, action.idx, action.col);
+      break;
+    case 'UNSTAGE_HAND_CARD':
+      next = handleUnstageHandCard(state, action.col);
+      break;
+    case 'RESOLVE_PLACE_HAND':
+      next = handleResolvePlaceHand(state);
       break;
   }
   if (next === state) return state;

@@ -25,7 +25,8 @@ export type ChallengeId =
   | 'double-duty'
   | 'spiraling'
   | 'time-trial'
-  | 'nut-low';
+  | 'nut-low'
+  | 'draw-poker';
 
 export interface Challenge {
   id: ChallengeId;
@@ -197,6 +198,18 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame (lowball + noBonusCards + noJokers): scoring
     // swaps to the 2-7 table (src/game/lowHands.ts) and the bonus deck
     // is stripped. Hitting the score target is the only end-state check.
+    conditionMet: () => true,
+  },
+  {
+    id: 'draw-poker',
+    name: 'Five Draw',
+    synopsis: 'Twist: Build each row from a 5-card draw',
+    goal: 'Score 500+ points playing five hands of classic 5-card draw. Each hand: hold the cards you like, redraw the rest once (hold all five to stand pat), then place all five into an empty row in the order you choose. You start holding 3 bonus cards; suit perks and discards are off — the redraw IS your discard.',
+    scoreTarget: 500,
+    // Enforced structurally at newGame (drawPoker + noBonusCards +
+    // initialBonusCards): the whole run flows through the draw-select /
+    // draw-place phases and never visits awaiting-action. Hitting the
+    // score target is the only end-state check.
     conditionMet: () => true,
   },
 ];
