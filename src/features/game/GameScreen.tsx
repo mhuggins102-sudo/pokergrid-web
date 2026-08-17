@@ -67,7 +67,11 @@ import { LineDetailSheet } from './components/LineDetailSheet';
 import { HandsIcon, ScoringIcon } from './components/icons';
 import { useAutoPlaceFlights } from './useAutoPlaceFlights';
 import { NextCardWell } from './components/NextCardWell';
-import { HandWell } from './components/HandWell';
+import {
+  HandWell,
+  REVEAL_DURATION,
+  REVEAL_STAGGER,
+} from './components/HandWell';
 import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
 import { BonusCardStrip } from './components/BonusCardStrip';
@@ -753,6 +757,37 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // hand), so the mode looks identical whatever the player picked.
   const dockLayout = state.drawPoker ? 'classic' : dockLayoutSetting;
 
+  // Five Draw: after Draw commits, the replacements flip into the dock
+  // one at a time (HandWell's stagger) — hold the board's row
+  // highlights and taps until the last card has landed plus a beat, so
+  // the "where to place" step doesn't compete with the reveal. Sized
+  // off the actual number drawn (the kept-count of the draw-select
+  // phase just left; stand pat gets no pause).
+  const [drawRevealPause, setDrawRevealPause] = useState(false);
+  const lastKeptRef = useRef(0);
+  useEffect(() => {
+    const ph = state.phase;
+    if (ph.kind === 'draw-select') {
+      lastKeptRef.current = ph.kept.length;
+      return;
+    }
+    if (ph.kind !== 'draw-place' || ph.row !== null) return;
+    if (reduceMotion || prefersReducedMotion()) return;
+    const drawn = 5 - lastKeptRef.current;
+    if (drawn === 0) return;
+    const revealMs =
+      ((drawn - 1) * REVEAL_STAGGER + REVEAL_DURATION) * 1000;
+    setDrawRevealPause(true);
+    const t = window.setTimeout(
+      () => setDrawRevealPause(false),
+      revealMs + 300
+    );
+    return () => {
+      window.clearTimeout(t);
+      setDrawRevealPause(false);
+    };
+  }, [state.phase, reduceMotion]);
+
   // Layout corrections snap (no glide) on the renders where the ♣
   // panel opens or closes — the board and dock resize in those
   // commits, and cards must move with their containers. (Hook order:
@@ -1070,6 +1105,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   const placeArmed =
     placeAction !== undefined && flight === null && boardHidden.size === 0;
   const boardRole = (idx: number) => {
+    // Five Draw's post-draw beat: no highlights while the replacements
+    // are still flipping into the dock.
+    if (drawRevealPause) return null;
     const role = ui.roleOf(idx);
     // Hold the next-slot ring until any staged flight (opening pose,
     // joker arrival, spiral hop) has landed — otherwise it highlights
@@ -1225,7 +1263,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       grid={displayGrid}
       roleOf={boardRole}
       isTappable={idx =>
-        ui.isTappable(idx) ||
+        (!drawRevealPause && ui.isTappable(idx)) ||
         (spotlightEnabled && state.grid[idx] !== null) ||
         // Normal play: every empty cell responds — the pulsing
         // next slot places, the rest nudge toward it.
@@ -1249,6 +1287,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           else nudgePlacement();
           return;
         }
+        // The post-draw beat holds the board inert with the highlights.
+        if (drawRevealPause) return;
         ui.onCellTap(idx);
       }}
       instantLayout={instantLayout}

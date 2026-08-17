@@ -74,12 +74,15 @@
   pointer-events: none;
 }
 
-/* Desk rail: slightly tighter squares (and gaps) so five fit the
-   narrow column — desk-lite's rail runs ~190px inside its padding. */
+/* Desk rail: phone-sized squares read tiny in the deep rail dock, so
+   the desk goes PORTRAIT — the classic 5:7 card ratio — spending the
+   dock's vertical slack on readability. Gaps tighten so five still
+   fit desk-lite's ~190px inner rail. */
 .compact .cards {
   gap: 4px;
 }
 
 .compact .slot {
-  flex-basis: 44px;
+  flex-basis: 46px;
+  aspect-ratio: 5 / 7;
 }
