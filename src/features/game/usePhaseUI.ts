@@ -53,6 +53,9 @@ export interface BonusDialogUI {
 /** Five Draw: the dock's 5-card hand — what the HandWell renders. */
 export interface HandWellUI {
   cards: Card[];
+  /** Which of the 5 hands this is — lets the well spot a fresh deal
+   *  (vs a redraw) and stagger-reveal the new arrivals. */
+  handNo: number;
   /** 'keep': toggling holds before the redraw. 'place': staging order. */
   mode: 'keep' | 'place';
   /** keep: held indices. place: staged indices. */
@@ -347,6 +350,7 @@ export function usePhaseUI(): PhaseUI {
           ],
           hand: {
             cards: hand,
+            handNo,
             mode: 'keep',
             marked: keptSet,
             orderOf: () => null,
@@ -428,6 +432,7 @@ export function usePhaseUI(): PhaseUI {
           actions: [placeHandAction, cancelAction],
           hand: {
             cards: hand,
+            handNo,
             mode: 'place',
             marked: stagedIdx,
             orderOf: idx => {
