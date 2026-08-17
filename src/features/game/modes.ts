@@ -95,7 +95,10 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
       return {
         difficulty,
         target: challenge.scoreTarget,
-        maxUndos: UNDOS_BY_DIFFICULTY[difficulty],
+        // Five Draw plays with no undos at all (the tutorial precedent):
+        // hold/redraw/arrange IS the decision space, and rewinding a
+        // committed row would unravel the whole hand.
+        maxUndos: mode.id === 'draw-poker' ? 0 : UNDOS_BY_DIFFICULTY[difficulty],
         challenge,
         start: rng =>
           newGame(difficulty, rng, {
@@ -161,14 +164,16 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
       // A twisted daily is structurally identical to the same-named
       // challenge — same flag plumbing — but seeded so every player
       // worldwide gets the same deal. Undos follow the difficulty table
-      // like every other mode; using one doesn't taint the score.
+      // like every other mode (Five Draw excepted — no undos there,
+      // matching its challenge); using one doesn't taint the score.
       const twist = mode.recipe.twist ?? null;
       const difficulty = mode.recipe.difficulty;
       const target = dailyTargetFor(difficulty, mode.recipe.twist);
       return {
         difficulty,
         target,
-        maxUndos: UNDOS_BY_DIFFICULTY[difficulty],
+        maxUndos:
+          twist === 'draw-poker' ? 0 : UNDOS_BY_DIFFICULTY[difficulty],
         challenge: twist ? findChallenge(twist) : null,
         start: rng =>
           newGame(difficulty, rng, {

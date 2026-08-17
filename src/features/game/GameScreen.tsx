@@ -746,7 +746,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // no win/lose sting (revision item 17).
   useGameSfx(state, liveReport.total, viewOnly);
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
-  const dockLayout = useSettingsStore(s => s.dockLayout);
+  const dockLayoutSetting = useSettingsStore(s => s.dockLayout);
+  // Five Draw ignores the dock-layout setting on the phone: every
+  // arrangement collapses to the one shared banner + HandWell + commit
+  // stack (the split view's side-by-side region can't hold a 5-card
+  // hand), so the mode looks identical whatever the player picked.
+  const dockLayout = state.drawPoker ? 'classic' : dockLayoutSetting;
 
   // Layout corrections snap (no glide) on the renders where the ♣
   // panel opens or closes — the board and dock resize in those
@@ -1857,11 +1862,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 )}
               </div>
             ) : ui.hand ? (
-              // Five Draw: ONE shared dock for all three stacked phone
-              // layouts — banner line, the 5-card HandWell, then the
-              // commit row (Draw / Place hand) with Cancel and the ↺
-              // (dockUndoBtn self-hides while a banner is up, which is
-              // exactly the draw-place lockout).
+              // Five Draw: THE dock — every phone arrangement renders
+              // this same stack (dockLayout is forced 'classic' above).
+              // Banner line, the 5-card HandWell, then the commit row
+              // (Draw / Place hand + Cancel). Both phases banner and
+              // carry the same three lines, so the dock and the board
+              // hold their size through every step. No ↺ — the mode
+              // has no undos (maxUndos 0 in modes.ts).
               <>
                 {banner}
                 <HandWell hand={ui.hand} />
@@ -1870,7 +1877,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     commitAction?.id === 'cancel' ? 'secondary' : undefined
                   )}
                   {rowActions.map(a => actionBtn(a))}
-                  {dockUndoBtn()}
                 </div>
               </>
             ) : dockLayout === 'classic' ? (
@@ -2218,25 +2224,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                           {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
                         </Button>
                       )}
-                    </div>
-                  </div>
-                ) : ui.hand ? (
-                  // Five Draw on the split dock: the HandWell replaces
-                  // the well + action grid wholesale; commit + Cancel
-                  // ride beneath it, ↺ via the shared dockUndoBtn.
-                  <div className={styles.dtStage}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {banner}
-                      <HandWell hand={ui.hand} compact />
-                      <div className={styles.commitRow}>
-                        {commitBtn(
-                          commitAction?.id === 'cancel'
-                            ? 'secondary'
-                            : undefined
-                        )}
-                        {rowActions.map(a => actionBtn(a, styles.dtGridBtn))}
-                        {dockUndoBtn()}
-                      </div>
                     </div>
                   </div>
                 ) : (

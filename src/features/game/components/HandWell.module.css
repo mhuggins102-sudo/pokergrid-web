@@ -1,37 +1,13 @@
 /* Five Draw's dock hand — five card slots in a row, each a toggle
- * button. Sized to keep the whole well inside the dock pins: card
- * chips cap at 60px tall so the dock doesn't steal board height. */
+ * button. Slots are SQUARE (aspect-ratio, like the grid's .cell) so
+ * the dock cards look exactly like they will on the board; the basis
+ * caps at 54px so the dock doesn't steal board height. No header —
+ * the dock banner above the well carries the step instruction. */
 
 .well {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   min-width: 0;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.hint {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.deckCount {
-  font-size: 11px;
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .cards {
@@ -42,12 +18,12 @@
 
 .slot {
   position: relative;
-  flex: 0 1 46px;
+  flex: 0 1 54px;
   min-width: 34px;
-  height: 60px;
+  aspect-ratio: 1 / 1;
   padding: 0;
   border: 1.5px solid var(--hairline);
-  border-radius: 7px;
+  border-radius: var(--radius-card);
   background: var(--paper-sunken);
   cursor: pointer;
   transition: border-color 120ms ease, transform 120ms ease;
@@ -98,8 +74,12 @@
   pointer-events: none;
 }
 
-/* Desk rail / split dock: slightly tighter. */
+/* Desk rail: slightly tighter squares (and gaps) so five fit the
+   narrow column — desk-lite's rail runs ~190px inside its padding. */
+.compact .cards {
+  gap: 4px;
+}
+
 .compact .slot {
-  height: 54px;
-  flex-basis: 40px;
+  flex-basis: 44px;
 }

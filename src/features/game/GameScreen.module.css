@@ -210,10 +210,23 @@
 }
 
 /* Five Draw: the 5-card HandWell + commit row runs taller than any
-   single-card arrangement — one shared pin across all three stacked
-   layouts (the mode replaces their docks wholesale). */
+   single-card arrangement — one shared pin (the mode forces every
+   phone layout into this same dock). Both phases render the same
+   banner + well + commit stack under this pin, so the dock and the
+   board above it hold their size through every draw/place step. */
 .dock.dockDrawPoker {
   min-height: calc(152px + env(safe-area-inset-bottom));
+}
+
+/* The two step banners differ in length — one reserved line,
+   ellipsized, so a wrap can never move the well below. */
+.dockDrawPoker > .dockText {
+  flex: none;
+  text-align: left;
+  padding: 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dockRow {
@@ -1424,10 +1437,7 @@
 
   /* Five Draw: the 5-card HandWell can't sit beside the button column
      in a ~250px rail — it stacks over the actions instead (every desk
-     dock layout collapses to this shape while a hand is up). The
-     actions pin relaxes: this mode never shows the awaiting-action
-     stack the 140px pin was sized for, and the hand row itself keeps
-     the dock from collapsing at hand boundaries. */
+     dock layout collapses to this shape while a hand is up). */
   .deskDockDraw {
     width: 100%;
     display: flex;
@@ -1435,8 +1445,19 @@
     gap: var(--space-sm);
   }
 
+  /* Both step banners show in this mode but wrap differently in the
+     narrow rail — reserve two lines so the buttons never move. */
+  .deskDockDraw .deskBanner {
+    min-height: 2.7em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Pinned to the taller phase (banner + Place hand + Cancel) so the
+     one-button draw step doesn't shrink the rail dock between steps. */
   .deskDockDraw .deskActions {
-    min-height: 0;
+    min-height: 140px;
   }
 
   .deskActions {

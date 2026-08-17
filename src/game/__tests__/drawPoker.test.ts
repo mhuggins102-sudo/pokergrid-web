@@ -314,6 +314,9 @@ describe('Five Draw — wiring and catalog', () => {
   it('setupForMode wires the challenge route', () => {
     const setup = setupForMode({ kind: 'challenge', id: 'draw-poker' });
     expect(setup.target).toBe(500);
+    // No undos in this mode (the tutorial precedent) — canUndo stays
+    // false for the whole run.
+    expect(setup.maxUndos).toBe(0);
     const s = setup.start(seededRng(5));
     expect(s.drawPoker).toBe(true);
     expect(s.noBonusCards).toBe(true);
@@ -332,11 +335,13 @@ describe('Five Draw — wiring and catalog', () => {
   });
 
   it('daily recipes deal jokers at the difficulty count', () => {
-    const easy = setupForMode({
+    const easySetup = setupForMode({
       kind: 'daily',
       dateISO: '2026-07-01',
       recipe: { difficulty: 'easy', twist: 'draw-poker' },
-    }).start(seededRng(5));
+    });
+    expect(easySetup.maxUndos).toBe(0); // no undos on the daily either
+    const easy = easySetup.start(seededRng(5));
     expect(easy.drawPoker).toBe(true);
     const easyCards = census(easy);
     expect(easyCards).toHaveLength(54); // 52 + Easy's 2 jokers

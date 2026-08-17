@@ -1,7 +1,6 @@
 import { motion } from 'motion/react';
 import { isJoker } from '../../../game/cards';
 import { HandWellUI } from '../usePhaseUI';
-import { useGameSession } from '../GameSessionProvider';
 import { CardFace, cardLayoutId } from './CardFace';
 import styles from './HandWell.module.css';
 
@@ -19,7 +18,9 @@ const cardName = (c: Parameters<typeof CardFace>[0]['card']): string =>
  * column of the chosen row (order badge) or takes it back. A staged
  * card renders as an empty outline — its layoutId now lives in the
  * board's preview cell, so the CardFace FLIP-travels dock → grid
- * (jokers have no layoutId and simply appear; acceptable).
+ * (jokers have no layoutId and simply appear; acceptable). No header
+ * line: the dock banner carries the step instruction, and the slots
+ * are square to mirror the grid cells the cards are headed for.
  */
 export function HandWell({
   hand,
@@ -28,16 +29,9 @@ export function HandWell({
   hand: HandWellUI;
   compact?: boolean;
 }) {
-  const { state } = useGameSession();
   const keepMode = hand.mode === 'keep';
   return (
     <div className={`${styles.well} ${compact ? styles.compact : ''}`}>
-      <div className={styles.header}>
-        <span className={styles.hint}>
-          {keepMode ? 'Tap cards to hold, then draw' : 'Your hand'}
-        </span>
-        <span className={styles.deckCount}>Deck · {state.deck.length}</span>
-      </div>
       <div className={styles.cards}>
         {hand.cards.map((card, i) => {
           const marked = hand.marked.has(i);
