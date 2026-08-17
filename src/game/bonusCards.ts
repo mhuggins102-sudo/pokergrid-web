@@ -112,6 +112,10 @@ export interface BonusCard {
   // placeholder has no effects, can't be activated, and renders as a
   // dimmed "draw to fill" prompt in the matching category tone.
   placeholderKind?: 'special' | 'in-game' | 'end-game';
+  // Challenge-exclusive cards carry a glyph rendered before the title
+  // (every renderer, not just colorblind assist) plus a doubled tone
+  // ring on the chip — the "you can't draw this one" marker.
+  emblem?: string;
 }
 
 // Three "Three Tricks" challenge special cards. Each one is a single-use
@@ -1296,6 +1300,36 @@ export const BONUS_DECK_POOL: BonusCard[] = [
 
 export const BONUS_HAND_LIMIT = 3;
 
+// ---------- Challenge exclusives ----------
+
+// Five Draw's guaranteed starter: every ROW's score ×5. Rows are the
+// hands the player actually drafts in that mode (columns fall where
+// they may), and a natural 5-card-draw hand is hard-won — the card is
+// the mode's balance lever. Deliberately OUTSIDE BONUS_DECK_POOL:
+// pool membership would make it ♣-drawable in every mode, grow the
+// Full Slate achievement's denominator, and enlarge newGame's bonus
+// deck.
+export const ALL_ROWS_ID = 'all-rows-x5';
+export const ALL_ROWS_CARD: BonusCard = {
+  id: ALL_ROWS_ID,
+  name: 'All Rows ×5',
+  title: 'All Rows',
+  mult: '×5 (each)',
+  emblem: '★',
+  description: "Every row's score. Dealt only in the Five Draw challenge.",
+  multValue: 5,
+  baseMultValue: 5,
+  lineEffect: (line, card) =>
+    line.kind === 'row' && line.hand
+      ? { multiplier: card.multValue ?? 5 }
+      : {},
+};
+
+// Cards dealt only by specific challenges — never drawable, but still
+// part of the catalog: hydration and the reference page consult this
+// pool alongside the two drawable ones.
+export const CHALLENGE_DECK_POOL: BonusCard[] = [ALL_ROWS_CARD];
+
 // ---------- Effect aggregation ----------
 
 export const applyLineEffects = (
@@ -1531,7 +1565,8 @@ export const hydrateBonusCard = (raw: BonusCard): BonusCard => {
   const base = baseId(raw);
   const fromPool =
     BONUS_DECK_POOL.find(p => p.id === base) ??
-    SPECIAL_DECK_POOL.find(p => p.id === base);
+    SPECIAL_DECK_POOL.find(p => p.id === base) ??
+    CHALLENGE_DECK_POOL.find(p => p.id === base);
   if (!fromPool) {
     // Unknown id — nothing to rehydrate against. The chip still
     // renders from its display fields; scoring just won't see it.
@@ -1542,7 +1577,8 @@ export const hydrateBonusCard = (raw: BonusCard): BonusCard => {
       console.warn(
         `hydrateBonusCard: unknown bonus card id "${raw.id}" — ` +
           'saved chip will render but not score. Was the card removed ' +
-          'or renamed in BONUS_DECK_POOL / SPECIAL_DECK_POOL?'
+          'or renamed in BONUS_DECK_POOL / SPECIAL_DECK_POOL / ' +
+          'CHALLENGE_DECK_POOL?'
       );
     }
     return raw;

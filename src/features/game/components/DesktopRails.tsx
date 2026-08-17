@@ -843,6 +843,7 @@ export function DesktopBonusPanel({
           dimmed ? styles.bonusDim : null,
           active ? styles.bonusActive : null,
           hoverDim ? styles.bonusFaded : null,
+          card.emblem ? styles.bonusExclusive : null,
         ]
           .filter(Boolean)
           .join(' ')}
@@ -881,6 +882,11 @@ export function DesktopBonusPanel({
                   {cat.icon}
                 </span>{' '}
               </>
+            )}
+            {card.emblem && (
+              <span className={styles.bonusEmblem} aria-hidden="true">
+                {card.emblem}{' '}
+              </span>
             )}
             {card.title}
             {card.used ? ' ✓' : ''}

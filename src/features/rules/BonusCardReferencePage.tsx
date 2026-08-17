@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import {
   BONUS_DECK_POOL,
   BonusCard,
+  CHALLENGE_DECK_POOL,
   SPECIAL_DECK_POOL,
 } from '../../game/bonusCards';
 import {
@@ -50,6 +51,9 @@ function CardEntry({ card }: { card: BonusCard }) {
           <span style={categoryIconStyle(tone)} aria-hidden="true">
             {tone.icon}
           </span>{' '}
+          {card.emblem && (
+            <span aria-hidden="true">{card.emblem} </span>
+          )}
           {card.title}
         </span>
         {card.mult && <span className={styles.cardMult}>{card.mult}</span>}
@@ -65,7 +69,13 @@ function CardEntry({ card }: { card: BonusCard }) {
  */
 export function BonusCardReferencePage() {
   const groups = new Map<BonusCategory, BonusCard[]>();
-  for (const card of [...BONUS_DECK_POOL, ...SPECIAL_DECK_POOL]) {
+  // Challenge exclusives (★) ride their natural category group; each
+  // one's description says which mode deals it.
+  for (const card of [
+    ...BONUS_DECK_POOL,
+    ...SPECIAL_DECK_POOL,
+    ...CHALLENGE_DECK_POOL,
+  ]) {
     const cat = categoryOf(card);
     groups.set(cat, [...(groups.get(cat) ?? []), card]);
   }

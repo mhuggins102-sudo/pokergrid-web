@@ -1,4 +1,5 @@
 import {
+  ALL_ROWS_CARD,
   BONUS_DECK_POOL,
   BonusCard,
   SPECIAL_DECK_POOL,
@@ -113,13 +114,17 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             // then the catalog's deckLimit (44) trims 8 random standards.
             noJokers: mode.id === 'nut-low',
             // Five Draw: the whole run flows through the draw phases;
-            // its 3-card starter comes from the filtered regular pool.
+            // the exclusive All Rows ×5 always leads the starter trio,
+            // the other two come from the filtered regular pool.
             drawPoker: mode.id === 'draw-poker',
             initialBonusCards:
               mode.id === 'three-tricks'
                 ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
                 : mode.id === 'draw-poker'
-                  ? shuffle(DRAW_POKER_BONUS_POOL, rng).slice(0, 3)
+                  ? [
+                      ALL_ROWS_CARD,
+                      ...shuffle(DRAW_POKER_BONUS_POOL, rng).slice(0, 2),
+                    ]
                   : [],
             slotCategories:
               mode.id === 'mixed-bag'
@@ -197,10 +202,13 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
                     seededRng(seedForInitialSpecials(mode.dateISO))
                   ).slice(0, 3)
                 : twist === 'draw-poker'
-                  ? shuffle(
-                      DRAW_POKER_BONUS_POOL,
-                      seededRng(seedForInitialSpecials(mode.dateISO))
-                    ).slice(0, 3)
+                  ? [
+                      ALL_ROWS_CARD,
+                      ...shuffle(
+                        DRAW_POKER_BONUS_POOL,
+                        seededRng(seedForInitialSpecials(mode.dateISO))
+                      ).slice(0, 2),
+                    ]
                   : [],
             slotCategories:
               twist === 'mixed-bag'

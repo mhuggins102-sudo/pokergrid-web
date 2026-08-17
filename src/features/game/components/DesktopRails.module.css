@@ -876,12 +876,30 @@
     box-shadow 160ms ease;
 }
 
+/* Challenge-exclusive cards (card.emblem set): the tone border doubles
+   with a soft echo ring just inside it — same marker as the phone
+   chip's .chipExclusive. Declared before .bonusActive so the hover
+   state supersedes it; the combined rule below merges the two. */
+.bonusExclusive {
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--entry-tone, var(--rule)) 35%, transparent);
+}
+
 /* ACTIVE: hovered itself, or an in-game card firing on the hovered
    line (mockup line 773). The extra half-pixel of border comes from an
    inset ring so the layout never shifts. */
 .bonusActive {
   background: color-mix(in srgb, var(--entry-tone, var(--rule)) 18%, var(--paper-raised));
   box-shadow:
+    inset 0 0 0 0.5px var(--entry-tone, var(--rule)),
+    var(--shadow-md);
+}
+
+/* Exclusive + active: keep the echo ring under the hover dressing. */
+.bonusExclusive.bonusActive {
+  box-shadow:
+    inset 0 0 0 2px
+      color-mix(in srgb, var(--entry-tone, var(--rule)) 35%, transparent),
     inset 0 0 0 0.5px var(--entry-tone, var(--rule)),
     var(--shadow-md);
 }
@@ -974,6 +992,11 @@
 .bonusTitle {
   font-size: 14px;
   font-weight: 700;
+  color: var(--entry-tone, var(--ink));
+}
+
+/* The ★ before an exclusive card's title, in the entry's tone. */
+.bonusEmblem {
   color: var(--entry-tone, var(--ink));
 }
 

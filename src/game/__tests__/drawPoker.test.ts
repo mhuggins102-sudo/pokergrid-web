@@ -1,11 +1,18 @@
-import { Card, isJoker } from '../cards';
-import { BONUS_DECK_POOL } from '../bonusCards';
+import { Card, Rank, StandardCard, Suit, isJoker } from '../cards';
+import {
+  ALL_ROWS_CARD,
+  ALL_ROWS_ID,
+  BONUS_DECK_POOL,
+  hydrateBonusCard,
+} from '../bonusCards';
 import { seededRng } from '../deck';
 import { LIVE_CHALLENGES, findChallenge } from '../challenges';
 import { dailyTargetFor, recipeFor } from '../daily/recipe';
-import { isFull } from '../grid';
+import { emptyGrid, isFull } from '../grid';
+import { scoreGrid } from '../scoring';
 import { Action, GameState, newGame, step } from '../state';
 import { setupForMode } from '../../features/game/modes';
+import { categoryOf } from '../../lib/bonusCardCategory';
 
 // Engine-level helper mirroring modes.ts's 'draw-poker' options (a
 // fixed 3-card trio keeps the fixtures deterministic and independent
@@ -311,6 +318,8 @@ describe('Five Draw — wiring and catalog', () => {
     expect(s.drawPoker).toBe(true);
     expect(s.noBonusCards).toBe(true);
     expect(s.bonusCards).toHaveLength(3);
+    // The exclusive All Rows ×5 always leads the trio.
+    expect(s.bonusCards[0].id).toBe(ALL_ROWS_ID);
     // The starter pool filter: none of the broken-here cards deal in.
     const banned = new Set([
       'spotlight-x1_5',
@@ -340,6 +349,13 @@ describe('Five Draw — wiring and catalog', () => {
       recipe: { difficulty: 'hard', twist: 'draw-poker' },
     }).start(seededRng(5));
     expect(census(hard)).toHaveLength(53);
+
+    // Dailies deal the same fixed-first trio, seeded off the date:
+    // identical for everyone on the day regardless of the deck rng.
+    expect(easy.bonusCards[0].id).toBe(ALL_ROWS_ID);
+    expect(easy.bonusCards.map(c => c.id)).toEqual(
+      hard.bonusCards.map(c => c.id)
+    );
   });
 
   it('is the last live entry, at the Hard base target, out of the rotation', () => {
@@ -354,5 +370,54 @@ describe('Five Draw — wiring and catalog', () => {
       const iso = d.toISOString().slice(0, 10);
       expect(recipeFor(iso).twist).not.toBe('draw-poker');
     }
+  });
+});
+
+describe('Five Draw — All Rows ×5', () => {
+  const C = (rank: Rank, suit: Suit): StandardCard => ({
+    kind: 'standard',
+    rank,
+    suit,
+  });
+
+  it('multiplies every scoring row ×5 and no column', () => {
+    // Outer Edge test template: two pair rows on an otherwise empty
+    // grid, so their line scores are directly comparable.
+    const g = emptyGrid();
+    const r0 = [C('2', 'H'), C('2', 'C'), C('5', 'D'), C('8', 'S'), C('K', 'H')];
+    const r2 = [C('3', 'H'), C('3', 'C'), C('6', 'D'), C('9', 'S'), C('Q', 'H')];
+    for (let i = 0; i < 5; i++) g[i] = r0[i];
+    for (let i = 0; i < 5; i++) g[10 + i] = r2[i];
+    const report = scoreGrid(g, [ALL_ROWS_CARD]);
+    for (const idx of [0, 2]) {
+      const row = report.lines.find(l => l.kind === 'row' && l.index === idx)!;
+      expect(row.multiplier).toBe(5);
+    }
+    // Columns are single cards (incomplete) here — fill col 0 to prove
+    // a COMPLETE column still gets no multiplier.
+    for (let r = 0; r < 5; r++) g[r * 5] ??= C('4', 'D');
+    for (let i = 0; i < 25; i++) g[i] ??= C('J', 'C');
+    const full = scoreGrid(g, [ALL_ROWS_CARD]);
+    for (const line of full.lines) {
+      expect(line.multiplier).toBe(line.kind === 'row' ? 5 : 1);
+    }
+  });
+
+  it('is a gold line card that survives a save roundtrip', () => {
+    expect(categoryOf(ALL_ROWS_CARD)).toBe('line');
+    expect(ALL_ROWS_CARD.emblem).toBe('★');
+    // Daily plays JSON-roundtrip held cards; hydration must find the
+    // challenge pool or the card would render but score 0 on re-entry.
+    const revived = hydrateBonusCard(
+      JSON.parse(JSON.stringify(ALL_ROWS_CARD)) as typeof ALL_ROWS_CARD
+    );
+    expect(revived.lineEffect).toBeDefined();
+    const g = emptyGrid();
+    const r0 = [C('2', 'H'), C('2', 'C'), C('5', 'D'), C('8', 'S'), C('K', 'H')];
+    for (let i = 0; i < 5; i++) g[i] = r0[i];
+    const row0 = scoreGrid(g, [revived]).lines.find(
+      l => l.kind === 'row' && l.index === 0
+    )!;
+    expect(row0.multiplier).toBe(5);
   });
 });

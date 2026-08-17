@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import {
   BONUS_DECK_POOL,
   BonusCard,
+  CHALLENGE_DECK_POOL,
   SPECIAL_DECK_POOL,
 } from '../../game/bonusCards';
 import { HandRank } from '../../game/hands';
@@ -115,7 +116,11 @@ export function RulesPage() {
   const maxBase = Math.max(...HAND_ORDER.map(h => HAND_BASE_VALUE[h]), 1);
 
   const grouped = new Map<ToneGroup, BonusCard[]>();
-  for (const card of [...BONUS_DECK_POOL, ...SPECIAL_DECK_POOL]) {
+  for (const card of [
+    ...BONUS_DECK_POOL,
+    ...SPECIAL_DECK_POOL,
+    ...CHALLENGE_DECK_POOL,
+  ]) {
     const g = TONE_GROUP_OF[categoryOf(card)];
     grouped.set(g, [...(grouped.get(g) ?? []), card]);
   }
@@ -263,7 +268,12 @@ export function RulesPage() {
                       style={{ '--group-tone': meta.tone } as CSSProperties}
                     >
                       <div className={styles.cardTop}>
-                        <span className={styles.cardTitle}>{c.title}</span>
+                        <span className={styles.cardTitle}>
+                          {c.emblem && (
+                            <span aria-hidden="true">{c.emblem} </span>
+                          )}
+                          {c.title}
+                        </span>
                         <span className={styles.cardMult}>{c.mult}</span>
                       </div>
                       <div className={styles.cardDesc}>{c.description}</div>
