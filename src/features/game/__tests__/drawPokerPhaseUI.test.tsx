@@ -46,30 +46,54 @@ const baseState = (phase: Record<string, unknown>) => ({
   grid: emptyGrid(),
   randomPerks: false,
   drawn: null,
+  deck: Array<Card>(40).fill(c('2', 'C')),
   phase,
 });
 
 beforeEach(() => dispatch.mockClear());
 
 describe('draw-select', () => {
-  test('banners the hold prompt, exactly the draw action', () => {
-    probe(baseState({ kind: 'draw-select', hand: HAND, kept: [1, 2], handNo: 1 }));
+  test('round one: hold prompt, exactly the draw action, no cells', () => {
+    probe(
+      baseState({
+        kind: 'draw-select',
+        hand: HAND,
+        kept: [1, 2],
+        handNo: 1,
+        draws: 0,
+      })
+    );
     expect(ui.banner).toBe('Select cards to hold');
     expect(ui.actions.map(a => a.id)).toEqual(['draw']);
     expect(ui.actions[0].label).toBe('Draw 3');
+    expect(ui.actions[0].disabled).toBe(false);
     expect(ui.canActivateSpecials).toBe(false);
     for (let i = 0; i < 25; i++) expect(ui.isTappable(i)).toBe(false);
   });
 
   test('holding all five relabels the action Stand pat', () => {
     probe(
-      baseState({ kind: 'draw-select', hand: HAND, kept: [0, 1, 2, 3, 4], handNo: 3 })
+      baseState({
+        kind: 'draw-select',
+        hand: HAND,
+        kept: [0, 1, 2, 3, 4],
+        handNo: 3,
+        draws: 0,
+      })
     );
     expect(ui.actions[0].label).toBe('Stand pat');
   });
 
   test('hand is keep-mode; card taps toggle holds', () => {
-    probe(baseState({ kind: 'draw-select', hand: HAND, kept: [1], handNo: 1 }));
+    probe(
+      baseState({
+        kind: 'draw-select',
+        hand: HAND,
+        kept: [1],
+        handNo: 1,
+        draws: 0,
+      })
+    );
     const hand = ui.hand!;
     expect(hand.mode).toBe('keep');
     expect([...hand.marked]).toEqual([1]);
@@ -77,6 +101,48 @@ describe('draw-select', () => {
     expect(hand.tappable(4)).toBe(true);
     hand.onCardTap(4);
     expect(dispatch).toHaveBeenCalledWith({ type: 'TOGGLE_HAND_KEEP', idx: 4 });
+  });
+
+  test('round two: place-or-hold banner, row starts offer, Draw waits', () => {
+    // Row 0 seated by hand 1 — rows 1-4 open.
+    const grid = emptyGrid();
+    for (let i = 0; i < 5; i++) grid[i] = c('3', 'S');
+    probe({
+      ...baseState({
+        kind: 'draw-select',
+        hand: HAND,
+        kept: [],
+        handNo: 2,
+        draws: 1,
+      }),
+      grid,
+    });
+    expect(ui.banner).toBe('Select placement row or cards to hold');
+    // Draw disables until a hold is toggled ("draw everything again"
+    // was round one's move).
+    expect(ui.actions[0].disabled).toBe(true);
+    expect(ui.isTappable(0)).toBe(false); // filled row
+    expect(ui.isTappable(5)).toBe(true); // open row's first slot
+    expect(ui.roleOf(5)).toBe('target');
+    expect(ui.isTappable(7)).toBe(false);
+    ui.onCellTap(5);
+    expect(dispatch).toHaveBeenCalledWith({ type: 'PLACE_HAND_ROW', row: 1 });
+  });
+
+  test('round two with holds: Draw arms; a dry deck disables it', () => {
+    const phase = {
+      kind: 'draw-select',
+      hand: HAND,
+      kept: [0, 1],
+      handNo: 2,
+      draws: 1,
+    };
+    probe(baseState(phase));
+    expect(ui.actions[0].label).toBe('Draw 3');
+    expect(ui.actions[0].disabled).toBe(false);
+    // Deck can't cover the request (2 left, 3 wanted) — hold more.
+    probe({ ...baseState(phase), deck: [c('4', 'D'), c('5', 'D')] });
+    expect(ui.actions[0].disabled).toBe(true);
   });
 });
 

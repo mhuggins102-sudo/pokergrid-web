@@ -785,32 +785,27 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // hand), so the mode looks identical whatever the player picked.
   const dockLayout = state.drawPoker ? 'classic' : dockLayoutSetting;
 
-  // Five Draw: after Draw commits, the replacements flip into the dock
+  // Five Draw: after a draw or deal, the new cards flip into the dock
   // one at a time (HandWell's stagger) — hold the board's placement
   // highlights and taps until the last card has landed plus a beat, so
-  // the "where to place" step doesn't compete with the reveal. Sized
-  // off the actual number drawn (the kept-count of the draw-select
-  // phase just left; stand pat gets no pause). Triggered on the
-  // draw-select → draw-place TRANSITION (not on row === null: the
-  // fifth hand opens with its row pre-selected), and via a LAYOUT
+  // the "where to place" step doesn't compete with the reveal. The
+  // deck-length DELTA across the phase change is exactly how many
+  // cards just revealed, whichever path dealt them (first draw back
+  // into draw-select, second draw or dry-deck skip into draw-place,
+  // stand pat and row picks move no cards → no pause). A LAYOUT
   // effect so the pause lands before paint — a passive effect let the
   // highlights flash for one frame before the pause caught up.
   const [drawRevealPause, setDrawRevealPause] = useState(false);
-  const lastDrawRef = useRef<{ kind: string; kept: number }>({
-    kind: '',
-    kept: 0,
-  });
+  const lastDeckRef = useRef<number | null>(null);
   useLayoutEffect(() => {
     const ph = state.phase;
-    const last = lastDrawRef.current;
-    lastDrawRef.current =
-      ph.kind === 'draw-select'
-        ? { kind: ph.kind, kept: ph.kept.length }
-        : { kind: ph.kind, kept: last.kept };
-    if (ph.kind !== 'draw-place' || last.kind !== 'draw-select') return;
+    const prevDeck = lastDeckRef.current;
+    lastDeckRef.current = state.deck.length;
+    if (!state.drawPoker || prevDeck === null) return;
+    if (ph.kind !== 'draw-select' && ph.kind !== 'draw-place') return;
     if (reduceMotion || prefersReducedMotion()) return;
-    const drawn = 5 - last.kept;
-    if (drawn === 0) return;
+    const drawn = prevDeck - state.deck.length;
+    if (drawn <= 0) return;
     const revealMs =
       ((drawn - 1) * REVEAL_STAGGER + REVEAL_DURATION) * 1000;
     setDrawRevealPause(true);
@@ -822,7 +817,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       window.clearTimeout(t);
       setDrawRevealPause(false);
     };
-  }, [state.phase, reduceMotion]);
+  }, [state.phase, state.deck.length, state.drawPoker, reduceMotion]);
 
   // Layout corrections snap (no glide) on the renders where the ♣
   // panel opens or closes — the board and dock resize in those
@@ -1641,7 +1636,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       />
                     )}
                     <div className={styles.deskActions}>
-                      {deskBanner}
+                      {ui.hand ? (
+                        // Five Draw: the deck count rides the banner
+                        // line — the two-draw rule really depletes it.
+                        <div className={styles.drawBannerRow}>
+                          {deskBanner}
+                          <span className={styles.drawDeckCount}>
+                            Deck · {state.deck.length}
+                          </span>
+                        </div>
+                      ) : (
+                        deskBanner
+                      )}
                       {stackActions.some(a => a.id === 'plus')
                         ? // Plus/Minus: the ± pair rides one row (a perk
                           // never coexists with it — different phases).
@@ -1932,7 +1938,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // hold their size through every step. No ↺ — the mode
               // has no undos (maxUndos 0 in modes.ts).
               <>
-                {banner}
+                {/* Deck count rides the banner line — with two draws a
+                    hand the deck genuinely depletes, so it's strategy
+                    now, not trivia. */}
+                <div className={styles.drawBannerRow}>
+                  {banner}
+                  <span className={styles.drawDeckCount}>
+                    Deck · {state.deck.length}
+                  </span>
+                </div>
                 <HandWell hand={ui.hand} />
                 <div className={styles.commitRow}>
                   {commitBtn(

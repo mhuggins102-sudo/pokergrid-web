@@ -1309,19 +1309,22 @@ export const BONUS_HAND_LIMIT = 3;
 // pool membership would make it ♣-drawable in every mode, grow the
 // Full Slate achievement's denominator, and enlarge newGame's bonus
 // deck.
+// Plays at ×3 (retuned from launch's ×5 after playtest); the id keeps
+// the original x5 tag so saves holding the card still resolve — the
+// Two Pair precedent.
 export const ALL_ROWS_ID = 'all-rows-x5';
 export const ALL_ROWS_CARD: BonusCard = {
   id: ALL_ROWS_ID,
-  name: 'All Rows ×5',
+  name: 'All Rows ×3',
   title: 'All Rows',
-  mult: '×5 (each)',
+  mult: '×3 (each)',
   emblem: '★',
   description: "Every row's score. Dealt only in the Five Draw challenge.",
-  multValue: 5,
-  baseMultValue: 5,
+  multValue: 3,
+  baseMultValue: 3,
   lineEffect: (line, card) =>
     line.kind === 'row' && line.hand
-      ? { multiplier: card.multValue ?? 5 }
+      ? { multiplier: card.multValue ?? 3 }
       : {},
 };
 

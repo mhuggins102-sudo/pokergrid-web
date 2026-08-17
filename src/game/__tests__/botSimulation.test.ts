@@ -362,9 +362,20 @@ const pickAction = (s: GameState): Action => {
       // Free Play simulation).
       return { type: 'RESOLVE_CLUB_INVEST' };
     case 'draw-select': {
-      // Five Draw: hold jokers and any paired rank, redraw the rest.
-      // Toggle the first difference from that policy, then draw.
-      const { hand, kept } = s.phase;
+      // Five Draw: hold jokers and any paired rank, redraw the rest
+      // ONCE — round two places immediately (a one-draw policy keeps
+      // the deck comfortable and the action count bounded).
+      const { hand, kept, draws } = s.phase;
+      if (draws > 0) {
+        for (let r = 0; r < 5; r++) {
+          let empty = true;
+          for (let c = 0; c < 5; c++) {
+            if (s.grid[r * 5 + c] !== null) empty = false;
+          }
+          if (empty) return { type: 'PLACE_HAND_ROW', row: r };
+        }
+        throw new Error('round-two draw-select with no empty row');
+      }
       const counts = new Map<string, number>();
       for (const c of hand) {
         if (!isJoker(c)) counts.set(c.rank, (counts.get(c.rank) ?? 0) + 1);
@@ -383,8 +394,10 @@ const pickAction = (s: GameState): Action => {
       return { type: 'DRAW_REDRAW' };
     }
     case 'draw-place': {
-      // Five Draw: first empty row, dealt order, then commit.
-      const { row, placed } = s.phase;
+      // Five Draw: first empty row, dealt order, then commit. The
+      // hand can run SHORT when the deck depletes — stage hand.length
+      // cards, not five.
+      const { hand, row, placed } = s.phase;
       if (row === null) {
         for (let r = 0; r < 5; r++) {
           let empty = true;
@@ -395,10 +408,10 @@ const pickAction = (s: GameState): Action => {
         }
         throw new Error('draw-place with no empty row');
       }
+      const stagedIdx = new Set(placed.filter(p => p !== null));
+      const idx = hand.map((_, i) => i).find(i => !stagedIdx.has(i));
       const openCol = placed.findIndex(p => p === null);
-      if (openCol >= 0) {
-        const stagedIdx = new Set(placed.filter(p => p !== null));
-        const idx = [0, 1, 2, 3, 4].find(i => !stagedIdx.has(i))!;
+      if (idx !== undefined && openCol >= 0) {
         return { type: 'STAGE_HAND_CARD', idx, col: openCol };
       }
       return { type: 'RESOLVE_PLACE_HAND' };
