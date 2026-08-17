@@ -329,22 +329,47 @@ export function usePhaseUI(): PhaseUI {
         // reachable), so the dock renders the same three-line stack —
         // banner / HandWell / commit row — through every step and
         // neither it nor the board ever changes size.
-        const { hand, kept, handNo } = phase;
+        //
+        // Round two (draws: 1) is a hybrid: keep toggling holds and
+        // draw again, OR tap an open row's first slot to place as-is.
+        // Draw disables until a hold is toggled there, and — either
+        // round — while the deck can't cover the request.
+        const { hand, kept, handNo, draws } = phase;
         const keptSet = new Set(kept);
+        const unkept = hand.length - kept.length;
+        const roundTwo = draws > 0;
+        const rowStarts = new Set<number>();
+        if (roundTwo) {
+          for (let r = 0; r < 5; r++) {
+            let empty = true;
+            for (let c = 0; c < 5; c++) {
+              if (state.grid[r * 5 + c] !== null) empty = false;
+            }
+            if (empty) rowStarts.add(r * 5);
+          }
+        }
         return {
           ...base,
-          banner: 'Select cards to hold',
-          ...fromSets(EMPTY_SET),
-          isTappable: () => false,
+          banner: roundTwo
+            ? 'Select placement row or cards to hold'
+            : 'Select cards to hold',
+          ...fromSets(rowStarts),
+          isTappable: (idx: number) => rowStarts.has(idx),
+          onCellTap: (idx: number) => {
+            if (rowStarts.has(idx)) {
+              dispatch({ type: 'PLACE_HAND_ROW', row: Math.floor(idx / 5) });
+            }
+          },
           actions: [
             {
               id: 'draw',
               label:
-                kept.length === hand.length
-                  ? 'Stand pat'
-                  : `Draw ${hand.length - kept.length}`,
+                unkept === 0 ? 'Stand pat' : `Draw ${unkept}`,
               ariaLabel: 'Draw',
               variant: 'primary',
+              disabled:
+                (roundTwo && kept.length === 0) ||
+                unkept > state.deck.length,
               onPress: () => dispatch({ type: 'DRAW_REDRAW' }),
             },
           ],
@@ -376,7 +401,9 @@ export function usePhaseUI(): PhaseUI {
         const lowestUnstaged = hand
           .map((_, i) => i)
           .find(i => !stagedIdx.has(i));
-        const allStaged = placed.every(p => p !== null);
+        // Short hands (the deck ran dry) commit once every HAND card
+        // is seated — the row's leftover columns stay open forever.
+        const allStaged = stagedIdx.size === hand.length;
         const placeHandAction: PhaseAction = {
           id: 'place-hand',
           label: 'Place hand',

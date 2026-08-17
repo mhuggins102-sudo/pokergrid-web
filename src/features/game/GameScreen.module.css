@@ -223,15 +223,34 @@
   justify-content: space-between;
 }
 
-/* The two step banners differ in length — one reserved line,
-   ellipsized, so a wrap can never move the well below. */
-.dockDrawPoker > .dockText {
+/* The step banners differ in length — one reserved line, ellipsized,
+   so a wrap can never move the well below. (Descendant selector: the
+   banner nests inside .drawBannerRow beside the deck count.) */
+.dockDrawPoker .dockText {
   flex: none;
   text-align: left;
   padding: 0 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Banner + deck count share one line: prompt left, "Deck · N" right.
+   Shared by the phone dock and the desk rail dock. */
+.drawBannerRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.drawDeckCount {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dockRow {

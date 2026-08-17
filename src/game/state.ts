@@ -277,12 +277,17 @@ export type Phase =
   //
   // draw-select: the dealt hand sits in the dock; `kept` are the
   // indices the player is HOLDING. DRAW_REDRAW replaces the rest from
-  // the deck head (holding all 5 = stand pat) and moves to draw-place.
+  // the deck head (holding all 5 = stand pat → straight to placement).
+  // Each hand allows up to TWO draws: the first lands back here with
+  // `draws: 1` — from there the player may pick a placement row
+  // directly (PLACE_HAND_ROW) or hold again and draw once more. The
+  // second draw (or the deck running dry) heads to draw-place.
   | {
       kind: 'draw-select';
-      hand: Card[]; // exactly 5; may include jokers (placed manually)
+      hand: Card[]; // ≤5 (short when the deck ran low); jokers ride along
       kept: number[];
       handNo: number; // 1..5, for banners and the history log
+      draws: number; // redraws taken this hand: 0 or 1
     }
   // draw-place: pick an empty row, then stage the hand into its five
   // columns in any order. `placed[col]` is the hand index seated at
@@ -788,7 +793,7 @@ export const newGame = (
     difficulty,
     target: targetOverride ?? TARGET_BY_DIFFICULTY[difficulty],
     phase: drawPoker
-      ? { kind: 'draw-select', hand: drawHand, kept: [], handNo: 1 }
+      ? { kind: 'draw-select', hand: drawHand, kept: [], handNo: 1, draws: 0 }
       : { kind: 'awaiting-action' },
     history: ['Game start'],
     past: [],
@@ -902,34 +907,52 @@ const handleToggleHandKeep = (s: GameState, idx: number): GameState => {
 // Joker can score a tossed joker. Holding all five stands pat. Either
 // way the flow advances to draw-place; there is no second redraw
 // (draw-place never transitions back within a hand).
-const handleDrawRedraw = (s: GameState): GameState => {
-  if (s.phase.kind !== 'draw-select') return s;
-  const { hand, kept, handNo } = s.phase;
-  const toReplace = hand.map((_, i) => i).filter(i => !kept.includes(i));
-  // When exactly one empty row remains (the fifth hand), picking it is
-  // a formality — the phase opens with it pre-selected and the UI
-  // jumps straight to ordering the cards.
-  const emptyRows: number[] = [];
+// Rows with no seated card — placement candidates.
+const fullyEmptyRows = (grid: GameState['grid']): number[] => {
+  const out: number[] = [];
   for (let r = 0; r < 5; r++) {
     let empty = true;
     for (let c = 0; c < 5; c++) {
-      if (s.grid[r * 5 + c] !== null) empty = false;
+      if (grid[r * 5 + c] !== null) empty = false;
     }
-    if (empty) emptyRows.push(r);
+    if (empty) out.push(r);
   }
-  const placePhase = (finalHand: Card[]): Phase => ({
+  return out;
+};
+
+// When exactly one empty row remains (the fifth hand), picking it is
+// a formality — draw-place opens with it pre-selected and the UI
+// jumps straight to ordering the cards.
+const drawPlacePhase = (
+  grid: GameState['grid'],
+  hand: Card[],
+  handNo: number
+): Phase => {
+  const emptyRows = fullyEmptyRows(grid);
+  return {
     kind: 'draw-place',
-    hand: finalHand,
+    hand,
     row: emptyRows.length === 1 ? emptyRows[0] : null,
     placed: [null, null, null, null, null],
     handNo,
-  });
+  };
+};
+
+const handleDrawRedraw = (s: GameState): GameState => {
+  if (s.phase.kind !== 'draw-select') return s;
+  const { hand, kept, handNo, draws } = s.phase;
+  const toReplace = hand.map((_, i) => i).filter(i => !kept.includes(i));
   if (toReplace.length === 0) {
-    return log({ ...s, phase: placePhase(hand) }, 'Stand pat');
+    // Stand pat (all held): nothing to draw — straight to placement,
+    // whichever round it is.
+    return log({ ...s, phase: drawPlacePhase(s.grid, hand, handNo) }, 'Stand pat');
   }
-  // Unreachable: worst case consumes 50 of the 52+ deck cards (25
-  // placed + ≤25 redrawn), so the deck always holds enough. Defensive
-  // all the same.
+  // Round two only opens for a hand that HOLDS something — the UI
+  // disables Draw until a hold is toggled ("draw everything again" is
+  // round one's move).
+  if (draws >= 1 && kept.length === 0) return s;
+  // The deck must cover the request — with two draws a hand it CAN run
+  // low; the UI disables Draw until enough cards are held.
   if (toReplace.length > s.deck.length) return s;
   const next = [...hand];
   const discarded: Card[] = [];
@@ -937,22 +960,48 @@ const handleDrawRedraw = (s: GameState): GameState => {
     discarded.push(next[handIdx]);
     next[handIdx] = s.deck[k];
   });
+  const deck = s.deck.slice(toReplace.length);
+  // The second draw — or the deck running dry — heads to placement;
+  // otherwise round two of holding opens (kept resets: fresh choice).
+  const phase: Phase =
+    draws >= 1 || deck.length === 0
+      ? drawPlacePhase(s.grid, next, handNo)
+      : { kind: 'draw-select', hand: next, kept: [], handNo, draws: draws + 1 };
   return log(
     {
       ...s,
-      deck: s.deck.slice(toReplace.length),
+      deck,
       discards: [...s.discards, ...discarded],
-      phase: placePhase(next),
+      phase,
     },
     `Draw ${toReplace.length}`
   );
 };
 
-// Pick (or switch to) a fully-empty row. `placed` is column-indexed,
-// so staging survives a row switch — the preview just moves.
+// Pick (or switch to) a fully-empty row. Reachable from draw-place AND
+// from draw-select once a draw has been taken (the round-two state
+// offers "place now" and "hold again" side by side). `placed` is
+// column-indexed, so staging survives a row switch — the preview just
+// moves.
 const handlePlaceHandRow = (s: GameState, row: number): GameState => {
-  if (s.phase.kind !== 'draw-place') return s;
   if (row < 0 || row >= 5) return s;
+  if (s.phase.kind === 'draw-select') {
+    if (s.phase.draws === 0) return s;
+    for (let c = 0; c < 5; c++) {
+      if (s.grid[row * 5 + c] !== null) return s;
+    }
+    return {
+      ...s,
+      phase: {
+        kind: 'draw-place',
+        hand: s.phase.hand,
+        row,
+        placed: [null, null, null, null, null],
+        handNo: s.phase.handNo,
+      },
+    };
+  }
+  if (s.phase.kind !== 'draw-place') return s;
   for (let c = 0; c < 5; c++) {
     if (s.grid[row * 5 + c] !== null) return s;
   }
@@ -987,31 +1036,29 @@ const handleUnstageHandCard = (s: GameState, col: number): GameState => {
 };
 
 // Commit the staged row, then deal the next hand — or end the game
-// when the board is full (always true after hand 5: 5 rows × 5 = 25).
+// after the fifth hand, or when the deck can't deal another card.
 // Follows the handleResolveRevive precedent: this fills slots WITHOUT
 // drawNext, so it owns its own end-of-game check. The log entry must
 // start with "Place" so the placement sfx mapping fires.
+//
+// Two draws per hand can burn the deck dry, so hands may run SHORT
+// (fewer than 5 cards): the commit then requires every HAND card
+// staged — the row's leftover columns stay empty and score as
+// incomplete lines at game end.
 const handleResolvePlaceHand = (s: GameState): GameState => {
   if (s.phase.kind !== 'draw-place' || s.phase.row === null) return s;
   const { hand, row, placed, handNo } = s.phase;
-  if (placed.some(p => p === null)) return s;
+  if (placed.filter(p => p !== null).length !== hand.length) return s;
   const grid = [...s.grid];
   for (let c = 0; c < 5; c++) {
-    grid[row * 5 + c] = activeHalf(hand[placed[c]!]);
+    const idx = placed[c];
+    if (idx !== null) grid[row * 5 + c] = activeHalf(hand[idx]);
   }
   const seated = log({ ...s, grid }, `Place hand → row ${row + 1}`);
-  if (isFull(grid)) {
-    return {
-      ...seated,
-      drawn: null,
-      scatterSlot: null,
-      phase: { kind: 'game-over' },
-    };
-  }
   // Deal the next hand off the deck head (jokers included — they
-  // simply arrive in the hand). The deck always holds ≥5 here; see
-  // the invariant note on handleDrawRedraw.
-  if (seated.deck.length < 5) {
+  // simply arrive in the hand), as many cards as the deck still has.
+  const deal = seated.deck.slice(0, 5);
+  if (handNo >= 5 || deal.length === 0) {
     return {
       ...seated,
       drawn: null,
@@ -1019,15 +1066,22 @@ const handleResolvePlaceHand = (s: GameState): GameState => {
       phase: { kind: 'game-over' },
     };
   }
+  const deck = seated.deck.slice(deal.length);
   return {
     ...seated,
-    deck: seated.deck.slice(5),
-    phase: {
-      kind: 'draw-select',
-      hand: seated.deck.slice(0, 5),
-      kept: [],
-      handNo: handNo + 1,
-    },
+    deck,
+    // A dealt-dry deck means no draws are possible — skip the hold
+    // step and go straight to placement.
+    phase:
+      deck.length === 0
+        ? drawPlacePhase(grid, deal, handNo + 1)
+        : {
+            kind: 'draw-select',
+            hand: deal,
+            kept: [],
+            handNo: handNo + 1,
+            draws: 0,
+          },
   };
 };
 

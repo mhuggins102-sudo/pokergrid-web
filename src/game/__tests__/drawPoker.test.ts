@@ -65,6 +65,7 @@ describe('Five Draw — construction', () => {
     expect(s.phase.hand).toHaveLength(5);
     expect(s.phase.kept).toEqual([]);
     expect(s.phase.handNo).toBe(1);
+    expect(s.phase.draws).toBe(0);
     expect(s.deck).toHaveLength(48); // 53 (Hard: 52 + 1 joker) − 5 dealt
     expect(census(s)).toHaveLength(53);
     expect(s.bonusCards).toHaveLength(3);
@@ -95,7 +96,7 @@ describe('Five Draw — hold toggling', () => {
 });
 
 describe('Five Draw — the redraw', () => {
-  it('replaces un-held cards from the deck head, in hand order', () => {
+  it('first draw replaces from the deck head and opens round two', () => {
     const s = drawPokerGame();
     if (s.phase.kind !== 'draw-select') throw new Error('bad phase');
     const before = s.phase.hand;
@@ -103,8 +104,10 @@ describe('Five Draw — the redraw', () => {
     // Hold 0 and 2 — replace 1, 3, 4.
     const held = toggle(toggle(s, 0), 2);
     const after = step(held, { type: 'DRAW_REDRAW' });
-    expect(after.phase.kind).toBe('draw-place');
-    if (after.phase.kind !== 'draw-place') return;
+    expect(after.phase.kind).toBe('draw-select');
+    if (after.phase.kind !== 'draw-select') return;
+    expect(after.phase.draws).toBe(1);
+    expect(after.phase.kept).toEqual([]); // holds reset — fresh choice
     expect(after.phase.hand[0]).toBe(before[0]);
     expect(after.phase.hand[2]).toBe(before[2]);
     expect(after.phase.hand[1]).toBe(deckHead[0]);
@@ -112,11 +115,45 @@ describe('Five Draw — the redraw', () => {
     expect(after.phase.hand[4]).toBe(deckHead[2]);
     expect(after.deck).toHaveLength(s.deck.length - 3);
     expect(after.discards).toEqual([before[1], before[3], before[4]]);
-    expect(after.phase.row).toBeNull();
-    expect(after.phase.placed).toEqual([null, null, null, null, null]);
   });
 
-  it('standing pat consumes nothing', () => {
+  it('the second draw heads to placement; a third is impossible', () => {
+    const roundTwo = step(
+      step(drawPokerGame(), { type: 'DRAW_REDRAW' }),
+      { type: 'TOGGLE_HAND_KEEP', idx: 0 }
+    );
+    if (roundTwo.phase.kind !== 'draw-select') throw new Error('bad phase');
+    const deckHead = roundTwo.deck.slice(0, 4);
+    const after = step(roundTwo, { type: 'DRAW_REDRAW' });
+    expect(after.phase.kind).toBe('draw-place');
+    if (after.phase.kind !== 'draw-place') return;
+    expect(after.phase.row).toBeNull();
+    expect(after.phase.placed).toEqual([null, null, null, null, null]);
+    expect(after.phase.hand.slice(1)).toEqual(deckHead);
+    expect(step(after, { type: 'DRAW_REDRAW' })).toBe(after);
+  });
+
+  it('round two requires a hold before drawing again', () => {
+    const roundTwo = step(drawPokerGame(), { type: 'DRAW_REDRAW' });
+    expect(roundTwo.phase.kind).toBe('draw-select');
+    expect(step(roundTwo, { type: 'DRAW_REDRAW' })).toBe(roundTwo);
+  });
+
+  it('round two can place directly; round one cannot', () => {
+    const fresh = drawPokerGame();
+    expect(step(fresh, { type: 'PLACE_HAND_ROW', row: 1 })).toBe(fresh);
+    const roundTwo = step(fresh, { type: 'DRAW_REDRAW' });
+    if (roundTwo.phase.kind !== 'draw-select') throw new Error('bad phase');
+    const hand = roundTwo.phase.hand;
+    const placed = step(roundTwo, { type: 'PLACE_HAND_ROW', row: 1 });
+    expect(placed.phase.kind).toBe('draw-place');
+    if (placed.phase.kind !== 'draw-place') return;
+    expect(placed.phase.row).toBe(1);
+    expect(placed.phase.hand).toEqual(hand);
+    expect(placed.deck).toEqual(roundTwo.deck); // no cards moved
+  });
+
+  it('standing pat consumes nothing and skips straight to placement', () => {
     const s = drawPokerGame();
     const after = standPat(s);
     expect(after.phase.kind).toBe('draw-place');
@@ -127,7 +164,7 @@ describe('Five Draw — the redraw', () => {
     expect(after.discards).toEqual([]);
   });
 
-  it('there is no second redraw', () => {
+  it('no redraw from the placement phase', () => {
     const placed = standPat(drawPokerGame());
     expect(step(placed, { type: 'DRAW_REDRAW' })).toBe(placed);
   });
@@ -249,12 +286,82 @@ describe('Five Draw — full game', () => {
     expect(s.drawn).toBeNull();
   });
 
-  it('never runs the deck dry even redrawing all five every hand', () => {
+  it('one full redraw per hand leaves the deck at 3', () => {
     const s = playOut(true);
     expect(s.phase.kind).toBe('game-over');
-    // 53 − 25 placed − 25 redrawn = 3 left.
+    // 53 − 25 placed − 25 redrawn = 3 left. (Second draws can burn
+    // further — the depletion suite below covers running dry.)
     expect(s.deck).toHaveLength(3);
     expect(s.discards).toHaveLength(25);
+  });
+});
+
+describe('Five Draw — deck depletion', () => {
+  // Maximum burn for one hand: draw all five, hold one, draw the
+  // other four again — 14 cards counting the deal.
+  const burnHand = (s: GameState): GameState => {
+    let cur = step(s, { type: 'DRAW_REDRAW' });
+    cur = step(cur, { type: 'TOGGLE_HAND_KEEP', idx: 0 });
+    return step(cur, { type: 'DRAW_REDRAW' });
+  };
+
+  // Three burned hands: deck 48 → 39 → 34 (deal) → 25 → 20 → 11 → 6.
+  const afterThreeBurns = (): GameState => {
+    let s = drawPokerGame(11);
+    for (let row = 0; row < 3; row++) {
+      s = placeRow(burnHand(s), row);
+    }
+    return s;
+  };
+
+  it('a draw that empties the deck heads straight to placement', () => {
+    const s = afterThreeBurns();
+    expect(s.deck).toHaveLength(6);
+    let h4 = step(s, { type: 'DRAW_REDRAW' }); // 5 drawn, deck 1
+    for (const i of [0, 1, 2, 3]) {
+      h4 = step(h4, { type: 'TOGGLE_HAND_KEEP', idx: i });
+    }
+    h4 = step(h4, { type: 'DRAW_REDRAW' }); // last card — deck dry
+    expect(h4.deck).toHaveLength(0);
+    expect(h4.phase.kind).toBe('draw-place');
+
+    // No card left to deal hand 5: the game ends with row 5 empty.
+    const over = placeRow(h4, 3);
+    expect(over.phase.kind).toBe('game-over');
+    expect(over.grid.filter(c => c !== null)).toHaveLength(20);
+    expect(isFull(over.grid)).toBe(false);
+  });
+
+  it('deals a short final hand and commits it once fully staged', () => {
+    const s = afterThreeBurns();
+    let h4 = step(s, { type: 'DRAW_REDRAW' }); // deck 1
+    expect(h4.deck).toHaveLength(1);
+    if (h4.phase.kind !== 'draw-select') throw new Error('bad phase');
+    expect(h4.phase.draws).toBe(1);
+    h4 = step(h4, { type: 'PLACE_HAND_ROW', row: 3 }); // place as-is
+    const afterH4 = placeRow(h4, 3);
+
+    // One card was left: hand 5 is a single card, the deck is dry, so
+    // the hold step is skipped — placement opens with the last row
+    // pre-selected.
+    expect(afterH4.phase.kind).toBe('draw-place');
+    if (afterH4.phase.kind !== 'draw-place') return;
+    expect(afterH4.phase.hand).toHaveLength(1);
+    expect(afterH4.phase.row).toBe(4);
+    expect(afterH4.deck).toHaveLength(0);
+
+    // Committing needs every HAND card staged (one), not five; the
+    // row's other columns stay empty and the game ends.
+    expect(step(afterH4, { type: 'RESOLVE_PLACE_HAND' })).toBe(afterH4);
+    const staged = step(afterH4, {
+      type: 'STAGE_HAND_CARD',
+      idx: 0,
+      col: 2,
+    });
+    const over = step(staged, { type: 'RESOLVE_PLACE_HAND' });
+    expect(over.phase.kind).toBe('game-over');
+    expect(over.grid.filter(c => c !== null)).toHaveLength(21);
+    expect(over.grid[4 * 5 + 2]).not.toBeNull();
   });
 });
 
@@ -336,7 +443,7 @@ describe('Five Draw — wiring and catalog', () => {
     expect(s.drawPoker).toBe(true);
     expect(s.noBonusCards).toBe(true);
     expect(s.bonusCards).toHaveLength(3);
-    // The exclusive All Rows ×5 always leads the trio.
+    // The exclusive All Rows ×3 always leads the trio.
     expect(s.bonusCards[0].id).toBe(ALL_ROWS_ID);
     // The starter pool filter: none of the broken-here cards deal in.
     const banned = new Set([
@@ -393,14 +500,14 @@ describe('Five Draw — wiring and catalog', () => {
   });
 });
 
-describe('Five Draw — All Rows ×5', () => {
+describe('Five Draw — All Rows ×3', () => {
   const C = (rank: Rank, suit: Suit): StandardCard => ({
     kind: 'standard',
     rank,
     suit,
   });
 
-  it('multiplies every scoring row ×5 and no column', () => {
+  it('multiplies every scoring row ×3 and no column', () => {
     // Outer Edge test template: two pair rows on an otherwise empty
     // grid, so their line scores are directly comparable.
     const g = emptyGrid();
@@ -411,7 +518,7 @@ describe('Five Draw — All Rows ×5', () => {
     const report = scoreGrid(g, [ALL_ROWS_CARD]);
     for (const idx of [0, 2]) {
       const row = report.lines.find(l => l.kind === 'row' && l.index === idx)!;
-      expect(row.multiplier).toBe(5);
+      expect(row.multiplier).toBe(3);
     }
     // Columns are single cards (incomplete) here — fill col 0 to prove
     // a COMPLETE column still gets no multiplier.
@@ -419,7 +526,7 @@ describe('Five Draw — All Rows ×5', () => {
     for (let i = 0; i < 25; i++) g[i] ??= C('J', 'C');
     const full = scoreGrid(g, [ALL_ROWS_CARD]);
     for (const line of full.lines) {
-      expect(line.multiplier).toBe(line.kind === 'row' ? 5 : 1);
+      expect(line.multiplier).toBe(line.kind === 'row' ? 3 : 1);
     }
   });
 
@@ -438,6 +545,6 @@ describe('Five Draw — All Rows ×5', () => {
     const row0 = scoreGrid(g, [revived]).lines.find(
       l => l.kind === 'row' && l.index === 0
     )!;
-    expect(row0.multiplier).toBe(5);
+    expect(row0.multiplier).toBe(3);
   });
 });

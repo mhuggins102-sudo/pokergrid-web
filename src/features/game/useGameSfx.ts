@@ -117,7 +117,7 @@ export const useGameSfx = (
         (state.phase.kind === 'draw-select' ||
           state.phase.kind === 'draw-place')
       ) {
-        dealTicks(5);
+        dealTicks(state.phase.hand.length);
       }
       return;
     }
@@ -144,17 +144,19 @@ export const useGameSfx = (
 
       // Five Draw's dealing flicks are the mode's voice: a redraw
       // ('Draw N') reveals N replacements, and a locked row ('Place
-      // hand', deliberately voiceless itself) deals the next hand's
-      // five. The final row is excluded twice over: the phase is
-      // game-over (guarded here) and no hand follows.
+      // hand', deliberately voiceless itself) deals the next hand —
+      // however many cards the deck still had (a dry deck deals the
+      // hand straight into draw-place, so both kinds count). The
+      // final row lands on game-over, which neither branch matches.
       if (state.drawPoker) {
         const drawEntry = fresh.find(e => /^Draw \d/.test(e));
         if (drawEntry) dealTicks(parseInt(drawEntry.slice(5), 10));
         if (
           fresh.some(e => e.startsWith('Place hand')) &&
-          state.phase.kind === 'draw-select'
+          (state.phase.kind === 'draw-select' ||
+            state.phase.kind === 'draw-place')
         ) {
-          dealTicks(5);
+          dealTicks(state.phase.hand.length);
         }
       }
     }
@@ -164,8 +166,15 @@ export const useGameSfx = (
     // the grid ticks the standard place, exactly like placing a card
     // in any other mode; taking one back plays the Rewind riffle. A
     // row switch carries the count unchanged — silent — and entering
-    // or leaving draw-place skips the compare (one side is -1).
-    if (last.staged >= 0 && cur.staged >= 0) {
+    // or leaving draw-place skips the compare (one side is -1). The
+    // history guard keeps commits out: a dry-deck 'Place hand' can
+    // land draw-place → draw-place with a fresh 0-staged hand, which
+    // is a deal, not an unstage.
+    if (
+      cur.historyLen === last.historyLen &&
+      last.staged >= 0 &&
+      cur.staged >= 0
+    ) {
       if (cur.staged > last.staged) SFX.place();
       else if (cur.staged < last.staged) SFX.riffle();
     }
