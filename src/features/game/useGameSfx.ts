@@ -1,12 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { GameState } from '../../game/state';
-import { SFX, sfxChime, sfxForHistoryEntry, sfxLose, sfxWin } from '../../lib/sfx';
+import {
+  SFX,
+  sfxChime,
+  sfxDeal,
+  sfxForHistoryEntry,
+  sfxLose,
+  sfxWin,
+} from '../../lib/sfx';
 import { useSettingsStore } from '../settings/settingsStore';
 import {
   DUAL_OPENING_STAGE_MS,
   OPENING_RAPID_MS,
   STAGE_MS,
 } from './useAutoPlaceFlights';
+import { REVEAL_STAGGER } from './components/HandWell';
 
 /**
  * State-transition sounds, derived from the reducer's history log —
@@ -26,8 +34,10 @@ export const useGameSfx = (
 ): void => {
   const sounds = useSettingsStore(s => s.sounds);
   const prev = useRef<{ historyLen: number; phase: string } | null>(null);
-  // Timers for the opening deal's placement ticks, cleared on unmount so
-  // a long Gridlock deal doesn't keep firing after you leave.
+  // Timers for staggered ticks (the opening deal's placements, Five
+  // Draw's per-card dealing flicks), cleared on unmount so a long
+  // Gridlock deal or a mid-reveal exit doesn't keep firing after you
+  // leave.
   const openingTimers = useRef<number[]>([]);
 
   useEffect(() => {
@@ -35,6 +45,31 @@ export const useGameSfx = (
     const last = prev.current;
     prev.current = cur;
     if (!sounds || muted) return;
+
+    // Five Draw: one papery flick per card revealed into the dock,
+    // timed to the HandWell's stagger (+60ms so each lands mid-flip).
+    // Reduced motion shows all cards at once — a single flick stands
+    // in for the batch.
+    const dealTicks = (count: number, offsetMs = 0) => {
+      if (count <= 0) return;
+      const reduced =
+        useSettingsStore.getState().reduceMotion ||
+        (typeof window !== 'undefined' &&
+          !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+      if (reduced) {
+        sfxDeal(0);
+        return;
+      }
+      for (let k = 0; k < count; k++) {
+        openingTimers.current.push(
+          window.setTimeout(
+            () => sfxDeal(k),
+            offsetMs + k * REVEAL_STAGGER * 1000 + 60
+          )
+        );
+      }
+    };
+
     if (last === null) {
       // Session mount: the engine seated the opening card(s) before the
       // first paint. Give that deal its placement tick(s), timed to the
@@ -63,6 +98,15 @@ export const useGameSfx = (
           );
         }
       }
+      // Five Draw session mount: the first hand is already dealt and
+      // the HandWell stagger-reveals it — give each card its flick.
+      if (
+        state.drawPoker &&
+        (state.phase.kind === 'draw-select' ||
+          state.phase.kind === 'draw-place')
+      ) {
+        dealTicks(5);
+      }
       return;
     }
 
@@ -83,6 +127,23 @@ export const useGameSfx = (
         if (name) {
           SFX[name]();
           break;
+        }
+      }
+
+      // Five Draw's dealing flicks ride ON TOP of the commit voice:
+      // a redraw ('Draw N') reveals N replacements, and a locked row
+      // ('Place hand', voiced by the lock above) deals the next hand —
+      // its five flicks follow a beat behind the lock. The final row
+      // is excluded twice over: the phase is game-over (guarded here)
+      // and no hand follows.
+      if (state.drawPoker) {
+        const drawEntry = fresh.find(e => /^Draw \d/.test(e));
+        if (drawEntry) dealTicks(parseInt(drawEntry.slice(5), 10));
+        if (
+          fresh.some(e => e.startsWith('Place hand')) &&
+          state.phase.kind === 'draw-select'
+        ) {
+          dealTicks(5, 160);
         }
       }
     }

@@ -49,6 +49,25 @@ export const sfxPlace = (): void => {
   tone(330, 0, 0.09, 0.05, 'sine');
 };
 
+/** Five Draw: one card flicked off the deck into the dock — a papery
+ *  snap, pitched a touch higher each `step` so a whole hand audibly
+ *  deals around the table (the online-poker-room cadence). Fired by
+ *  useGameSfx on the HandWell's reveal stagger, one call per card. */
+export const sfxDeal = (step = 0): void => {
+  const f = 740 + step * 44;
+  tone(f, 0, 0.035, 0.05, 'triangle', f * 0.72);
+  tone(f / 2.2, 0.012, 0.05, 0.035, 'sine');
+};
+
+/** Five Draw: a whole row locked in via Place hand — a firmer settle
+ *  than the single-card tick: a clack landing on a low resolving
+ *  fifth, so the commit reads as bigger than any one card. */
+export const sfxLock = (): void => {
+  tone(523.25, 0, 0.07, 0.07, 'triangle', 392);
+  tone(261.63, 0.05, 0.14, 0.08, 'sine');
+  tone(196, 0.07, 0.18, 0.05, 'sine');
+};
+
 /** ♣ draw opens / bonus card kept — a small two-note chime. */
 export const sfxChime = (): void => {
   tone(523.25, 0, 0.12, 0.06);
@@ -263,6 +282,7 @@ export const sfxTallyCount = (durationS: number, tier: TallyTier): void => {
 
 export type SfxName =
   | 'place'
+  | 'lock'
   | 'chime'
   | 'swap'
   | 'slide'
@@ -275,6 +295,7 @@ export type SfxName =
 
 export const SFX: Record<SfxName, () => void> = {
   place: sfxPlace,
+  lock: sfxLock,
   chime: sfxChime,
   swap: sfxSwap,
   slide: sfxSlide,
@@ -294,6 +315,8 @@ export const SFX: Record<SfxName, () => void> = {
  */
 export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   if (entry.startsWith('Joker auto-placed')) return 'joker';
+  // Five Draw's row commit — checked before the generic 'Place'.
+  if (entry.startsWith('Place hand')) return 'lock';
   if (entry.startsWith('Place')) return 'place';
   if (entry.startsWith('Hop ')) return 'swap'; // ♥
   if (entry.startsWith('Slide ')) return 'slide'; // ♠
@@ -308,8 +331,9 @@ export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   if (entry.startsWith('Wildcard')) return 'enchant';
   if (entry.startsWith('Plus/Minus')) return 'enchant';
   if (entry.startsWith('Shuffle on')) return 'riffle';
-  // Five Draw's redraw ('Draw N'). 'Stand pat' stays silent on purpose.
-  if (entry.startsWith('Draw ')) return 'riffle';
+  // Five Draw's 'Draw N' has no one-shot voice: useGameSfx schedules a
+  // per-card sfxDeal flick on the reveal stagger instead. 'Stand pat'
+  // stays silent on purpose.
   if (entry.startsWith('Rewind on')) return 'riffle';
   if (entry.startsWith('Revive discard')) return 'revive';
   // Double Duty two-way card rotation (+ its unseen burn).
