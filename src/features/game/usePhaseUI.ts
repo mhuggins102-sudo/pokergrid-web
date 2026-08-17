@@ -331,8 +331,8 @@ export function usePhaseUI(): PhaseUI {
         // neither it nor the board ever changes size.
         //
         // Round two (draws: 1) is a hybrid: keep toggling holds and
-        // draw again, OR tap an open row's first slot to place as-is.
-        // Draw disables until a hold is toggled there, and — either
+        // draw again (a full five included), OR tap an open row's
+        // first slot to place as-is. Draw only disables — either
         // round — while the deck can't cover the request.
         const { hand, kept, handNo, draws } = phase;
         const keptSet = new Set(kept);
@@ -367,9 +367,7 @@ export function usePhaseUI(): PhaseUI {
                 unkept === 0 ? 'Stand pat' : `Draw ${unkept}`,
               ariaLabel: 'Draw',
               variant: 'primary',
-              disabled:
-                (roundTwo && kept.length === 0) ||
-                unkept > state.deck.length,
+              disabled: unkept > state.deck.length,
               onPress: () => dispatch({ type: 'DRAW_REDRAW' }),
             },
           ],
@@ -386,7 +384,7 @@ export function usePhaseUI(): PhaseUI {
       }
 
       case 'draw-place': {
-        const { hand, row, placed, handNo } = phase;
+        const { hand, row, placed, handNo, draws } = phase;
         const emptyRows: number[] = [];
         for (let r = 0; r < 5; r++) {
           let empty = true;
@@ -410,6 +408,17 @@ export function usePhaseUI(): PhaseUI {
           variant: 'primary',
           disabled: !allStaged,
           onPress: () => dispatch({ type: 'RESOLVE_PLACE_HAND' }),
+        };
+        // A draw is still available — Back returns to the hold state
+        // (CANCEL_ACTION; staging dissolves, no cards move), so a
+        // player who started placing can change their mind and draw.
+        const canBack = draws < 2 && state.deck.length > 0;
+        const backAction: PhaseAction = {
+          id: 'back',
+          label: 'Back',
+          ariaLabel: 'Back to drawing',
+          variant: 'ghost',
+          onPress: () => dispatch({ type: 'CANCEL_ACTION' }),
         };
 
         // Cells: before a row is chosen, only the FIRST slot of each
@@ -469,7 +478,7 @@ export function usePhaseUI(): PhaseUI {
               });
             }
           },
-          actions: [placeHandAction],
+          actions: canBack ? [placeHandAction, backAction] : [placeHandAction],
           hand: {
             cards: hand,
             handNo,
