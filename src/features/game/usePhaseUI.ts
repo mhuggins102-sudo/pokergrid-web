@@ -389,16 +389,26 @@ export function usePhaseUI(): PhaseUI {
         // open row offers (a whole-row wash read as "tap anywhere");
         // once chosen, exactly that row's five slots light up — staged
         // cells 'selected' (tap = unstage), open cells 'target' (tap =
-        // stage the lowest unstaged card there). Switching rows goes
-        // through Cancel, which clears the staging.
+        // stage the lowest unstaged card there). No Cancel button:
+        // staged cards come back by tapping them, and another open
+        // row's first slot still answers a tap (quietly — no highlight)
+        // so a mis-picked row can be switched, staging intact.
         const tappable = new Set<number>();
+        const lit = new Set<number>(); // highlighted subset of tappable
         const selected = new Set<number>();
         if (row === null) {
-          for (const r of emptyRows) tappable.add(r * 5);
+          for (const r of emptyRows) {
+            tappable.add(r * 5);
+            lit.add(r * 5);
+          }
         } else {
           for (let c = 0; c < 5; c++) {
             tappable.add(row * 5 + c);
+            lit.add(row * 5 + c);
             if (placed[c] !== null) selected.add(row * 5 + c);
+          }
+          for (const r of emptyRows) {
+            if (r !== row) tappable.add(r * 5);
           }
         }
         return {
@@ -407,18 +417,19 @@ export function usePhaseUI(): PhaseUI {
             row === null
               ? `Hand ${handNo} of 5 — tap a row to place`
               : 'Tap cards in placing order',
-          ...fromSets(tappable, selected),
+          // Roles come from `lit` — the quiet row-switch slots answer
+          // taps but stay unhighlighted on purpose.
+          ...fromSets(lit, selected),
           isTappable: (idx: number) => tappable.has(idx),
           onCellTap: (idx: number) => {
             const r = Math.floor(idx / 5);
             const c = idx % 5;
-            if (row === null) {
+            if (r !== row) {
               if (c === 0 && emptyRows.includes(r)) {
                 dispatch({ type: 'PLACE_HAND_ROW', row: r });
               }
               return;
             }
-            if (r !== row) return;
             if (placed[c] !== null) {
               dispatch({ type: 'UNSTAGE_HAND_CARD', col: c });
             } else if (lowestUnstaged !== undefined) {
@@ -429,7 +440,7 @@ export function usePhaseUI(): PhaseUI {
               });
             }
           },
-          actions: [placeHandAction, cancelAction],
+          actions: [placeHandAction],
           hand: {
             cards: hand,
             handNo,

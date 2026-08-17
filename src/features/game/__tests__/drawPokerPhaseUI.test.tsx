@@ -13,8 +13,10 @@ import { Card, Rank, Suit } from '../../../game/cards';
  *    toggles holds.
  *  - draw-place, row unpicked: ONLY the first slot of each open row
  *    offers. Row picked: exactly that row's five slots light up
- *    (staged = selected, open = target) — no other row responds;
- *    switching goes through Cancel. 'place-hand' arms at 5 staged.
+ *    (staged = selected, open = target); another open row's FIRST
+ *    slot still answers a tap — unhighlighted — to switch rows. No
+ *    Cancel button: staged cards come back by tapping them.
+ *    'place-hand' arms at 5 staged.
  *  - Neither phase offers Discard or special activation.
  */
 
@@ -93,7 +95,7 @@ describe('draw-place', () => {
     for (let i = 0; i < 5; i++) grid[i] = c('3', 'S');
     probe({ ...baseState(rowNullPhase), grid });
     expect(ui.banner).toBe('Hand 2 of 5 — tap a row to place');
-    expect(ui.actions.map(a => a.id)).toEqual(['place-hand', 'cancel']);
+    expect(ui.actions.map(a => a.id)).toEqual(['place-hand']); // no Cancel
     expect(ui.actions[0].disabled).toBe(true);
     expect(ui.isTappable(0)).toBe(false); // filled row 0's first slot
     expect(ui.isTappable(5)).toBe(true); // empty row 1's first slot
@@ -133,10 +135,15 @@ describe('draw-place', () => {
       col: 1,
     });
     dispatch.mockClear();
-    // Other rows are dark now — switching goes through Cancel.
-    expect(ui.isTappable(20)).toBe(false);
+    // Another open row's FIRST slot switches rows — quietly (no
+    // highlight); its other slots stay fully inert.
+    expect(ui.isTappable(20)).toBe(true); // row 4 col 0
     expect(ui.roleOf(20)).toBeNull();
     ui.onCellTap(20);
+    expect(dispatch).toHaveBeenCalledWith({ type: 'PLACE_HAND_ROW', row: 4 });
+    dispatch.mockClear();
+    expect(ui.isTappable(21)).toBe(false);
+    ui.onCellTap(21);
     expect(dispatch).not.toHaveBeenCalled();
   });
 

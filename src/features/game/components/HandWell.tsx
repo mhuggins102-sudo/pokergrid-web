@@ -21,8 +21,11 @@ const cardName = (c: Parameters<typeof CardFace>[0]['card']): string =>
 const cardKeyOf = (c: Card): string =>
   isJoker(c) ? 'joker' : `${c.rank}${c.suit}`;
 
-/** Seconds between one card's flip-in and the next. */
-const REVEAL_STAGGER = 0.11;
+/** Seconds between one card's flip-in and the next. Exported (with the
+ *  flip duration) so GameScreen can size the post-draw pause that holds
+ *  the row highlights until the last card has landed. */
+export const REVEAL_STAGGER = 0.22;
+export const REVEAL_DURATION = 0.18;
 
 /**
  * Five Draw's dock hand: the five dealt cards, each a toggle button.
@@ -120,7 +123,10 @@ export function HandWell({
                   animate={{ opacity: 1, rotateY: 0 }}
                   transition={
                     fresh
-                      ? { duration: 0.18, delay: revealAt * REVEAL_STAGGER }
+                      ? {
+                          duration: REVEAL_DURATION,
+                          delay: revealAt * REVEAL_STAGGER,
+                        }
                       : undefined
                   }
                 >
