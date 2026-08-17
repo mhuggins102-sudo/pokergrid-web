@@ -202,6 +202,21 @@ describe('Five Draw — row placement', () => {
     expect(step(hand2, { type: 'PLACE_HAND_ROW', row: 4 })).toBe(hand2);
   });
 
+  it('the fifth hand opens with the last empty row pre-selected', () => {
+    let s = drawPokerGame(11);
+    for (let row = 0; row < 4; row++) {
+      s = placeRow(standPat(s), row);
+    }
+    // Hands 1-4 open with the row unpicked (covered above); the fifth
+    // has exactly one empty row left, so picking it is skipped.
+    const last = standPat(s);
+    expect(last.phase.kind === 'draw-place' && last.phase.row).toBe(4);
+    expect(
+      last.phase.kind === 'draw-place' &&
+        last.phase.placed.every(p => p === null)
+    ).toBe(true);
+  });
+
   it('CANCEL clears the staging without touching the grid', () => {
     const s = standPat(drawPokerGame());
     let cur = step(s, { type: 'PLACE_HAND_ROW', row: 0 });

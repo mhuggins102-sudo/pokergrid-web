@@ -130,12 +130,11 @@ export const useGameSfx = (
         }
       }
 
-      // Five Draw's dealing flicks ride ON TOP of the commit voice:
-      // a redraw ('Draw N') reveals N replacements, and a locked row
-      // ('Place hand', voiced by the lock above) deals the next hand —
-      // its five flicks follow a beat behind the lock. The final row
-      // is excluded twice over: the phase is game-over (guarded here)
-      // and no hand follows.
+      // Five Draw's dealing flicks are the mode's voice: a redraw
+      // ('Draw N') reveals N replacements, and a locked row ('Place
+      // hand', deliberately voiceless itself) deals the next hand's
+      // five. The final row is excluded twice over: the phase is
+      // game-over (guarded here) and no hand follows.
       if (state.drawPoker) {
         const drawEntry = fresh.find(e => /^Draw \d/.test(e));
         if (drawEntry) dealTicks(parseInt(drawEntry.slice(5), 10));
@@ -143,7 +142,7 @@ export const useGameSfx = (
           fresh.some(e => e.startsWith('Place hand')) &&
           state.phase.kind === 'draw-select'
         ) {
-          dealTicks(5, 160);
+          dealTicks(5);
         }
       }
     }
