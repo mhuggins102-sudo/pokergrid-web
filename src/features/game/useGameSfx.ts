@@ -33,7 +33,12 @@ export const useGameSfx = (
   muted = false
 ): void => {
   const sounds = useSettingsStore(s => s.sounds);
-  const prev = useRef<{ historyLen: number; phase: string } | null>(null);
+  const prev = useRef<{
+    historyLen: number;
+    phase: string;
+    /** Five Draw draw-place: staged card count; -1 in any other phase. */
+    staged: number;
+  } | null>(null);
   // Timers for staggered ticks (the opening deal's placements, Five
   // Draw's per-card dealing flicks), cleared on unmount so a long
   // Gridlock deal or a mid-reveal exit doesn't keep firing after you
@@ -41,7 +46,14 @@ export const useGameSfx = (
   const openingTimers = useRef<number[]>([]);
 
   useEffect(() => {
-    const cur = { historyLen: state.history.length, phase: state.phase.kind };
+    const cur = {
+      historyLen: state.history.length,
+      phase: state.phase.kind,
+      staged:
+        state.phase.kind === 'draw-place'
+          ? state.phase.placed.filter(p => p !== null).length
+          : -1,
+    };
     const last = prev.current;
     prev.current = cur;
     if (!sounds || muted) return;
@@ -145,6 +157,17 @@ export const useGameSfx = (
           dealTicks(5);
         }
       }
+    }
+
+    // Five Draw staging is phase-only (STAGE/UNSTAGE write no history
+    // entry): voice it off the staged-count delta. Seating a card on
+    // the grid ticks the standard place, exactly like placing a card
+    // in any other mode; taking one back plays the Rewind riffle. A
+    // row switch carries the count unchanged — silent — and entering
+    // or leaving draw-place skips the compare (one side is -1).
+    if (last.staged >= 0 && cur.staged >= 0) {
+      if (cur.staged > last.staged) SFX.place();
+      else if (cur.staged < last.staged) SFX.riffle();
     }
 
     if (
