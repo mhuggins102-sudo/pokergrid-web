@@ -133,10 +133,12 @@ describe('Five Draw — the redraw', () => {
     expect(step(after, { type: 'DRAW_REDRAW' })).toBe(after);
   });
 
-  it('round two requires a hold before drawing again', () => {
+  it('round two allows a full five-card redraw', () => {
     const roundTwo = step(drawPokerGame(), { type: 'DRAW_REDRAW' });
     expect(roundTwo.phase.kind).toBe('draw-select');
-    expect(step(roundTwo, { type: 'DRAW_REDRAW' })).toBe(roundTwo);
+    const after = step(roundTwo, { type: 'DRAW_REDRAW' }); // kept []
+    expect(after.phase.kind).toBe('draw-place');
+    expect(after.deck).toHaveLength(roundTwo.deck.length - 5);
   });
 
   it('round two can place directly; round one cannot', () => {
@@ -254,8 +256,28 @@ describe('Five Draw — row placement', () => {
     ).toBe(true);
   });
 
-  it('CANCEL clears the staging without touching the grid', () => {
+  it('Back returns placement to the hold state while a draw remains', () => {
+    // Stand pat round 1 → placement with both draws still unspent.
     const s = standPat(drawPokerGame());
+    let cur = step(s, { type: 'PLACE_HAND_ROW', row: 0 });
+    cur = step(cur, { type: 'STAGE_HAND_CARD', idx: 1, col: 1 });
+    if (cur.phase.kind !== 'draw-place') throw new Error('bad phase');
+    const hand = cur.phase.hand;
+    const back = step(cur, { type: 'CANCEL_ACTION' });
+    expect(back.phase.kind).toBe('draw-select');
+    if (back.phase.kind !== 'draw-select') return;
+    expect(back.phase.hand).toEqual(hand); // staging dissolved, hand intact
+    expect(back.phase.kept).toEqual([]);
+    expect(back.phase.draws).toBe(0); // stand pat spent nothing
+    expect(back.grid).toEqual(cur.grid);
+    expect(back.deck).toEqual(cur.deck);
+  });
+
+  it('after the second draw, CANCEL only clears the staging', () => {
+    // Draw twice — no draw left, so no Back to a hold state.
+    let s = step(drawPokerGame(), { type: 'DRAW_REDRAW' });
+    s = step(s, { type: 'TOGGLE_HAND_KEEP', idx: 0 });
+    s = step(s, { type: 'DRAW_REDRAW' });
     let cur = step(s, { type: 'PLACE_HAND_ROW', row: 0 });
     cur = step(cur, { type: 'STAGE_HAND_CARD', idx: 1, col: 1 });
     const cleared = step(cur, { type: 'CANCEL_ACTION' });

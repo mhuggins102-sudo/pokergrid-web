@@ -1478,11 +1478,11 @@
     justify-content: center;
   }
 
-  /* Both phases now carry banner + exactly one button — the pin just
-     keeps that shape steady (and the portrait HandWell above spends
-     the dock's old vertical slack). */
+  /* Pinned to the taller phase — banner + Place hand + Back — so the
+     one-button hold step doesn't shrink the rail dock between steps
+     (the portrait HandWell above spends the rest of the old slack). */
   .deskDockDraw .deskActions {
-    min-height: 90px;
+    min-height: 140px;
   }
 
   .deskActions {

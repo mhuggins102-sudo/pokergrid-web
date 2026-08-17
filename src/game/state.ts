@@ -293,12 +293,16 @@ export type Phase =
   // columns in any order. `placed[col]` is the hand index seated at
   // column col (null = open). Staging is preview-only — the grid is
   // untouched until RESOLVE_PLACE_HAND commits the whole row.
+  // `draws` carries the hand's redraw count along: while it's < 2 and
+  // the deck isn't dry, CANCEL_ACTION steps BACK to the hold state
+  // (the dock's Back button) — staging dissolves, no cards move.
   | {
       kind: 'draw-place';
       hand: Card[];
       row: number | null;
       placed: (number | null)[];
       handNo: number;
+      draws: number;
     }
   | { kind: 'game-over' };
 
@@ -902,11 +906,6 @@ const handleToggleHandKeep = (s: GameState, idx: number): GameState => {
   return { ...s, phase: { ...s.phase, kept } };
 };
 
-// Commit the hold decision: replace every un-held card from the deck
-// head (ascending hand index), discarding the replaced ones — Trash
-// Joker can score a tossed joker. Holding all five stands pat. Either
-// way the flow advances to draw-place; there is no second redraw
-// (draw-place never transitions back within a hand).
 // Rows with no seated card — placement candidates.
 const fullyEmptyRows = (grid: GameState['grid']): number[] => {
   const out: number[] = [];
@@ -926,7 +925,8 @@ const fullyEmptyRows = (grid: GameState['grid']): number[] => {
 const drawPlacePhase = (
   grid: GameState['grid'],
   hand: Card[],
-  handNo: number
+  handNo: number,
+  draws: number
 ): Phase => {
   const emptyRows = fullyEmptyRows(grid);
   return {
@@ -935,6 +935,7 @@ const drawPlacePhase = (
     row: emptyRows.length === 1 ? emptyRows[0] : null,
     placed: [null, null, null, null, null],
     handNo,
+    draws,
   };
 };
 
@@ -944,13 +945,13 @@ const handleDrawRedraw = (s: GameState): GameState => {
   const toReplace = hand.map((_, i) => i).filter(i => !kept.includes(i));
   if (toReplace.length === 0) {
     // Stand pat (all held): nothing to draw — straight to placement,
-    // whichever round it is.
-    return log({ ...s, phase: drawPlacePhase(s.grid, hand, handNo) }, 'Stand pat');
+    // whichever round it is. No cards moved, so the redraw count
+    // rides along unchanged (Back can return here).
+    return log(
+      { ...s, phase: drawPlacePhase(s.grid, hand, handNo, draws) },
+      'Stand pat'
+    );
   }
-  // Round two only opens for a hand that HOLDS something — the UI
-  // disables Draw until a hold is toggled ("draw everything again" is
-  // round one's move).
-  if (draws >= 1 && kept.length === 0) return s;
   // The deck must cover the request — with two draws a hand it CAN run
   // low; the UI disables Draw until enough cards are held.
   if (toReplace.length > s.deck.length) return s;
@@ -965,7 +966,7 @@ const handleDrawRedraw = (s: GameState): GameState => {
   // otherwise round two of holding opens (kept resets: fresh choice).
   const phase: Phase =
     draws >= 1 || deck.length === 0
-      ? drawPlacePhase(s.grid, next, handNo)
+      ? drawPlacePhase(s.grid, next, handNo, draws + 1)
       : { kind: 'draw-select', hand: next, kept: [], handNo, draws: draws + 1 };
   return log(
     {
@@ -998,6 +999,7 @@ const handlePlaceHandRow = (s: GameState, row: number): GameState => {
         row,
         placed: [null, null, null, null, null],
         handNo: s.phase.handNo,
+        draws: s.phase.draws,
       },
     };
   }
@@ -1071,10 +1073,11 @@ const handleResolvePlaceHand = (s: GameState): GameState => {
     ...seated,
     deck,
     // A dealt-dry deck means no draws are possible — skip the hold
-    // step and go straight to placement.
+    // step and go straight to placement (draws 0, but Back stays
+    // hidden: it also requires a non-dry deck).
     phase:
       deck.length === 0
-        ? drawPlacePhase(grid, deal, handNo + 1)
+        ? drawPlacePhase(grid, deal, handNo + 1, 0)
         : {
             kind: 'draw-select',
             hand: deal,
@@ -2178,9 +2181,24 @@ const handleCancelAction = (s: GameState): GameState => {
       //  cards, so UNDO is the only way back.)
       return s;
     case 'draw-place': {
-      // Clear the staging (row pick + seated cards) without touching
-      // the committed grid — a within-flow step-back, like Slide's
-      // dest→source.
+      // Back to the hold state while a draw is still available (fewer
+      // than two taken, deck not dry): staging dissolves, no cards
+      // move — changing your mind about placing costs nothing.
+      if (s.phase.draws < 2 && s.deck.length > 0) {
+        return {
+          ...s,
+          phase: {
+            kind: 'draw-select',
+            hand: s.phase.hand,
+            kept: [],
+            handNo: s.phase.handNo,
+            draws: s.phase.draws,
+          },
+        };
+      }
+      // No draw left: clear the staging (row pick + seated cards)
+      // without touching the committed grid — a within-flow
+      // step-back, like Slide's dest→source.
       if (s.phase.row === null && s.phase.placed.every(p => p === null)) {
         return s;
       }

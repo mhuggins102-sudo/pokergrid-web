@@ -178,6 +178,17 @@ export const useGameSfx = (
       if (cur.staged > last.staged) SFX.place();
       else if (cur.staged < last.staged) SFX.riffle();
     }
+    // Back (draw-place → the hold state) with cards staged: they all
+    // return to the dock at once — one riffle for the batch. History
+    // unchanged separates this from a committed row (which logs).
+    if (
+      cur.historyLen === last.historyLen &&
+      last.phase === 'draw-place' &&
+      cur.phase === 'draw-select' &&
+      last.staged > 0
+    ) {
+      SFX.riffle();
+    }
 
     if (
       cur.phase === 'bonus-card-resolving' &&

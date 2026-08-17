@@ -14,9 +14,10 @@ import { Card, Rank, Suit } from '../../../game/cards';
  *  - draw-place, row unpicked: ONLY the first slot of each open row
  *    offers. Row picked: exactly that row's five slots light up
  *    (staged = selected, open = target); another open row's FIRST
- *    slot still answers a tap — unhighlighted — to switch rows. No
- *    Cancel button: staged cards come back by tapping them.
- *    'place-hand' arms at 5 staged.
+ *    slot still answers a tap — unhighlighted — to switch rows.
+ *    Staged cards come back by tapping them; while a draw remains a
+ *    Back action returns to the hold state. 'place-hand' arms once
+ *    every hand card is staged.
  *  - Neither phase offers Discard or special activation.
  */
 
@@ -103,7 +104,7 @@ describe('draw-select', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'TOGGLE_HAND_KEEP', idx: 4 });
   });
 
-  test('round two: place-or-hold banner, row starts offer, Draw waits', () => {
+  test('round two: place-or-hold banner, row starts offer, Draw armed', () => {
     // Row 0 seated by hand 1 — rows 1-4 open.
     const grid = emptyGrid();
     for (let i = 0; i < 5; i++) grid[i] = c('3', 'S');
@@ -118,9 +119,10 @@ describe('draw-select', () => {
       grid,
     });
     expect(ui.banner).toBe('Select placement row or cards to hold');
-    // Draw disables until a hold is toggled ("draw everything again"
-    // was round one's move).
-    expect(ui.actions[0].disabled).toBe(true);
+    // A full five-card redraw is allowed in round two — Draw only
+    // disables when the deck can't serve it.
+    expect(ui.actions[0].label).toBe('Draw 5');
+    expect(ui.actions[0].disabled).toBe(false);
     expect(ui.isTappable(0)).toBe(false); // filled row
     expect(ui.isTappable(5)).toBe(true); // open row's first slot
     expect(ui.roleOf(5)).toBe('target');
@@ -129,7 +131,7 @@ describe('draw-select', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'PLACE_HAND_ROW', row: 1 });
   });
 
-  test('round two with holds: Draw arms; a dry deck disables it', () => {
+  test('a deck too small for the request disables Draw', () => {
     const phase = {
       kind: 'draw-select',
       hand: HAND,
@@ -147,12 +149,15 @@ describe('draw-select', () => {
 });
 
 describe('draw-place', () => {
+  // draws: 2 — both draws spent, so no Back action muddies the
+  // baseline assertions; the Back tests below use draws: 1.
   const rowNullPhase = {
     kind: 'draw-place',
     hand: HAND,
     row: null,
     placed: [null, null, null, null, null],
     handNo: 2,
+    draws: 2,
   };
 
   test('row unpicked: only the FIRST slot of each open row offers', () => {
@@ -245,5 +250,17 @@ describe('draw-place', () => {
       expect(ui.actions.map(a => a.id)).not.toContain('discard');
       expect(ui.canActivateSpecials).toBe(false);
     }
+  });
+
+  test('Back appears while a draw remains, and returns to holding', () => {
+    probe(baseState({ ...rowPickedPhase, draws: 1 }));
+    expect(ui.actions.map(a => a.id)).toEqual(['place-hand', 'back']);
+    ui.actions.find(a => a.id === 'back')!.onPress();
+    expect(dispatch).toHaveBeenCalledWith({ type: 'CANCEL_ACTION' });
+    // Both draws spent — no Back (also hidden on a dry deck).
+    probe(baseState({ ...rowPickedPhase, draws: 2 }));
+    expect(ui.actions.map(a => a.id)).toEqual(['place-hand']);
+    probe({ ...baseState({ ...rowPickedPhase, draws: 1 }), deck: [] });
+    expect(ui.actions.map(a => a.id)).toEqual(['place-hand']);
   });
 });
