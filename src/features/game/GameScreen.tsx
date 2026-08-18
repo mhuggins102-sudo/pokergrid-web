@@ -1181,6 +1181,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // pick falls through to the card's detail sheet (mirrors the
   // engine's slotDrawable gate in state.ts).
   const slotLocked = (slot: number): boolean => {
+    // Five Draw's between-hands offer exists to REPLACE a held card —
+    // the no-swap cap lock never applies while it's up (Hard's
+    // bonusSwapAtCap 'off' would otherwise mark every held chip
+    // locked, and the strip would open the detail popup instead of
+    // dispatching the keep).
+    if (ui.bonusOffer) return false;
     const occupant = state.bonusCards[slot];
     return (
       state.bonusSwapAtCap === 'off' &&
