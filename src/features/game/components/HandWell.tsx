@@ -26,6 +26,10 @@ const cardKeyOf = (c: Card): string =>
  *  the row highlights until the last card has landed. */
 export const REVEAL_STAGGER = 0.22;
 export const REVEAL_DURATION = 0.18;
+/** Seconds the reveal (and its deal flicks) waits when the deal follows
+ *  a KEPT bonus offer — a beat between the keep chime and the flicks,
+ *  which otherwise land on top of each other. */
+export const KEEP_REVEAL_DELAY = 0.45;
 
 /**
  * Five Draw's dock hand: the five dealt cards, each a toggle button.
@@ -46,9 +50,13 @@ export const REVEAL_DURATION = 0.18;
 export function HandWell({
   hand,
   compact = false,
+  revealDelay = 0,
 }: {
   hand: HandWellUI;
   compact?: boolean;
+  /** Extra seconds before the first fresh card flips in (see
+   *  KEEP_REVEAL_DELAY — a beat after a kept bonus offer's chime). */
+  revealDelay?: number;
 }) {
   const keepMode = hand.mode === 'keep';
   const reduceMotion =
@@ -125,7 +133,7 @@ export function HandWell({
                     fresh
                       ? {
                           duration: REVEAL_DURATION,
-                          delay: revealAt * REVEAL_STAGGER,
+                          delay: revealDelay + revealAt * REVEAL_STAGGER,
                         }
                       : undefined
                   }

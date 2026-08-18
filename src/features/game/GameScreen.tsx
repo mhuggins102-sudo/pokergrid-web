@@ -70,6 +70,7 @@ import { useAutoPlaceFlights } from './useAutoPlaceFlights';
 import { NextCardWell } from './components/NextCardWell';
 import {
   HandWell,
+  KEEP_REVEAL_DELAY,
   REVEAL_DURATION,
   REVEAL_STAGGER,
 } from './components/HandWell';
@@ -127,6 +128,15 @@ const NO_SWEEP: ReadonlyMap<number, number> = new Map();
 // Vertical slack (px, each side) reserved around the board frame for
 // Card Room's felt bleed — see the frame-width computation below and
 // the matching -12px in GameScreen.module.css's CSS fallbacks.
+
+// Per-mount namespace for the motion LayoutGroups. layoutId matching
+// is app-global by default, and "Play Again" swaps the old and new
+// game trees in ONE commit — without a namespace, the new deal's
+// cards would FLIP-travel from wherever the same rank+suit sat in the
+// PREVIOUS game (board or dock), overriding their staggered reveal
+// and scrambling the opening animation. A fresh id per GameScreen
+// mount keeps shared-element travel strictly within one game.
+let layoutNsCounter = 0;
 const FELT_BLEED = 6;
 // Width-bound boards keep a visible gutter per side. .boardArea bleeds
 // to the viewport edges (so a height-bound board can use the full
@@ -805,6 +815,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // (DetailSheet, reused from the strip). Hook lives up here, above
   // the game-over early return.
   const [offerDetail, setOfferDetail] = useState(false);
+  // See layoutNsCounter above — one namespace per game mount.
+  const [layoutNs] = useState(() => `game-${++layoutNsCounter}`);
   useLayoutEffect(() => {
     const ph = state.phase;
     const prevDeck = lastDeckRef.current;
@@ -814,8 +826,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     if (reduceMotion || prefersReducedMotion()) return;
     const drawn = prevDeck - state.deck.length;
     if (drawn <= 0) return;
+    // A deal right after a KEPT bonus offer starts on a delay (the
+    // chime gets its beat) — the pause covers that too.
+    const keepDelayMs = state.history[state.history.length - 1]?.startsWith(
+      'Bonus kept'
+    )
+      ? KEEP_REVEAL_DELAY * 1000
+      : 0;
     const revealMs =
-      ((drawn - 1) * REVEAL_STAGGER + REVEAL_DURATION) * 1000;
+      keepDelayMs + ((drawn - 1) * REVEAL_STAGGER + REVEAL_DURATION) * 1000;
     setDrawRevealPause(true);
     const t = window.setTimeout(
       () => setDrawRevealPause(false),
@@ -825,7 +844,22 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       window.clearTimeout(t);
       setDrawRevealPause(false);
     };
-  }, [state.phase, state.deck.length, state.drawPoker, reduceMotion]);
+  }, [
+    state.phase,
+    state.deck.length,
+    state.drawPoker,
+    state.history,
+    reduceMotion,
+  ]);
+
+  // Five Draw: the HandWell reveal (and its flicks, scheduled in
+  // useGameSfx) waits a beat when this deal followed a KEPT bonus
+  // offer — the keep chime otherwise collides with the first flick.
+  const dealRevealDelay =
+    state.drawPoker &&
+    state.history[state.history.length - 1]?.startsWith('Bonus kept')
+      ? KEEP_REVEAL_DELAY
+      : 0;
 
   // Layout corrections snap (no glide) on the renders where the ♣
   // panel opens or closes — the board and dock resize in those
@@ -1539,7 +1573,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
     return (
       <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
-        <LayoutGroup>
+        <LayoutGroup id={layoutNs}>
           <div
             className={`${styles.desk} ${
               family === 'desk-lite' ? styles.deskLite : ''
@@ -1657,7 +1691,11 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     }
                   >
                     {ui.hand ? (
-                      <HandWell hand={ui.hand} compact />
+                      <HandWell
+                        hand={ui.hand}
+                        compact
+                        revealDelay={dealRevealDelay}
+                      />
                     ) : ui.bonusOffer ? (
                       <div className={styles.bonusOfferWell}>
                         <BonusChip
@@ -1820,7 +1858,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
-      <LayoutGroup>
+      <LayoutGroup id={layoutNs}>
         <div
           className={[
             styles.layout,
@@ -1981,7 +2019,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </span>
                 </div>
                 {ui.hand ? (
-                  <HandWell hand={ui.hand} />
+                  <HandWell hand={ui.hand} revealDelay={dealRevealDelay} />
                 ) : (
                   <div className={styles.bonusOfferWell}>
                     <BonusChip
