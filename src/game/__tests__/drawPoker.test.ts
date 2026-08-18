@@ -387,6 +387,83 @@ describe('Five Draw — deck depletion', () => {
   });
 });
 
+describe('Five Draw — the bonus offer', () => {
+  // The plain helper passes no offer deck, so every earlier suite
+  // runs the direct hand-to-hand flow; this one opts in.
+  const withOffers = (seed = 7): GameState =>
+    newGame('hard', seededRng(seed), {
+      drawPoker: true,
+      noBonusCards: true,
+      targetOverride: findChallenge('draw-poker').scoreTarget,
+      initialBonusCards: BONUS_DECK_POOL.slice(0, 3),
+      initialBonusDeck: BONUS_DECK_POOL.slice(3, 8),
+    });
+
+  const placeFirstRow = (s: GameState): GameState => placeRow(standPat(s), 0);
+
+  it('offers one card after the row commits — next hand not yet dealt', () => {
+    const after = placeFirstRow(withOffers());
+    expect(after.phase.kind).toBe('draw-bonus');
+    if (after.phase.kind !== 'draw-bonus') return;
+    expect(after.phase.offer.id).toBe(BONUS_DECK_POOL[3].id);
+    expect(after.phase.handNo).toBe(1);
+    expect(after.bonusDeck.map(c => c.id)).toEqual(
+      BONUS_DECK_POOL.slice(4, 8).map(c => c.id)
+    );
+    expect(after.deck).toHaveLength(48); // deal waits for the decision
+  });
+
+  it('pass lets the offer go and deals the next hand', () => {
+    const offered = placeFirstRow(withOffers());
+    const heldIds = offered.bonusCards.map(c => c.id);
+    const after = step(offered, { type: 'PASS_BONUS_CARD' });
+    expect(after.phase.kind).toBe('draw-select');
+    if (after.phase.kind !== 'draw-select') return;
+    expect(after.phase.handNo).toBe(2);
+    expect(after.phase.draws).toBe(0);
+    expect(after.deck).toHaveLength(43);
+    expect(after.bonusCards.map(c => c.id)).toEqual(heldIds);
+  });
+
+  it('keep swaps the offer over the chosen held card, then deals', () => {
+    const offered = placeFirstRow(withOffers());
+    if (offered.phase.kind !== 'draw-bonus') throw new Error('bad phase');
+    const offer = offered.phase.offer;
+    const held = offered.bonusCards;
+    const after = step(offered, { type: 'KEEP_BONUS_CARD', slot: 1 });
+    expect(after.bonusCards[0]).toBe(held[0]);
+    expect(after.bonusCards[1]).toBe(offer);
+    expect(after.bonusCards[2]).toBe(held[2]);
+    expect(after.phase.kind).toBe('draw-select');
+    expect(after.deck).toHaveLength(43);
+  });
+
+  it('rejects bad slots and wrong phases by reference', () => {
+    const offered = placeFirstRow(withOffers());
+    expect(step(offered, { type: 'KEEP_BONUS_CARD', slot: 3 })).toBe(offered);
+    expect(step(offered, { type: 'KEEP_BONUS_CARD', slot: -1 })).toBe(offered);
+    expect(step(offered, { type: 'DRAW_REDRAW' })).toBe(offered);
+    expect(step(offered, { type: 'CANCEL_ACTION' })).toBe(offered);
+    const select = withOffers();
+    expect(step(select, { type: 'PASS_BONUS_CARD' })).toBe(select);
+    expect(step(select, { type: 'KEEP_BONUS_CARD', slot: 0 })).toBe(select);
+  });
+
+  it('hands 1-4 each offer; hand 5 ends the game with no offer', () => {
+    let s = withOffers(11);
+    let offers = 0;
+    for (let row = 0; row < 5; row++) {
+      s = placeRow(standPat(s), row);
+      if (s.phase.kind === 'draw-bonus') {
+        offers++;
+        s = step(s, { type: 'PASS_BONUS_CARD' });
+      }
+    }
+    expect(offers).toBe(4);
+    expect(s.phase.kind).toBe('game-over');
+  });
+});
+
 describe('Five Draw — undo', () => {
   it('undo after placing a row restores the fully-staged draw-place', () => {
     let s = standPat(drawPokerGame());
@@ -475,6 +552,15 @@ describe('Five Draw — wiring and catalog', () => {
       'patience-no-penalty',
     ]);
     for (const c of s.bonusCards) expect(banned.has(c.id)).toBe(false);
+    // The offer deck is the filtered pool minus the 2 dealt starters
+    // (4 ids excluded; All Rows lives outside the pool) — one card is
+    // offered after each of hands 1-4.
+    expect(s.bonusDeck.length).toBe(BONUS_DECK_POOL.length - 6);
+    const heldIds = new Set(s.bonusCards.map(c => c.id));
+    for (const c of s.bonusDeck) {
+      expect(banned.has(c.id)).toBe(false);
+      expect(heldIds.has(c.id)).toBe(false);
+    }
     expect(census(s)).toHaveLength(53); // jokers stay in the deck
   });
 
@@ -499,11 +585,15 @@ describe('Five Draw — wiring and catalog', () => {
     }).start(seededRng(5));
     expect(census(hard)).toHaveLength(53);
 
-    // Dailies deal the same fixed-first trio, seeded off the date:
-    // identical for everyone on the day regardless of the deck rng.
+    // Dailies deal the same fixed-first trio AND offer deck, seeded
+    // off the date: identical for everyone on the day regardless of
+    // the deck rng.
     expect(easy.bonusCards[0].id).toBe(ALL_ROWS_ID);
     expect(easy.bonusCards.map(c => c.id)).toEqual(
       hard.bonusCards.map(c => c.id)
+    );
+    expect(easy.bonusDeck.map(c => c.id)).toEqual(
+      hard.bonusDeck.map(c => c.id)
     );
   });
 

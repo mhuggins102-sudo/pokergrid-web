@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PhaseUI, usePhaseUI } from '../usePhaseUI';
 import { Card, Rank, Suit } from '../../../game/cards';
+import { BONUS_DECK_POOL } from '../../../game/bonusCards';
 
 /*
  * Five Draw's two phases through the usePhaseUI lens. The contracts
@@ -250,6 +251,18 @@ describe('draw-place', () => {
       expect(ui.actions.map(a => a.id)).not.toContain('discard');
       expect(ui.canActivateSpecials).toBe(false);
     }
+  });
+
+  test('draw-bonus: offer exposed, Pass is the one action, board dark', () => {
+    const offer = BONUS_DECK_POOL[0];
+    probe(baseState({ kind: 'draw-bonus', offer, handNo: 2 }));
+    expect(ui.banner).toBe('New bonus — tap a card to replace, or pass');
+    expect(ui.bonusOffer).toBe(offer);
+    expect(ui.hand).toBeNull();
+    expect(ui.actions.map(a => a.id)).toEqual(['pass']);
+    for (let i = 0; i < 25; i++) expect(ui.isTappable(i)).toBe(false);
+    ui.actions[0].onPress();
+    expect(dispatch).toHaveBeenCalledWith({ type: 'PASS_BONUS_CARD' });
   });
 
   test('Back appears while a draw remains, and returns to holding', () => {

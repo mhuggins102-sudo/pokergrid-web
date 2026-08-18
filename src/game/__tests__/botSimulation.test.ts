@@ -416,6 +416,10 @@ const pickAction = (s: GameState): Action => {
       }
       return { type: 'RESOLVE_PLACE_HAND' };
     }
+    case 'draw-bonus':
+      // Five Draw's between-hands offer: the trivial policy passes —
+      // valuing a swap needs board context the bot doesn't model.
+      return { type: 'PASS_BONUS_CARD' };
     case 'game-over':
       throw new Error('pickAction called on game-over state');
   }

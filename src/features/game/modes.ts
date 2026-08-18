@@ -58,6 +58,19 @@ const DRAW_POKER_BONUS_POOL: BonusCard[] = BONUS_DECK_POOL.filter(
   c => !DRAW_POKER_EXCLUDED.has(c.id)
 );
 
+// One shuffle of the filtered pool covers both bonus surfaces: the
+// exclusive All Rows + the next 2 lead the starter trio, and the REST
+// becomes the offer deck the between-hands draw-bonus flow pops from
+// (hands 1-4 each offer one keep-or-pass card). One shuffle = no
+// duplicates between the trio and the offers.
+const drawPokerBonusSetup = (rng: () => number) => {
+  const pool = shuffle(DRAW_POKER_BONUS_POOL, rng);
+  return {
+    initialBonusCards: [ALL_ROWS_CARD, ...pool.slice(0, 2)],
+    initialBonusDeck: pool.slice(2),
+  };
+};
+
 /**
  * Translate a play mode into the newGame() configuration. Mirrors the
  * original App.tsx context helpers: challenges run on the Hard ruleset
@@ -117,18 +130,18 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             // then the catalog's deckLimit (44) trims 8 random standards.
             noJokers: mode.id === 'nut-low',
             // Five Draw: the whole run flows through the draw phases;
-            // the exclusive All Rows ×5 always leads the starter trio,
-            // the other two come from the filtered regular pool.
+            // the exclusive All Rows always leads the starter trio and
+            // the shuffled pool remainder feeds the offer deck.
             drawPoker: mode.id === 'draw-poker',
-            initialBonusCards:
-              mode.id === 'three-tricks'
-                ? shuffle(SPECIAL_DECK_POOL, rng).slice(0, 3)
-                : mode.id === 'draw-poker'
-                  ? [
-                      ALL_ROWS_CARD,
-                      ...shuffle(DRAW_POKER_BONUS_POOL, rng).slice(0, 2),
-                    ]
-                  : [],
+            ...(mode.id === 'draw-poker' ? drawPokerBonusSetup(rng) : {}),
+            ...(mode.id === 'three-tricks'
+              ? {
+                  initialBonusCards: shuffle(SPECIAL_DECK_POOL, rng).slice(
+                    0,
+                    3
+                  ),
+                }
+              : {}),
             slotCategories:
               mode.id === 'mixed-bag'
                 ? ['special', 'in-game', 'end-game']
@@ -197,24 +210,23 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             // Five Draw dailies (out of rotation today, wired anyway):
             // jokers deal into hands at the difficulty's usual count.
             drawPoker: twist === 'draw-poker',
-            // The Three Tricks trio (and Five Draw's starter trio) is
-            // seeded off the date (its own salt) so it's globally
-            // identical without sharing the deck's rng stream.
-            initialBonusCards:
-              twist === 'three-tricks'
-                ? shuffle(
+            // The Three Tricks trio (and Five Draw's starter trio +
+            // offer deck) is seeded off the date (its own salt) so
+            // it's globally identical without sharing the deck's rng
+            // stream.
+            ...(twist === 'draw-poker'
+              ? drawPokerBonusSetup(
+                  seededRng(seedForInitialSpecials(mode.dateISO))
+                )
+              : {}),
+            ...(twist === 'three-tricks'
+              ? {
+                  initialBonusCards: shuffle(
                     SPECIAL_DECK_POOL,
                     seededRng(seedForInitialSpecials(mode.dateISO))
-                  ).slice(0, 3)
-                : twist === 'draw-poker'
-                  ? [
-                      ALL_ROWS_CARD,
-                      ...shuffle(
-                        DRAW_POKER_BONUS_POOL,
-                        seededRng(seedForInitialSpecials(mode.dateISO))
-                      ).slice(0, 2),
-                    ]
-                  : [],
+                  ).slice(0, 3),
+                }
+              : {}),
             slotCategories:
               twist === 'mixed-bag'
                 ? ['special', 'in-game', 'end-game']

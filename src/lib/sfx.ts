@@ -313,6 +313,8 @@ export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   if (entry.startsWith('Slide ')) return 'slide'; // ♠
   if (entry.startsWith('Destroy slot')) return 'destroy'; // ♦
   if (entry.startsWith('Bonus draw resolved')) return 'chime'; // ♣ kept/declined
+  // Five Draw's between-hands offer taken; 'Bonus passed' stays silent.
+  if (entry.startsWith('Bonus kept')) return 'chime';
   // Green one-time action cards (Three Tricks / Mixed Bag specials).
   if (entry.startsWith('Power Swap')) return 'swap';
   if (entry.startsWith('Jump ')) return 'swap';

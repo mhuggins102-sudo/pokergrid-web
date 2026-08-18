@@ -88,6 +88,9 @@ export interface PhaseUI {
   canActivateSpecials: boolean;
   /** Five Draw: the docked 5-card hand (null outside the mode). */
   hand: HandWellUI | null;
+  /** Five Draw: the between-hands bonus offer shown in the dock —
+   *  keep it (tap a held card to replace) or pass. */
+  bonusOffer: BonusCard | null;
   isGameOver: boolean;
 }
 
@@ -145,6 +148,7 @@ export function usePhaseUI(): PhaseUI {
       bonusSlotPick: false,
       canActivateSpecials: false,
       hand: null as HandWellUI | null,
+      bonusOffer: null as BonusCard | null,
       isGameOver: false,
       actions: [] as PhaseAction[],
       onCellTap: (_idx: number) => {},
@@ -502,6 +506,30 @@ export function usePhaseUI(): PhaseUI {
             },
             tappable: () => row !== null,
           },
+        };
+      }
+
+      case 'draw-bonus': {
+        // Between hands: one bonus card on offer in the dock. Keeping
+        // means replacing — the trio is always at cap here — so the
+        // held chips themselves are the keep targets (GameScreen
+        // routes strip taps to KEEP_BONUS_CARD while an offer is up);
+        // Pass is the dock button.
+        return {
+          ...base,
+          banner: 'New bonus — tap a card to replace, or pass',
+          ...fromSets(EMPTY_SET),
+          isTappable: () => false,
+          actions: [
+            {
+              id: 'pass',
+              label: 'Pass',
+              ariaLabel: 'Pass on the bonus card',
+              variant: 'primary',
+              onPress: () => dispatch({ type: 'PASS_BONUS_CARD' }),
+            },
+          ],
+          bonusOffer: phase.offer,
         };
       }
 
