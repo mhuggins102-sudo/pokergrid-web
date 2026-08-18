@@ -304,6 +304,12 @@ export type Phase =
       handNo: number;
       draws: number;
     }
+  // draw-bonus: after hands 1-4 seat their row, one bonus card is
+  // offered off the mode's pre-shuffled offer deck (state.bonusDeck).
+  // KEEP_BONUS_CARD{slot} swaps it over a held card (All Rows
+  // included); PASS_BONUS_CARD lets it go. Either way the next hand
+  // deals on resolution. `handNo` is the hand just completed.
+  | { kind: 'draw-bonus'; offer: BonusCard; handNo: number }
   | { kind: 'game-over' };
 
 export interface GameState {
@@ -490,6 +496,8 @@ export type Action =
   | { type: 'STAGE_HAND_CARD'; idx: number; col: number }
   | { type: 'UNSTAGE_HAND_CARD'; col: number }
   | { type: 'RESOLVE_PLACE_HAND' }
+  | { type: 'KEEP_BONUS_CARD'; slot: number }
+  | { type: 'PASS_BONUS_CARD' }
   | { type: 'UNDO' };
 
 const log = (s: GameState, msg: string): GameState => ({
@@ -582,6 +590,10 @@ export interface NewGameOptions {
   // starts with these specific cards (the three one-time specials) and
   // the bonus deck stays empty, so the ♣ perk can't draw anything.
   initialBonusCards?: BonusCard[];
+  // Five Draw: a pre-shuffled OFFER deck overriding the normal bonus
+  // deck build (noBonusCards keeps the ♣ path dead — the deck is only
+  // consumed by the between-hands draw-bonus offers).
+  initialBonusDeck?: BonusCard[];
   // Mixed Bag challenge: positionally-categorized slots. Slot N is
   // locked to slotCategories[N]'s category (placeholder card seeded at
   // start). ♣ draws are filtered by slot category. The bonus deck is
@@ -636,6 +648,7 @@ export const newGame = (
     timeTrial = false,
     noBonusCards = false,
     initialBonusCards = [],
+    initialBonusDeck,
     slotCategories,
     randomGridFill = 0,
     scatter = false,
@@ -733,7 +746,9 @@ export const newGame = (
   // Mixed Bag mixes the regular pool with the special deck so the green
   // slot has cards to draw — they're filtered by slot kind at draw time.
   const remainingPool = shuffledBonus.slice(starterCount);
-  const bonusDeck = noBonusCards
+  const bonusDeck = initialBonusDeck
+    ? initialBonusDeck
+    : noBonusCards
     ? []
     : slotCategories
     ? shuffle([...remainingPool, ...deckExtras, ...SPECIAL_DECK_POOL], rng)
@@ -1057,10 +1072,7 @@ const handleResolvePlaceHand = (s: GameState): GameState => {
     if (idx !== null) grid[row * 5 + c] = activeHalf(hand[idx]);
   }
   const seated = log({ ...s, grid }, `Place hand → row ${row + 1}`);
-  // Deal the next hand off the deck head (jokers included — they
-  // simply arrive in the hand), as many cards as the deck still has.
-  const deal = seated.deck.slice(0, 5);
-  if (handNo >= 5 || deal.length === 0) {
+  if (handNo >= 5) {
     return {
       ...seated,
       drawn: null,
@@ -1068,16 +1080,40 @@ const handleResolvePlaceHand = (s: GameState): GameState => {
       phase: { kind: 'game-over' },
     };
   }
-  const deck = seated.deck.slice(deal.length);
+  // Hands 1-4: one bonus card is offered off the mode's offer deck
+  // before the next hand deals — keep it over a held card, or pass.
+  if (seated.bonusDeck.length > 0) {
+    return {
+      ...seated,
+      bonusDeck: seated.bonusDeck.slice(1),
+      phase: { kind: 'draw-bonus', offer: seated.bonusDeck[0], handNo },
+    };
+  }
+  return dealNextDrawHand(seated, handNo);
+};
+
+// Deal the next Five Draw hand off the deck head (jokers included —
+// they simply arrive in the hand), as many cards as the deck still
+// has. A card-less deal ends the game; a dealt-dry deck means no
+// draws are possible, so the hold step is skipped (draws 0, but Back
+// stays hidden: it also requires a non-dry deck).
+const dealNextDrawHand = (s: GameState, handNo: number): GameState => {
+  const deal = s.deck.slice(0, 5);
+  if (deal.length === 0) {
+    return {
+      ...s,
+      drawn: null,
+      scatterSlot: null,
+      phase: { kind: 'game-over' },
+    };
+  }
+  const deck = s.deck.slice(deal.length);
   return {
-    ...seated,
+    ...s,
     deck,
-    // A dealt-dry deck means no draws are possible — skip the hold
-    // step and go straight to placement (draws 0, but Back stays
-    // hidden: it also requires a non-dry deck).
     phase:
       deck.length === 0
-        ? drawPlacePhase(grid, deal, handNo + 1, 0)
+        ? drawPlacePhase(s.grid, deal, handNo + 1, 0)
         : {
             kind: 'draw-select',
             hand: deal,
@@ -1086,6 +1122,30 @@ const handleResolvePlaceHand = (s: GameState): GameState => {
             draws: 0,
           },
   };
+};
+
+// Keep the offered bonus card over the held card at `slot` (the trio
+// is always at cap in this mode, so keeping IS replacing — All Rows
+// included), then deal the next hand.
+const handleKeepBonusCard = (s: GameState, slot: number): GameState => {
+  if (s.phase.kind !== 'draw-bonus') return s;
+  if (slot < 0 || slot >= s.bonusCards.length) return s;
+  const bonusCards = [...s.bonusCards];
+  const replaced = bonusCards[slot];
+  bonusCards[slot] = s.phase.offer;
+  return dealNextDrawHand(
+    log(
+      { ...s, bonusCards },
+      `Bonus kept: ${s.phase.offer.title} over ${replaced.title}`
+    ),
+    s.phase.handNo
+  );
+};
+
+// Let the offered bonus card go, then deal the next hand.
+const handlePassBonusCard = (s: GameState): GameState => {
+  if (s.phase.kind !== 'draw-bonus') return s;
+  return dealNextDrawHand(log(s, 'Bonus passed'), s.phase.handNo);
 };
 
 // Double Duty: rotate the drawn card 180° so its bottom half becomes the
@@ -2176,9 +2236,11 @@ const handleCancelAction = (s: GameState): GameState => {
     case 'game-over':
     case 'club-invest':
     case 'draw-select':
+    case 'draw-bonus':
       // (club-invest = Bull Market's committed invest reveal — no cancel.
       //  draw-select = Five Draw's resting phase; the redraw consumed
-      //  cards, so UNDO is the only way back.)
+      //  cards, so UNDO is the only way back. draw-bonus must resolve
+      //  via keep or pass — pass IS the escape.)
       return s;
     case 'draw-place': {
       // Back to the hold state while a draw is still available (fewer
@@ -2524,6 +2586,12 @@ export const step = (
       break;
     case 'RESOLVE_PLACE_HAND':
       next = handleResolvePlaceHand(state);
+      break;
+    case 'KEEP_BONUS_CARD':
+      next = handleKeepBonusCard(state, action.slot);
+      break;
+    case 'PASS_BONUS_CARD':
+      next = handlePassBonusCard(state);
       break;
   }
   if (next === state) return state;

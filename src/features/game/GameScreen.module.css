@@ -253,6 +253,21 @@
   white-space: nowrap;
 }
 
+/* Five Draw's between-hands bonus offer: the chip sits centered where
+   the HandWell normally is, at a readable card width. min-height
+   matches the well's tallest slot so the dock doesn't move when the
+   offer replaces the hand (or vice versa). */
+.bonusOfferWell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70px;
+}
+
+.bonusOfferWell > * {
+  width: min(240px, 100%);
+}
+
 .dockRow {
   display: flex;
   align-items: center;

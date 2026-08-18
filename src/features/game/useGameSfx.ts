@@ -151,8 +151,17 @@ export const useGameSfx = (
       if (state.drawPoker) {
         const drawEntry = fresh.find(e => /^Draw \d/.test(e));
         if (drawEntry) dealTicks(parseInt(drawEntry.slice(5), 10));
+        // A deal follows the row commit ('Place hand', when no bonus
+        // offer intervenes) or the offer's resolution ('Bonus kept' /
+        // 'Bonus passed') — the phase guard separates both from the
+        // offer step and from game over.
         if (
-          fresh.some(e => e.startsWith('Place hand')) &&
+          fresh.some(
+            e =>
+              e.startsWith('Place hand') ||
+              e.startsWith('Bonus kept') ||
+              e.startsWith('Bonus passed')
+          ) &&
           (state.phase.kind === 'draw-select' ||
             state.phase.kind === 'draw-place')
         ) {
@@ -194,6 +203,11 @@ export const useGameSfx = (
       cur.phase === 'bonus-card-resolving' &&
       last.phase !== 'bonus-card-resolving'
     ) {
+      sfxChime();
+    }
+    // Five Draw's between-hands offer arriving — same chime as a ♣
+    // draw opening.
+    if (cur.phase === 'draw-bonus' && last.phase !== 'draw-bonus') {
       sfxChime();
     }
     if (cur.phase === 'game-over' && last.phase !== 'game-over') {

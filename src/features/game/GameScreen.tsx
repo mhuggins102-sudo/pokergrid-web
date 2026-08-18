@@ -75,7 +75,11 @@ import {
 } from './components/HandWell';
 import { ScoreBar } from './components/ScoreBar';
 import { LinesPanel } from './components/LinesPanel';
-import { BonusCardStrip } from './components/BonusCardStrip';
+import {
+  BonusCardStrip,
+  BonusChip,
+  DetailSheet,
+} from './components/BonusCardStrip';
 import { DeckPreviewDialog } from './components/DeckPreviewDialog';
 import {
   DailyLeaderboardPanel,
@@ -797,6 +801,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // highlights flash for one frame before the pause caught up.
   const [drawRevealPause, setDrawRevealPause] = useState(false);
   const lastDeckRef = useRef<number | null>(null);
+  // Five Draw: tap-to-read for the between-hands offered bonus chip
+  // (DetailSheet, reused from the strip). Hook lives up here, above
+  // the game-over early return.
+  const [offerDetail, setOfferDetail] = useState(false);
   useLayoutEffect(() => {
     const ph = state.phase;
     const prevDeck = lastDeckRef.current;
@@ -1127,8 +1135,18 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     placeAction ??
     ui.actions.find(a => a.id === 'draw') ??
     ui.actions.find(a => a.id === 'place-hand') ??
+    ui.actions.find(a => a.id === 'pass') ??
     ui.actions.find(a => a.id === 'cancel');
   const rowActions = ui.actions.filter(a => a !== commitAction);
+
+  // Five Draw's between-hands offer: while it's up, tapping a held
+  // bonus chip KEEPS the offer over that card (the strips' slot-tap
+  // channel, shared with Mixed Bag's ♣ slot pick below).
+  const bonusSlotTap = ui.bonusSlotPick
+    ? (slot: number) => dispatch({ type: 'BONUS_PICK_SLOT', slot })
+    : ui.bonusOffer
+      ? (slot: number) => dispatch({ type: 'KEEP_BONUS_CARD', slot })
+      : undefined;
 
   // Mirrors the dock's pause: while an engine flight is posing in the
   // well (or a Spiraling hop is travelling), a board tap must not
@@ -1323,6 +1341,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         {/* activeReport: at game end open lines show Incomplete / -25. */}
         <LinesPanel report={activeReport} />
       </Sheet>
+      {/* Five Draw: the offered bonus chip's tap-to-read sheet. */}
+      <DetailSheet
+        detail={
+          offerDetail && ui.bonusOffer
+            ? { card: ui.bonusOffer, index: -1 }
+            : null
+        }
+        onClose={() => setOfferDetail(false)}
+      />
       <LineDetailSheet
         line={detailLine}
         bonusCards={state.bonusCards}
@@ -1616,7 +1643,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       // compact card-beside-buttons variant. Five Draw
                       // stacks the HandWell over the actions instead of
                       // seating a single-card well beside them.
-                      ui.hand
+                      ui.hand || ui.bonusOffer
                         ? styles.deskDockDraw
                         : dockLayout === 'center-stage'
                           ? styles.deskDockStage
@@ -1625,6 +1652,13 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   >
                     {ui.hand ? (
                       <HandWell hand={ui.hand} compact />
+                    ) : ui.bonusOffer ? (
+                      <div className={styles.bonusOfferWell}>
+                        <BonusChip
+                          card={ui.bonusOffer}
+                          onClick={() => setOfferDetail(true)}
+                        />
+                      </div>
                     ) : (
                       <NextCardWell
                         onPeekDeck={() => {}}
@@ -1636,7 +1670,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                       />
                     )}
                     <div className={styles.deskActions}>
-                      {ui.hand ? (
+                      {ui.hand || ui.bonusOffer ? (
                         // Five Draw: the deck count rides the banner
                         // line — the two-draw rule really depletes it.
                         <div className={styles.drawBannerRow}>
@@ -1699,11 +1733,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 <DesktopBonusPanel
                   cards={state.bonusCards}
                   values={liveShapley}
-                  onSlotTap={
-                    ui.bonusSlotPick
-                      ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
-                      : undefined
-                  }
+                  onSlotTap={bonusSlotTap}
                   slotLocked={slotLocked}
                   onUse={
                     ui.canActivateSpecials
@@ -1869,11 +1899,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 docked={streamlined}
                 cards={state.bonusCards}
                 values={liveShapley}
-                onSlotTap={
-                  ui.bonusSlotPick
-                    ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
-                    : undefined
-                }
+                onSlotTap={bonusSlotTap}
                 slotLocked={slotLocked}
                 onUse={
                   ui.canActivateSpecials
@@ -1894,7 +1920,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // the marker scopes the perk/Discard sizing that keeps every
               // perk label (♦ Destroy is the widest) on one line.
               streamlined ? ' ' + styles.dockStreamlined : ''
-            }${ui.hand ? ' ' + styles.dockDrawPoker : ''}${
+            }${ui.hand || ui.bonusOffer ? ' ' + styles.dockDrawPoker : ''}${
               // Mid-action (banner up): height-recovery trims so the
               // banner line doesn't grow the dock on short viewports
               // (there the board pays 1:1 for every extra dock px).
@@ -1929,14 +1955,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   </Button>
                 )}
               </div>
-            ) : ui.hand ? (
+            ) : ui.hand || ui.bonusOffer ? (
               // Five Draw: THE dock — every phone arrangement renders
               // this same stack (dockLayout is forced 'classic' above).
-              // Banner line, the 5-card HandWell, then the commit row
-              // (Draw / Place hand + Cancel). Both phases banner and
-              // carry the same three lines, so the dock and the board
-              // hold their size through every step. No ↺ — the mode
-              // has no undos (maxUndos 0 in modes.ts).
+              // Banner line, then the 5-card HandWell — or the
+              // between-hands bonus OFFER chip (tap it to read; tap a
+              // held strip chip to keep-and-replace) — then the commit
+              // row. Every phase banners and carries the same three
+              // lines, so the dock and the board hold their size
+              // through every step. No ↺ — the mode has no undos.
               <>
                 {/* Deck count rides the banner line — with two draws a
                     hand the deck genuinely depletes, so it's strategy
@@ -1947,7 +1974,16 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     Deck · {state.deck.length}
                   </span>
                 </div>
-                <HandWell hand={ui.hand} />
+                {ui.hand ? (
+                  <HandWell hand={ui.hand} />
+                ) : (
+                  <div className={styles.bonusOfferWell}>
+                    <BonusChip
+                      card={ui.bonusOffer!}
+                      onClick={() => setOfferDetail(true)}
+                    />
+                  </div>
+                )}
                 <div className={styles.commitRow}>
                   {commitBtn(
                     commitAction?.id === 'cancel' ? 'secondary' : undefined
@@ -2246,11 +2282,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     dockColumn
                     cards={state.bonusCards}
                     values={liveShapley}
-                    onSlotTap={
-                      ui.bonusSlotPick
-                        ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
-                        : undefined
-                    }
+                    onSlotTap={bonusSlotTap}
                     slotLocked={slotLocked}
                     onUse={
                       ui.canActivateSpecials
@@ -2430,11 +2462,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <BonusCardStrip
                 cards={state.bonusCards}
                 values={liveShapley}
-                onSlotTap={
-                  ui.bonusSlotPick
-                    ? slot => dispatch({ type: 'BONUS_PICK_SLOT', slot })
-                    : undefined
-                }
+                onSlotTap={bonusSlotTap}
                 slotLocked={slotLocked}
                 onUse={
                   ui.canActivateSpecials
