@@ -14,7 +14,7 @@ import {
   OPENING_RAPID_MS,
   STAGE_MS,
 } from './useAutoPlaceFlights';
-import { REVEAL_STAGGER } from './components/HandWell';
+import { KEEP_REVEAL_DELAY, REVEAL_STAGGER } from './components/HandWell';
 
 /**
  * State-transition sounds, derived from the reducer's history log —
@@ -154,7 +154,9 @@ export const useGameSfx = (
         // A deal follows the row commit ('Place hand', when no bonus
         // offer intervenes) or the offer's resolution ('Bonus kept' /
         // 'Bonus passed') — the phase guard separates both from the
-        // offer step and from game over.
+        // offer step and from game over. A KEPT offer chimes, so its
+        // deal flicks wait a beat (the HandWell delays the visual
+        // reveal by the same amount).
         if (
           fresh.some(
             e =>
@@ -165,7 +167,12 @@ export const useGameSfx = (
           (state.phase.kind === 'draw-select' ||
             state.phase.kind === 'draw-place')
         ) {
-          dealTicks(state.phase.hand.length);
+          dealTicks(
+            state.phase.hand.length,
+            fresh.some(e => e.startsWith('Bonus kept'))
+              ? KEEP_REVEAL_DELAY * 1000
+              : 0
+          );
         }
       }
     }
