@@ -484,8 +484,22 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       : twistId === 'mixed-bag'
         ? 0
         : STARTER_BONUS_BY_DIFFICULTY[state.difficulty];
+    // Deck-trimming twists put jokers in the random trim pool (Short
+    // Deck everywhere, Nut Low below Hard) — '≤N'; Nut Low's Hard trim
+    // is jokerless outright.
+    const jokerCount = JOKERS_BY_DIFFICULTY[state.difficulty];
+    const trimsJokers =
+      twistId === 'short-deck' ||
+      (twistId === 'nut-low' && state.difficulty !== 'hard');
     const rules: [string, string][] = [
-      ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
+      [
+        'Jokers in deck',
+        twistId === 'nut-low' && state.difficulty === 'hard'
+          ? '0'
+          : trimsJokers && jokerCount > 0
+            ? `≤${jokerCount}`
+            : String(jokerCount),
+      ],
       ...(noBonusAtAll
         ? []
         : ([
