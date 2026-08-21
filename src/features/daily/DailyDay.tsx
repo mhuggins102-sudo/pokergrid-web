@@ -51,9 +51,20 @@ export function DailyDay({ dateISO }: { dateISO: string }) {
 
   // Challenge goal copy embeds the challenge's own score target; swap
   // in today's (difficulty-adjusted) daily target so the numbers agree.
-  const twistGoal = twist
+  let twistGoal = twist
     ? twist.goal.replace(/^Score \d+\+ points/, `Score ${target}+ points`)
     : null;
+  // Nut Low's catalog copy describes the Hard trim (joker + 8 random).
+  // Easy/Medium dailies keep their jokers in the random trim pool
+  // (modes.ts), so the parenthetical is rewritten to the actual count:
+  // 54→44 removes 10 on Easy, 53→44 removes 9 on Medium.
+  if (twistGoal && recipe.twist === 'nut-low' && recipe.difficulty !== 'hard') {
+    const removed = recipe.difficulty === 'easy' ? 10 : 9;
+    twistGoal = twistGoal.replace(
+      '(with the joker and 8 additional cards removed at random)',
+      `(with ${removed} cards removed at random, jokers included in the pool)`
+    );
+  }
 
   if (started) {
     return (

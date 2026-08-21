@@ -86,7 +86,7 @@ describe('daily recipe', () => {
       }
     }
 
-    // All eleven twists appear, and only those eleven.
+    // All twelve twists appear, and only those twelve.
     const ALL = [
       'short-circuit',
       'no-discards',
@@ -99,17 +99,18 @@ describe('daily recipe', () => {
       'bull-market',
       'double-duty',
       'time-trial',
+      'draw-poker',
     ];
     for (const t of ALL) expect(counts[t] ?? 0).toBeGreaterThan(0);
     expect(Object.keys(counts).sort()).toEqual([...ALL].sort());
 
-    // Flat weights since g2: every twist lands 1/11 of twisted days.
+    // Flat weights since g2: every twist lands 1/12 of twisted days.
     // ±0.03 absolute tolerance — over ~2400 twisted samples the
-    // binomial std-dev for a 1/11 bucket is ~0.6%, so this is ~5σ.
+    // binomial std-dev for a 1/12 bucket is ~0.6%, so this is ~5σ.
     for (const t of ALL) {
       const share = (counts[t] ?? 0) / twisted;
-      expect(share).toBeGreaterThan(1 / 11 - 0.03);
-      expect(share).toBeLessThan(1 / 11 + 0.03);
+      expect(share).toBeGreaterThan(1 / 12 - 0.03);
+      expect(share).toBeLessThan(1 / 12 + 0.03);
     }
   });
 

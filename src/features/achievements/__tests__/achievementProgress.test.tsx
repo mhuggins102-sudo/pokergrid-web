@@ -43,9 +43,9 @@ describe('achievementProgressMap', () => {
       `0 / ${LIVE_CHALLENGES.length} challenges beaten`
     );
     expect(map['challenge-trophies-5']?.text).toBe(
-      '0 / 5 challenges at silver or gold'
+      '0 / 7 challenges at silver or gold'
     );
-    expect(map['challenge-golds-3']?.text).toBe('0 / 3 gold trophies');
+    expect(map['challenge-golds-3']?.text).toBe('0 / 4 gold trophies');
     expect(map['win-every-difficulty']?.text).toBe(
       'No win yet at: Easy, Medium, Hard, Extreme'
     );
@@ -110,9 +110,9 @@ describe('achievementProgressMap', () => {
       `3 / ${LIVE_CHALLENGES.length} challenges beaten`
     );
     expect(map['challenge-trophies-5']?.text).toBe(
-      '2 / 5 challenges at silver or gold'
+      '2 / 7 challenges at silver or gold'
     );
-    expect(map['challenge-golds-3']?.text).toBe('1 / 3 gold trophies');
+    expect(map['challenge-golds-3']?.text).toBe('1 / 4 gold trophies');
   });
 
   it('lists only the missing difficulties, counting dailies too', () => {

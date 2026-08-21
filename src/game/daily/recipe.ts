@@ -42,10 +42,11 @@ const ALL_TWISTS: ChallengeId[] = [
   'bull-market',
   'double-duty',
   'time-trial',
+  'draw-poker',
 ];
 
 // Relative odds of each twist when a day is twisted — flat since g2:
-// every live twist is equally likely (1/11). The weighted-bag shape
+// every live twist is equally likely (1/12). The weighted-bag shape
 // stays so a future rebalance is a per-twist one-line edit.
 const TWIST_WEIGHT: Record<ChallengeId, number> = {
   'short-deck': 1,
@@ -68,10 +69,9 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // 1, append 'nut-low' to ALL_TWISTS above, and update
   // dailyRecipe.test.ts's local twist list + 1/N share bounds.
   'nut-low': 0,
-  // Out of the rotation — Five Draw restructures the whole play loop
-  // (dealt hands, no perks), which is structurally heavy for a daily
-  // twist. The daily wiring exists (modes.ts) if this ever flips to 1.
-  'draw-poker': 0,
+  // In the rotation at the standard share; targets follow the
+  // difficulty base (400/450/500) like the other unfixed twists.
+  'draw-poker': 1,
 };
 
 export const RECIPE_CONFIG: RecipeConfig = {

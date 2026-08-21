@@ -66,7 +66,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'poker-purist',
     name: 'Poker Purist',
     synopsis: 'Twist: No bonus cards',
-    goal: 'Score 350+ points with no bonus cards at all — no starter, no ♣ draws, no multipliers. Pure rows and columns scoring as 5-card poker hands.',
+    goal: 'Score 350+ points with no bonus cards available. Just pure rows and columns scoring as 5-card poker hands.',
     scoreTarget: 350,
     // Enforced at newGame: bonusCards and bonusDeck are both empty,
     // which naturally disables ♣ (canDrawBonus returns false) and
@@ -77,7 +77,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'no-discards',
     name: 'No Discards',
     synopsis: 'Twist: Discard button disabled',
-    goal: 'Score 500+ points without using the Discard button — every drawn card must be placed or spent on a suit perk.',
+    goal: 'Score 500+ points without using the Discard button. Every drawn card must be placed or spent on a suit perk.',
     scoreTarget: 500,
     // The Discard button is hidden in this challenge and the DISCARD_NONE
     // action is rejected by the reducer, so reaching the score target is
@@ -88,7 +88,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'short-circuit',
     name: 'Short Circuit',
     synopsis: 'Twist: Suit perks fire at random',
-    goal: "Score 500+ points with random suit perks — you won't know which of ♥/♠/♦/♣'s effects you'll get until you commit to spending the card.",
+    goal: "Score 500+ points with random suit perks. You won't know which effect you'll get until you commit to spending the card.",
     scoreTarget: 500,
     // The randomness is enforced at the reducer level (state.randomPerks
     // is true and handleBeginSuitAction picks a uniformly-random perk
@@ -100,7 +100,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'gridlock',
     name: 'Gridlock',
     synopsis: 'Twist: First 15 cards pre-placed at random',
-    goal: 'Score 500+ points with 15 cards pre-placed at random positions on the grid. Spiral placement resumes from whichever slots are still empty — you fill the remaining 10 in normal play.',
+    goal: 'Score 500+ points with the grid seeded by randomly placing the first 15 cards. Regular gameplay starts thereafter.',
     scoreTarget: 500,
     // Enforced at newGame: randomGridFill seeds 15 cards into random
     // positions before drawNext runs. The remaining deck is intact
@@ -111,7 +111,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'scatter',
     name: 'Scatter',
     synopsis: 'Twist: Each card lands at a random spot',
-    goal: 'Score 500+ points with no spiral. Every card drawn from the deck targets a random empty slot, re-rolled for each new card — even after you spend one on a suit perk. Jokers scatter too.',
+    goal: 'Score 500+ points with no spiral. Every card drawn from the deck moves the placement position to a random empty slot.',
     scoreTarget: 500,
     // Enforced at newGame: the scatter flag makes drawNext pick (and
     // re-roll) a random empty slot for every drawn card and auto-placed
@@ -122,7 +122,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'time-trial',
     name: 'Time Trial',
     synopsis: 'Twist: Finish fast for bonus points',
-    goal: 'Score 500+ points with the clock in the math. The rules are unchanged, but finishing under 3:00 earns bonus points — the faster the finish, the bigger the bonus — while finishing over 3:00 costs points, with every extra second costing more. The clock pauses while the app is in the background.',
+    goal: 'Score 500+ points while racing against the clock. Finishing in under 3 minutes earns bonus points (the faster the finish, the bigger the bonus). Taking too long results in a penalty.',
     scoreTarget: 500,
     // The adjustment is applied by the FINAL score surfaces via
     // scoring.ts's timeTrialAdjust (state.timeTrial + state.elapsedMs,
@@ -134,7 +134,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'mixed-bag',
     name: 'Mixed Bag',
     synopsis: 'Twist: One bonus slot per color',
-    goal: 'Score 500+ points with bonus slots locked to categories. Slot 1 holds a green one-time action card — tap it to read what it does, then tap Use to fire it; it\'s consumed on use. Slot 2 holds a yellow (per-line) card and slot 3 a purple (end-game) card. ♣ asks which slot to draw for, then shows 2 category-matching cards to pick from.',
+    goal: 'Score 500+ points with bonus slots locked to categories. Slot 1 holds a green one-time action card, slot 2 a yellow in-game bonus card, and slot 3 a purple end-game bonus card.',
     scoreTarget: 500,
     // Enforced at newGame via slotCategories — placeholders seed the
     // three slots in category order, and ♣ filters draws to match.
@@ -144,7 +144,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'three-tricks',
     name: 'Three Tricks',
     synopsis: 'Twist: Bonus slots locked to green only',
-    goal: 'Score 500+ points with no bonus-card deck. Instead you start holding three green one-time action cards (the kind Mixed Bag\'s green slot draws), dealt at random from the full special deck — tap one to read it, tap Use to fire it; each is consumed on use.',
+    goal: 'Score 500+ points with no yellow/purple bonus cards. Instead, you start holding three green one-time action cards (dealt at random from the full special deck).',
     scoreTarget: 500,
     // Enforced at newGame: noBonusCards strips the regular bonus deck,
     // and initialBonusCards seeds the hand with three random specials.
@@ -155,7 +155,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'bull-market',
     name: 'Bull Market',
     synopsis: 'Twist: ♣ invests in hand values',
-    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its ♣ perk "invests" twice its blackjack value (2–9 face, 10–K = 10, A = 11; so a 7 adds 14, an Ace adds 22) into a random hand type, permanently raising that hand\'s base value. Boosts stack — open Hand values to see the revised table.',
+    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its perk increases the base value of a random hand type by double its blackjack value (2–9 = face, 10–K = 10, A = 11).',
     scoreTarget: 500,
     // Enforced at newGame: noBonusCards strips the bonus deck and
     // investHands repurposes the ♣ perk to boost a random hand's base.
@@ -165,7 +165,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'double-duty',
     name: 'Double Duty',
     synopsis: 'Twist: Two-way cards — Flip burns 2 cards',
-    goal: 'Score 500+ points with a two-way deck. Every card carries a second identity printed upside-down on its bottom half — each rank+suit appears exactly twice across the deck, paired at random each game. Flip the drawn card (once per card) to play its other half; the cost: the next two deck cards are burned, sight unseen — so neither of the last 2 cards can flip. Jokers can\'t flip.',
+    goal: "Score 500+ points with a two-way deck. Every card carries a second identity printed upside-down on its bottom half. Each rank+suit appears exactly twice across the deck, paired at random each game. Flip a card to play its other half, with the cost of the next two deck cards being burned. Don't flip too many times or the deck will run out!",
     scoreTarget: 500,
     // Enforced at newGame (dual identities assigned to the deck) and by
     // the FLIP_CARD reducer guards. Hitting the score target is the only
@@ -187,29 +187,31 @@ export const CHALLENGES: Challenge[] = [
     conditionMet: () => true,
   },
   {
-    id: 'nut-low',
-    name: 'Nut Low',
-    synopsis: 'Twist: Lines score as 2-7 lowball hands',
-    goal: 'Score 400+ points with the table flipped: every line scores as a deuce-to-seven LOW hand, so 7-5-4-3-2 — "The Nuts" — is the best line in the game. Aces are always high (A-2-3-4-5 is just ace-high), and a busted line — ANY pair, straight, or flush — costs 50, same as an unfinished line. The deck is trimmed to 44 cards: no joker, and 8 more removed at random. No bonus cards. Tap Hand values for the full table.',
-    scoreTarget: 400,
-    // 44 cards after the joker strip (noJokers in modes.ts): the joker
-    // plus 8 random standards are gone before play.
-    deckLimit: 44,
-    // Enforced at newGame (lowball + noBonusCards + noJokers): scoring
-    // swaps to the 2-7 table (src/game/lowHands.ts) and the bonus deck
-    // is stripped. Hitting the score target is the only end-state check.
-    conditionMet: () => true,
-  },
-  {
     id: 'draw-poker',
     name: 'Five Draw',
     synopsis: 'Twist: Build each row from a 5-card draw',
-    goal: 'Score 500+ points playing five hands of classic 5-card draw. Each hand: hold the cards you like and redraw the rest — up to two draws per hand — then place all five into an empty row in the order you choose. You start holding 3 bonus cards — one is always All Rows ×3 (every row’s score is multiplied), plus two that vary. Suit perks and discards are off, and the deck is finite: burn through it and late hands may come up short.',
+    goal: 'Score 500+ points playing five hands of 5-card draw from a single deck, with up to two drawing rounds allowed per hand. Place each completed hand into an empty row, with the cards in your preferred order. You start with 3 bonus cards, one of which is always “All Rows ×3” (every row’s score is multiplied) and the other two chosen at random. You have the option to replace a bonus card at the end of each hand.',
     scoreTarget: 500,
     // Enforced structurally at newGame (drawPoker + noBonusCards +
     // initialBonusCards): the whole run flows through the draw-select /
     // draw-place phases and never visits awaiting-action. Hitting the
     // score target is the only end-state check.
+    conditionMet: () => true,
+  },
+  {
+    id: 'nut-low',
+    name: 'Nut Low',
+    synopsis: 'Twist: Lines score as 2-7 lowball hands',
+    goal: 'Score 400+ points with every line scoring as a deuce-to-seven lowball hand. Straights and flushes count against you, so 7-5-4-3-2 is the best line in the game. A busted line (pair or higher) or unfinished line has a penalty of -50. The deck is trimmed to 44 cards (with the joker and 8 additional cards removed at random) and there are no bonus cards. Tap hand values to view the full scoring table.',
+    scoreTarget: 400,
+    // 44 cards after the joker strip (noJokers in modes.ts): the joker
+    // plus 8 random standards are gone before play. (Easy/Medium
+    // dailies keep jokers in the random trim pool — DailyDay adjusts
+    // the goal's parenthetical to match.)
+    deckLimit: 44,
+    // Enforced at newGame (lowball + noBonusCards + noJokers): scoring
+    // swaps to the 2-7 table (src/game/lowHands.ts) and the bonus deck
+    // is stripped. Hitting the score target is the only end-state check.
     conditionMet: () => true,
   },
 ];

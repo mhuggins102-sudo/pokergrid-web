@@ -79,16 +79,18 @@ describe('challenge trophies', () => {
         (typeof ACHIEVEMENTS)[number]['conditionMet']
       >[0];
 
+    // Trophy Case requires 7 silver-or-gold; Gold Standard 4 golds
+    // (the ids keep their historical numeric suffixes).
     const trophyCase = ACHIEVEMENTS.find(a => a.id === 'challenge-trophies-5')!;
-    expect(trophyCase.conditionMet(ctxWith({ challengeSilverPlus: 4 }))).toBe(
+    expect(trophyCase.conditionMet(ctxWith({ challengeSilverPlus: 6 }))).toBe(
       false
     );
-    expect(trophyCase.conditionMet(ctxWith({ challengeSilverPlus: 5 }))).toBe(
+    expect(trophyCase.conditionMet(ctxWith({ challengeSilverPlus: 7 }))).toBe(
       true
     );
 
     const goldStandard = ACHIEVEMENTS.find(a => a.id === 'challenge-golds-3')!;
-    expect(goldStandard.conditionMet(ctxWith({ challengeGold: 2 }))).toBe(false);
-    expect(goldStandard.conditionMet(ctxWith({ challengeGold: 3 }))).toBe(true);
+    expect(goldStandard.conditionMet(ctxWith({ challengeGold: 3 }))).toBe(false);
+    expect(goldStandard.conditionMet(ctxWith({ challengeGold: 4 }))).toBe(true);
   });
 });
