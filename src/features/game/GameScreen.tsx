@@ -466,18 +466,45 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     // Value formats are kept identical to the Free Play difficulty table
     // (DifficultyPicker.axesFor): numerical jokers/starter, Must/Available/
     // Off swap, On/Off peek + discards, "N per game" undos.
-    // No-bonus-deck twists (Poker Purist / Three Tricks / Bull Market)
-    // skip the starter draw and have no swap rule — dash both rows
-    // rather than reporting the difficulty's values for a deck that
-    // doesn't exist in this run.
-    const noBonus = state.noBonusCards;
-    const starter = STARTER_BONUS_BY_DIFFICULTY[state.difficulty];
+    // Twists rewire the standard loop, so the rows report the RUN:
+    //  - Poker Purist / Nut Low / Bull Market never have bonus cards —
+    //    both bonus rows drop rather than describing a deck that
+    //    doesn't exist in this run.
+    //  - Five Draw and Three Tricks START holding 3. Five Draw's
+    //    between-hands offer always allows replacing ('Available');
+    //    Three Tricks' trio is consumed, never swapped. Five Draw also
+    //    drops the Discards row — its redraw IS the discard, the
+    //    button doesn't exist there.
+    //  - Mixed Bag seeds empty category slots: no starter card.
+    const twistId = twist?.id ?? null;
+    const heldTrio = twistId === 'draw-poker' || twistId === 'three-tricks';
+    const noBonusAtAll = state.noBonusCards && !heldTrio;
+    const starter = heldTrio
+      ? 3
+      : twistId === 'mixed-bag'
+        ? 0
+        : STARTER_BONUS_BY_DIFFICULTY[state.difficulty];
     const rules: [string, string][] = [
       ['Jokers in deck', String(JOKERS_BY_DIFFICULTY[state.difficulty])],
-      ['Starter bonus', noBonus ? '—' : String(starter)],
-      ['Bonus swap', noBonus ? '—' : BONUS_SWAP_LABEL[state.bonusSwapAtCap]],
+      ...(noBonusAtAll
+        ? []
+        : ([
+            ['Starter bonus', String(starter)],
+            [
+              'Bonus swap',
+              twistId === 'draw-poker'
+                ? BONUS_SWAP_LABEL.available
+                : twistId === 'three-tricks'
+                  ? '—'
+                  : BONUS_SWAP_LABEL[state.bonusSwapAtCap],
+            ],
+          ] as [string, string][])),
       ['Deck peek', canPreviewDeck(state.difficulty) ? 'On' : 'Off'],
-      ['Discards', state.noDiscards ? 'Off' : 'On'],
+      ...(twistId === 'draw-poker'
+        ? []
+        : ([
+            ['Discards', state.noDiscards ? 'Off' : 'On'],
+          ] as [string, string][])),
       ['Undos', maxUndos > 0 ? `${maxUndos} per game` : '—'],
     ];
     return (
@@ -867,6 +894,23 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     state.history[state.history.length - 1]?.startsWith('Bonus kept')
       ? KEEP_REVEAL_DELAY
       : 0;
+
+  // Five Draw: the dock's deck count doubles as the deck-peek trigger
+  // where the difficulty allows peeking (Easy/Medium dailies) — the
+  // mode's dock has no NextCardWell to host the usual Peek affordance.
+  // Hard has no peek, so the count stays a plain label.
+  const drawDeckChip = canPreviewDeck(state.difficulty) ? (
+    <button
+      type="button"
+      className={`${styles.drawDeckCount} ${styles.drawDeckPeek}`}
+      onClick={() => setPeekOpen(true)}
+      aria-label={`Deck: ${state.deck.length} cards left — tap to preview`}
+    >
+      Deck · {state.deck.length}
+    </button>
+  ) : (
+    <span className={styles.drawDeckCount}>Deck · {state.deck.length}</span>
+  );
 
   // Layout corrections snap (no glide) on the renders where the ♣
   // panel opens or closes — the board and dock resize in those
@@ -1726,9 +1770,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                         // line — the two-draw rule really depletes it.
                         <div className={styles.drawBannerRow}>
                           {deskBanner}
-                          <span className={styles.drawDeckCount}>
-                            Deck · {state.deck.length}
-                          </span>
+                          {drawDeckChip}
                         </div>
                       ) : (
                         deskBanner
@@ -2021,9 +2063,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                     now, not trivia. */}
                 <div className={styles.drawBannerRow}>
                   {banner}
-                  <span className={styles.drawDeckCount}>
-                    Deck · {state.deck.length}
-                  </span>
+                  {drawDeckChip}
                 </div>
                 {ui.hand ? (
                   <HandWell hand={ui.hand} revealDelay={dealRevealDelay} />
