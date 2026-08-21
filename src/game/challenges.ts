@@ -1,6 +1,17 @@
 import { ScoreReport } from './scoring';
 import type { GameState } from './state';
-import { Difficulty, TARGET_BY_DIFFICULTY } from './rules';
+import {
+  BONUS_SWAP_AT_CAP_BY_DIFFICULTY,
+  BONUS_SWAP_CLAUSE,
+  CAN_PREVIEW_DECK_BY_DIFFICULTY,
+  Difficulty,
+  JOKERS_BY_DIFFICULTY,
+  NO_DISCARDS_BY_DIFFICULTY,
+  STARTER_BONUS_BY_DIFFICULTY,
+  TARGET_BY_DIFFICULTY,
+  difficultySentence,
+  undoClauseFor,
+} from './rules';
 
 // ============================================================================
 // Challenges — playable game variants. The other entries that used to live
@@ -273,6 +284,78 @@ export const goalForRun = (
     );
   }
   return goal;
+};
+
+/**
+ * The daily splash's difficulty briefing sentence, made RUN-aware the
+ * same way the in-game difficulty pill's rows are (GameScreen's
+ * navPill): a twist can rewire the standard loop, and the briefing
+ * must not contradict it. Twist-free days keep the standard
+ * difficulty sentence verbatim.
+ *  - Poker Purist / Nut Low / Bull Market never have bonus cards —
+ *    one 'no bonus cards' clause replaces the starter + swap pair.
+ *  - Five Draw and Three Tricks start holding 3; Five Draw's
+ *    between-hands offer always allows swapping, Three Tricks' trio
+ *    is consumed. Five Draw drops the discards clause (its redraw IS
+ *    the discard) and plays with no undo.
+ *  - Mixed Bag seeds empty category slots — no starter card.
+ *  - Nut Low trims the deck: jokerless on Hard; Easy/Medium keep
+ *    their jokers in the random trim pool (they may not survive it).
+ *  - A No Discards day says so at every difficulty.
+ */
+export const runSentenceFor = (
+  d: Difficulty,
+  twistId: ChallengeId | null
+): string => {
+  if (!twistId) return difficultySentence(d, undoClauseFor(d));
+  const jokers = JOKERS_BY_DIFFICULTY[d];
+  const jokerClause =
+    twistId === 'nut-low'
+      ? d === 'hard'
+        ? 'no jokers'
+        : jokers === 1
+          ? 'up to one joker'
+          : 'up to two jokers'
+      : jokers === 0
+        ? 'no jokers'
+        : jokers === 1
+          ? 'one joker'
+          : 'two jokers';
+  const noBonusAtAll =
+    twistId === 'poker-purist' ||
+    twistId === 'nut-low' ||
+    twistId === 'bull-market';
+  const heldTrio = twistId === 'draw-poker' || twistId === 'three-tricks';
+  const bonusClauses = noBonusAtAll
+    ? ['no bonus cards']
+    : heldTrio
+      ? [
+          'three starter bonus cards',
+          ...(twistId === 'draw-poker' ? ['may swap bonus cards'] : []),
+        ]
+      : [
+          twistId === 'mixed-bag'
+            ? 'no starter bonus'
+            : STARTER_BONUS_BY_DIFFICULTY[d] > 0
+              ? 'one starter bonus card'
+              : 'no starter bonus',
+          BONUS_SWAP_CLAUSE[BONUS_SWAP_AT_CAP_BY_DIFFICULTY[d]],
+        ];
+  const clauses = [
+    jokerClause,
+    ...bonusClauses,
+    CAN_PREVIEW_DECK_BY_DIFFICULTY[d] ? 'deck peek on' : 'no deck peek',
+    ...(twistId === 'draw-poker'
+      ? []
+      : [
+          twistId === 'no-discards' || NO_DISCARDS_BY_DIFFICULTY[d]
+            ? 'no discards'
+            : 'discards on',
+        ]),
+    twistId === 'draw-poker' ? 'no undo' : undoClauseFor(d),
+  ];
+  const s = clauses.join(', ') + '.';
+  return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
 // ============================================================================

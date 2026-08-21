@@ -14,10 +14,12 @@ describe('dailyTargetFor', () => {
   });
 
   describe('every twist keeps the full base target — except the fixed ones', () => {
-    // Poker Purist and Nut Low run multiplier-free (no bonus cards), so
-    // they carry flat targets instead of the difficulty schedule.
+    // Poker Purist and Nut Low run multiplier-free (no bonus cards),
+    // and Five Draw's Easy/Medium assists (deck peek, extra joker) are
+    // outsized there — all three carry flat targets instead of the
+    // difficulty schedule.
     const FULL_BASE_TWISTS = CHALLENGES.map(c => c.id).filter(
-      id => id !== 'poker-purist' && id !== 'nut-low'
+      id => id !== 'poker-purist' && id !== 'nut-low' && id !== 'draw-poker'
     );
     it.each([
       ['easy', 400],
@@ -41,6 +43,12 @@ describe('dailyTargetFor', () => {
       expect(dailyTargetFor('easy', 'nut-low')).toBe(400);
       expect(dailyTargetFor('medium', 'nut-low')).toBe(400);
       expect(dailyTargetFor('hard', 'nut-low')).toBe(400);
+    });
+
+    it('draw-poker is 500 across all difficulties', () => {
+      expect(dailyTargetFor('easy', 'draw-poker')).toBe(500);
+      expect(dailyTargetFor('medium', 'draw-poker')).toBe(500);
+      expect(dailyTargetFor('hard', 'draw-poker')).toBe(500);
     });
   });
 

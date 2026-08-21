@@ -6,7 +6,7 @@ import {
   hydrateBonusCard,
 } from '../bonusCards';
 import { seededRng } from '../deck';
-import { LIVE_CHALLENGES, findChallenge } from '../challenges';
+import { LIVE_CHALLENGES, findChallenge, runSentenceFor } from '../challenges';
 import { dailyTargetFor, recipeFor } from '../daily/recipe';
 import { emptyGrid, isFull } from '../grid';
 import { scoreGrid } from '../scoring';
@@ -605,10 +605,11 @@ describe('Five Draw — wiring and catalog', () => {
     expect(c.name).toBe('Five Draw');
     expect(c.scoreTarget).toBe(500);
     expect(c.goal.startsWith('Score 500+ points')).toBe(true);
-    // Daily targets follow the difficulty base (no fixed override).
+    // Flat 500 on every difficulty (FIXED_TWIST_TARGET): Easy/Medium's
+    // deck peek + extra joker are outsized in this mode.
     expect(dailyTargetFor('hard', 'draw-poker')).toBe(500);
-    expect(dailyTargetFor('medium', 'draw-poker')).toBe(450);
-    expect(dailyTargetFor('easy', 'draw-poker')).toBe(400);
+    expect(dailyTargetFor('medium', 'draw-poker')).toBe(500);
+    expect(dailyTargetFor('easy', 'draw-poker')).toBe(500);
     // In the rotation now: the timeTrial.test pattern — sweep until a
     // day rolls it (deterministic recipe, so this is a fixed fact).
     let hit: string | null = null;
@@ -618,6 +619,27 @@ describe('Five Draw — wiring and catalog', () => {
       if (recipeFor(iso).twist === 'draw-poker') hit = iso;
     }
     expect(hit).not.toBeNull();
+  });
+
+  it('the daily splash briefing reports the run, not just the difficulty', () => {
+    // Twist-free days keep the standard difficulty sentence.
+    expect(runSentenceFor('easy', null)).toContain('one starter bonus card');
+    // Five Draw: 3 starters, swap always available, no discard clause
+    // (the redraw IS the discard), no undo; peek follows difficulty.
+    const s = runSentenceFor('easy', 'draw-poker');
+    expect(s).toContain('three starter bonus cards');
+    expect(s).toContain('may swap bonus cards');
+    expect(s).toContain('deck peek on');
+    expect(s).toContain('no undo');
+    expect(s).not.toContain('discard');
+    expect(runSentenceFor('hard', 'draw-poker')).toContain('no deck peek');
+    // Nut Low: jokerless on Hard; jokers ride the trim pool below it.
+    // (The joker clause leads the sentence, so it's capitalized.)
+    expect(runSentenceFor('hard', 'nut-low')).toContain('No jokers');
+    expect(runSentenceFor('easy', 'nut-low')).toContain('Up to two jokers');
+    expect(runSentenceFor('easy', 'nut-low')).toContain('no bonus cards');
+    // A No Discards day says so at every difficulty.
+    expect(runSentenceFor('easy', 'no-discards')).toContain('no discards');
   });
 });
 
