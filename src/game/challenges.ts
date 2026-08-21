@@ -234,6 +234,39 @@ export const challengeWon = (
 ): boolean =>
   report.total >= challenge.scoreTarget && challenge.conditionMet(state, report);
 
+/**
+ * The challenge's goal copy adjusted to an actual RUN — shared by the
+ * daily intro (DailyDay) and the in-game twist popover so the two can't
+ * drift. Every goal opens with a "Score N+ points" sentence; the run's
+ * real target (dailyTargetFor's difficulty-adjusted number on a daily,
+ * the catalog target on the challenge route) swaps in. Nut Low's deck
+ * parenthetical describes the Hard trim (joker + 8 random); Easy and
+ * Medium dailies keep their jokers in the random trim pool (modes.ts),
+ * so it's rewritten to the actual count: 54→44 removes 10 on Easy,
+ * 53→44 removes 9 on Medium.
+ */
+export const goalForRun = (
+  challenge: Challenge,
+  target: number,
+  difficulty: Difficulty
+): string => {
+  let goal = challenge.goal.replace(
+    /^Score \d+\+ points/,
+    `Score ${target}+ points`
+  );
+  if (
+    challenge.id === 'nut-low' &&
+    (difficulty === 'easy' || difficulty === 'medium')
+  ) {
+    const removed = difficulty === 'easy' ? 10 : 9;
+    goal = goal.replace(
+      '(with the joker and 8 additional cards removed at random)',
+      `(with ${removed} cards removed at random, jokers included in the pool)`
+    );
+  }
+  return goal;
+};
+
 // ============================================================================
 // Targets Up — Levels mode.
 //
