@@ -1,6 +1,6 @@
 import { Card, isJoker } from '../cards';
 import { seededRng } from '../deck';
-import { LIVE_CHALLENGES, findChallenge } from '../challenges';
+import { LIVE_CHALLENGES, findChallenge, goalForRun } from '../challenges';
 import { dailyTargetFor, recipeFor } from '../daily/recipe';
 import { GameState, newGame } from '../state';
 import { setupForMode } from '../../features/game/modes';
@@ -104,6 +104,25 @@ describe('Nut Low — challenge catalog', () => {
   it('uses the fixed twist target at every difficulty', () => {
     expect(dailyTargetFor('hard', 'nut-low')).toBe(400);
     expect(dailyTargetFor('easy', 'nut-low')).toBe(400);
+  });
+
+  it('goalForRun adjusts the target sentence and the deck parenthetical', () => {
+    const c = findChallenge('nut-low');
+    // Hard: the catalog copy verbatim (joker + 8 random removed).
+    expect(goalForRun(c, 400, 'hard')).toBe(c.goal);
+    // Easy/Medium dailies keep jokers in the random trim pool.
+    expect(goalForRun(c, 400, 'easy')).toContain(
+      '(with 10 cards removed at random, jokers included in the pool)'
+    );
+    expect(goalForRun(c, 400, 'medium')).toContain(
+      '(with 9 cards removed at random, jokers included in the pool)'
+    );
+    // The target sentence follows the run (Five Draw easy daily = 400).
+    const five = findChallenge('draw-poker');
+    expect(goalForRun(five, 400, 'easy').startsWith('Score 400+ points')).toBe(
+      true
+    );
+    expect(goalForRun(five, 500, 'hard')).toBe(five.goal);
   });
 
   it('stays out of the daily rotation while the target is calibrated', () => {

@@ -23,7 +23,7 @@ import {
   JOKERS_BY_DIFFICULTY,
   STARTER_BONUS_BY_DIFFICULTY,
 } from '../../game/rules';
-import { TARGETS_UP_STEP } from '../../game/challenges';
+import { TARGETS_UP_STEP, goalForRun } from '../../game/challenges';
 import { spiralHopPath } from '../../game/actions';
 import { Card } from '../../game/cards';
 import { canPreviewDeck } from '../../game/state';
@@ -522,7 +522,12 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               <div className={`${styles.navMenuHead} ${styles.navMenuHeadAccent}`}>
                 Twist · {twist.synopsis.replace(/^Twist:\s*/i, '')}
               </div>
-              <div className={styles.navMenuGoal}>{twist.goal}</div>
+              {/* goalForRun: on a daily the copy's target and Nut Low's
+                  deck details follow the day's difficulty (the DailyDay
+                  intro applies the identical rewrite). */}
+              <div className={styles.navMenuGoal}>
+                {goalForRun(twist, setup.target, setup.difficulty)}
+              </div>
             </div>
           </span>
         )}
@@ -642,6 +647,8 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   }, [
     state.difficulty,
     state.bonusSwapAtCap,
+    setup.target,
+    setup.difficulty,
     state.noBonusCards,
     state.timeTrial,
     clockText,
