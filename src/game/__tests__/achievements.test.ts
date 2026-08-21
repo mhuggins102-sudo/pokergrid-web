@@ -279,6 +279,59 @@ describe('Flipping Out (Double Duty, 10+ flips)', () => {
   });
 });
 
+describe('Backdoor Draw (Five Draw, under 150 points from rows)', () => {
+  // Fabricated report with typed row/col lines — the shared reportWith
+  // helper carries no kind/index, and this condition reads both.
+  const rowColReport = (
+    rowTotals: number[],
+    colTotals: number[],
+    total: number
+  ): ScoreReport =>
+    ({
+      total,
+      lines: [
+        ...rowTotals.map((t, index) => ({
+          kind: 'row',
+          index,
+          hand: 'PAIR',
+          total: t,
+          incomplete: false,
+        })),
+        ...colTotals.map((t, index) => ({
+          kind: 'col',
+          index,
+          hand: 'PAIR',
+          total: t,
+          incomplete: false,
+        })),
+      ],
+    }) as unknown as ScoreReport;
+
+  const withRows = (rowTotals: number[]): boolean =>
+    earn('variant-draw-poker', {
+      mode: 'challenge',
+      activeVariant: 'draw-poker',
+      state: stateWith({ difficulty: 'hard' }),
+      report: rowColReport(rowTotals, [200, 200, 200, 200, 200], 520),
+    });
+
+  it('sums ROW totals only — columns carry the run', () => {
+    expect(withRows([30, 30, 30, 30, 29])).toBe(true); // 149 from rows
+    expect(withRows([30, 30, 30, 30, 30])).toBe(false); // 150 from rows
+  });
+
+  it('still demands the 500 floor', () => {
+    expect(
+      earn('variant-draw-poker', {
+        mode: 'challenge',
+        activeVariant: 'draw-poker',
+        state: stateWith({ difficulty: 'hard' }),
+        report: rowColReport([0, 0, 0, 0, 0], [99, 99, 99, 99, 99], 499),
+      })
+    ).toBe(false);
+  });
+});
+
 describe('Bull Run (Bull Market, 300+ invested points)', () => {
   // Row 0 is a pair of Kings; the junk fill gives each column four of a
   // kind, so the un-boosted board already clears the 500 floor once the

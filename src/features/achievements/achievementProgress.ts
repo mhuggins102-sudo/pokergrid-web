@@ -63,12 +63,12 @@ export function achievementProgressMap(
     return t === 'SS' || t === 'S';
   }).length;
   out['challenge-trophies-5'] = {
-    text: `${silverPlus} / 5 challenges at silver or gold`,
+    text: `${silverPlus} / 7 challenges at silver or gold`,
   };
   const golds = LIVE_CHALLENGES.filter(
     ch => stats.challengeTiers[ch.id] === 'SS'
   ).length;
-  out['challenge-golds-3'] = { text: `${golds} / 3 gold trophies` };
+  out['challenge-golds-3'] = { text: `${golds} / 4 gold trophies` };
 
   // Globetrotter / Perfectionist list what's MISSING. An empty list means
   // the sync pass is about to award it — no entry rather than a blank.

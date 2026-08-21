@@ -83,6 +83,7 @@ export type AchievementId =
   | 'variant-bull-market'
   | 'variant-time-trial'
   | 'variant-double-duty'
+  | 'variant-draw-poker'
   // Milestones
   | 'win-every-difficulty'
   | 'perfect-every-difficulty'
@@ -322,19 +323,21 @@ export const ACHIEVEMENTS: Achievement[] = [
       milestone.challengesCompleted >= milestone.totalChallenges,
   },
   {
+    // (id keeps its historical -5 suffix; the requirement is 7 now.)
     id: 'challenge-trophies-5',
     tier: 'challenge',
     name: 'Trophy Case',
     description:
-      'Earn silver or gold trophies (S or SS wins) on 5 different Challenges.',
-    conditionMet: ({ milestone }) => milestone.challengeSilverPlus >= 5,
+      'Earn silver or gold trophies (S or SS wins) on 7 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeSilverPlus >= 7,
   },
   {
+    // (id keeps its historical -3 suffix; the requirement is 4 now.)
     id: 'challenge-golds-3',
     tier: 'challenge',
     name: 'Gold Standard',
-    description: 'Earn gold trophies (SS wins) on 3 different Challenges.',
-    conditionMet: ({ milestone }) => milestone.challengeGold >= 3,
+    description: 'Earn gold trophies (SS wins) on 4 different Challenges.',
+    conditionMet: ({ milestone }) => milestone.challengeGold >= 4,
   },
 
   // ---------- Variants ----------
@@ -370,6 +373,23 @@ export const ACHIEVEMENTS: Achievement[] = [
     // flip when fewer than 2 remain), and UNDO restores them — so
     // burned.length / 2 is the honest flip count.
     conditionMet: ({ state }) => state.burned.length >= 20,
+  },
+  {
+    id: 'variant-draw-poker',
+    tier: 'variant',
+    variantId: 'draw-poker',
+    name: 'Backdoor Draw',
+    description:
+      'Five Draw — score 500+ with under 150 points coming from rows.',
+    scoreTarget: 500,
+    // Rows are the hands the player drafts (and All Rows ×3 boosts
+    // them) — clearing the target while the rows pay under 150 means
+    // the columns carried the run. Per-line totals are pre-grid-
+    // multiplier, matching what the rails display.
+    conditionMet: ({ report }) =>
+      report.lines
+        .filter(l => l.kind === 'row')
+        .reduce((sum, l) => sum + l.total, 0) < 150,
   },
 
   // ---------- Milestones ----------

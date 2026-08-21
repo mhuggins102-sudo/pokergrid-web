@@ -597,18 +597,27 @@ describe('Five Draw — wiring and catalog', () => {
     );
   });
 
-  it('is the last live entry, at the Hard base target, out of the rotation', () => {
-    const c = LIVE_CHALLENGES[LIVE_CHALLENGES.length - 1];
-    expect(c.id).toBe('draw-poker');
+  it('sits directly above Nut Low, in the rotation at base targets', () => {
+    const idx = LIVE_CHALLENGES.findIndex(ch => ch.id === 'draw-poker');
+    expect(idx).toBeGreaterThan(-1);
+    expect(LIVE_CHALLENGES[idx + 1]?.id).toBe('nut-low');
+    const c = LIVE_CHALLENGES[idx];
     expect(c.name).toBe('Five Draw');
     expect(c.scoreTarget).toBe(500);
     expect(c.goal.startsWith('Score 500+ points')).toBe(true);
+    // Daily targets follow the difficulty base (no fixed override).
     expect(dailyTargetFor('hard', 'draw-poker')).toBe(500);
-    for (let i = 0; i < 366; i++) {
+    expect(dailyTargetFor('medium', 'draw-poker')).toBe(450);
+    expect(dailyTargetFor('easy', 'draw-poker')).toBe(400);
+    // In the rotation now: the timeTrial.test pattern — sweep until a
+    // day rolls it (deterministic recipe, so this is a fixed fact).
+    let hit: string | null = null;
+    for (let i = 0; i < 3650 && hit === null; i++) {
       const d = new Date(Date.UTC(2026, 0, 1 + i));
       const iso = d.toISOString().slice(0, 10);
-      expect(recipeFor(iso).twist).not.toBe('draw-poker');
+      if (recipeFor(iso).twist === 'draw-poker') hit = iso;
     }
+    expect(hit).not.toBeNull();
   });
 });
 
