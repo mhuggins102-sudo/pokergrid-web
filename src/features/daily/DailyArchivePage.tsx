@@ -343,26 +343,30 @@ export function DailyArchivePage() {
     closeAllPopovers();
   };
 
-  // Calendar swipe: a horizontal swipe on the month grid pages between
-  // months (left = newer, right = older — `months` is newest-first),
-  // clamped at the published range. The grid FOLLOWS the finger once
-  // the gesture locks horizontal (8px direction lock, the Dialog
-  // drag-to-close pattern), and the incoming month slides in from the
-  // matching side (the keyed .calGrid's calSlide* animation). Native
-  // listeners because React's synthetic touchmove is passive — the
-  // horizontal lock preventDefaults so an intentional side-swipe never
-  // scrolls the page; .calWrap's touch-action: pan-y leaves vertical
-  // swipes to the browser as before.
+  // Month swipe (both views): a horizontal swipe on the month grid OR
+  // the list pages between months (left = newer, right = older —
+  // `months` is newest-first), clamped at the published range. The
+  // content FOLLOWS the finger once the gesture locks horizontal (8px
+  // direction lock, the Dialog drag-to-close pattern), and the
+  // incoming month slides in from the matching side (the keyed
+  // container's calSlide* animation — the list reuses the calendar's).
+  // Native listeners because React's synthetic touchmove is passive —
+  // the horizontal lock preventDefaults so an intentional side-swipe
+  // never scrolls the page; touch-action: pan-y on both containers
+  // leaves vertical swipes/scrolling to the browser as before.
   const pickMonthRef = useRef(pickMonth);
   pickMonthRef.current = pickMonth;
   useEffect(() => {
-    const el = calWrapRef.current;
+    // List view: the scrolling list is both the touch surface and the
+    // element that follows the finger.
+    const el = view === 'cal' ? calWrapRef.current : scrollRef.current;
     if (!el) return;
     let sx = 0;
     let sy = 0;
     let live = false;
     let axis: 'x' | 'y' | null = null;
-    const grid = () => calGridRef.current;
+    const grid = () =>
+      view === 'cal' ? calGridRef.current : scrollRef.current;
     const atEnd = (dx: number) => {
       const idx = months.indexOf(month);
       const next = dx < 0 ? idx - 1 : idx + 1;
@@ -627,7 +631,20 @@ export function DailyArchivePage() {
               </div>
             </div>
           ) : (
-          <div className={styles.dateScroll} ref={scrollRef}>
+          // Keyed by month (like the calendar grid) so a swipe commit
+          // remounts the list with the directional slide-in — and a
+          // month change always reopens at the top.
+          <div
+            key={month}
+            className={`${styles.dateScroll} ${
+              slideFrom === 'right'
+                ? styles.calSlideRight
+                : slideFrom === 'left'
+                  ? styles.calSlideLeft
+                  : ''
+            }`}
+            ref={scrollRef}
+          >
             {dates.map(iso => {
               const play = plays[iso];
               const recipe = recipeFor(iso);

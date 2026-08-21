@@ -117,11 +117,10 @@ describe('Nut Low — challenge catalog', () => {
     expect(goalForRun(c, 400, 'medium')).toContain(
       '(with 9 cards removed at random, jokers included in the pool)'
     );
-    // The target sentence follows the run (Five Draw easy daily = 400).
+    // The target sentence follows the run's actual target — Five Draw
+    // is a flat 500 on every difficulty, so its copy never changes.
     const five = findChallenge('draw-poker');
-    expect(goalForRun(five, 400, 'easy').startsWith('Score 400+ points')).toBe(
-      true
-    );
+    expect(goalForRun(five, 500, 'easy')).toBe(five.goal);
     expect(goalForRun(five, 500, 'hard')).toBe(five.goal);
     // Short Deck: Easy's two-joker 54-card pool trims 9 to reach 45;
     // Medium matches Hard at 8 (one joker either way).

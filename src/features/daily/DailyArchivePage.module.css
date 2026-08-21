@@ -185,6 +185,9 @@
   /* Clip the bottom row's full-width hover background to the panel's
      rounded corners (the panel itself must not clip — see .listPanel). */
   border-radius: 0 0 calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px);
+  /* Month swipe (mirrors .calWrap): vertical pans stay the browser's
+     scroll; horizontal ones are ours once the JS drag-follow locks. */
+  touch-action: pan-y;
 }
 
 /* ---- Calendar view ----

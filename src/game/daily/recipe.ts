@@ -69,8 +69,9 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // 1, append 'nut-low' to ALL_TWISTS above, and update
   // dailyRecipe.test.ts's local twist list + 1/N share bounds.
   'nut-low': 0,
-  // In the rotation at the standard share; targets follow the
-  // difficulty base (400/450/500) like the other unfixed twists.
+  // In the rotation at the standard share; the target is fixed at 500
+  // on every difficulty (FIXED_TWIST_TARGET below) — deck peek and the
+  // extra joker are worth more here than in any other twist.
   'draw-poker': 1,
 };
 
@@ -176,6 +177,10 @@ export const recipeFor = (
 const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
   'poker-purist': 350,
   'nut-low': 400,
+  // Flat 500 on every difficulty: Easy/Medium's assists (deck peek,
+  // the extra joker) are far stronger in Five Draw than elsewhere, so
+  // the easier tiers don't also get a discounted target.
+  'draw-poker': 500,
 };
 
 // Delta applied to the difficulty's base target when a twist is active.

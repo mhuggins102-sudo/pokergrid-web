@@ -1,12 +1,7 @@
 import { Link } from 'react-router';
-import type { Challenge } from '../../game/challenges';
+import { runSentenceFor, type Challenge } from '../../game/challenges';
 import type { DailyRecipe } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
-import {
-  Difficulty,
-  difficultySentence,
-  undoClauseFor,
-} from '../../game/rules';
 import { difficultyColors } from '../../design/tokens';
 import { useTier } from '../../app/useTier';
 import { DAILY_LAUNCH_ISO, dayMs, toUTC } from './dailyDates';
@@ -32,11 +27,6 @@ export interface DailyIntroProps {
   target: number;
   onPlay: () => void;
 }
-
-// The daily's undos follow the shared difficulty table (modes.ts), so
-// the clause comes from the same helper as the Free Play cards.
-const diffDescription = (d: Difficulty): string =>
-  difficultySentence(d, undoClauseFor(d));
 
 // "Thursday, July 9, 2026" — from ISO parts (timezone-safe).
 const longDate = (iso: string): string => {
@@ -93,7 +83,10 @@ export function DailyIntro({
                 {recipe.difficulty}
               </span>
               <span className={styles.briefNote}>
-                {diffDescription(recipe.difficulty)}
+                {/* Twist-aware: the standard difficulty sentence would
+                    contradict a variant day (e.g. Five Draw holds 3
+                    bonus cards and has no discards or undos). */}
+                {runSentenceFor(recipe.difficulty, recipe.twist ?? null)}
               </span>
             </div>
             <div className={styles.brief}>
