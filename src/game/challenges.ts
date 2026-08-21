@@ -243,7 +243,9 @@ export const challengeWon = (
  * parenthetical describes the Hard trim (joker + 8 random); Easy and
  * Medium dailies keep their jokers in the random trim pool (modes.ts),
  * so it's rewritten to the actual count: 54→44 removes 10 on Easy,
- * 53→44 removes 9 on Medium.
+ * 53→44 removes 9 on Medium. Short Deck's removal count shifts the
+ * same way: Easy's two-joker 54-card pool trims 9 to reach 45 (Medium
+ * matches Hard at 8).
  */
 export const goalForRun = (
   challenge: Challenge,
@@ -262,6 +264,12 @@ export const goalForRun = (
     goal = goal.replace(
       '(with the joker and 8 additional cards removed at random)',
       `(with ${removed} cards removed at random, jokers included in the pool)`
+    );
+  }
+  if (challenge.id === 'short-deck' && difficulty === 'easy') {
+    goal = goal.replace(
+      '8 cards are removed at random',
+      '9 cards are removed at random'
     );
   }
   return goal;

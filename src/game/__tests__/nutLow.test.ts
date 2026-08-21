@@ -123,6 +123,16 @@ describe('Nut Low — challenge catalog', () => {
       true
     );
     expect(goalForRun(five, 500, 'hard')).toBe(five.goal);
+    // Short Deck: Easy's two-joker 54-card pool trims 9 to reach 45;
+    // Medium matches Hard at 8 (one joker either way).
+    const shortDeck = findChallenge('short-deck');
+    expect(goalForRun(shortDeck, 400, 'easy')).toContain(
+      '9 cards are removed at random'
+    );
+    expect(goalForRun(shortDeck, 450, 'medium')).toContain(
+      '8 cards are removed at random'
+    );
+    expect(goalForRun(shortDeck, 500, 'hard')).toBe(shortDeck.goal);
   });
 
   it('stays out of the daily rotation while the target is calibrated', () => {
