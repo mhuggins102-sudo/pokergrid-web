@@ -637,6 +637,10 @@ describe('Five Draw — wiring and catalog', () => {
     // (The joker clause leads the sentence, so it's capitalized.)
     expect(runSentenceFor('hard', 'nut-low')).toContain('No jokers');
     expect(runSentenceFor('easy', 'nut-low')).toContain('Up to two jokers');
+    // Short Deck trims at random from the full pool, jokers included —
+    // 'up to N' at every difficulty.
+    expect(runSentenceFor('hard', 'short-deck')).toContain('Up to one joker');
+    expect(runSentenceFor('easy', 'short-deck')).toContain('Up to two jokers');
     expect(runSentenceFor('easy', 'nut-low')).toContain('no bonus cards');
     // A No Discards day says so at every difficulty.
     expect(runSentenceFor('easy', 'no-discards')).toContain('no discards');

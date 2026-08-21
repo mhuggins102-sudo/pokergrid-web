@@ -299,8 +299,10 @@ export const goalForRun = (
  *    is consumed. Five Draw drops the discards clause (its redraw IS
  *    the discard) and plays with no undo.
  *  - Mixed Bag seeds empty category slots — no starter card.
- *  - Nut Low trims the deck: jokerless on Hard; Easy/Medium keep
- *    their jokers in the random trim pool (they may not survive it).
+ *  - The deck-trimming twists put jokers in the random trim pool, so
+ *    they may not survive the cut: Short Deck at every difficulty,
+ *    Nut Low on Easy/Medium ('up to N'); Nut Low's Hard trim is
+ *    jokerless outright.
  *  - A No Discards day says so at every difficulty.
  */
 export const runSentenceFor = (
@@ -309,18 +311,20 @@ export const runSentenceFor = (
 ): string => {
   if (!twistId) return difficultySentence(d, undoClauseFor(d));
   const jokers = JOKERS_BY_DIFFICULTY[d];
+  const trimsJokers =
+    twistId === 'short-deck' || (twistId === 'nut-low' && d !== 'hard');
   const jokerClause =
-    twistId === 'nut-low'
-      ? d === 'hard'
-        ? 'no jokers'
-        : jokers === 1
+    twistId === 'nut-low' && d === 'hard'
+      ? 'no jokers'
+      : trimsJokers && jokers > 0
+        ? jokers === 1
           ? 'up to one joker'
           : 'up to two jokers'
-      : jokers === 0
-        ? 'no jokers'
-        : jokers === 1
-          ? 'one joker'
-          : 'two jokers';
+        : jokers === 0
+          ? 'no jokers'
+          : jokers === 1
+            ? 'one joker'
+            : 'two jokers';
   const noBonusAtAll =
     twistId === 'poker-purist' ||
     twistId === 'nut-low' ||
