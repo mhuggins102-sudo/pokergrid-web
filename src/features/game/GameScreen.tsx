@@ -99,6 +99,8 @@ import {
 import { ReviveSheet } from './components/ReviveSheet';
 import { ResultView } from './components/ResultView';
 import { BonusDrawModal } from './components/BonusDrawModal';
+import { IntroTour } from '../onboarding/IntroTour';
+import { freshProfile, introTourChoice } from '../onboarding/introTourSeen';
 import { DesktopResultDialog } from './components/DesktopResultDialog';
 import styles from './GameScreen.module.css';
 
@@ -292,6 +294,19 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // A re-hydrated archive view opens in the post-View-Grid state: the
   // finished board first, the dialog one click away.
   const [resultOpen, setResultOpen] = useState(!viewOnly);
+  // The intro tour: a paged how-to card overlaying the game until
+  // closed. Computed ONCE per mount (a game-end stats write must not
+  // pop it open mid-run): a fresh profile sees it until they finish
+  // it or tick "don't show again"; Settings can re-arm it for any
+  // profile ('show'). Never over archive revisits.
+  const [tourOpen, setTourOpen] = useState(() => {
+    if (viewOnly || mode.kind === 'tutorial') return false;
+    const choice = introTourChoice();
+    return (
+      choice === 'show' ||
+      (choice === null && freshProfile(useStatsStore.getState().stats))
+    );
+  });
   // Rails stay off for the whole tutorial regardless of the setting:
   // the guided deal never references line totals, and the plain board
   // is one less thing to explain — the extra ~30px goes to the grid.
@@ -372,8 +387,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // Time Trial's clock: the hook owns real time (paused while hidden)
   // and writes whole-second CLOCK_TICKs; everything below reads
   // state.elapsedMs. The pill pieces are computed here so the navPill
-  // memo can list them as plain deps.
-  useGameClock();
+  // memo can list them as plain deps. The intro tour holds the clock
+  // — reading the how-to must not cost Time Trial points.
+  useGameClock(tourOpen);
   const clockWorth = timeTrialAdjust(state);
   const clockText = formatClock(state.elapsedMs);
   const clockOver =
@@ -1446,6 +1462,9 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         {/* activeReport: at game end open lines show Incomplete / -25. */}
         <LinesPanel report={activeReport} />
       </Sheet>
+      {/* The intro tour, over everything (both layout forks render
+          this shared overlays node). The game idles underneath. */}
+      {tourOpen && <IntroTour onClose={() => setTourOpen(false)} />}
       {/* Five Draw: the offered bonus chip's tap-to-read sheet. */}
       <DetailSheet
         detail={

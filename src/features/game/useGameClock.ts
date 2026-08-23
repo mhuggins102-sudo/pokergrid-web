@@ -15,11 +15,17 @@ import { useGameSession } from './GameSessionProvider';
  * StrictMode-safe: elapsed time lives in module-free closure state
  * re-derived from state.elapsedMs on every (re)start, so a double
  * mount can't double-count and a remount resumes seamlessly.
+ *
+ * `paused` holds the clock while a blocking overlay owns the screen
+ * (the intro tour over a first game) — reading the how-to must not
+ * cost Time Trial points. Unpausing re-baselines from state, exactly
+ * like a remount.
  */
-export function useGameClock(): void {
+export function useGameClock(paused = false): void {
   const { state, dispatch, viewOnly } = useGameSession();
   const running =
-    state.timeTrial && !viewOnly && state.phase.kind !== 'game-over';
+    state.timeTrial && !viewOnly && !paused &&
+    state.phase.kind !== 'game-over';
   // Deliberately NOT keyed on state.elapsedMs — our own ticks would
   // restart the effect. The baseline is read once per (re)start.
   const baseMs = state.elapsedMs;

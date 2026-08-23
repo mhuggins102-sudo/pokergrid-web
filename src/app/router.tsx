@@ -53,11 +53,6 @@ const TargetsPlayPage = lazy(() =>
     default: m.TargetsPlayPage,
   }))
 );
-const TutorialPage = lazy(() =>
-  import('../features/tutorial/TutorialPage').then(m => ({
-    default: m.TutorialPage,
-  }))
-);
 const RulesPage = lazy(() =>
   import('../features/rules/RulesPage').then(m => ({ default: m.RulesPage }))
 );
@@ -106,7 +101,9 @@ export const router = createBrowserRouter([
       { path: 'challenges/:id', element: page(<ChallengePlayPage />) },
       { path: 'targets', element: page(<TargetsPage />) },
       { path: 'targets/play', element: page(<TargetsPlayPage />) },
-      { path: 'tutorial', element: page(<TutorialPage />) },
+      // The interactive tutorial (src/features/tutorial/) is retired
+      // in favor of the in-game intro tour; the code is kept unrouted
+      // in case it returns.
       { path: 'rules', element: page(<RulesPage />) },
       { path: 'rules/cards', element: page(<BonusCardReferencePage />) },
       { path: 'settings', element: page(<SettingsPage />) },

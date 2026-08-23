@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+// The intro tour overlays a fresh profile's first game (covered by
+// introTour.spec.ts) — pre-mark it seen so gameplay specs start with a
+// clear screen.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('pokergrid:intro-tour:v1', 'seen');
+  });
+});
+
 test('token gallery renders the design system', async ({ page }) => {
   await page.goto('/design');
   await expect(page.getByRole('heading', { name: 'Morning Paper' })).toBeVisible();
@@ -28,7 +37,8 @@ test('achievements are reachable from the home tile', async ({ page }) => {
   await expect(
     page.locator('main').getByText(/0 (of \d+ earned|\/ \d+)/).first()
   ).toBeVisible();
-  await expect(page.getByText('Milestones')).toBeVisible();
+  // A tier section from the redesigned six-section layout.
+  await expect(page.getByText('Low Stakes')).toBeVisible();
 });
 
 test('difficulty picker links into a game', async ({ page }) => {

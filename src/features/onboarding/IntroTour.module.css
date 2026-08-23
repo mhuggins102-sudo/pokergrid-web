@@ -1,0 +1,544 @@
+/* The intro tour overlay: hand-rolled scrim + centered card (the
+   SettingsPage-confirm / DesktopResultDialog pattern — centered at
+   EVERY breakpoint, unlike Sheet). Demos are pure CSS loops; the
+   card-level `.still` class (settings reduceMotion, applied in JS)
+   freezes them, and the OS-level preference collapses all animation
+   globally via reset.css. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+  animation: tour-fadein 160ms ease;
+}
+
+.card {
+  width: min(92vw, 420px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-lg) var(--space-xl) var(--space-lg);
+  animation: tour-in 220ms ease;
+}
+
+.card:focus {
+  outline: none;
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+}
+
+@keyframes tour-fadein {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- Header: masthead-style identity + the ✕. ---- */
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Page body. Fixed-ish height so paging never resizes the
+   card; the keyed .page slides in from the travel direction. ---- */
+.pageArea {
+  overflow: hidden;
+  touch-action: pan-y;
+  margin-top: var(--space-md);
+}
+
+.page {
+  min-height: 268px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pageFwd {
+  animation: tour-slide-fwd 190ms ease;
+}
+
+.pageBack {
+  animation: tour-slide-back 190ms ease;
+}
+
+@keyframes tour-slide-fwd {
+  from {
+    transform: translateX(44px);
+    opacity: 0.4;
+  }
+}
+
+@keyframes tour-slide-back {
+  from {
+    transform: translateX(-44px);
+    opacity: 0.4;
+  }
+}
+
+.demo {
+  height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-panel);
+  background: var(--paper);
+  margin-bottom: var(--space-md);
+}
+
+.pageTitle {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.pageBody {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ---- Footer: dismiss checkbox left, pager right. ---- */
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-top: var(--space-lg);
+}
+
+.dismiss {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.dismiss input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-left: auto;
+}
+
+.pageBtn {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pageBtn:disabled {
+  color: var(--ink-3);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pageBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pageCount {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==== Demos ==== */
+
+/* Reduced motion (settings toggle): freeze every demo at a legible
+   still frame — the loops read as diagrams. */
+.still * {
+  animation: none !important;
+}
+
+/* -- Mini 5×5 grid (goal + spiral demos) -- */
+.miniGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 18px);
+  gap: 3px;
+}
+
+.miniCell {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--paper-sunken);
+  border: 1px solid var(--hairline);
+}
+
+/* Goal: the center row lights first, the center column answers —
+   "rows AND columns both score". The static frame keeps both lit. */
+.dRow {
+  animation: tour-line-row 4s ease-in-out infinite;
+}
+
+.dCol {
+  animation: tour-line-col 4s ease-in-out infinite;
+}
+
+.still .dRow,
+.still .dCol {
+  background: color-mix(in srgb, var(--accent) 35%, var(--paper-sunken));
+  border-color: var(--accent);
+}
+
+@keyframes tour-line-row {
+  10%,
+  40% {
+    background: color-mix(in srgb, var(--accent) 40%, var(--paper-sunken));
+    border-color: var(--accent);
+  }
+  0%,
+  50%,
+  100% {
+    background: var(--paper-sunken);
+    border-color: var(--hairline);
+  }
+}
+
+@keyframes tour-line-col {
+  60%,
+  90% {
+    background: color-mix(in srgb, var(--accent) 40%, var(--paper-sunken));
+    border-color: var(--accent);
+  }
+  0%,
+  50%,
+  100% {
+    background: var(--paper-sunken);
+    border-color: var(--hairline);
+  }
+}
+
+/* Spiral: each cell "seats a card" on a phase offset from its spiral
+   position (--sp, 1-based) — a wave of arrivals travelling the
+   spiral, each with a brief accent ring. Static frame: a filled
+   board. */
+.dSeat {
+  animation: tour-seat 5s linear infinite;
+  animation-delay: calc(var(--sp) * 0.16s);
+}
+
+.still .dSeat {
+  background: var(--card-face);
+  border-color: var(--rule);
+}
+
+@keyframes tour-seat {
+  0% {
+    background: var(--paper-sunken);
+    border-color: var(--hairline);
+  }
+  3% {
+    background: var(--card-face);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  10%,
+  78% {
+    background: var(--card-face);
+    border-color: var(--rule);
+    box-shadow: none;
+  }
+  86%,
+  100% {
+    background: var(--paper-sunken);
+    border-color: var(--hairline);
+  }
+}
+
+/* -- Suit perks -- */
+.perksDemo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.perkRow {
+  display: flex;
+  gap: 8px;
+}
+
+.perkChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-chip);
+  background: var(--paper-raised);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  animation: tour-perk 4.4s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+
+.still .perkChip {
+  border-color: var(--tone);
+}
+
+.perkGlyph {
+  color: var(--tone);
+  font-size: 14px;
+}
+
+@keyframes tour-perk {
+  6%,
+  19% {
+    border-color: var(--tone);
+    box-shadow: 0 0 0 1px var(--tone) inset;
+    transform: translateY(-2px);
+  }
+  0%,
+  25%,
+  100% {
+    border-color: var(--hairline);
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+/* The ♥ swap in miniature: two card tiles trade places and return. */
+.swapDemo {
+  display: flex;
+  gap: 10px;
+}
+
+.swapTile {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  background: var(--card-face);
+  border: 1px solid var(--rule);
+}
+
+.swapA {
+  animation: tour-swap-a 4.4s ease-in-out infinite;
+}
+
+.swapB {
+  animation: tour-swap-b 4.4s ease-in-out infinite;
+}
+
+@keyframes tour-swap-a {
+  10%,
+  45% {
+    transform: translateX(36px);
+    border-color: var(--suit-h);
+  }
+  0%,
+  55%,
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes tour-swap-b {
+  10%,
+  45% {
+    transform: translateX(-36px);
+    border-color: var(--suit-h);
+  }
+  0%,
+  55%,
+  100% {
+    transform: none;
+  }
+}
+
+/* -- Bonus card chips -- */
+.bonusDemo {
+  display: flex;
+  gap: 10px;
+}
+
+.bonusChip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-button);
+  background: var(--paper-raised);
+  border: 1px solid var(--tone);
+  box-shadow: inset 0 0 0 1px var(--tone);
+  animation: tour-bonus 3.6s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+
+.bonusChip b {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tone);
+}
+
+.bonusChip span {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+@keyframes tour-bonus {
+  12%,
+  28% {
+    box-shadow:
+      inset 0 0 0 1px var(--tone),
+      inset 0 0 0 3px color-mix(in srgb, var(--tone) 35%, transparent);
+    transform: translateY(-2px);
+  }
+  0%,
+  40%,
+  100% {
+    transform: none;
+  }
+}
+
+/* -- Scoring: a heart flush with its score popping -- */
+.flushDemo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.flushCards {
+  display: flex;
+  gap: 5px;
+}
+
+.flushCard {
+  position: relative;
+  width: 34px;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.flushScore {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 14%, var(--paper));
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  animation: tour-score 2.8s ease-in-out infinite;
+}
+
+@keyframes tour-score {
+  12%,
+  22% {
+    transform: scale(1.14);
+  }
+  0%,
+  35%,
+  100% {
+    transform: none;
+  }
+}
+
+/* -- Learn-more pills -- */
+.pillsDemo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 260px;
+}
+
+.pillDemo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--paper-raised);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  animation: tour-perk 4s ease-in-out infinite;
+  animation-delay: var(--d);
+  --tone: var(--accent);
+}
+
+.pillDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--difficulty-easy);
+}

@@ -1,6 +1,6 @@
 import { CSSProperties, useState } from 'react';
 import { Link } from 'react-router';
-import { tutorialSeen } from '../tutorial/tutorialSeen';
+import { introTourChoice } from '../onboarding/introTourSeen';
 import { LIVE_CHALLENGES, findChallenge } from '../../game/challenges';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { currentDateISO } from '../../game/daily/seed';
@@ -104,11 +104,11 @@ export function HomePage() {
     : null;
   const diffTone = difficultyColors[recipe.difficulty];
   const isPhone = useTier() === 'phone';
-  // Newcomer card (every tier): the tutorial callout gives way to the
-  // quiet "Rules" pointer once the player has either taken the tutorial
+  // Newcomer card (every tier): the intro-tour callout gives way to the
+  // quiet "Rules" pointer once the player has either finished the tour
   // OR finished at least one game — no manual dismiss needed.
   const gamesPlayed = useStatsStore(s => s.stats.wins + s.stats.losses);
-  const showIntroCard = !tutorialSeen() && gamesPlayed === 0;
+  const showIntroCard = introTourChoice() === null && gamesPlayed === 0;
 
   // The three mode cards — identical at every tier; only their
   // container's column count (4-across desk, 2×2 tablet/phone) differs.
@@ -281,7 +281,7 @@ export function HomePage() {
       </div>
 
       {/* CARD GRID — the three mode cards + the newcomer card (the
-          tutorial callout on a first visit, the quiet rules pointer
+          intro-tour callout on a first visit, the quiet rules pointer
           ever after). One row of four on desk widths, 2×2 below. */}
       <div className={styles.cardGrid}>
         {modeCards}
@@ -289,10 +289,11 @@ export function HomePage() {
           <div className={styles.footerCard}>
             <span className={styles.modeTitle}>New here?</span>
             <span className={styles.modeBlurb}>
-              Play a guided practice deal that walks you through every move.
+              A quick intro tour walks you through the basics over your
+              first game.
             </span>
-            <Link to="/tutorial" className={styles.modeLink}>
-              Start the tutorial <ArrowRight size={13} />
+            <Link to="/play" className={styles.modeLink}>
+              Start playing <ArrowRight size={13} />
             </Link>
           </div>
         ) : (

@@ -24,6 +24,15 @@ const popOpacity = (loc: Locator): Promise<number> =>
     return Number(getComputedStyle(pop as Element).opacity);
   });
 
+// The intro tour overlays a fresh profile's first game (covered by
+// introTour.spec.ts) — pre-mark it seen so the in-game popover cases
+// start with a clear screen.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('pokergrid:intro-tour:v1', 'seen');
+  });
+});
+
 test('mobile header: the hamburger drawer opens and routes into Daily', async ({
   page,
 }, testInfo) => {

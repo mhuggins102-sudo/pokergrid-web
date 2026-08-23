@@ -23,6 +23,15 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 const SEEDED_GAME = '/play?difficulty=easy&seed=42';
 const OUT = process.env.SPACING_OUT ?? 'e2e-out/spacing';
 
+// The intro tour overlays a fresh profile's first game (covered by
+// introTour.spec.ts) — pre-mark it seen so the measured screen is the
+// bare gameplay surface.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('pokergrid:intro-tour:v1', 'seen');
+  });
+});
+
 /** Read layout/box geometry + computed spacing for the gameplay screen. */
 async function measure(page: Page) {
   return page.evaluate(() => {

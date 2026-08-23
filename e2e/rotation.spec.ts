@@ -21,6 +21,15 @@ const TU_SAVE_L3 = JSON.stringify({
   version: 0,
 });
 
+// The intro tour overlays a fresh profile's first game (covered by
+// introTour.spec.ts) — pre-mark it seen so this spec's game starts
+// with a clear screen.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('pokergrid:intro-tour:v1', 'seen');
+  });
+});
+
 test('family flip mid-result records once', async ({ page }, testInfo) => {
   // Only the tablet-820 project starts in the portrait column and can
   // rotate across the family boundary; the fixed desktop/phone projects
