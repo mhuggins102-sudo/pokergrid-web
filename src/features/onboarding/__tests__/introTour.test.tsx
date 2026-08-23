@@ -76,14 +76,17 @@ describe('IntroTour — dismissal contract', () => {
     expect(introTourChoice()).toBeNull();
   });
 
-  test('the checkbox persists "seen"; unticking takes it back', () => {
+  test('the checkbox persists "seen"; unticking re-arms "show"', () => {
+    // Untick must write the explicit 'show' state, NOT clear to the
+    // untouched one — the fresh-profile guard would swallow a cleared
+    // flag once any game is on the books.
     openTour();
     const box = screen.getByRole('checkbox');
     fireEvent.click(box);
     expect(box).toBeChecked();
     expect(introTourChoice()).toBe('seen');
     fireEvent.click(box);
-    expect(introTourChoice()).toBeNull();
+    expect(introTourChoice()).toBe('show');
   });
 
   test('reaching the last page marks the tour seen and ticks the box', () => {
@@ -92,5 +95,13 @@ describe('IntroTour — dismissal contract', () => {
     for (let i = 0; i < 5; i++) fireEvent.click(next());
     expect(introTourChoice()).toBe('seen');
     expect(screen.getByRole('checkbox')).toBeChecked();
+  });
+
+  test('unticking after finishing overrides the auto-mark', () => {
+    openTour();
+    for (let i = 0; i < 5; i++) fireEvent.click(next());
+    expect(introTourChoice()).toBe('seen');
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(introTourChoice()).toBe('show');
   });
 });

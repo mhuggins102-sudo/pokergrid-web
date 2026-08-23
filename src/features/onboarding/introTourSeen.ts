@@ -6,8 +6,9 @@ import { readPlayedDatesLite } from '../daily/streak';
 // unavailable must never nag). Tri-state:
 //   'seen'  — the player finished the tour or ticked "don't show
 //             again": never auto-show.
-//   'show'  — Settings' "Show again": show over the next game even
-//             for a seasoned profile, once.
+//   'show'  — Settings' "Show again", or the tour's own checkbox
+//             UNTICKED: keep showing over each new game — seasoned
+//             profile or not — until 'seen' is written again.
 //   null    — untouched: show only over a fresh profile's games.
 const KEY = 'pokergrid:intro-tour:v1';
 
@@ -30,7 +31,8 @@ export const markIntroTourSeen = (): void => {
   }
 };
 
-/** Settings' "Show again" — arms the tour for the next game. */
+/** Settings' "Show again" / the tour checkbox unticked — arms the
+ *  tour for the next game (and every one after, until seen again). */
 export const requestIntroTour = (): void => {
   try {
     localStorage.setItem(KEY, 'show');

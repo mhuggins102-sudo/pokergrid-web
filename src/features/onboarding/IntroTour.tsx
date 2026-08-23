@@ -3,7 +3,7 @@ import { Button } from '../../design/primitives';
 import { prefersReducedMotion } from '../game/useAnimatedNumber';
 import { useSettingsStore } from '../settings/settingsStore';
 import { TOUR_PAGES } from './introTourPages';
-import { clearIntroTour, markIntroTourSeen } from './introTourSeen';
+import { markIntroTourSeen, requestIntroTour } from './introTourSeen';
 import styles from './IntroTour.module.css';
 
 /*
@@ -17,8 +17,11 @@ import styles from './IntroTour.module.css';
  *
  * Dismissal contract (user spec): ✕ or a scrim tap close it for THIS
  * game only; it returns on the next one. Reaching the last page, or
- * ticking "Don't show this again", marks it seen for good
- * (introTourSeen.ts). Settings can re-arm it.
+ * ticking "Don't show again", marks it seen for good
+ * (introTourSeen.ts). UNTICKING the box re-arms the explicit 'show'
+ * state — not the untouched one, whose fresh-profile guard would
+ * swallow the request once any game is on the books — so the tour
+ * keeps returning until the box is ticked. Settings can re-arm too.
  */
 export function IntroTour({ onClose }: { onClose: () => void }) {
   const [page, setPage] = useState(0);
@@ -171,7 +174,7 @@ export function IntroTour({ onClose }: { onClose: () => void }) {
               onChange={e => {
                 setDismiss(e.target.checked);
                 if (e.target.checked) markIntroTourSeen();
-                else clearIntroTour();
+                else requestIntroTour();
               }}
             />
             Don't show again
