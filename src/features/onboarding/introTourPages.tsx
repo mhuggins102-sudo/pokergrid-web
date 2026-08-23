@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Card, Rank, Suit } from '../../game/cards';
 import { LIVE_CHALLENGES } from '../../game/challenges';
@@ -35,11 +35,27 @@ const useStill = (): boolean =>
   useSettingsStore(s => s.reduceMotion) || prefersReducedMotion();
 
 /**
- * Shuffle-bag rotation: walk `items` in random order, showing every
- * one before any repeats — and never the same item twice in a row,
- * refill boundaries included. The first bag excludes `initial` since
- * it is already showing.
+ * Shuffle-bag stepper: yields `items` in random order, every one
+ * before any repeats — and never the same item twice in a row, refill
+ * boundaries included. The first bag excludes `initial` since it is
+ * already showing.
  */
+function shuffleBag<T>(items: readonly T[], initial: T): () => T {
+  let bag = shuffle(items.filter(i => i !== initial));
+  let last = initial;
+  return () => {
+    if (bag.length === 0) {
+      bag = shuffle(items);
+      if (bag[bag.length - 1] === last && bag.length > 1) {
+        [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+      }
+    }
+    last = bag.pop() as T;
+    return last;
+  };
+}
+
+/** Shuffle-bag rotation on a timer (skipped under reduced motion). */
 function useShuffleBag<T>(
   items: readonly T[],
   intervalMs: number,
@@ -49,18 +65,8 @@ function useShuffleBag<T>(
   const [cur, setCur] = useState(initial);
   useEffect(() => {
     if (still) return;
-    let bag = shuffle(items.filter(i => i !== initial));
-    let last = initial;
-    const id = window.setInterval(() => {
-      if (bag.length === 0) {
-        bag = shuffle(items);
-        if (bag[bag.length - 1] === last && bag.length > 1) {
-          [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
-        }
-      }
-      last = bag.pop() as T;
-      setCur(last);
-    }, intervalMs);
+    const next = shuffleBag(items, initial);
+    const id = window.setInterval(() => setCur(next()), intervalMs);
     return () => window.clearInterval(id);
   }, [still, items, intervalMs, initial]);
   return cur;
@@ -327,13 +333,16 @@ const ALL_HANDS = Object.keys(HAND_EXAMPLES) as HandRank[];
 
 function ScoringDemo() {
   // Every hand type in shuffle-bag order; the flush is the
-  // reduced-motion frame.
+  // reduced-motion frame. The five cards show in a random order each
+  // time — as in the game, only the hand formed matters, not where
+  // its cards sit.
   const rank = useShuffleBag<HandRank>(ALL_HANDS, 3200, 'FLUSH');
+  const cards = useMemo(() => shuffle(HAND_EXAMPLES[rank]), [rank]);
   return (
     <div className={styles.handCycle} aria-hidden="true">
       <div key={rank} className={styles.handShow}>
         <div className={styles.flushCards}>
-          {HAND_EXAMPLES[rank].map((card, j) => (
+          {cards.map((card, j) => (
             <span key={j} className={styles.flushCard}>
               <CardFace card={card} />
             </span>
@@ -351,22 +360,25 @@ const DEMO_DIFFS: Difficulty[] = ['easy', 'medium', 'hard'];
 const TWIST_NAMES = LIVE_CHALLENGES.map(c => c.name);
 
 function ExploreDemo() {
-  // Miniatures of the real in-game pills. The difficulty pill walks
-  // easy → medium → hard with each tier's true tone and target
-  // (difficultyColors / TARGET_BY_DIFFICULTY — the navPill's own
-  // sources); the twist pill shuffle-bags through every live variant.
+  // Miniatures of the real in-game pills. One shared timer swaps BOTH
+  // rotating pills in unison: the difficulty pill walks easy → medium
+  // → hard with each tier's true tone and target (difficultyColors /
+  // TARGET_BY_DIFFICULTY — the navPill's own sources) while the twist
+  // pill shuffle-bags through every live variant. The Hands / Scoring
+  // buttons sit still.
   const still = useStill();
-  const [diffIdx, setDiffIdx] = useState(0);
+  const [pills, setPills] = useState({ diff: 0, twist: 'Five Draw' });
   useEffect(() => {
     if (still) return;
-    const id = window.setInterval(
-      () => setDiffIdx(i => (i + 1) % DEMO_DIFFS.length),
-      2600
-    );
+    const nextTwist = shuffleBag(TWIST_NAMES, 'Five Draw');
+    let d = 0;
+    const id = window.setInterval(() => {
+      d = (d + 1) % DEMO_DIFFS.length;
+      setPills({ diff: d, twist: nextTwist() });
+    }, 2600);
     return () => window.clearInterval(id);
   }, [still]);
-  const diff = DEMO_DIFFS[diffIdx];
-  const twist = useShuffleBag(TWIST_NAMES, 2200, 'Five Draw');
+  const diff = DEMO_DIFFS[pills.diff];
   return (
     <div className={styles.pillsDemo} aria-hidden="true">
       <div className={styles.pillRow}>
@@ -386,27 +398,43 @@ function ExploreDemo() {
           </span>
         </span>
         <span className={styles.demoTwistPill}>
-          <span key={twist} className={styles.rollSwap}>
+          <span key={pills.twist} className={styles.rollSwap}>
             <span className={styles.demoTwistStar}>✦</span>
-            {twist}
+            {pills.twist}
           </span>
         </span>
       </div>
       <div className={styles.pillRow}>
-        <span
-          className={styles.demoCtrlBtn}
-          style={{ '--d': '0s' } as CSSProperties}
-        >
+        <span className={styles.demoCtrlBtn}>
           <HandsIcon />
           Hands
         </span>
-        <span
-          className={styles.demoCtrlBtn}
-          style={{ '--d': '2s' } as CSSProperties}
-        >
+        <span className={styles.demoCtrlBtn}>
           <ScoringIcon />
           Scoring
         </span>
+      </div>
+    </div>
+  );
+}
+
+function XpDemo() {
+  // XP bar ticking over a level with a deck unlock popping in, over
+  // the customization chips. The still frame is the mid-fill bar with
+  // the unlock chip showing.
+  return (
+    <div className={styles.xpDemo} aria-hidden="true">
+      <div className={styles.xpRow}>
+        <span className={styles.xpLevel}>LVL 4</span>
+        <span className={styles.xpTrack}>
+          <span className={styles.xpFill} />
+        </span>
+        <span className={styles.xpUnlock}>New deck!</span>
+      </div>
+      <div className={styles.lookRow}>
+        <span className={styles.lookChip}>Paper</span>
+        <span className={styles.lookChip}>Card Room</span>
+        <span className={styles.lookChip}>☀ / ☾</span>
       </div>
     </div>
   );
@@ -435,25 +463,31 @@ export const TOUR_PAGES: TourPage[] = [
   {
     id: 'perks',
     title: 'Or spend a card on its suit perk',
-    body: "Instead of placing, spend the drawn card on its suit's power: ♥ swaps two placed cards, ♠ slides a row or column, ♦ destroys a placed card, ♣ draws a bonus card.",
+    body: "Instead of placing, spend the drawn card on its suit's power: ♥ swaps two placed cards, ♠ slides a row or column, ♦ destroys a placed card, ♣ draws a bonus card. These can leave holes in the grid — the next placed card always fills the earliest open spiral slot.",
     demo: <PerksDemo />,
   },
   {
     id: 'bonus',
     title: 'Bonus cards boost your score',
-    body: 'You can hold up to three. Gold cards multiply lines while you play; purple cards judge the whole grid at game end. (Green one-time action cards appear in some variants.)',
+    body: 'You can hold up to three. Gold cards multiply lines while you play. Purple cards assess the entire grid at game end and multiply your total line score. Green cards are one-time actions that only appear in certain variants.',
     demo: <BonusDemo />,
   },
   {
     id: 'scoring',
     title: 'Every line pays — or costs',
-    body: 'Better hands score more: a pair earns 5, a straight 30, a flush 40, a royal flush 120 — and jokers are wild. Any row or column left unfinished costs 25 at game end. Clear the target to win.',
+    body: 'Better hands score more: a pair earns 5, a straight 30, a flush 40, a royal flush 120, etc. Jokers are wild and help with creating the higher value hands. Any line left unfinished at game end costs 25.',
     demo: <ScoringDemo />,
   },
   {
     id: 'explore',
-    title: 'Keep exploring',
-    body: "Challenges and Daily Grid twists remix these rules — the ✦ pill explains any active twist. Tap the difficulty pill for the ruleset, the score pill for win tiers, and Hands or Scoring for hand values and line math.",
+    title: 'In-game reminders',
+    body: 'Challenges and Daily Grid twists remix the base rules, with the ✦ pill explaining the active twist. Tap the difficulty pill for the ruleset, the score pill for win tiers, Hands for the value of each hand type, or Scoring for the current value of each line.',
     demo: <ExploreDemo />,
+  },
+  {
+    id: 'progress',
+    title: 'Level up, unlock decks',
+    body: 'Every game earns XP, and leveling up unlocks new deck designs. Visit Settings to equip them and pick your look — two themes, each with light and dark modes.',
+    demo: <XpDemo />,
   },
 ];
