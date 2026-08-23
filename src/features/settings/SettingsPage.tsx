@@ -6,7 +6,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { useNavigate } from 'react-router';
 import { Button, Sheet, useToast } from '../../design/primitives';
 import { HandleEditor } from '../daily/RankPanel';
 import { useHandle } from '../daily/sync/handleStore';
@@ -16,7 +15,7 @@ import { isBackendConfigured } from '../../lib/supabaseRpc';
 import { useProgressionStore } from '../progress/progressionStore';
 import { useStatsStore } from '../progress/statsStore';
 import { useTargetsStore } from '../targets/targetsStore';
-import { clearTutorialSeen } from '../tutorial/tutorialSeen';
+import { clearIntroTour, requestIntroTour } from '../onboarding/introTourSeen';
 import {
   Appearance,
   DockLayout,
@@ -168,7 +167,6 @@ export function SettingsPage() {
   const resetStats = useStatsStore(s => s.reset);
   const resetProgression = useProgressionStore(s => s.reset);
   const clearTargets = useTargetsStore(s => s.clearProgress);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
   // ?decks=1 deep-links straight into the deck-skin store — the end-of-
@@ -364,18 +362,21 @@ export function SettingsPage() {
             }
           />
         </Row>
-        {/* Not in the mockup — keeps the guided tutorial reachable on
-            desktop (feature-reachability convention). */}
+        {/* Not in the mockup — keeps the intro tour re-runnable
+            (feature-reachability convention). */}
         <Row
-          title="Replay tutorial"
-          hint="Re-run the guided practice deal that walks through every move."
+          title="Intro tour"
+          hint="Show the quick how-to-play tour over your next game."
         >
           <button
             type="button"
             className={styles.quietAction}
-            onClick={() => navigate('/tutorial')}
+            onClick={() => {
+              requestIntroTour();
+              toast('The tour will appear over your next game.', 'success');
+            }}
           >
-            Replay
+            Show again
           </button>
         </Row>
       </Section>
@@ -503,7 +504,7 @@ export function SettingsPage() {
               challenges, the current Targets-Up run, and your daily puzzle
               results and leaderboard identity on this device — so you can
               start over under a different name. It also re-arms the
-              one-time explainers (tutorial callout, daily twist intros).
+              one-time explainers (intro tour, daily twist intros).
               Scores already submitted stay on the online leaderboard.
             </p>
             <div className={styles.confirmActions}>
@@ -521,7 +522,7 @@ export function SettingsPage() {
                   clearTargets();
                   resetDailyProgress();
                   clearTwistsSeen();
-                  clearTutorialSeen();
+                  clearIntroTour();
                   setConfirmReset(false);
                   toast('Progress reset.', 'success');
                 }}

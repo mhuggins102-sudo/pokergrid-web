@@ -1,5 +1,4 @@
 import { CSSProperties, useState } from 'react';
-import { Link } from 'react-router';
 import {
   BONUS_DECK_POOL,
   BonusCard,
@@ -152,11 +151,11 @@ export function RulesPage() {
               </div>
             ))}
           </div>
-          {/* Not in the mockup — keeps the guided tutorial reachable on
-              desktop (feature-reachability convention). */}
+          {/* Not in the mockup — points at the in-game intro tour
+              (feature-reachability convention). */}
           <p className={styles.tutorialLink}>
-            Prefer to learn by playing?{' '}
-            <Link to="/tutorial">Take the interactive tutorial</Link>
+            Prefer to learn in-game? The intro tour appears over your
+            first game — re-run it any time from Settings.
           </p>
           <div className={styles.facts}>
             <div className={styles.fact}>
