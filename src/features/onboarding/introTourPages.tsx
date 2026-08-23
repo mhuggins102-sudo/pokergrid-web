@@ -1,60 +1,102 @@
-import type { ReactNode } from 'react';
-import type { CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Card, Rank, Suit } from '../../game/cards';
 import { SPIRAL_POSITION } from '../../game/grid';
 import { CardFace } from '../game/components/CardFace';
+import { HandsIcon, ScoringIcon } from '../game/components/icons';
+import { prefersReducedMotion } from '../game/useAnimatedNumber';
+import { useSettingsStore } from '../settings/settingsStore';
 import styles from './IntroTour.module.css';
 
 /*
  * The intro tour's six pages: title + copy + a small looping demo.
- * Demos are pure CSS keyframe loops (module classes on plain divs) —
- * the tour card's `.still` class freezes them at their final frame
- * for reduced motion, and the OS-level preference collapses them
- * globally (reset.css). Copy adapts the Rules page's "How PokerGrid
- * works" steps.
+ * Demos that need scripted or random sequencing (the goal sweep, the
+ * spiral fill) drive a class flip from a JS timer; the rest are pure
+ * CSS keyframe loops. Both respect reduced motion: the tour card's
+ * `.still` class freezes the CSS loops, and the JS demos skip their
+ * timers and render a legible static frame instead. Copy adapts the
+ * Rules page's "How PokerGrid works" steps.
  */
 
 const C = (rank: Rank, suit: Suit): Card => ({ kind: 'standard', rank, suit });
+const JOKER: Card = { kind: 'joker' };
 
-// A 5×5 of tiny inert cells, optionally classed per index.
-function MiniGrid({ cellClass }: { cellClass?: (idx: number) => string }) {
+// The same reduced-motion condition the tour card uses for `.still` —
+// the JS-driven demos read it themselves to skip their timers (the
+// test env forces it, keeping component tests timer-free).
+const useStill = (): boolean =>
+  useSettingsStore(s => s.reduceMotion) || prefersReducedMotion();
+
+// A 5×5 of tiny inert cells, classed per index.
+function MiniGrid({ cellClass }: { cellClass: (idx: number) => string }) {
   return (
     <div className={styles.miniGrid} aria-hidden="true">
       {Array.from({ length: 25 }, (_, i) => (
-        <span
-          key={i}
-          className={`${styles.miniCell} ${cellClass?.(i) ?? ''}`}
-          style={
-            // Spiral demo: phase each cell by its 1-based spiral
-            // position (grid.ts SPIRAL_POSITION).
-            { '--sp': SPIRAL_POSITION[i] } as CSSProperties
-          }
-        />
+        <span key={i} className={`${styles.miniCell} ${cellClass(i)}`} />
       ))}
     </div>
   );
 }
 
 function GoalDemo() {
-  // The center row, then the center column, sweep-highlight in turn.
+  const still = useStill();
+  // The lit line: 0-4 = rows, 5-9 = columns. Opens on the center row,
+  // then hops to a random DIFFERENT line — rows and columns both
+  // score, shown rather than said.
+  const [line, setLine] = useState(2);
+  useEffect(() => {
+    if (still) return;
+    let cur = 2;
+    const id = window.setInterval(() => {
+      let next = cur;
+      while (next === cur) next = Math.floor(Math.random() * 10);
+      cur = next;
+      setLine(next);
+    }, 1700);
+    return () => window.clearInterval(id);
+  }, [still]);
+  const inLine = (i: number) =>
+    line < 5 ? Math.floor(i / 5) === line : i % 5 === line - 5;
+  // Static frame: center row AND column lit — the diagram version.
+  const inCross = (i: number) => Math.floor(i / 5) === 2 || i % 5 === 2;
   return (
     <MiniGrid
       cellClass={i =>
-        [
-          Math.floor(i / 5) === 2 ? styles.dRow : null,
-          i % 5 === 2 ? styles.dCol : null,
-        ]
-          .filter(Boolean)
-          .join(' ')
+        (still ? inCross(i) : inLine(i)) ? styles.lineOn : ''
       }
     />
   );
 }
 
 function SpiralDemo() {
-  // Cards ripple in along the spiral, each arriving with a brief
-  // accent ring — the pulsing-slot idea in miniature.
-  return <MiniGrid cellClass={() => styles.dSeat} />;
+  const still = useStill();
+  // Cards seat one at a time in spiral order; the full board holds a
+  // beat, clears in one clean reset, then the deal loops.
+  const [seated, setSeated] = useState(0);
+  useEffect(() => {
+    if (still) return;
+    let n = 0;
+    let id = 0;
+    const tick = () => {
+      n = n >= 25 ? 0 : n + 1;
+      setSeated(n);
+      const wait = n === 25 ? 1600 : n === 0 ? 600 : 170;
+      id = window.setTimeout(tick, wait);
+    };
+    id = window.setTimeout(tick, 500);
+    return () => window.clearTimeout(id);
+  }, [still]);
+  return (
+    <MiniGrid
+      cellClass={i => {
+        if (still) return styles.seatOn;
+        const p = SPIRAL_POSITION[i];
+        return `${p <= seated ? styles.seatOn : ''} ${
+          p === seated ? styles.seatNew : ''
+        }`;
+      }}
+    />
+  );
 }
 
 const PERKS: Array<[string, string, string]> = [
@@ -64,6 +106,35 @@ const PERKS: Array<[string, string, string]> = [
   ['♣', 'Bonus', '--suit-c'],
 ];
 
+// The perk demo board: nine cards seated in the center 3×3 (the
+// spiral's first nine slots), keyed by grid index.
+const MINI_BOARD: Record<number, [Rank, Suit]> = {
+  6: ['7', 'S'],
+  7: ['K', 'H'],
+  8: ['2', 'D'],
+  11: ['J', 'C'],
+  12: ['A', 'S'],
+  13: ['9', 'H'],
+  16: ['4', 'D'],
+  17: ['Q', 'C'],
+  18: ['8', 'S'],
+};
+const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
+
+// Each perk acts on its own cells in one window of the shared 6s
+// cycle, synced to its chip's highlight: ♥ swaps K♥↔2♦, ♠ slides the
+// bottom row into the empty cell beside it, ♦ destroys the 9♥,
+// ♣ pulses the J♣ gold as a bonus card pops in.
+const PERK_CELL: Record<number, string> = {
+  7: styles.swapRight,
+  8: styles.swapLeft,
+  16: styles.slideCell,
+  17: styles.slideCell,
+  18: styles.slideCell,
+  13: styles.destroyCell,
+  11: styles.bonusCell,
+};
+
 function PerksDemo() {
   return (
     <div className={styles.perksDemo} aria-hidden="true">
@@ -72,17 +143,40 @@ function PerksDemo() {
           <span
             key={label}
             className={styles.perkChip}
-            style={{ '--tone': `var(${tone})`, '--d': `${i * 1.1}s` } as CSSProperties}
+            style={
+              { '--tone': `var(${tone})`, '--d': `${i * 1.5}s` } as CSSProperties
+            }
           >
             <span className={styles.perkGlyph}>{glyph}</span>
             {label}
           </span>
         ))}
       </div>
-      {/* Two placed cards trading places — the ♥ Swap in miniature. */}
-      <div className={styles.swapDemo}>
-        <span className={`${styles.swapTile} ${styles.swapA}`} />
-        <span className={`${styles.swapTile} ${styles.swapB}`} />
+      <div className={styles.perkBoard}>
+        <div className={styles.miniGrid}>
+          {Array.from({ length: 25 }, (_, i) => {
+            const card = MINI_BOARD[i];
+            if (!card) return <span key={i} className={styles.miniCell} />;
+            const [rank, suit] = card;
+            return (
+              <span
+                key={i}
+                className={`${styles.miniCell} ${styles.mc} ${
+                  PERK_CELL[i] ?? ''
+                }`}
+                style={
+                  {
+                    '--tone': `var(--suit-${suit.toLowerCase()})`,
+                  } as CSSProperties
+                }
+              >
+                {rank}
+                {SUIT_GLYPH[suit]}
+              </span>
+            );
+          })}
+        </div>
+        <span className={styles.bonusPop}>+ bonus</span>
       </div>
     </div>
   );
@@ -111,39 +205,90 @@ function BonusDemo() {
   );
 }
 
-const FLUSH: Card[] = [C('9', 'H'), C('J', 'H'), C('3', 'H'), C('Q', 'H'), C('6', 'H')];
+// Rotating example hands (values from HAND_BASE_VALUE); the straight
+// shows a joker standing in as the missing 7.
+const HAND_LOOP: Array<{ label: string; cards: Card[] }> = [
+  {
+    label: 'Flush +40',
+    cards: [C('9', 'H'), C('J', 'H'), C('3', 'H'), C('Q', 'H'), C('6', 'H')],
+  },
+  {
+    label: 'Straight +30',
+    cards: [C('5', 'D'), C('6', 'S'), JOKER, C('8', 'H'), C('9', 'C')],
+  },
+  {
+    label: 'Full house +50',
+    cards: [C('K', 'S'), C('K', 'H'), C('K', 'D'), C('9', 'C'), C('9', 'S')],
+  },
+];
 
 function ScoringDemo() {
+  // Three stacked layers crossfade on offsets of one shared cycle;
+  // the reduced-motion frame is the lead layer (base opacity).
   return (
-    <div className={styles.flushDemo} aria-hidden="true">
-      <div className={styles.flushCards}>
-        {FLUSH.map(card => (
-          <span key={`${card.kind === 'standard' ? card.rank + card.suit : 'j'}`} className={styles.flushCard}>
-            <CardFace card={card} />
-          </span>
-        ))}
-      </div>
-      <span className={styles.flushScore}>Flush +40</span>
+    <div className={styles.handCycle} aria-hidden="true">
+      {HAND_LOOP.map(({ label, cards }, i) => (
+        <div
+          key={label}
+          className={`${styles.handLayer} ${i === 0 ? styles.handLead : ''}`}
+          style={{ '--d': `${i * 3.5}s` } as CSSProperties}
+        >
+          <div className={styles.flushCards}>
+            {cards.map((card, j) => (
+              <span key={j} className={styles.flushCard}>
+                <CardFace card={card} />
+              </span>
+            ))}
+          </div>
+          <span className={styles.flushScore}>{label}</span>
+        </div>
+      ))}
     </div>
   );
 }
 
 function ExploreDemo() {
+  // Miniatures of the real in-game pills (GameScreen's navPill,
+  // twistPill, and the Hands/Scoring row buttons with their icons) —
+  // same casing, tones, and chrome, so the tour teaches exactly what
+  // the player will see.
   return (
     <div className={styles.pillsDemo} aria-hidden="true">
-      <span className={styles.pillDemo} style={{ '--d': '0s' } as CSSProperties}>
-        <span className={styles.pillDot} />
-        easy · 0 / 400
-      </span>
-      <span className={styles.pillDemo} style={{ '--d': '1s' } as CSSProperties}>
-        ✦ Twist
-      </span>
-      <span className={styles.pillDemo} style={{ '--d': '2s' } as CSSProperties}>
-        Hands
-      </span>
-      <span className={styles.pillDemo} style={{ '--d': '3s' } as CSSProperties}>
-        Scoring
-      </span>
+      <div className={styles.pillRow}>
+        <span
+          className={styles.demoNavPill}
+          style={{ '--d': '0s' } as CSSProperties}
+        >
+          <span className={styles.demoNavDot} />
+          <span className={styles.demoNavDiff}>easy</span>
+          <span className={styles.demoNavScore}>
+            0<span className={styles.demoNavTarget}>/ 400</span>
+          </span>
+        </span>
+        <span
+          className={styles.demoTwistPill}
+          style={{ '--d': '1s' } as CSSProperties}
+        >
+          <span className={styles.demoTwistStar}>✦</span>
+          Five Draw
+        </span>
+      </div>
+      <div className={styles.pillRow}>
+        <span
+          className={styles.demoCtrlBtn}
+          style={{ '--d': '2s' } as CSSProperties}
+        >
+          <HandsIcon />
+          Hands
+        </span>
+        <span
+          className={styles.demoCtrlBtn}
+          style={{ '--d': '3s' } as CSSProperties}
+        >
+          <ScoringIcon />
+          Scoring
+        </span>
+      </div>
     </div>
   );
 }
@@ -183,13 +328,13 @@ export const TOUR_PAGES: TourPage[] = [
   {
     id: 'scoring',
     title: 'Every line pays — or costs',
-    body: 'Better hands score more: a pair earns 5, a straight 30, a flush 40, a royal flush 120. Any row or column left unfinished costs 25 at game end. Clear the target to win — the biggest wins earn silver and gold trophies.',
+    body: 'Better hands score more: a pair earns 5, a straight 30, a flush 40, a royal flush 120 — and jokers are wild. Any row or column left unfinished costs 25 at game end. Clear the target to win.',
     demo: <ScoringDemo />,
   },
   {
     id: 'explore',
     title: 'Keep exploring',
-    body: "Challenges and Daily Grid twists remix these rules — the ✦ pill explains any active twist. During a game, tap the difficulty pill for the ruleset, the score pill for win tiers, and the Hands and Scoring buttons for hand values and live line math.",
+    body: "Challenges and Daily Grid twists remix these rules — the ✦ pill explains any active twist. Tap the difficulty pill for the ruleset, the score pill for win tiers, and Hands or Scoring for hand values and line math.",
     demo: <ExploreDemo />,
   },
 ];
