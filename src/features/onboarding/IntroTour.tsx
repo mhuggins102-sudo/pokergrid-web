@@ -174,7 +174,7 @@ export function IntroTour({ onClose }: { onClose: () => void }) {
                 else clearIntroTour();
               }}
             />
-            Don't show this again
+            Don't show again
           </label>
           <div className={styles.pager}>
             <button
