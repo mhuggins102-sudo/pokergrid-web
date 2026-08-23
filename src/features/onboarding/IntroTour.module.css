@@ -269,13 +269,8 @@
   border-color: var(--accent);
 }
 
-/* Spiral: cells "seat a card" in spiral order; the newest arrival
+/* Spiral: mini cards seat in spiral order; the newest arrival
    carries a brief accent ring. */
-.seatOn {
-  background: var(--card-face);
-  border-color: var(--rule);
-}
-
 .seatNew {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
@@ -356,14 +351,17 @@
   position: relative;
 }
 
-/* A seated mini card: rank + suit glyph in the suit's tone. */
+/* A seated mini card: rank + suit glyph. Its `--tone` is one of the
+   ON-FACE suit inks (--face-suit-*) — the UI --suit-* set lightens
+   spades for dark surfaces, which washes out on the paper-light card
+   face. 8.5px so the two-char '10' rank fits the cell. */
 .mc {
   display: grid;
   place-items: center;
   background: var(--card-face);
   border-color: var(--rule);
   color: var(--tone);
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -449,27 +447,9 @@
   }
 }
 
-/* ♣ Bonus (75-100%): the J♣ pulses gold as a bonus card pops in. */
-.bonusCell {
-  animation: tour-bonus-cell 6s ease-in-out infinite;
-}
-
-@keyframes tour-bonus-cell {
-  84%,
-  91% {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--warn) 60%, transparent);
-    border-color: var(--warn);
-    transform: translateY(-1px);
-  }
-  0%,
-  80%,
-  95%,
-  100% {
-    box-shadow: none;
-    transform: none;
-  }
-}
-
+/* ♣ Bonus (75-100%): a bonus chip pops in beside the grid — no board
+   card lights up, since the DRAWN club triggers the draw, not a
+   placed one. */
 .bonusPop {
   position: absolute;
   left: calc(50% + 64px);
@@ -548,42 +528,28 @@
   }
 }
 
-/* -- Scoring: rotating example hands (flush / joker straight / full
-   house), three layers crossfading on offsets of one shared cycle.
-   The lead layer's base opacity is the reduced-motion frame. -- */
+/* -- Scoring: every hand type in shuffle-bag order (JS-driven); the
+   keyed block fades in on each swap. Fixed box so the frame never
+   shifts between hands. -- */
 .handCycle {
-  position: relative;
   width: 190px;
   height: 72px;
+  display: flex;
 }
 
-.handLayer {
-  position: absolute;
-  inset: 0;
+.handShow {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  opacity: 0;
-  animation: tour-hand 10.5s linear infinite;
-  animation-delay: var(--d);
+  animation: roll-fade 240ms ease;
 }
 
-.handLead {
-  opacity: 1;
-}
-
-@keyframes tour-hand {
-  0% {
+@keyframes roll-fade {
+  from {
     opacity: 0;
-  }
-  4%,
-  28% {
-    opacity: 1;
-  }
-  33%,
-  100% {
-    opacity: 0;
+    transform: translateY(3px);
   }
 }
 
@@ -627,6 +593,15 @@
   gap: 10px;
 }
 
+/* The keyed inner span of a rotating pill: re-fades on each content
+   swap, inheriting its pill's flex gap. */
+.rollSwap {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  animation: roll-fade 240ms ease;
+}
+
 .demoNavPill {
   display: inline-flex;
   align-items: center;
@@ -637,15 +612,13 @@
   border: 1px solid var(--hairline);
   box-shadow: var(--shadow-sm);
   white-space: nowrap;
-  animation: tour-lift 4s ease-in-out infinite;
-  animation-delay: var(--d);
 }
 
 .demoNavDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--difficulty-easy);
+  background: var(--pill-tone, var(--difficulty-easy));
 }
 
 .demoNavDiff {
@@ -653,7 +626,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--difficulty-easy);
+  color: var(--pill-tone, var(--difficulty-easy));
 }
 
 .demoNavScore {
@@ -682,7 +655,10 @@
 .demoTwistPill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
+  /* Damps resize jitter as the rotating variant names change. */
+  min-width: 120px;
   padding: 5px 9px;
   border-radius: var(--radius-chip);
   background: color-mix(in srgb, var(--accent) 12%, var(--paper-raised));
@@ -692,8 +668,6 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   white-space: nowrap;
-  animation: tour-lift 4s ease-in-out infinite;
-  animation-delay: var(--d);
 }
 
 .demoTwistStar {

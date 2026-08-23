@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Card, Rank, Suit } from '../../game/cards';
+import { LIVE_CHALLENGES } from '../../game/challenges';
+import { freshShuffledDeck, shuffle } from '../../game/deck';
 import { SPIRAL_POSITION } from '../../game/grid';
+import { HandRank } from '../../game/hands';
+import { TARGET_BY_DIFFICULTY } from '../../game/rules';
+import { HAND_BASE_VALUE } from '../../game/scoring';
+import { Difficulty, difficultyColors } from '../../design/tokens';
 import { CardFace } from '../game/components/CardFace';
 import { HandsIcon, ScoringIcon } from '../game/components/icons';
+import { HAND_LABEL } from '../game/handLabels';
 import { prefersReducedMotion } from '../game/useAnimatedNumber';
 import { useSettingsStore } from '../settings/settingsStore';
 import styles from './IntroTour.module.css';
 
 /*
  * The intro tour's six pages: title + copy + a small looping demo.
- * Demos that need scripted or random sequencing (the goal sweep, the
- * spiral fill) drive a class flip from a JS timer; the rest are pure
- * CSS keyframe loops. Both respect reduced motion: the tour card's
- * `.still` class freezes the CSS loops, and the JS demos skip their
- * timers and render a legible static frame instead. Copy adapts the
- * Rules page's "How PokerGrid works" steps.
+ * Demos that need scripted or random sequencing drive a class/content
+ * flip from a JS timer; the rest are pure CSS keyframe loops. Both
+ * respect reduced motion: the tour card's `.still` class freezes the
+ * CSS loops, and the JS demos skip their timers and render a legible
+ * static frame instead. Copy adapts the Rules page's "How PokerGrid
+ * works" steps.
  */
 
 const C = (rank: Rank, suit: Suit): Card => ({ kind: 'standard', rank, suit });
@@ -27,12 +34,77 @@ const JOKER: Card = { kind: 'joker' };
 const useStill = (): boolean =>
   useSettingsStore(s => s.reduceMotion) || prefersReducedMotion();
 
-// A 5×5 of tiny inert cells, classed per index.
-function MiniGrid({ cellClass }: { cellClass: (idx: number) => string }) {
+/**
+ * Shuffle-bag rotation: walk `items` in random order, showing every
+ * one before any repeats — and never the same item twice in a row,
+ * refill boundaries included. The first bag excludes `initial` since
+ * it is already showing.
+ */
+function useShuffleBag<T>(
+  items: readonly T[],
+  intervalMs: number,
+  initial: T
+): T {
+  const still = useStill();
+  const [cur, setCur] = useState(initial);
+  useEffect(() => {
+    if (still) return;
+    let bag = shuffle(items.filter(i => i !== initial));
+    let last = initial;
+    const id = window.setInterval(() => {
+      if (bag.length === 0) {
+        bag = shuffle(items);
+        if (bag[bag.length - 1] === last && bag.length > 1) {
+          [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+        }
+      }
+      last = bag.pop() as T;
+      setCur(last);
+    }, intervalMs);
+    return () => window.clearInterval(id);
+  }, [still, items, intervalMs, initial]);
+  return cur;
+}
+
+const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
+
+// Mini cards live on `--card-face` (paper-light in EVERY theme), so
+// they use the on-face suit inks (`--face-suit-*`, the tokens
+// CardFace's four-color path uses) — the UI `--suit-*` set lightens
+// spades for dark surfaces and washes out on the cream face.
+const mcTone = (suit: Suit): CSSProperties =>
+  ({ '--tone': `var(--face-suit-${suit.toLowerCase()})` }) as CSSProperties;
+
+const mcFace = (card: Card): ReactNode =>
+  card.kind === 'standard' ? (
+    <>
+      {card.rank}
+      {SUIT_GLYPH[card.suit]}
+    </>
+  ) : (
+    '★'
+  );
+
+// A 5×5 of tiny cells, classed/styled/filled per index.
+function MiniGrid({
+  cellClass,
+  cellStyle,
+  cellContent,
+}: {
+  cellClass: (idx: number) => string;
+  cellStyle?: (idx: number) => CSSProperties | undefined;
+  cellContent?: (idx: number) => ReactNode;
+}) {
   return (
     <div className={styles.miniGrid} aria-hidden="true">
       {Array.from({ length: 25 }, (_, i) => (
-        <span key={i} className={`${styles.miniCell} ${cellClass(i)}`} />
+        <span
+          key={i}
+          className={`${styles.miniCell} ${cellClass(i)}`}
+          style={cellStyle?.(i)}
+        >
+          {cellContent?.(i)}
+        </span>
       ))}
     </div>
   );
@@ -68,17 +140,22 @@ function GoalDemo() {
   );
 }
 
+const dealCards = (): Card[] => freshShuffledDeck(Math.random, 0).slice(0, 25);
+
 function SpiralDemo() {
   const still = useStill();
-  // Cards seat one at a time in spiral order; the full board holds a
-  // beat, clears in one clean reset, then the deal loops.
-  const [seated, setSeated] = useState(0);
+  // Real cards seat one at a time in spiral order; the full board
+  // holds a beat, clears in one clean reset, and a FRESH random deal
+  // loops. The initial deal doubles as the reduced-motion frame.
+  const [seated, setSeated] = useState(still ? 25 : 0);
+  const [deal, setDeal] = useState<Card[]>(dealCards);
   useEffect(() => {
     if (still) return;
     let n = 0;
     let id = 0;
     const tick = () => {
       n = n >= 25 ? 0 : n + 1;
+      if (n === 0) setDeal(dealCards());
       setSeated(n);
       const wait = n === 25 ? 1600 : n === 0 ? 600 : 170;
       id = window.setTimeout(tick, wait);
@@ -86,15 +163,23 @@ function SpiralDemo() {
     id = window.setTimeout(tick, 500);
     return () => window.clearTimeout(id);
   }, [still]);
+  const cardAt = (i: number) => deal[SPIRAL_POSITION[i] - 1];
   return (
     <MiniGrid
       cellClass={i => {
-        if (still) return styles.seatOn;
         const p = SPIRAL_POSITION[i];
-        return `${p <= seated ? styles.seatOn : ''} ${
-          p === seated ? styles.seatNew : ''
-        }`;
+        if (p > seated) return '';
+        return `${styles.mc} ${p === seated && !still ? styles.seatNew : ''}`;
       }}
+      cellStyle={i => {
+        const card = cardAt(i);
+        return SPIRAL_POSITION[i] <= seated && card.kind === 'standard'
+          ? mcTone(card.suit)
+          : undefined;
+      }}
+      cellContent={i =>
+        SPIRAL_POSITION[i] <= seated ? mcFace(cardAt(i)) : null
+      }
     />
   );
 }
@@ -119,12 +204,13 @@ const MINI_BOARD: Record<number, [Rank, Suit]> = {
   17: ['Q', 'C'],
   18: ['8', 'S'],
 };
-const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
 
 // Each perk acts on its own cells in one window of the shared 6s
 // cycle, synced to its chip's highlight: ♥ swaps K♥↔2♦, ♠ slides the
-// bottom row into the empty cell beside it, ♦ destroys the 9♥,
-// ♣ pulses the J♣ gold as a bonus card pops in.
+// bottom row into the empty cell beside it, ♦ destroys the 9♥. The ♣
+// window pops a bonus chip beside the grid instead — no board card
+// lights up, because the DRAWN club triggers the draw, not a placed
+// one.
 const PERK_CELL: Record<number, string> = {
   7: styles.swapRight,
   8: styles.swapLeft,
@@ -132,7 +218,6 @@ const PERK_CELL: Record<number, string> = {
   17: styles.slideCell,
   18: styles.slideCell,
   13: styles.destroyCell,
-  11: styles.bonusCell,
 };
 
 function PerksDemo() {
@@ -153,29 +238,22 @@ function PerksDemo() {
         ))}
       </div>
       <div className={styles.perkBoard}>
-        <div className={styles.miniGrid}>
-          {Array.from({ length: 25 }, (_, i) => {
-            const card = MINI_BOARD[i];
-            if (!card) return <span key={i} className={styles.miniCell} />;
-            const [rank, suit] = card;
-            return (
-              <span
-                key={i}
-                className={`${styles.miniCell} ${styles.mc} ${
-                  PERK_CELL[i] ?? ''
-                }`}
-                style={
-                  {
-                    '--tone': `var(--suit-${suit.toLowerCase()})`,
-                  } as CSSProperties
-                }
-              >
-                {rank}
-                {SUIT_GLYPH[suit]}
-              </span>
-            );
-          })}
-        </div>
+        <MiniGrid
+          cellClass={i =>
+            MINI_BOARD[i] ? `${styles.mc} ${PERK_CELL[i] ?? ''}` : ''
+          }
+          cellStyle={i =>
+            MINI_BOARD[i] ? mcTone(MINI_BOARD[i][1]) : undefined
+          }
+          cellContent={i =>
+            MINI_BOARD[i] ? (
+              <>
+                {MINI_BOARD[i][0]}
+                {SUIT_GLYPH[MINI_BOARD[i][1]]}
+              </>
+            ) : null
+          }
+        />
         <span className={styles.bonusPop}>+ bonus</span>
       </div>
     </div>
@@ -205,85 +283,126 @@ function BonusDemo() {
   );
 }
 
-// Rotating example hands (values from HAND_BASE_VALUE); the straight
-// shows a joker standing in as the missing 7.
-const HAND_LOOP: Array<{ label: string; cards: Card[] }> = [
-  {
-    label: 'Flush +40',
-    cards: [C('9', 'H'), C('J', 'H'), C('3', 'H'), C('Q', 'H'), C('6', 'H')],
-  },
-  {
-    label: 'Straight +30',
-    cards: [C('5', 'D'), C('6', 'S'), JOKER, C('8', 'H'), C('9', 'C')],
-  },
-  {
-    label: 'Full house +50',
-    cards: [C('K', 'S'), C('K', 'H'), C('K', 'D'), C('9', 'C'), C('9', 'S')],
-  },
-];
+// One example per hand type (labels/values come from the real
+// HAND_LABEL / HAND_BASE_VALUE maps); the straight's joker stands in
+// as the missing 7, and Five of a Kind needs one by definition.
+const HAND_EXAMPLES: Record<HandRank, Card[]> = {
+  HIGH_CARD: [C('K', 'S'), C('9', 'D'), C('7', 'H'), C('4', 'C'), C('2', 'S')],
+  PAIR: [C('8', 'H'), C('8', 'C'), C('K', 'D'), C('5', 'S'), C('2', 'H')],
+  TWO_PAIR: [C('J', 'S'), C('J', 'D'), C('4', 'H'), C('4', 'C'), C('9', 'S')],
+  THREE_OF_A_KIND: [
+    C('Q', 'H'),
+    C('Q', 'S'),
+    C('Q', 'D'),
+    C('7', 'C'),
+    C('3', 'H'),
+  ],
+  STRAIGHT: [C('5', 'D'), C('6', 'S'), JOKER, C('8', 'H'), C('9', 'C')],
+  FLUSH: [C('9', 'H'), C('J', 'H'), C('3', 'H'), C('Q', 'H'), C('6', 'H')],
+  FULL_HOUSE: [C('K', 'S'), C('K', 'H'), C('K', 'D'), C('9', 'C'), C('9', 'S')],
+  FOUR_OF_A_KIND: [
+    C('A', 'C'),
+    C('A', 'D'),
+    C('A', 'H'),
+    C('A', 'S'),
+    C('6', 'D'),
+  ],
+  STRAIGHT_FLUSH: [
+    C('5', 'C'),
+    C('6', 'C'),
+    C('7', 'C'),
+    C('8', 'C'),
+    C('9', 'C'),
+  ],
+  ROYAL_FLUSH: [
+    C('10', 'S'),
+    C('J', 'S'),
+    C('Q', 'S'),
+    C('K', 'S'),
+    C('A', 'S'),
+  ],
+  FIVE_OF_A_KIND: [C('7', 'D'), C('7', 'C'), C('7', 'H'), C('7', 'S'), JOKER],
+};
+const ALL_HANDS = Object.keys(HAND_EXAMPLES) as HandRank[];
 
 function ScoringDemo() {
-  // Three stacked layers crossfade on offsets of one shared cycle;
-  // the reduced-motion frame is the lead layer (base opacity).
+  // Every hand type in shuffle-bag order; the flush is the
+  // reduced-motion frame.
+  const rank = useShuffleBag<HandRank>(ALL_HANDS, 3200, 'FLUSH');
   return (
     <div className={styles.handCycle} aria-hidden="true">
-      {HAND_LOOP.map(({ label, cards }, i) => (
-        <div
-          key={label}
-          className={`${styles.handLayer} ${i === 0 ? styles.handLead : ''}`}
-          style={{ '--d': `${i * 3.5}s` } as CSSProperties}
-        >
-          <div className={styles.flushCards}>
-            {cards.map((card, j) => (
-              <span key={j} className={styles.flushCard}>
-                <CardFace card={card} />
-              </span>
-            ))}
-          </div>
-          <span className={styles.flushScore}>{label}</span>
+      <div key={rank} className={styles.handShow}>
+        <div className={styles.flushCards}>
+          {HAND_EXAMPLES[rank].map((card, j) => (
+            <span key={j} className={styles.flushCard}>
+              <CardFace card={card} />
+            </span>
+          ))}
         </div>
-      ))}
+        <span className={styles.flushScore}>
+          {HAND_LABEL[rank]} +{HAND_BASE_VALUE[rank]}
+        </span>
+      </div>
     </div>
   );
 }
 
+const DEMO_DIFFS: Difficulty[] = ['easy', 'medium', 'hard'];
+const TWIST_NAMES = LIVE_CHALLENGES.map(c => c.name);
+
 function ExploreDemo() {
-  // Miniatures of the real in-game pills (GameScreen's navPill,
-  // twistPill, and the Hands/Scoring row buttons with their icons) —
-  // same casing, tones, and chrome, so the tour teaches exactly what
-  // the player will see.
+  // Miniatures of the real in-game pills. The difficulty pill walks
+  // easy → medium → hard with each tier's true tone and target
+  // (difficultyColors / TARGET_BY_DIFFICULTY — the navPill's own
+  // sources); the twist pill shuffle-bags through every live variant.
+  const still = useStill();
+  const [diffIdx, setDiffIdx] = useState(0);
+  useEffect(() => {
+    if (still) return;
+    const id = window.setInterval(
+      () => setDiffIdx(i => (i + 1) % DEMO_DIFFS.length),
+      2600
+    );
+    return () => window.clearInterval(id);
+  }, [still]);
+  const diff = DEMO_DIFFS[diffIdx];
+  const twist = useShuffleBag(TWIST_NAMES, 2200, 'Five Draw');
   return (
     <div className={styles.pillsDemo} aria-hidden="true">
       <div className={styles.pillRow}>
         <span
           className={styles.demoNavPill}
-          style={{ '--d': '0s' } as CSSProperties}
+          style={{ '--pill-tone': difficultyColors[diff] } as CSSProperties}
         >
-          <span className={styles.demoNavDot} />
-          <span className={styles.demoNavDiff}>easy</span>
-          <span className={styles.demoNavScore}>
-            0<span className={styles.demoNavTarget}>/ 400</span>
+          <span key={diff} className={styles.rollSwap}>
+            <span className={styles.demoNavDot} />
+            <span className={styles.demoNavDiff}>{diff}</span>
+            <span className={styles.demoNavScore}>
+              0
+              <span className={styles.demoNavTarget}>
+                / {TARGET_BY_DIFFICULTY[diff]}
+              </span>
+            </span>
           </span>
         </span>
-        <span
-          className={styles.demoTwistPill}
-          style={{ '--d': '1s' } as CSSProperties}
-        >
-          <span className={styles.demoTwistStar}>✦</span>
-          Five Draw
+        <span className={styles.demoTwistPill}>
+          <span key={twist} className={styles.rollSwap}>
+            <span className={styles.demoTwistStar}>✦</span>
+            {twist}
+          </span>
         </span>
       </div>
       <div className={styles.pillRow}>
         <span
           className={styles.demoCtrlBtn}
-          style={{ '--d': '2s' } as CSSProperties}
+          style={{ '--d': '0s' } as CSSProperties}
         >
           <HandsIcon />
           Hands
         </span>
         <span
           className={styles.demoCtrlBtn}
-          style={{ '--d': '3s' } as CSSProperties}
+          style={{ '--d': '2s' } as CSSProperties}
         >
           <ScoringIcon />
           Scoring
