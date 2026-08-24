@@ -77,6 +77,24 @@ const PALETTES: Record<ThemeKey, Palette> = {
     accent: '#33a06a',
     onAccent: '#ffffff',
   },
+  draft: {
+    bg: '#eef2f4',
+    panel: '#f8fbfc',
+    outline: 'rgba(23, 36, 46, 0.18)',
+    textHi: '#17242e',
+    textMid: '#51616d',
+    accent: '#1d6ca8',
+    onAccent: '#ffffff',
+  },
+  'draft-dark': {
+    bg: '#0d2136',
+    panel: '#132c47',
+    outline: 'rgba(217, 232, 245, 0.16)',
+    textHi: '#d9e8f5',
+    textMid: '#9db8cd',
+    accent: '#6fb7e8',
+    onAccent: '#0d2136',
+  },
 };
 
 // ---- HTML builder -----------------------------------------------------------

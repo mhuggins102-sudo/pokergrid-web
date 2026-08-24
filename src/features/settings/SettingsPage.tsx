@@ -255,12 +255,13 @@ export function SettingsPage() {
       <Section title="Appearance">
         <Row
           title="Theme"
-          hint="Card Room felt or Morning Paper editorial, light or dark."
+          hint="Card Room felt, Morning Paper editorial, or Drafting Room blueprint — light or dark."
         >
           {seg<ThemeFamily>(
             [
               ['paper', 'Morning Paper'],
               ['card-room', 'Card Room'],
+              ['draft', 'Drafting Room'],
             ],
             settings.themeFamily,
             themeFamily => patch({ themeFamily }),

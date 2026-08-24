@@ -29,7 +29,13 @@ export type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'T' | '
 export type Suit = 'H' | 'S' | 'D' | 'C';
 export type ModeLabel = 'Free' | 'Targets Up' | 'Challenge' | 'Daily';
 export type Tier = 'SS' | 'S' | 'A' | 'B' | 'C' | 'D';
-export type ThemeKey = 'paper' | 'paper-dark' | 'card-room' | 'card-room-dark';
+export type ThemeKey =
+  | 'paper'
+  | 'paper-dark'
+  | 'card-room'
+  | 'card-room-dark'
+  | 'draft'
+  | 'draft-dark';
 
 // Mirrors TIER_RULES in src/features/game/components/TierBreakdownSheet.
 export const TIER_LABEL: Record<Tier, string> = {
@@ -47,6 +53,8 @@ const THEMES: Set<string> = new Set([
   'paper-dark',
   'card-room',
   'card-room-dark',
+  'draft',
+  'draft-dark',
 ]);
 
 const RANKS: Set<string> = new Set(['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K']);

@@ -191,11 +191,14 @@
  * toggle tracks), and the two opt-in tokens square the round controls
  * (toggle knobs, header icon buttons) that stay circles in every other
  * theme via their 50% fallback. Card Room inherits the :root scale
- * untouched. Functional circles — status dots, ⓘ markers, the
- * progress ring — stay round on purpose.
+ * untouched. Drafting Room shares the squared personality — crisp
+ * technical edges suit the drawing board. Functional circles — status
+ * dots, ⓘ markers, the progress ring — stay round on purpose.
  */
 [data-theme='paper'],
-[data-theme='paper-dark'] {
+[data-theme='paper-dark'],
+[data-theme='draft'],
+[data-theme='draft-dark'] {
   --radius-xs: 1px;
   --radius-sm: 2px;
   --radius-md: 3px;
@@ -469,6 +472,127 @@
      the default --home-surface applies.) */
 
   /* Card Room body font (Space Grotesk); display stays Fraunces. */
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+  --font-body: 'Space Grotesk Variable', 'Space Grotesk', system-ui,
+    sans-serif;
+}
+
+/*
+ * "Drafting Room" — the third family: an architect's drafting table.
+ * Light is cool tracing paper with india ink and a cobalt drafting
+ * accent; dark is a cyanotype BLUEPRINT — Prussian-blue paper, chalk
+ * lines, luminous cyan accent. Shares Morning Paper's squared radius
+ * personality (crisp technical edges, block above) and Card Room's
+ * Space Grotesk body (geometric, instrument-panel voice); display
+ * stays Fraunces. Card faces stay paper-light in dark mode with the
+ * light face inks — same invariant as the other dark themes.
+ */
+[data-theme='draft'] {
+  --paper: #eef2f4;
+  --paper-raised: #f8fbfc;
+  --paper-sunken: #e2e9ed;
+  --felt: #24567c;
+
+  --ink: #17242e;
+  --ink-2: #51616d;
+  --ink-3: #6e7d88;
+  --hairline: rgba(23, 36, 46, 0.18);
+  --scrim: rgba(15, 26, 34, 0.5);
+  --rule: rgba(23, 36, 46, 0.34);
+
+  --card-face: #fdfefe;
+  --card-red: #b02f2a;
+  --card-black: #1b2733;
+  --card-back: #24567c;
+  --card-shadow: 0 1px 2px rgba(23, 36, 46, 0.14);
+
+  --suit-h: #b02f2a;
+  --suit-d: #2456a6;
+  --suit-c: #17796b;
+  --suit-s: #1b2733;
+  --joker: #6b4fa0;
+
+  --face-suit-h: #b02f2a;
+  --face-suit-d: #2456a6;
+  --face-suit-c: #17796b;
+  --face-suit-s: #1b2733;
+
+  --accent: #1d6ca8;
+  --on-accent: #ffffff;
+  --warn: #a8731f;
+  --danger: #b3372e;
+  --success: #2e7d5b;
+
+  --difficulty-easy: #2e7d5b;
+  --difficulty-medium: #a8731f;
+  --difficulty-hard: #bd4f2c;
+  --difficulty-extreme: #a3243c;
+
+  --shadow-sm: 0 1px 2px rgba(23, 36, 46, 0.08);
+  --shadow-md: 0 2px 6px rgba(23, 36, 46, 0.1);
+  --shadow-lg: 0 6px 18px rgba(23, 36, 46, 0.14);
+
+  --wm-opacity: 0.05;
+  --masthead-rule: 1px solid var(--rule);
+
+  /* Drafting Room voice: Fraunces display over Space Grotesk body. */
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+  --font-body: 'Space Grotesk Variable', 'Space Grotesk', system-ui,
+    sans-serif;
+}
+
+/* Drafting Room, lights off: the cyanotype blueprint. */
+[data-theme='draft-dark'] {
+  --paper: #0d2136;
+  --paper-raised: #132c47;
+  --paper-sunken: #091827;
+  --felt: #123a5c;
+
+  --ink: #d9e8f5;
+  --ink-2: #9db8cd;
+  --ink-3: #7c97ac;
+  --hairline: rgba(217, 232, 245, 0.16);
+  --scrim: rgba(4, 12, 20, 0.62);
+  --rule: rgba(217, 232, 245, 0.3);
+
+  /* Faces stay paper-light (the shared dark-theme invariant), so the
+     face inks keep their light-theme values below. */
+  --card-face: #eef3f0;
+  --card-red: #b02f2a;
+  --card-black: #1b2733;
+  --card-back: #1d4e7c;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  /* UI suit glyphs brighten for the Prussian ground. */
+  --suit-h: #e0605a;
+  --suit-d: #6fb7e8;
+  --suit-c: #57c0a8;
+  --suit-s: #a9c0d2;
+  --joker: #a78bdb;
+
+  --face-suit-h: #b02f2a;
+  --face-suit-d: #2456a6;
+  --face-suit-c: #17796b;
+  --face-suit-s: #1b2733;
+
+  --accent: #6fb7e8;
+  --on-accent: #0d2136;
+  --warn: #d9a93e;
+  --danger: #e0605a;
+  --success: #57c0a8;
+
+  --difficulty-easy: #4fae85;
+  --difficulty-medium: #d9a93e;
+  --difficulty-hard: #e07a50;
+  --difficulty-extreme: #e05a68;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 22px rgba(0, 0, 0, 0.5);
+
+  --wm-opacity: 0.07;
+  --masthead-rule: 1px solid var(--rule);
+
   --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
   --font-body: 'Space Grotesk Variable', 'Space Grotesk', system-ui,
     sans-serif;
