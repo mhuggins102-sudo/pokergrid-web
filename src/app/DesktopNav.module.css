@@ -497,16 +497,19 @@
   outline-offset: 2px;
 }
 
-/* Desktop (≥1024) Morning Paper: the broadsheet dateline strip appears as
-   a full-width row above the nameplate, and the inline "Thu · Jul 9"
-   yields to it (the strip carries the date). Gated to the paper themes so
-   Card Room keeps its inline date and shows no strip; gated to ≥1024 so
-   the denser tablet/phone headers never grow a third row. The strip is a
+/* Desktop (≥1024) Morning Paper + Drafting Room: the decorative strip
+   (broadsheet dateline / drawing title block) appears as a full-width
+   row above the nameplate, and the inline "Thu · Jul 9" yields to it
+   (the strip carries the date). Gated to those families so Card Room
+   keeps its inline date and shows no strip; gated to ≥1024 so the
+   denser tablet/phone headers never grow a third row. The strip is a
    display:none element in every other theme/tier, so those layouts are
    byte-identical. */
 @media (min-width: 1024px) { /* bp-desktop */
   :global(:root[data-theme='paper']) .editionStrip,
-  :global(:root[data-theme='paper-dark']) .editionStrip {
+  :global(:root[data-theme='paper-dark']) .editionStrip,
+  :global(:root[data-theme='draft']) .editionStrip,
+  :global(:root[data-theme='draft-dark']) .editionStrip {
     display: flex;
     grid-column: 1 / -1;
     justify-content: space-between;
@@ -520,7 +523,9 @@
   }
 
   :global(:root[data-theme='paper']) .dateline,
-  :global(:root[data-theme='paper-dark']) .dateline {
+  :global(:root[data-theme='paper-dark']) .dateline,
+  :global(:root[data-theme='draft']) .dateline,
+  :global(:root[data-theme='draft-dark']) .dateline {
     display: none;
   }
 }
