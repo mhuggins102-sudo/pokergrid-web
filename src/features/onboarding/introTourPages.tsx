@@ -419,23 +419,49 @@ function ExploreDemo() {
 }
 
 function XpDemo() {
-  // XP bar ticking over a level with a deck unlock popping in, over
-  // the customization chips. The still frame is the mid-fill bar with
-  // the unlock chip showing.
-  return (
-    <div className={styles.xpDemo} aria-hidden="true">
-      <div className={styles.xpRow}>
-        <span className={styles.xpLevel}>LVL 4</span>
-        <span className={styles.xpTrack}>
-          <span className={styles.xpFill} />
-        </span>
-        <span className={styles.xpUnlock}>New deck!</span>
-      </div>
-      <div className={styles.lookRow}>
-        <span className={styles.lookChip}>Paper</span>
-        <span className={styles.lookChip}>Card Room</span>
-        <span className={styles.lookChip}>☀ / ☾</span>
-      </div>
+  // Two alternating scenes on one beat clock: the end-of-game
+  // level-up moment (the ResultView "+N XP" / "⬆ Level reached" chip
+  // styling, with the bar filling between them), then a full board
+  // re-inking as the 2-/4-color deck setting toggles. The still frame
+  // is the completed level-up scene.
+  const still = useStill();
+  const [t, setT] = useState(0);
+  const [board] = useState<Card[]>(dealCards);
+  useEffect(() => {
+    if (still) return;
+    const id = window.setInterval(() => setT(x => x + 1), 1400);
+    return () => window.clearInterval(id);
+  }, [still]);
+  const beat = t % 6;
+  const cycle = Math.floor(t / 6);
+  const levelScene = still || beat < 3;
+  const fourColor = beat % 2 === 0;
+  return levelScene ? (
+    <div key={`lvl-${cycle}`} className={styles.xpScene} aria-hidden="true">
+      <span className={styles.xpGain}>+120 XP</span>
+      <span className={styles.xpTrack}>
+        <span className={styles.xpFill} />
+      </span>
+      <span className={styles.xpLevelUp}>⬆ Level 4 reached</span>
+    </div>
+  ) : (
+    <div key={`looks-${cycle}`} className={styles.lookScene} aria-hidden="true">
+      <MiniGrid
+        cellClass={() => styles.mc}
+        cellStyle={i => {
+          const card = board[i];
+          if (card.kind !== 'standard') return undefined;
+          if (fourColor) return mcTone(card.suit);
+          const red = card.suit === 'H' || card.suit === 'D';
+          return {
+            '--tone': red ? 'var(--card-red)' : 'var(--card-black)',
+          } as CSSProperties;
+        }}
+        cellContent={i => mcFace(board[i])}
+      />
+      <span key={String(fourColor)} className={styles.lookLabel}>
+        {fourColor ? '4-color deck' : '2-color deck'}
+      </span>
     </div>
   );
 }
@@ -487,7 +513,7 @@ export const TOUR_PAGES: TourPage[] = [
   {
     id: 'progress',
     title: 'Level up, unlock decks',
-    body: 'Every game earns XP, and leveling up unlocks new deck designs. Visit Settings to equip them and pick your look — two themes, each with light and dark modes.',
+    body: 'Every game earns XP, and leveling up unlocks new deck designs. Visit Settings to equip them and set your look — theme, light or dark mode, 2- or 4-color deck, and more. On phones, the ☰ menu in the top-right corner tweaks these mid-game too.',
     demo: <XpDemo />,
   },
 ];
