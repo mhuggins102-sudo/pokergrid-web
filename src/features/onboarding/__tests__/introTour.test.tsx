@@ -28,10 +28,10 @@ beforeEach(() => {
 });
 
 describe('IntroTour — paging', () => {
-  test('opens on page 1 of 7 with back disabled', () => {
+  test('opens on page 1 of 8 with back disabled', () => {
     openTour();
     expect(dialog()).toBeInTheDocument();
-    expect(screen.getByText('1 / 7')).toBeInTheDocument();
+    expect(screen.getByText('1 / 8')).toBeInTheDocument();
     expect(
       screen.getByText('Build 10 poker hands at once')
     ).toBeInTheDocument();
@@ -41,19 +41,19 @@ describe('IntroTour — paging', () => {
   test('▶ and ◀ page forward and back', () => {
     openTour();
     fireEvent.click(next());
-    expect(screen.getByText('2 / 7')).toBeInTheDocument();
+    expect(screen.getByText('2 / 8')).toBeInTheDocument();
     expect(
       screen.getByText('Place cards along the spiral')
     ).toBeInTheDocument();
     expect(prev()).toBeEnabled();
     fireEvent.click(prev());
-    expect(screen.getByText('1 / 7')).toBeInTheDocument();
+    expect(screen.getByText('1 / 8')).toBeInTheDocument();
   });
 
   test('the last page swaps ▶ for a Start playing CTA that closes', () => {
     const onClose = openTour();
-    for (let i = 0; i < 6; i++) fireEvent.click(next());
-    expect(screen.getByText('7 / 7')).toBeInTheDocument();
+    for (let i = 0; i < 7; i++) fireEvent.click(next());
+    expect(screen.getByText('8 / 8')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next page' })).toBeNull();
     const cta = screen.getByRole('button', { name: 'Start playing' });
     fireEvent.click(cta);
@@ -92,14 +92,14 @@ describe('IntroTour — dismissal contract', () => {
   test('reaching the last page marks the tour seen and ticks the box', () => {
     openTour();
     expect(introTourChoice()).toBeNull();
-    for (let i = 0; i < 6; i++) fireEvent.click(next());
+    for (let i = 0; i < 7; i++) fireEvent.click(next());
     expect(introTourChoice()).toBe('seen');
     expect(screen.getByRole('checkbox')).toBeChecked();
   });
 
   test('unticking after finishing overrides the auto-mark', () => {
     openTour();
-    for (let i = 0; i < 6; i++) fireEvent.click(next());
+    for (let i = 0; i < 7; i++) fireEvent.click(next());
     expect(introTourChoice()).toBe('seen');
     fireEvent.click(screen.getByRole('checkbox'));
     expect(introTourChoice()).toBe('show');
