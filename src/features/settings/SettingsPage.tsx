@@ -258,10 +258,12 @@ export function SettingsPage() {
           hint="Card Room felt, Morning Paper editorial, or Drafting Room blueprint — light or dark."
         >
           {seg<ThemeFamily>(
+            // Short chip labels so all three fit beside the row title;
+            // the hint carries the full family names.
             [
-              ['paper', 'Morning Paper'],
+              ['paper', 'Paper'],
               ['card-room', 'Card Room'],
-              ['draft', 'Drafting Room'],
+              ['draft', 'Drafting'],
             ],
             settings.themeFamily,
             themeFamily => patch({ themeFamily }),

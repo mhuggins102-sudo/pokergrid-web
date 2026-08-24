@@ -535,10 +535,11 @@
   --wm-opacity: 0.05;
   --masthead-rule: 1px solid var(--rule);
 
-  /* Drafting Room voice: Fraunces display over Space Grotesk body. */
-  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
-  --font-body: 'Space Grotesk Variable', 'Space Grotesk', system-ui,
-    sans-serif;
+  /* Drafting Room voice: title-block mono display (the wordmark and
+     headings read as stamped lettering) over a clean technical sans
+     body. */
+  --font-display: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
 /* Drafting Room, lights off: the cyanotype blueprint. */
@@ -593,7 +594,6 @@
   --wm-opacity: 0.07;
   --masthead-rule: 1px solid var(--rule);
 
-  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
-  --font-body: 'Space Grotesk Variable', 'Space Grotesk', system-ui,
-    sans-serif;
+  --font-display: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
 }

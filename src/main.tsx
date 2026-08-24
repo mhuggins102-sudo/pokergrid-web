@@ -4,8 +4,17 @@ import { RouterProvider } from 'react-router/dom';
 
 import '@fontsource-variable/fraunces/index.css';
 import '@fontsource-variable/inter/index.css';
-// Card Room + Drafting Room body font (Morning Paper keeps Inter).
+// Card Room's body font (Morning Paper keeps Inter).
 import '@fontsource-variable/space-grotesk/index.css';
+// Drafting Room's voice: IBM Plex Mono display over IBM Plex Sans
+// body. Static cuts — only the weights the app actually sets.
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-sans/700.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/600.css';
+import '@fontsource/ibm-plex-mono/700.css';
 // Deck-skin display fonts (used only on skinned card faces).
 import '@fontsource/special-elite/index.css';
 import '@fontsource/press-start-2p/index.css';
