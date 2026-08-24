@@ -784,6 +784,11 @@
   font-weight: 700;
   white-space: nowrap;
   animation: roll-fade 240ms ease;
+  transition:
+    border-color 220ms ease-in-out,
+    color 220ms ease-in-out,
+    box-shadow 220ms ease-in-out,
+    transform 220ms ease-in-out;
 }
 
 /* Slide 7's board scene sits in one row: board left, the two option
@@ -802,29 +807,15 @@
   gap: 8px;
 }
 
-/* The option that just flipped pulses like the perk chips — accent
-   ring + lift — so the eye lands on what changed. Composed with the
-   keyed roll-fade so the value swap still fades in. */
+/* The option that just flipped highlights EXACTLY like the perk
+   chips (tour-perk's held frame): accent border, 1px inset ring, a
+   2px lift — easing in, holding while active, easing back out via
+   the base transition. */
 .lookLabelOn {
   border-color: var(--accent);
   color: var(--accent);
-  animation:
-    roll-fade 240ms ease,
-    look-pulse 1.4s ease-in-out 240ms infinite;
-}
-
-@keyframes look-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 1px var(--accent) inset;
-    transform: translateY(-1px);
-  }
-  50% {
-    box-shadow:
-      0 0 0 1px var(--accent) inset,
-      0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-    transform: translateY(-2px);
-  }
+  box-shadow: 0 0 0 1px var(--accent) inset;
+  transform: translateY(-2px);
 }
 
 /* Board + reserved rail tracks (right = rows, below = columns): the
