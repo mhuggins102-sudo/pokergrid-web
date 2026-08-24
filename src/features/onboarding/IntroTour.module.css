@@ -786,12 +786,20 @@
   animation: roll-fade 240ms ease;
 }
 
-/* Slide 7's scenes sit in one row: visual left, option label right. */
+/* Slide 7's board scene sits in one row: board left, the two option
+   status chips stacked on the right (both always visible). */
 .lookRowScene {
   display: flex;
   align-items: center;
   gap: 14px;
   animation: roll-fade 240ms ease;
+}
+
+.lookLabelCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 /* Board + reserved rail tracks (right = rows, below = columns): the
@@ -861,17 +869,23 @@
   animation: roll-fade 240ms ease;
 }
 
-.dockMock {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dockStackWrap {
+/* One shared surface under every arrangement, so the pieces read as a
+   single dock rather than floating parts. */
+.dockPanel {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 7px;
+  padding: 9px 12px;
+  border-radius: var(--radius-panel);
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+}
+
+.dockPanelRow {
+  flex-direction: row;
+  gap: 10px;
 }
 
 .dockRow {
@@ -923,7 +937,7 @@
 .dockBtn {
   padding: 3px 9px;
   border-radius: var(--radius-button);
-  background: var(--paper-raised);
+  background: var(--paper);
   border: 1px solid var(--hairline);
   color: var(--ink-2);
   font-size: 9.5px;

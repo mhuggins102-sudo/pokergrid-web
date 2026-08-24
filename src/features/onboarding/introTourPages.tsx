@@ -442,7 +442,8 @@ function BonusSlots({ column = false }: { column?: boolean }) {
 // One phone dock arrangement in miniature, bonus positioning
 // included: Hand stack / Classic / Center stage carry the bonus strip
 // ABOVE the dock (GameScreen renders BonusCardStrip there); Split
-// pairs a bonus COLUMN beside the 2×2 action grid.
+// pairs a bonus COLUMN beside the 2×2 action grid. Everything sits on
+// one shared panel surface so the buttons read as a unified dock.
 function DockMock({ layout }: { layout: DockLayout }) {
   const card = <span className={styles.dockCard}>Q♥</span>;
   const btn = (label: string, primary = false) => (
@@ -454,7 +455,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
   );
   if (layout === 'desktop') {
     return (
-      <div className={styles.dockMock}>
+      <div className={`${styles.dockPanel} ${styles.dockPanelRow}`}>
         <BonusSlots column />
         {card}
         <span className={styles.dockBtnGrid}>
@@ -468,7 +469,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
   }
   if (layout === 'classic') {
     return (
-      <div className={styles.dockStackWrap}>
+      <div className={styles.dockPanel}>
         <BonusSlots />
         <span className={styles.dockRow}>
           {card}
@@ -482,7 +483,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
   }
   if (layout === 'center-stage') {
     return (
-      <div className={styles.dockStackWrap}>
+      <div className={styles.dockPanel}>
         <BonusSlots />
         <span className={styles.dockRow}>
           <span className={styles.dockBtnCol}>
@@ -499,7 +500,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
     );
   }
   return (
-    <div className={styles.dockStackWrap}>
+    <div className={styles.dockPanel}>
       <BonusSlots />
       <span className={styles.dockRow}>
         {card}
@@ -524,11 +525,12 @@ const DOCK_CYCLE: DockLayout[] = [
 ];
 
 function LookDemo() {
-  // Three settings scenes on one beat clock: the board re-inking as
-  // the 2-/4-color deck flips, the line rails fading in beside and
-  // below the board (tracks reserved so nothing shifts), and the dock
-  // walking all four phone layouts — each labeled beside the visual.
-  // The still frame is the four-color board.
+  // Two scenes on one beat clock. The board scene (beats 0-5) shows
+  // BOTH options at once — the 2/4-color and line-rails status chips
+  // stacked beside the board — and flips them alternately: color,
+  // rails, color, rails. The dock scene (beats 6-9) walks all four
+  // phone layouts, named beneath. The still frame is the four-color
+  // board with rails shown.
   const still = useStill();
   const [t, setT] = useState(0);
   const [board] = useState<Card[]>(dealCards);
@@ -539,71 +541,80 @@ function LookDemo() {
   }, [still]);
   const beat = t % 10;
   const cycle = Math.floor(t / 10);
-  const scene = still || beat < 3 ? 'colors' : beat < 6 ? 'rails' : 'dock';
-  const on = still || beat % 2 === 0;
+  const scene = still || beat < 6 ? 'board' : 'dock';
+  // Alternating single-option flips: 4c/off → 2c/off → 2c/on →
+  // 4c/on → 4c/off → 2c/off → (docks).
+  const fourColor = still || beat % 4 === 0 || beat % 4 === 3;
+  const railsOn = still || (beat < 6 && beat % 4 >= 2);
   const dock = DOCK_CYCLE[Math.max(0, beat - 6)];
-  const railsOn = scene === 'rails' && on;
-  const label =
-    scene === 'colors'
-      ? on
-        ? '4-color deck'
-        : '2-color deck'
-      : scene === 'rails'
-        ? on
-          ? 'Line rails · on'
-          : 'Line rails · off'
-        : `Dock · ${DOCK_LAYOUT_LABEL[dock]}`;
-  return (
-    <div
-      key={`${scene}-${cycle}`}
-      className={styles.lookRowScene}
-      aria-hidden="true"
-    >
-      {scene === 'dock' ? (
+  if (scene === 'dock') {
+    return (
+      <div
+        key={`dock-${cycle}`}
+        className={styles.lookScene}
+        aria-hidden="true"
+      >
         <span key={dock} className={styles.dockSwap}>
           <DockMock layout={dock} />
         </span>
-      ) : (
-        <div className={`${styles.boardRails} ${styles.lookBig}`}>
-          <MiniGrid
-            cellClass={() => styles.mc}
-            cellStyle={i => {
-              const card = board[i];
-              if (card.kind !== 'standard') return undefined;
-              if (scene !== 'colors' || on) return mcTone(card.suit);
-              const red = card.suit === 'H' || card.suit === 'D';
-              return {
-                '--tone': red ? 'var(--card-red)' : 'var(--card-black)',
-              } as CSSProperties;
-            }}
-            cellContent={i => mcFace(board[i])}
-          />
-          <span
-            className={`${styles.railsRight} ${
-              railsOn ? styles.railsShown : ''
-            }`}
-          >
-            {ROW_TOTALS.map((v, i) => (
-              <span key={i} className={styles.railChip}>
-                {v}
-              </span>
-            ))}
-          </span>
-          <span
-            className={`${styles.railsBelow} ${
-              railsOn ? styles.railsShown : ''
-            }`}
-          >
-            {COL_TOTALS.map((v, i) => (
-              <span key={i} className={styles.railChip}>
-                {v}
-              </span>
-            ))}
-          </span>
-        </div>
-      )}
-      <span key={label} className={styles.lookLabel}>
-        {label}
+        <span key={`l-${dock}`} className={styles.lookLabel}>
+          Dock · {DOCK_LAYOUT_LABEL[dock]}
+        </span>
+      </div>
+    );
+  }
+  const colorLabel = fourColor ? '4-color deck' : '2-color deck';
+  const railLabel = railsOn ? 'Line rails · on' : 'Line rails · off';
+  return (
+    <div
+      key={`board-${cycle}`}
+      className={styles.lookRowScene}
+      aria-hidden="true"
+    >
+      <div className={`${styles.boardRails} ${styles.lookBig}`}>
+        <MiniGrid
+          cellClass={() => styles.mc}
+          cellStyle={i => {
+            const card = board[i];
+            if (card.kind !== 'standard') return undefined;
+            if (fourColor) return mcTone(card.suit);
+            const red = card.suit === 'H' || card.suit === 'D';
+            return {
+              '--tone': red ? 'var(--card-red)' : 'var(--card-black)',
+            } as CSSProperties;
+          }}
+          cellContent={i => mcFace(board[i])}
+        />
+        <span
+          className={`${styles.railsRight} ${
+            railsOn ? styles.railsShown : ''
+          }`}
+        >
+          {ROW_TOTALS.map((v, i) => (
+            <span key={i} className={styles.railChip}>
+              {v}
+            </span>
+          ))}
+        </span>
+        <span
+          className={`${styles.railsBelow} ${
+            railsOn ? styles.railsShown : ''
+          }`}
+        >
+          {COL_TOTALS.map((v, i) => (
+            <span key={i} className={styles.railChip}>
+              {v}
+            </span>
+          ))}
+        </span>
+      </div>
+      <span className={styles.lookLabelCol}>
+        <span key={colorLabel} className={styles.lookLabel}>
+          {colorLabel}
+        </span>
+        <span key={railLabel} className={styles.lookLabel}>
+          {railLabel}
+        </span>
       </span>
     </div>
   );
