@@ -496,6 +496,10 @@ function DockBtn({
 // game: the full-width strip above the stacked docks, the stacked
 // column beside Split.
 function DockMock({ layout }: { layout: DockLayout }) {
+  // The well at each dock's true relative size (~0.55 scale of the
+  // real slots: hand-stack hero 92, stage/Split 76, Classic 56).
+  // Stacked wells run the meta as ONE row beneath the card; the row
+  // wells stack it in a column beside.
   const well = (size: number, stacked: boolean, deckMeta = false) => (
     <span className={stacked ? styles.dockWellStacked : styles.dockWell}>
       <span
@@ -504,10 +508,16 @@ function DockMock({ layout }: { layout: DockLayout }) {
       >
         <CardFace card={DOCK_DRAWN} />
       </span>
-      <span className={styles.dockMetaCol}>
-        <span>{deckMeta ? 'Deck · 52' : '52 left'}</span>
-        <i className={styles.dockPeek}>Peek</i>
-      </span>
+      {stacked ? (
+        <span className={styles.dockMetaRow}>
+          52 left · <i className={styles.dockPeek}>Peek</i>
+        </span>
+      ) : (
+        <span className={styles.dockMetaCol}>
+          <span>{deckMeta ? 'Deck · 52' : '52 left'}</span>
+          <i className={styles.dockPeek}>Peek</i>
+        </span>
+      )}
     </span>
   );
   if (layout === 'desktop') {
@@ -520,7 +530,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
           <BonusSlots column />
         </span>
         <span className={`${styles.dockSubPanel} ${styles.dockRightCol}`}>
-          {well(26, false, true)}
+          {well(42, false, true)}
           <span className={styles.dockGrid}>
             <span className={styles.dockGridMain}>
               <DockBtn label="Place" variant="primary" />
@@ -540,7 +550,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
       <div className={styles.dockPanel}>
         <BonusSlots />
         <span className={styles.dockRow}>
-          {well(28, false)}
+          {well(31, false)}
           <span className={styles.dockRowEnd}>
             <DockBtn label="♥ Swap" variant="perk" />
             <DockBtn label="Discard" />
@@ -562,7 +572,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
             <DockBtn label="Discard" />
             <DockBtn label="Undo" />
           </span>
-          {well(38, true)}
+          {well(42, true)}
           <span className={styles.dockSide}>
             <DockBtn label="Place" variant="primary" />
             <DockBtn label="♥ Swap" variant="perk" />
@@ -575,7 +585,7 @@ function DockMock({ layout }: { layout: DockLayout }) {
     <div className={styles.dockPanel}>
       <BonusSlots />
       <span className={styles.dockRow}>
-        {well(42, true)}
+        {well(50, true)}
         <span className={styles.dockActionCol}>
           <DockBtn label="Place" variant="primary" />
           <span className={styles.dockRowTight}>

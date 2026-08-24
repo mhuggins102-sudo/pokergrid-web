@@ -992,8 +992,13 @@
   flex: none;
 }
 
-.dockWellStacked .dockMetaCol {
-  align-items: center;
+/* Stacked wells run the meta as ONE line beneath the card. */
+.dockMetaRow {
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .dockRightCol {
@@ -1068,8 +1073,14 @@
   gap: 4px;
 }
 
+/* Buttons at the game's true proportion: 44px tall against 56-92px
+   cards → ~24px at mini scale (the commit runs 48 → 26). */
 .dockBtn {
-  padding: 3px 9px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 9px;
   border-radius: var(--radius-button);
   background: var(--paper);
   border: 1px solid var(--hairline);
@@ -1081,6 +1092,7 @@
 }
 
 .dockPrimary {
+  min-height: 26px;
   background: var(--accent);
   border-color: var(--accent);
   color: var(--paper);
@@ -1093,17 +1105,25 @@
   color: var(--paper);
 }
 
-/* Icon-only square (the game's dockUndo / Split's icon pair). */
+/* Icon-only square (the game's 44px dockUndo, scaled). */
 .dockIconBtn {
-  width: 19px;
+  width: 24px;
   flex: none;
-  padding: 3px 0;
-  display: grid;
-  place-items: center;
+  padding: 0;
 }
 
 .dockIconBtn svg {
   display: block;
+}
+
+/* The action row splits its width evenly (the game's flex: 1
+   children), with the ↺ square riding fixed at the end. */
+.dockRowTight > * {
+  flex: 1;
+}
+
+.dockRowTight > .dockIconBtn {
+  flex: none;
 }
 
 /* The bonus strip: a full-width band of three EQUAL slots, like
