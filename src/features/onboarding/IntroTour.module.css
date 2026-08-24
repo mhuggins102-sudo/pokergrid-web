@@ -695,35 +695,33 @@
   display: block;
 }
 
-/* -- Level-up: XP bar ticking over with a deck unlock popping in,
-   over the customization chips. Still frame: mid-fill bar with the
-   unlock chip showing (base styles). -- */
-.xpDemo {
+/* -- Level-up scene: the end-of-game moment, in ResultView's own
+   chip styling — "+N XP" (warn pill) pops, the bar fills, "⬆ Level
+   reached" (accent pill) lands. One-shot animations replay on each
+   keyed revisit; base styles ARE the completed still frame. -- */
+.xpScene {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  animation: roll-fade 240ms ease;
 }
 
-.xpRow {
-  display: flex;
+.xpGain {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.xpLevel {
-  padding: 3px 8px;
-  border: 1px solid var(--hairline);
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: var(--radius-pill);
-  background: var(--paper-raised);
-  color: var(--ink-2);
-  font-size: 11px;
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn);
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  animation: xp-chip-pop 500ms ease 150ms both;
 }
 
 .xpTrack {
-  width: 120px;
+  width: 130px;
   height: 8px;
   border-radius: var(--radius-pill);
   background: var(--paper-sunken);
@@ -734,64 +732,57 @@
 .xpFill {
   display: block;
   height: 100%;
-  width: 72%;
+  width: 100%;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  animation: tour-xp 4.5s ease-in-out infinite;
+  animation: xp-fill 2s ease-out 400ms both;
 }
 
-@keyframes tour-xp {
-  0% {
-    width: 12%;
-  }
-  55%,
-  100% {
-    width: 100%;
+@keyframes xp-fill {
+  from {
+    width: 8%;
   }
 }
 
-.xpUnlock {
-  padding: 2px 8px;
-  border: 1px solid var(--success);
+.xpLevelUp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--success) 12%, var(--paper));
-  color: var(--success);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  animation: xp-chip-pop 500ms ease 2.3s both;
+}
+
+@keyframes xp-chip-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.9);
+  }
+}
+
+/* -- Looks scene: the full board re-inking as the 2-/4-color deck
+   setting toggles, labeled below. -- */
+.lookScene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: roll-fade 240ms ease;
+}
+
+.lookLabel {
+  padding: 2px 9px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--paper-raised);
+  color: var(--ink-2);
   font-size: 10.5px;
   font-weight: 700;
   white-space: nowrap;
-  animation: tour-xp-pop 4.5s ease-in-out infinite;
-}
-
-@keyframes tour-xp-pop {
-  0%,
-  55% {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-  62%,
-  96% {
-    opacity: 1;
-    transform: none;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.lookRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.lookChip {
-  padding: 4px 10px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-chip);
-  background: var(--paper-raised);
-  color: var(--ink-2);
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
+  animation: roll-fade 240ms ease;
 }
 
