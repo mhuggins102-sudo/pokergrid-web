@@ -428,21 +428,16 @@ function ExploreDemo() {
 const ROW_TOTALS = ['15', '–', '40', '5', '–'];
 const COL_TOTALS = ['5', '30', '–', '12', '–'];
 
-// A mini bonus slot strip/column: one held gold card + two empties
-// (the strip shows it inline, Split's column stacks title over mult —
-// the DesktopBonusPanel slot look in miniature).
+// A mini bonus card strip/column, mirroring BonusCardStrip's row (a
+// full-width band of three equal slots: gold-ringed held chip with a
+// tone-colored title, dashed 'empty' slots) and the Split dock's
+// stacked bonus column.
 function BonusSlots({ column = false }: { column?: boolean }) {
   return (
     <span className={column ? styles.bcol : styles.bstrip}>
       <span className={styles.bslot}>
-        {column ? (
-          <>
-            <b>Straight</b>
-            <span>×2</span>
-          </>
-        ) : (
-          <b>Straight ×2</b>
-        )}
+        <b>Straight</b>
+        <span>×2</span>
       </span>
       <span className={styles.bslotEmpty}>empty</span>
       <span className={styles.bslotEmpty}>empty</span>
@@ -452,11 +447,32 @@ function BonusSlots({ column = false }: { column?: boolean }) {
 
 const DOCK_DRAWN = C('Q', 'H');
 
+// The game's trash glyph (Split's icon Discard), at mini scale.
+const trashIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    width="10"
+    height="10"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
+
 function DockBtn({
   label,
   variant = 'plain',
 }: {
-  label: string;
+  label: ReactNode;
   variant?: 'primary' | 'perk' | 'plain' | 'icon';
 }) {
   const cls =
@@ -470,22 +486,28 @@ function DockBtn({
   return <span className={`${styles.dockBtn} ${cls}`}>{label}</span>;
 }
 
-// One phone dock arrangement in miniature, each a scaled-down mirror
-// of the Settings DockLayoutPreview mockups (which copy the real
-// docks): a real CardFace for the drawn card with its deck meta, the
-// amber perk button, the icon-only ↺, Classic's full-width Place bar
-// — and the bonus positioning: Hand stack / Classic / Center stage
-// carry the bonus strip ABOVE the dock, Split pairs the bonus COLUMN
-// beside its 2×2 grid.
+// One phone dock in miniature, a scaled-down facsimile of the REAL
+// GameScreen docks: the drawn-card well (56px slot + "N left"/Peek
+// meta column, stacked beneath in Hand stack / Center stage, beside
+// the card in Classic / Split), the amber suit-perk button, the
+// square icon-only ↺, Classic's full-width Place bar, Center stage's
+// full-width flanking columns, and Split's Place/perk column with the
+// trash + ↺ icon column beside it. Bonus positioning matches the
+// game: the full-width strip above the stacked docks, the stacked
+// column beside Split.
 function DockMock({ layout }: { layout: DockLayout }) {
-  const drawn = (size: number) => (
-    <span className={styles.dockCardBox} style={{ width: size, height: size }}>
-      <CardFace card={DOCK_DRAWN} />
-    </span>
-  );
-  const peekMeta = (
-    <span className={styles.dockMeta}>
-      52 left · <i className={styles.dockPeek}>Peek</i>
+  const well = (size: number, stacked: boolean, deckMeta = false) => (
+    <span className={stacked ? styles.dockWellStacked : styles.dockWell}>
+      <span
+        className={styles.dockCardBox}
+        style={{ width: size, height: size }}
+      >
+        <CardFace card={DOCK_DRAWN} />
+      </span>
+      <span className={styles.dockMetaCol}>
+        <span>{deckMeta ? 'Deck · 52' : '52 left'}</span>
+        <i className={styles.dockPeek}>Peek</i>
+      </span>
     </span>
   );
   if (layout === 'desktop') {
@@ -493,18 +515,16 @@ function DockMock({ layout }: { layout: DockLayout }) {
       <div className={`${styles.dockPanel} ${styles.dockPanelRow}`}>
         <BonusSlots column />
         <span className={styles.dockRightCol}>
-          <span className={styles.dockRow}>
-            {drawn(32)}
-            <span className={styles.dockMetaCol}>
-              <span>Deck · 52</span>
-              <i className={styles.dockPeek}>Peek</i>
+          {well(30, false, true)}
+          <span className={styles.dockGrid}>
+            <span className={styles.dockGridMain}>
+              <DockBtn label="Place" variant="primary" />
+              <DockBtn label="♥ Swap" variant="perk" />
             </span>
-          </span>
-          <span className={styles.dockBtnGrid}>
-            <DockBtn label="Place" variant="primary" />
-            <DockBtn label="Discard" />
-            <DockBtn label="♥ Swap" variant="perk" />
-            <DockBtn label="↺" variant="icon" />
+            <span className={styles.dockGridIcons}>
+              <DockBtn label={trashIcon} variant="icon" />
+              <DockBtn label="↺" variant="icon" />
+            </span>
           </span>
         </span>
       </div>
@@ -515,14 +535,12 @@ function DockMock({ layout }: { layout: DockLayout }) {
       <div className={styles.dockPanel}>
         <BonusSlots />
         <span className={styles.dockRow}>
-          {drawn(30)}
-          <span className={styles.dockMetaCol}>
-            <span>52 left</span>
-            <i className={styles.dockPeek}>Peek</i>
+          {well(28, false)}
+          <span className={styles.dockRowEnd}>
+            <DockBtn label="♥ Swap" variant="perk" />
+            <DockBtn label="Discard" />
+            <DockBtn label="↺" variant="icon" />
           </span>
-          <DockBtn label="♥ Swap" variant="perk" />
-          <DockBtn label="Discard" />
-          <DockBtn label="↺" variant="icon" />
         </span>
         <span className={styles.dockFullRow}>
           <DockBtn label="Place" variant="primary" />
@@ -535,15 +553,12 @@ function DockMock({ layout }: { layout: DockLayout }) {
       <div className={styles.dockPanel}>
         <BonusSlots />
         <span className={styles.dockRow}>
-          <span className={styles.dockBtnCol}>
+          <span className={styles.dockSide}>
             <DockBtn label="Discard" />
             <DockBtn label="Undo" />
           </span>
-          <span className={styles.dockCardCol}>
-            {drawn(38)}
-            {peekMeta}
-          </span>
-          <span className={styles.dockBtnCol}>
+          {well(38, true)}
+          <span className={styles.dockSide}>
             <DockBtn label="Place" variant="primary" />
             <DockBtn label="♥ Swap" variant="perk" />
           </span>
@@ -555,11 +570,8 @@ function DockMock({ layout }: { layout: DockLayout }) {
     <div className={styles.dockPanel}>
       <BonusSlots />
       <span className={styles.dockRow}>
-        <span className={styles.dockCardCol}>
-          {drawn(42)}
-          {peekMeta}
-        </span>
-        <span className={styles.dockBtnCol}>
+        {well(42, true)}
+        <span className={styles.dockActionCol}>
           <DockBtn label="Place" variant="primary" />
           <span className={styles.dockRowTight}>
             <DockBtn label="♥ Swap" variant="perk" />
@@ -594,17 +606,17 @@ function LookDemo() {
     const id = window.setInterval(() => setT(x => x + 1), 1400);
     return () => window.clearInterval(id);
   }, [still]);
-  const beat = t % 10;
-  const cycle = Math.floor(t / 10);
-  const scene = still || beat < 6 ? 'board' : 'dock';
-  // Alternating single-option flips: 4c/off → 2c/off → 2c/on →
-  // 4c/on → 4c/off → 2c/off → (docks). ACTIVE names the option that
-  // just flipped, so its chip carries the perk-style pulse.
-  const ACTIVE = ['color', 'color', 'rails', 'color', 'rails', 'color'];
-  const fourColor = still || beat % 4 === 0 || beat % 4 === 3;
-  const railsOn = still || (beat < 6 && beat % 4 >= 2);
-  const active = still ? null : ACTIVE[beat];
-  const dock = DOCK_CYCLE[Math.max(0, beat - 6)];
+  const beat = t % 9;
+  const cycle = Math.floor(t / 9);
+  const scene = still || beat < 5 ? 'board' : 'dock';
+  // Each option toggles exactly once per pass, alternating: rest →
+  // 2-color → rails on → 4-color → rails off → (docks). ACTIVE names
+  // the option that just flipped, so its chip carries the pulse.
+  const ACTIVE = [null, 'color', 'rails', 'color', 'rails'];
+  const fourColor = still || !(beat === 1 || beat === 2);
+  const railsOn = still || beat === 2 || beat === 3;
+  const active = still || beat >= 5 ? null : ACTIVE[beat];
+  const dock = DOCK_CYCLE[Math.max(0, beat - 5)];
   if (scene === 'dock') {
     return (
       <div
