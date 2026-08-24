@@ -764,8 +764,8 @@
   }
 }
 
-/* -- Looks scene: the full board re-inking as the 2-/4-color deck
-   setting toggles, labeled below. -- */
+/* -- Customize scenes: the board re-inking (2/4-color), line rails
+   appearing beside it, and the dock rearranging — each labeled. -- */
 .lookScene {
   display: flex;
   flex-direction: column;
@@ -784,5 +784,102 @@
   font-weight: 700;
   white-space: nowrap;
   animation: roll-fade 240ms ease;
+}
+
+/* Rails pop in beside the board without moving it. */
+.railWrap {
+  position: relative;
+}
+
+.railCol {
+  position: absolute;
+  left: calc(100% + 7px);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: roll-fade 240ms ease;
+}
+
+.railChip {
+  min-width: 22px;
+  padding: 1px 4px;
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+  background: var(--paper-raised);
+  color: var(--ink-2);
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The dock in miniature: drawn card + action buttons, rearranging
+   between the Hand stack (stacked column) and Split (2×2 grid). */
+.dockMock {
+  height: 112px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: roll-fade 240ms ease;
+}
+
+.dockCard {
+  width: 46px;
+  height: 46px;
+  border-radius: 5px;
+  background: var(--card-face);
+  border: 1px solid var(--rule);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--face-suit-s);
+}
+
+.dockBtnCol {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dockBtnGrid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 5px;
+}
+
+.dockBtn {
+  padding: 4px 12px;
+  border-radius: var(--radius-button);
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  color: var(--ink-2);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dockPrimary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+
+/* -- Deck-design samples: a fan of three real skinned faces. -- */
+.skinScene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: roll-fade 240ms ease;
+}
+
+.skinFan {
+  display: flex;
+  gap: 7px;
 }
 

@@ -20,21 +20,21 @@ test('first game shows the tour; finishing it dismisses for good', async ({
 
   const tour = page.getByRole('dialog', { name: 'How to play PokerGrid' });
   await expect(tour).toBeVisible();
-  await expect(tour).toContainText('1 / 7');
+  await expect(tour).toContainText('1 / 8');
   await expect(tour).toContainText('Build 10 poker hands at once');
 
-  // Page forward through all seven pages; ▶ gives way to the primary
+  // Page forward through all eight pages; ▶ gives way to the primary
   // "Start playing" CTA on the last one.
   const next = tour.getByRole('button', { name: 'Next page' });
-  for (let i = 2; i <= 7; i++) {
+  for (let i = 2; i <= 8; i++) {
     await next.click();
-    await expect(tour).toContainText(`${i} / 7`);
+    await expect(tour).toContainText(`${i} / 8`);
   }
   await expect(tour).toContainText('Level up, unlock decks');
 
   // ◀ pages back too.
   await tour.getByRole('button', { name: 'Previous page' }).click();
-  await expect(tour).toContainText('6 / 7');
+  await expect(tour).toContainText('7 / 8');
   await tour.getByRole('button', { name: 'Next page' }).click();
 
   // Reaching the end marked the tour seen — the checkbox reflects it.
@@ -100,7 +100,7 @@ test('unticking the box keeps the tour returning — seasoned profile included',
 
   // Finish the tour (auto-marks seen, ticks the box), then untick —
   // "keep showing this until I check the box".
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     await tour.getByRole('button', { name: 'Next page' }).click();
   }
   await expect(tour.getByRole('checkbox')).toBeChecked();

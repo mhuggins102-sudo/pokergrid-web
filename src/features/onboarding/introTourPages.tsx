@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { useTier } from '../../app/useTier';
 import { Card, Rank, Suit } from '../../game/cards';
 import { LIVE_CHALLENGES } from '../../game/challenges';
 import { freshShuffledDeck, shuffle } from '../../game/deck';
@@ -7,9 +8,12 @@ import { SPIRAL_POSITION } from '../../game/grid';
 import { HandRank } from '../../game/hands';
 import { TARGET_BY_DIFFICULTY } from '../../game/rules';
 import { HAND_BASE_VALUE } from '../../game/scoring';
+import type { SuitKey } from '../../design/deckSkins';
+import { skinName } from '../../design/skinCatalog';
 import { Difficulty, difficultyColors } from '../../design/tokens';
 import { CardFace } from '../game/components/CardFace';
 import { HandsIcon, ScoringIcon } from '../game/components/icons';
+import { skinFace } from '../game/components/skinFace';
 import { HAND_LABEL } from '../game/handLabels';
 import { prefersReducedMotion } from '../game/useAnimatedNumber';
 import { useSettingsStore } from '../settings/settingsStore';
@@ -418,12 +422,15 @@ function ExploreDemo() {
   );
 }
 
-function XpDemo() {
-  // Two alternating scenes on one beat clock: the end-of-game
-  // level-up moment (the ResultView "+N XP" / "⬆ Level reached" chip
-  // styling, with the bar filling between them), then a full board
-  // re-inking as the 2-/4-color deck setting toggles. The still frame
-  // is the completed level-up scene.
+// Plausible rail totals for the line-rails scene (rows R1–R5).
+const RAIL_TOTALS = ['15', '–', '40', '5', '–'];
+
+function LookDemo() {
+  // Three settings scenes on one beat clock, each toggling its value
+  // per beat: the board re-inking as the 2-/4-color deck flips, the
+  // line rails appearing beside the board, and the dock rearranging
+  // between the Hand stack and Split layouts. The still frame is the
+  // four-color board.
   const still = useStill();
   const [t, setT] = useState(0);
   const [board] = useState<Card[]>(dealCards);
@@ -432,11 +439,148 @@ function XpDemo() {
     const id = window.setInterval(() => setT(x => x + 1), 1400);
     return () => window.clearInterval(id);
   }, [still]);
-  const beat = t % 6;
-  const cycle = Math.floor(t / 6);
-  const levelScene = still || beat < 3;
-  const fourColor = beat % 2 === 0;
-  return levelScene ? (
+  const beat = t % 9;
+  const cycle = Math.floor(t / 9);
+  const scene = still || beat < 3 ? 'colors' : beat < 6 ? 'rails' : 'dock';
+  const on = still || beat % 2 === 0;
+  const label =
+    scene === 'colors'
+      ? on
+        ? '4-color deck'
+        : '2-color deck'
+      : scene === 'rails'
+        ? on
+          ? 'Line rails · on'
+          : 'Line rails · off'
+        : on
+          ? 'Dock · Hand stack'
+          : 'Dock · Split';
+  return (
+    <div
+      key={`${scene}-${cycle}`}
+      className={styles.lookScene}
+      aria-hidden="true"
+    >
+      {scene === 'dock' ? (
+        <div className={styles.dockMock}>
+          <span className={styles.dockCard}>K♠</span>
+          <span className={on ? styles.dockBtnCol : styles.dockBtnGrid}>
+            <span className={`${styles.dockBtn} ${styles.dockPrimary}`}>
+              Place
+            </span>
+            {!on && <span className={styles.dockBtn}>♥ Swap</span>}
+            <span className={styles.dockBtn}>Discard</span>
+            <span className={styles.dockBtn}>↺ Undo</span>
+          </span>
+        </div>
+      ) : (
+        <div className={styles.railWrap}>
+          <MiniGrid
+            cellClass={() => styles.mc}
+            cellStyle={i => {
+              const card = board[i];
+              if (card.kind !== 'standard') return undefined;
+              if (scene !== 'colors' || on) return mcTone(card.suit);
+              const red = card.suit === 'H' || card.suit === 'D';
+              return {
+                '--tone': red ? 'var(--card-red)' : 'var(--card-black)',
+              } as CSSProperties;
+            }}
+            cellContent={i => mcFace(board[i])}
+          />
+          {scene === 'rails' && on && (
+            <span className={styles.railCol}>
+              {RAIL_TOTALS.map((v, i) => (
+                <span key={i} className={styles.railChip}>
+                  {v}
+                </span>
+              ))}
+            </span>
+          )}
+        </div>
+      )}
+      <span key={label} className={styles.lookLabel}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// A rotating sample of unlockable deck designs (ids from the skin
+// catalog; skinName gives their store labels).
+const SKIN_DEMO: string[] = [
+  'D24',
+  'D42',
+  'W1',
+  'SP1',
+  'EX16',
+  'D51a',
+  'AR3',
+  'MU2',
+  'P1',
+  'L1',
+];
+
+// A real skinned card face at thumbnail size — the DesktopResultDialog
+// unlock-showcase pattern (skinFace renders the actual design, keyed
+// remount so a swapped skin's styles never merge into the old spans).
+function MiniSkinFace({
+  id,
+  rank,
+  suit,
+  size,
+}: {
+  id: string;
+  rank: string;
+  suit: SuitKey;
+  size: number;
+}) {
+  const four = !useSettingsStore(s => s.twoColorDeck);
+  const mobile = useTier() === 'phone';
+  const face = skinFace(id, rank, suit, four, mobile);
+  return (
+    <span
+      key={`${id}-${mobile ? 'm' : 'd'}`}
+      style={{ ...face.wrap, width: size, height: size, flex: 'none' }}
+    >
+      {face.layers.map((l, i) => (
+        <span key={i} style={l.style}>
+          {l.glyph}
+          {l.kids.map((k, j) => (
+            <span key={j} style={k.style}>
+              {k.glyph}
+            </span>
+          ))}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function XpDemo() {
+  // The end-of-game level-up moment (ResultView's "+N XP" / "⬆ Level
+  // reached" chips with the bar filling between them), alternating
+  // with a run of deck-design samples — four random skins, names
+  // attached, then back to the XP beat. Still frame: the completed
+  // level-up scene.
+  const still = useStill();
+  const [t, setT] = useState(0);
+  const [skin, setSkin] = useState(SKIN_DEMO[0]);
+  useEffect(() => {
+    if (still) return;
+    const nextSkin = shuffleBag(SKIN_DEMO, SKIN_DEMO[0]);
+    let n = 0;
+    const id = window.setInterval(() => {
+      n += 1;
+      setT(n);
+      if (n % 7 >= 3) setSkin(nextSkin());
+    }, 1400);
+    return () => window.clearInterval(id);
+  }, [still]);
+  const beat = t % 7;
+  const cycle = Math.floor(t / 7);
+  const xpScene = still || beat < 3;
+  return xpScene ? (
     <div key={`lvl-${cycle}`} className={styles.xpScene} aria-hidden="true">
       <span className={styles.xpGain}>+120 XP</span>
       <span className={styles.xpTrack}>
@@ -445,23 +589,13 @@ function XpDemo() {
       <span className={styles.xpLevelUp}>⬆ Level 4 reached</span>
     </div>
   ) : (
-    <div key={`looks-${cycle}`} className={styles.lookScene} aria-hidden="true">
-      <MiniGrid
-        cellClass={() => styles.mc}
-        cellStyle={i => {
-          const card = board[i];
-          if (card.kind !== 'standard') return undefined;
-          if (fourColor) return mcTone(card.suit);
-          const red = card.suit === 'H' || card.suit === 'D';
-          return {
-            '--tone': red ? 'var(--card-red)' : 'var(--card-black)',
-          } as CSSProperties;
-        }}
-        cellContent={i => mcFace(board[i])}
-      />
-      <span key={String(fourColor)} className={styles.lookLabel}>
-        {fourColor ? '4-color deck' : '2-color deck'}
-      </span>
+    <div key={`skin-${skin}`} className={styles.skinScene} aria-hidden="true">
+      <div className={styles.skinFan}>
+        <MiniSkinFace id={skin} rank="A" suit="h" size={48} />
+        <MiniSkinFace id={skin} rank="K" suit="s" size={48} />
+        <MiniSkinFace id={skin} rank="Q" suit="d" size={48} />
+      </div>
+      <span className={styles.lookLabel}>{skinName(skin)}</span>
     </div>
   );
 }
@@ -511,9 +645,15 @@ export const TOUR_PAGES: TourPage[] = [
     demo: <ExploreDemo />,
   },
   {
+    id: 'looks',
+    title: 'Customize your look',
+    body: "Visit Settings to set your in-game look. Options include the overall theme, light or dark mode, 2- or 4-color deck, deck design, line rails (keep each line's current score on display), dock type (the action interface), and more.",
+    demo: <LookDemo />,
+  },
+  {
     id: 'progress',
     title: 'Level up, unlock decks',
-    body: 'Every game earns XP, and leveling up unlocks new deck designs. Visit Settings to equip them and set your look — theme, light or dark mode, 2- or 4-color deck, and more. On phones, the ☰ menu in the top-right corner tweaks these mid-game too.',
+    body: 'Every game earns XP, and leveling up unlocks new deck designs. On phones, the ☰ menu in the top-right corner can be used to tweak the deck design and other settings mid-game.',
     demo: <XpDemo />,
   },
 ];
