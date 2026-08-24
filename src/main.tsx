@@ -4,7 +4,7 @@ import { RouterProvider } from 'react-router/dom';
 
 import '@fontsource-variable/fraunces/index.css';
 import '@fontsource-variable/inter/index.css';
-// Card Room's body font (Morning Paper keeps Inter).
+// Card Room + Drafting Room body font (Morning Paper keeps Inter).
 import '@fontsource-variable/space-grotesk/index.css';
 // Deck-skin display fonts (used only on skinned card faces).
 import '@fontsource/special-elite/index.css';

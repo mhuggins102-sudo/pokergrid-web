@@ -33,7 +33,9 @@
           app === 'dark' ||
           (app !== 'light' &&
             matchMedia('(prefers-color-scheme: dark)').matches);
-        var theme = (fam === 'paper' ? 'paper' : 'card-room') + (dark ? '-dark' : '');
+        var theme =
+          (fam === 'paper' || fam === 'draft' ? fam : 'card-room') +
+          (dark ? '-dark' : '');
         document.documentElement.dataset.theme = theme;
         // Browser chrome follows the theme's paper surface from the
         // first frame too (useApplyTheme owns it after boot).
@@ -42,6 +44,8 @@
           'paper-dark': '#17150f',
           'card-room': '#faf8f2',
           'card-room-dark': '#131210',
+          draft: '#eef2f4',
+          'draft-dark': '#0d2136',
         };
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta && surfaces[theme]) meta.setAttribute('content', surfaces[theme]);
@@ -68,6 +72,12 @@
       html[data-theme='card-room-dark'] {
         background: #131210;
       }
+      html[data-theme='draft'] {
+        background: #eef2f4;
+      }
+      html[data-theme='draft-dark'] {
+        background: #0d2136;
+      }
       .bootSplash {
         position: fixed;
         inset: 0;
@@ -85,6 +95,9 @@
       html[data-theme='paper-dark'] .bootSplash,
       html[data-theme='card-room-dark'] .bootSplash {
         color: #efe9d8;
+      }
+      html[data-theme='draft-dark'] .bootSplash {
+        color: #d9e8f5;
       }
       .bootSpin {
         width: 20px;

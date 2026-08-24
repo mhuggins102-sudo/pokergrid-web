@@ -1,22 +1,18 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { Appearance, ThemeFamily, useSettingsStore } from './settingsStore';
 
-export type ResolvedTheme =
-  | 'card-room'
-  | 'card-room-dark'
-  | 'paper'
-  | 'paper-dark';
+export type ResolvedTheme = ThemeFamily | `${ThemeFamily}-dark`;
 
-// The data-theme value a (family, appearance) pair resolves to.
-// 'system' follows the OS color-scheme within the chosen family.
+// The data-theme value a (family, appearance) pair resolves to: the
+// family id, suffixed '-dark' when dark. 'system' follows the OS
+// color-scheme within the chosen family.
 export const resolveTheme = (
   family: ThemeFamily,
   appearance: Appearance,
   prefersDark: boolean
 ): ResolvedTheme => {
   const dark = appearance === 'dark' || (appearance === 'system' && prefersDark);
-  if (family === 'paper') return dark ? 'paper-dark' : 'paper';
-  return dark ? 'card-room-dark' : 'card-room';
+  return dark ? `${family}-dark` : family;
 };
 
 /**

@@ -46,5 +46,9 @@ describe('resolveTheme', () => {
     expect(resolveTheme('paper', 'dark', false)).toBe('paper-dark');
     expect(resolveTheme('paper', 'system', true)).toBe('paper-dark');
     expect(resolveTheme('paper', 'system', false)).toBe('paper');
+    expect(resolveTheme('draft', 'light', true)).toBe('draft');
+    expect(resolveTheme('draft', 'dark', false)).toBe('draft-dark');
+    expect(resolveTheme('draft', 'system', true)).toBe('draft-dark');
+    expect(resolveTheme('draft', 'system', false)).toBe('draft');
   });
 });

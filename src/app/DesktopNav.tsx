@@ -16,6 +16,7 @@ import { useHandle } from '../features/daily/sync/handleStore';
 import { DOCK_LAYOUT_LABEL } from '../features/settings/DockLayoutPreview';
 import {
   DockLayout,
+  ThemeFamily,
   useSettingsStore,
 } from '../features/settings/settingsStore';
 import { useResolvedTheme } from '../features/settings/useTheme';
@@ -115,6 +116,9 @@ const LINKS = [
   { to: '/rules', label: 'Rules' },
   { to: '/settings', label: 'Settings' },
 ];
+
+// Drawer quick-action cycle order for the theme family.
+const FAMILY_CYCLE: ThemeFamily[] = ['paper', 'card-room', 'draft'];
 
 // Drawer quick-action cycle order for the dock layout.
 const DOCK_CYCLE: DockLayout[] = [
@@ -273,7 +277,17 @@ export function DesktopNav() {
         ? 'Dark'
         : 'Light';
   const familyLabel =
-    settings.themeFamily === 'paper' ? 'Paper' : 'Card Room';
+    settings.themeFamily === 'paper'
+      ? 'Paper'
+      : settings.themeFamily === 'draft'
+        ? 'Drafting'
+        : 'Card Room';
+  const cycleFamily = () => {
+    const i = FAMILY_CYCLE.indexOf(settings.themeFamily);
+    settings.set({
+      themeFamily: FAMILY_CYCLE[(i + 1) % FAMILY_CYCLE.length],
+    });
+  };
   const cycleDock = () => {
     const i = DOCK_CYCLE.indexOf(settings.dockLayout);
     settings.set({ dockLayout: DOCK_CYCLE[(i + 1) % DOCK_CYCLE.length] });
@@ -531,13 +545,8 @@ export function DesktopNav() {
             <button
               type="button"
               className={styles.drawerQuickBtn}
-              aria-label={`Theme: ${familyLabel} — tap to switch`}
-              onClick={() =>
-                settings.set({
-                  themeFamily:
-                    settings.themeFamily === 'paper' ? 'card-room' : 'paper',
-                })
-              }
+              aria-label={`Theme: ${familyLabel} — tap to cycle`}
+              onClick={cycleFamily}
             >
               <svg
                 className={styles.drawerQuickIcon}
