@@ -910,10 +910,38 @@
   box-shadow: var(--shadow-sm);
 }
 
-.dockPanelRow {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
+/* Split, as in game (.dtWrap): two EQUAL columns, each its own
+   panel; the bonus slots stretch to divide the dock height. */
+.dockSplitGrid {
+  width: 216px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  align-items: stretch;
+}
+
+.dockSubPanel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px;
+  border-radius: var(--radius-panel);
+  background: var(--paper-raised);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+}
+
+.dockSubPanel .bcol {
+  flex: 1;
+}
+
+.dockSplitGrid .bslot,
+.dockSplitGrid .bslotEmpty {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
 }
 
 .dockRow {

@@ -511,11 +511,16 @@ function DockMock({ layout }: { layout: DockLayout }) {
     </span>
   );
   if (layout === 'desktop') {
+    // Split is the real dtWrap: two EQUAL columns (1fr/1fr grid), the
+    // bonus panel's three slots stretching to divide the dock height,
+    // each half its own panel surface.
     return (
-      <div className={`${styles.dockPanel} ${styles.dockPanelRow}`}>
-        <BonusSlots column />
-        <span className={styles.dockRightCol}>
-          {well(30, false, true)}
+      <div className={styles.dockSplitGrid}>
+        <span className={styles.dockSubPanel}>
+          <BonusSlots column />
+        </span>
+        <span className={`${styles.dockSubPanel} ${styles.dockRightCol}`}>
+          {well(26, false, true)}
           <span className={styles.dockGrid}>
             <span className={styles.dockGridMain}>
               <DockBtn label="Place" variant="primary" />
