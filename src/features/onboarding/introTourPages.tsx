@@ -9,14 +9,15 @@ import { HandRank } from '../../game/hands';
 import { TARGET_BY_DIFFICULTY } from '../../game/rules';
 import { HAND_BASE_VALUE } from '../../game/scoring';
 import type { SuitKey } from '../../design/deckSkins';
-import { skinName } from '../../design/skinCatalog';
+import { SKIN_CATALOG, skinName } from '../../design/skinCatalog';
 import { Difficulty, difficultyColors } from '../../design/tokens';
 import { CardFace } from '../game/components/CardFace';
 import { HandsIcon, ScoringIcon } from '../game/components/icons';
 import { skinFace } from '../game/components/skinFace';
 import { HAND_LABEL } from '../game/handLabels';
 import { prefersReducedMotion } from '../game/useAnimatedNumber';
-import { useSettingsStore } from '../settings/settingsStore';
+import { DOCK_LAYOUT_LABEL } from '../settings/DockLayoutPreview';
+import { DockLayout, useSettingsStore } from '../settings/settingsStore';
 import styles from './IntroTour.module.css';
 
 /*
@@ -422,15 +423,112 @@ function ExploreDemo() {
   );
 }
 
-// Plausible rail totals for the line-rails scene (rows R1–R5).
-const RAIL_TOTALS = ['15', '–', '40', '5', '–'];
+// Plausible rail totals for the line-rails scene (rows beside the
+// board, columns below it — the in-game arrangement).
+const ROW_TOTALS = ['15', '–', '40', '5', '–'];
+const COL_TOTALS = ['5', '30', '–', '12', '–'];
+
+// A mini bonus slot strip/column: one held gold card + two empties.
+function BonusSlots({ column = false }: { column?: boolean }) {
+  return (
+    <span className={column ? styles.bcol : styles.bstrip}>
+      <span className={styles.bslot}>×2</span>
+      <span className={styles.bslotEmpty} />
+      <span className={styles.bslotEmpty} />
+    </span>
+  );
+}
+
+// One phone dock arrangement in miniature, bonus positioning
+// included: Hand stack / Classic / Center stage carry the bonus strip
+// ABOVE the dock (GameScreen renders BonusCardStrip there); Split
+// pairs a bonus COLUMN beside the 2×2 action grid.
+function DockMock({ layout }: { layout: DockLayout }) {
+  const card = <span className={styles.dockCard}>Q♥</span>;
+  const btn = (label: string, primary = false) => (
+    <span
+      className={`${styles.dockBtn} ${primary ? styles.dockPrimary : ''}`}
+    >
+      {label}
+    </span>
+  );
+  if (layout === 'desktop') {
+    return (
+      <div className={styles.dockMock}>
+        <BonusSlots column />
+        {card}
+        <span className={styles.dockBtnGrid}>
+          {btn('Place', true)}
+          {btn('♥ Swap')}
+          {btn('Discard')}
+          {btn('↺')}
+        </span>
+      </div>
+    );
+  }
+  if (layout === 'classic') {
+    return (
+      <div className={styles.dockStackWrap}>
+        <BonusSlots />
+        <span className={styles.dockRow}>
+          {card}
+          {btn('♥ Swap')}
+          {btn('Discard')}
+          {btn('↺')}
+        </span>
+        <span className={styles.dockFullRow}>{btn('Place', true)}</span>
+      </div>
+    );
+  }
+  if (layout === 'center-stage') {
+    return (
+      <div className={styles.dockStackWrap}>
+        <BonusSlots />
+        <span className={styles.dockRow}>
+          <span className={styles.dockBtnCol}>
+            {btn('Discard')}
+            {btn('↺ Undo')}
+          </span>
+          {card}
+          <span className={styles.dockBtnCol}>
+            {btn('Place', true)}
+            {btn('♥ Swap')}
+          </span>
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className={styles.dockStackWrap}>
+      <BonusSlots />
+      <span className={styles.dockRow}>
+        {card}
+        <span className={styles.dockBtnCol}>
+          {btn('Place', true)}
+          <span className={styles.dockRowTight}>
+            {btn('♥ Swap')}
+            {btn('Discard')}
+            {btn('↺')}
+          </span>
+        </span>
+      </span>
+    </div>
+  );
+}
+
+const DOCK_CYCLE: DockLayout[] = [
+  'hand-stack',
+  'center-stage',
+  'classic',
+  'desktop',
+];
 
 function LookDemo() {
-  // Three settings scenes on one beat clock, each toggling its value
-  // per beat: the board re-inking as the 2-/4-color deck flips, the
-  // line rails appearing beside the board, and the dock rearranging
-  // between the Hand stack and Split layouts. The still frame is the
-  // four-color board.
+  // Three settings scenes on one beat clock: the board re-inking as
+  // the 2-/4-color deck flips, the line rails fading in beside and
+  // below the board (tracks reserved so nothing shifts), and the dock
+  // walking all four phone layouts — each labeled beside the visual.
+  // The still frame is the four-color board.
   const still = useStill();
   const [t, setT] = useState(0);
   const [board] = useState<Card[]>(dealCards);
@@ -439,10 +537,12 @@ function LookDemo() {
     const id = window.setInterval(() => setT(x => x + 1), 1400);
     return () => window.clearInterval(id);
   }, [still]);
-  const beat = t % 9;
-  const cycle = Math.floor(t / 9);
+  const beat = t % 10;
+  const cycle = Math.floor(t / 10);
   const scene = still || beat < 3 ? 'colors' : beat < 6 ? 'rails' : 'dock';
   const on = still || beat % 2 === 0;
+  const dock = DOCK_CYCLE[Math.max(0, beat - 6)];
+  const railsOn = scene === 'rails' && on;
   const label =
     scene === 'colors'
       ? on
@@ -452,29 +552,19 @@ function LookDemo() {
         ? on
           ? 'Line rails · on'
           : 'Line rails · off'
-        : on
-          ? 'Dock · Hand stack'
-          : 'Dock · Split';
+        : `Dock · ${DOCK_LAYOUT_LABEL[dock]}`;
   return (
     <div
       key={`${scene}-${cycle}`}
-      className={styles.lookScene}
+      className={styles.lookRowScene}
       aria-hidden="true"
     >
       {scene === 'dock' ? (
-        <div className={styles.dockMock}>
-          <span className={styles.dockCard}>K♠</span>
-          <span className={on ? styles.dockBtnCol : styles.dockBtnGrid}>
-            <span className={`${styles.dockBtn} ${styles.dockPrimary}`}>
-              Place
-            </span>
-            {!on && <span className={styles.dockBtn}>♥ Swap</span>}
-            <span className={styles.dockBtn}>Discard</span>
-            <span className={styles.dockBtn}>↺ Undo</span>
-          </span>
-        </div>
+        <span key={dock} className={styles.dockSwap}>
+          <DockMock layout={dock} />
+        </span>
       ) : (
-        <div className={styles.railWrap}>
+        <div className={`${styles.boardRails} ${styles.lookBig}`}>
           <MiniGrid
             cellClass={() => styles.mc}
             cellStyle={i => {
@@ -488,15 +578,28 @@ function LookDemo() {
             }}
             cellContent={i => mcFace(board[i])}
           />
-          {scene === 'rails' && on && (
-            <span className={styles.railCol}>
-              {RAIL_TOTALS.map((v, i) => (
-                <span key={i} className={styles.railChip}>
-                  {v}
-                </span>
-              ))}
-            </span>
-          )}
+          <span
+            className={`${styles.railsRight} ${
+              railsOn ? styles.railsShown : ''
+            }`}
+          >
+            {ROW_TOTALS.map((v, i) => (
+              <span key={i} className={styles.railChip}>
+                {v}
+              </span>
+            ))}
+          </span>
+          <span
+            className={`${styles.railsBelow} ${
+              railsOn ? styles.railsShown : ''
+            }`}
+          >
+            {COL_TOTALS.map((v, i) => (
+              <span key={i} className={styles.railChip}>
+                {v}
+              </span>
+            ))}
+          </span>
         </div>
       )}
       <span key={label} className={styles.lookLabel}>
@@ -506,20 +609,9 @@ function LookDemo() {
   );
 }
 
-// A rotating sample of unlockable deck designs (ids from the skin
-// catalog; skinName gives their store labels).
-const SKIN_DEMO: string[] = [
-  'D24',
-  'D42',
-  'W1',
-  'SP1',
-  'EX16',
-  'D51a',
-  'AR3',
-  'MU2',
-  'P1',
-  'L1',
-];
+// EVERY unlockable deck design, equally likely (the shuffle-bag walks
+// the whole catalog before any repeats); skinName gives store labels.
+const SKIN_DEMO: string[] = SKIN_CATALOG.flatMap(u => u.skinIds);
 
 // A real skinned card face at thumbnail size — the DesktopResultDialog
 // unlock-showcase pattern (skinFace renders the actual design, keyed
