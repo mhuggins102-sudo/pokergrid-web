@@ -294,23 +294,36 @@ export function DesktopNav() {
   };
   const dockLabel = DOCK_LAYOUT_LABEL[settings.dockLayout];
 
-  // Morning Paper's edition label follows the appearance; the strip that
-  // shows it is CSS-gated to the paper themes × desktop, so this string
-  // is inert in Card Room.
-  const editionLabel = resolved.endsWith('-dark')
-    ? 'Late Night'
-    : 'Morning Edition';
+  // The decorative strip above the nameplate is family-voiced: Morning
+  // Paper runs a broadsheet edition line, Drafting Room a drawing
+  // title block (sheet + scale · issue state · ISO date). CSS gates
+  // the strip to those two families × desktop, so these strings are
+  // inert in Card Room.
+  const stripDark = resolved.endsWith('-dark');
+  const strip =
+    settings.themeFamily === 'draft'
+      ? {
+          left: `Sheet ${editionNo()} · Scale 1:1`,
+          mid: stripDark ? 'Night revision' : 'First issue',
+          right: currentDateISO(),
+        }
+      : {
+          left: `No. ${editionNo()}`,
+          mid: stripDark ? 'Late Night' : 'Morning Edition',
+          right: editionDate(),
+        };
 
   return (
     <header
       className={`${styles.bar} ${gameRow ? styles.gameRowActive : ''}`}
     >
-      {/* Broadsheet dateline — desk-only, shown only in the Morning Paper
-          themes (DesktopNav.module.css). Decorative, so hidden from a11y. */}
+      {/* Broadsheet dateline / drafting title block — desk-only, shown
+          only in the Morning Paper and Drafting Room themes
+          (DesktopNav.module.css). Decorative, so hidden from a11y. */}
       <div className={styles.editionStrip} aria-hidden="true">
-        <span>No. {editionNo()}</span>
-        <span>{editionLabel}</span>
-        <span>{editionDate()}</span>
+        <span>{strip.left}</span>
+        <span>{strip.mid}</span>
+        <span>{strip.right}</span>
       </div>
       <div className={styles.left}>
         <NavLink to="/" className={styles.wordmark}>
