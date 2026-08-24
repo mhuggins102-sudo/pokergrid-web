@@ -895,13 +895,15 @@
 }
 
 /* One shared surface under every arrangement, so the pieces read as a
-   single dock rather than floating parts. */
+   single dock rather than floating parts. Fixed width: the strip and
+   full-width rows span it like the real dock spans the phone. */
 .dockPanel {
+  width: 216px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 7px;
-  padding: 9px 12px;
+  padding: 9px 10px;
   border-radius: var(--radius-panel);
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
@@ -910,7 +912,8 @@
 
 .dockPanelRow {
   flex-direction: row;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
 }
 
 .dockRow {
@@ -942,53 +945,98 @@
   flex: none;
 }
 
-.dockCardCol {
+/* The drawn-card well: card + the "N left"/Peek meta column, beside
+   the card (Classic / Split) or stacked beneath it (Hand stack /
+   Center stage) — NextCardWell's two arrangements. */
+.dockWell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+}
+
+.dockWellStacked {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
+  flex: none;
+}
+
+.dockWellStacked .dockMetaCol {
+  align-items: center;
 }
 
 .dockRightCol {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Deck meta, as under/beside the real wells: "52 left · Peek". */
-.dockMeta {
-  font-size: 8px;
-  font-weight: 600;
-  color: var(--ink-3);
-  white-space: nowrap;
-}
-
 .dockMetaCol {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   font-size: 8px;
   font-weight: 600;
-  color: var(--ink-3);
+  color: var(--ink-2);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .dockPeek {
   font-style: normal;
   color: var(--accent);
   text-decoration: underline;
+  text-underline-offset: 1.5px;
 }
 
-.dockBtnCol {
+/* Classic's secondary actions sit at the row's end, after the well. */
+.dockRowEnd {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Hand stack's action stack fills the space beside the hero card. */
+.dockActionCol {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
 }
 
-.dockBtnGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+/* Center stage's flanking columns: equal width, full-width buttons. */
+.dockSide {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+/* Split's action block: Place over the perk, the trash + ↺ icon
+   column riding beside them (the dtGrid arrangement). */
+.dockGrid {
+  display: flex;
+  gap: 4px;
+}
+
+.dockGridMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.dockGridIcons {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
@@ -1017,42 +1065,57 @@
   color: var(--paper);
 }
 
-/* Icon-only ↺, the compact pill every stacked dock carries. */
+/* Icon-only square (the game's dockUndo / Split's icon pair). */
 .dockIconBtn {
+  width: 19px;
+  flex: none;
   padding: 3px 0;
-  width: 20px;
-  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
 }
 
+.dockIconBtn svg {
+  display: block;
+}
+
+/* The bonus strip: a full-width band of three EQUAL slots, like
+   BonusCardStrip's row layout. */
 .bstrip {
   display: flex;
   align-items: stretch;
-  gap: 4px;
+  gap: 5px;
+}
+
+.bstrip .bslot,
+.bstrip .bslotEmpty {
+  flex: 1;
+  min-width: 0;
 }
 
 .bcol {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: none;
 }
 
-/* A held bonus card slot (gold tone ring, like the strip/panel). */
+/* A held bonus chip: paper card, hairline border + inset gold tone
+   ring, tone-colored title (the BonusChip look). */
 .bslot {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  min-width: 30px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  border: 1px solid var(--warn);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 45%, transparent);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 3px 6px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 0 0 1px var(--warn);
   background: var(--paper);
 }
 
 .bslot b {
-  font-size: 7.5px;
-  font-weight: 700;
+  font-size: 8px;
+  font-weight: 600;
   color: var(--warn);
   white-space: nowrap;
 }
@@ -1062,28 +1125,21 @@
   color: var(--ink-2);
 }
 
-.bcol .bslot {
-  flex-direction: column;
-  gap: 1px;
-  min-width: 44px;
-  padding: 3px 6px;
-}
-
 .bslotEmpty {
   display: grid;
   place-items: center;
-  min-width: 30px;
-  padding: 2px 6px;
-  border-radius: 3px;
+  padding: 3px 6px;
+  border-radius: var(--radius-button);
   border: 1px dashed var(--hairline);
   color: var(--ink-3);
   font-size: 7px;
   font-weight: 600;
 }
 
+.bcol .bslot,
 .bcol .bslotEmpty {
-  min-width: 44px;
-  padding: 4px 6px;
+  min-width: 46px;
+  align-self: stretch;
 }
 
 /* -- Deck-design samples: a fan of three real skinned faces. -- */
