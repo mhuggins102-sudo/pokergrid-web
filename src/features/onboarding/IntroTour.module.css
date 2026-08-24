@@ -786,78 +786,147 @@
   animation: roll-fade 240ms ease;
 }
 
-/* Rails pop in beside the board without moving it. */
-.railWrap {
-  position: relative;
+/* Slide 7's scenes sit in one row: visual left, option label right. */
+.lookRowScene {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: roll-fade 240ms ease;
 }
 
-.railCol {
-  position: absolute;
-  left: calc(100% + 7px);
-  top: 0;
-  bottom: 0;
+/* Board + reserved rail tracks (right = rows, below = columns): the
+   chips fade, the layout never shifts. */
+.boardRails {
+  display: grid;
+  grid-template-columns: auto 24px;
+  grid-template-rows: auto 15px;
+  gap: 6px;
+  align-items: stretch;
+}
+
+/* The customize scenes run a slightly larger board than the other
+   mini-grid demos. */
+.lookBig .miniGrid {
+  grid-template-columns: repeat(5, 24px);
+}
+
+.lookBig .miniCell {
+  width: 24px;
+  height: 24px;
+}
+
+.lookBig .mc {
+  font-size: 10px;
+}
+
+.railsRight {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  animation: roll-fade 240ms ease;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.railsBelow {
+  grid-column: 1;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.railsShown {
+  opacity: 1;
 }
 
 .railChip {
   min-width: 22px;
-  padding: 1px 4px;
+  padding: 0 4px;
   border: 1px solid var(--hairline);
   border-radius: 3px;
   background: var(--paper-raised);
   color: var(--ink-2);
   font-size: 8.5px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 13px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
-/* The dock in miniature: drawn card + action buttons, rearranging
-   between the Hand stack (stacked column) and Split (2×2 grid). */
-.dockMock {
-  height: 112px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* -- The phone docks in miniature, bonus slots included: a gold ×2 +
+   two empties as the strip above the stacked docks, or the column
+   beside Split's 2×2 grid. -- */
+.dockSwap {
+  display: block;
   animation: roll-fade 240ms ease;
 }
 
+.dockMock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dockStackWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.dockRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dockRowTight {
+  display: flex;
+  gap: 4px;
+}
+
+.dockFullRow {
+  display: flex;
+  align-self: stretch;
+}
+
+.dockFullRow > span {
+  flex: 1;
+}
+
 .dockCard {
-  width: 46px;
-  height: 46px;
+  width: 38px;
+  height: 38px;
   border-radius: 5px;
   background: var(--card-face);
   border: 1px solid var(--rule);
   display: grid;
   place-items: center;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--face-suit-s);
+  color: var(--face-suit-h);
+  flex: none;
 }
 
 .dockBtnCol {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .dockBtnGrid {
   display: grid;
   grid-template-columns: repeat(2, auto);
-  gap: 5px;
+  gap: 4px;
 }
 
 .dockBtn {
-  padding: 4px 12px;
+  padding: 3px 9px;
   border-radius: var(--radius-button);
   background: var(--paper-raised);
   border: 1px solid var(--hairline);
   color: var(--ink-2);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   text-align: center;
   white-space: nowrap;
@@ -867,6 +936,44 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--paper);
+}
+
+.bstrip {
+  display: flex;
+  gap: 4px;
+}
+
+.bcol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bslot {
+  min-width: 26px;
+  height: 15px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  border: 1px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 14%, var(--paper-raised));
+  color: var(--warn);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.bcol .bslot,
+.bcol .bslotEmpty {
+  min-width: 40px;
+  height: 17px;
+}
+
+.bslotEmpty {
+  min-width: 26px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1px dashed var(--hairline);
 }
 
 /* -- Deck-design samples: a fan of three real skinned faces. -- */
