@@ -123,7 +123,13 @@ const NO_ARRIVALS: ReadonlySet<number> = new Set();
  * ♣-panel toggle (the exact commit a ♣-triggered joker lands in),
  * which would wipe a board-local previous-grid ref.
  */
-export function useJokerArrivals(grid: Grid): ReadonlySet<number> {
+export function useJokerArrivals(
+  grid: Grid,
+  /** True while the session sits at the opening deal (no moves yet):
+   *  a joker the engine seated before first paint is an ARRIVAL too —
+   *  without this, the game-start joker misses its bloom. */
+  openingDeal = false
+): ReadonlySet<number> {
   const prevGridRef = useRef<Grid | null>(null);
   const prevGrid = prevGridRef.current;
   useEffect(() => {
@@ -133,6 +139,11 @@ export function useJokerArrivals(grid: Grid): ReadonlySet<number> {
   for (const i of [...arrivedSlots]) {
     const c = grid[i];
     if (!(c && isJoker(c))) arrivedSlots.delete(i);
+  }
+  if (prevGrid === null && openingDeal) {
+    grid.forEach((c, i) => {
+      if (c && isJoker(c)) arrivedSlots.add(i);
+    });
   }
   if (prevGrid !== null && jokerCount(grid) > jokerCount(prevGrid)) {
     grid.forEach((c, i) => {
