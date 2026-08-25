@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import { isJoker } from '../../game/cards';
+import { SPIRAL_POSITION } from '../../game/grid';
 import { GameState } from '../../game/state';
 import {
   SFX,
@@ -87,27 +89,50 @@ export const useGameSfx = (
       // first paint. Give that deal its placement tick(s), timed to the
       // staged flight cadence in useAutoPlaceFlights.
       if (state.past.length === 0 && state.grid.some(c => c !== null)) {
-        const seats = state.grid.filter(c => c !== null).length;
+        // The deal may hold more than the opening card: drawNext seats
+        // any top-of-deck joker before first paint, and Gridlock
+        // pre-scatters a whole board. Walk the seats in the same spiral
+        // order useAutoPlaceFlights stages the flights, voicing each —
+        // a joker gets its flourish, not a plain tick.
+        const seats = state.grid
+          .flatMap((c, i) => (c !== null ? [i] : []))
+          .sort((a, b) => SPIRAL_POSITION[a] - SPIRAL_POSITION[b]);
         const reduced =
           typeof window !== 'undefined' &&
           !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-        if (seats > 3 && !reduced) {
-          // Gridlock: cards fly in one at a time (OPENING_RAPID_MS apart),
-          // so tick a placement for each as it lands.
-          for (let j = 1; j <= seats; j++) {
-            openingTimers.current.push(
-              window.setTimeout(() => SFX.place(), j * OPENING_RAPID_MS)
-            );
-          }
-        } else {
-          // Normal opening: a single card seats from the well. Double
-          // Duty's two-way opener (openingCard set) poses longer, so its
-          // tick waits for the extended stage to release.
+        if (reduced) {
+          // Everything seats at once: one tick stands in for the deal,
+          // with the joker flourish layered on top if the deal held one
+          // (the mid-game one-voice + flourish rule).
           const stageMs =
             state.openingCard !== null ? DUAL_OPENING_STAGE_MS : STAGE_MS;
           openingTimers.current.push(
             window.setTimeout(() => SFX.place(), stageMs)
           );
+          if (seats.some(i => isJoker(state.grid[i]!))) SFX.joker();
+        } else {
+          // Staged deal: each seat poses in the well, then flies. A
+          // normal card ticks as it LANDS; a joker's flourish fires as
+          // its pose BEGINS — sfxJoker starts ~0.4s late by design, the
+          // same offset the mid-game path gets by firing at commit.
+          // Gridlock (>3 seats) flies rapid-fire; Double Duty's two-way
+          // opener (openingCard set) poses longer before its tick.
+          const rapid = seats.length > 3;
+          let at = 0;
+          seats.forEach((slot, i) => {
+            const stage = rapid
+              ? OPENING_RAPID_MS
+              : i === 0 && state.openingCard !== null
+                ? DUAL_OPENING_STAGE_MS
+                : STAGE_MS;
+            const poseStart = at;
+            openingTimers.current.push(
+              isJoker(state.grid[slot]!)
+                ? window.setTimeout(() => SFX.joker(), poseStart)
+                : window.setTimeout(() => SFX.place(), poseStart + stage)
+            );
+            at += stage;
+          });
         }
       }
       // Five Draw session mount: the first hand is already dealt and
@@ -130,9 +155,18 @@ export const useGameSfx = (
     // pop-in animation).
     if (cur.historyLen > last.historyLen && cur.phase !== 'game-over') {
       const fresh = state.history.slice(last.historyLen);
-      if (fresh.some(e => e.startsWith('Joker auto-placed'))) {
-        SFX.joker();
-      }
+      // One flourish PER joker: consecutive deck jokers land as
+      // separate flights STAGE_MS apart, so their flourishes stagger on
+      // the same cadence instead of collapsing into one.
+      fresh
+        .filter(e => e.startsWith('Joker auto-placed'))
+        .forEach((_, j) => {
+          if (j === 0) SFX.joker();
+          else
+            openingTimers.current.push(
+              window.setTimeout(() => SFX.joker(), j * STAGE_MS)
+            );
+        });
       for (let i = fresh.length - 1; i >= 0; i--) {
         if (fresh[i].startsWith('Joker auto-placed')) continue;
         const name = sfxForHistoryEntry(fresh[i]);

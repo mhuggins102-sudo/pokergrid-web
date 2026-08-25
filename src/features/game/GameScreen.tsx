@@ -954,7 +954,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
   // Tracked here because the board below remounts on the ♣ toggle —
   // the same commit a ♣-triggered joker auto-places in.
-  const jokerArrivals = useJokerArrivals(state.grid);
+  const jokerArrivals = useJokerArrivals(
+    state.grid,
+    state.past.length === 0 && !viewOnly
+  );
   // Engine-placed cards (opening deal, auto-placed jokers) pose in the
   // well, then fly to their cell via the same FLIP a manual Place gets.
   // A re-hydrated archive view renders its finished board seated.
