@@ -95,6 +95,24 @@ const PALETTES: Record<ThemeKey, Palette> = {
     accent: '#6fb7e8',
     onAccent: '#0d2136',
   },
+  tide: {
+    bg: '#eaf3ee',
+    panel: '#f6fbf8',
+    outline: 'rgba(26, 50, 56, 0.18)',
+    textHi: '#1a3238',
+    textMid: '#4f7076',
+    accent: '#17858c',
+    onAccent: '#ffffff',
+  },
+  'tide-dark': {
+    bg: '#0e2024',
+    panel: '#142b30',
+    outline: 'rgba(220, 236, 231, 0.16)',
+    textHi: '#dcece7',
+    textMid: '#9cbab4',
+    accent: '#4ecfc4',
+    onAccent: '#0e2024',
+  },
 };
 
 // ---- HTML builder -----------------------------------------------------------

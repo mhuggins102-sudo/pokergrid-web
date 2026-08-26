@@ -50,5 +50,9 @@ describe('resolveTheme', () => {
     expect(resolveTheme('draft', 'dark', false)).toBe('draft-dark');
     expect(resolveTheme('draft', 'system', true)).toBe('draft-dark');
     expect(resolveTheme('draft', 'system', false)).toBe('draft');
+    expect(resolveTheme('tide', 'light', true)).toBe('tide');
+    expect(resolveTheme('tide', 'dark', false)).toBe('tide-dark');
+    expect(resolveTheme('tide', 'system', true)).toBe('tide-dark');
+    expect(resolveTheme('tide', 'system', false)).toBe('tide');
   });
 });

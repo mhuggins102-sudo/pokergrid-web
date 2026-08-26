@@ -118,7 +118,7 @@ const LINKS = [
 ];
 
 // Drawer quick-action cycle order for the theme family.
-const FAMILY_CYCLE: ThemeFamily[] = ['paper', 'card-room', 'draft'];
+const FAMILY_CYCLE: ThemeFamily[] = ['paper', 'card-room', 'draft', 'tide'];
 
 // Drawer quick-action cycle order for the dock layout.
 const DOCK_CYCLE: DockLayout[] = [
@@ -281,7 +281,9 @@ export function DesktopNav() {
       ? 'Paper'
       : settings.themeFamily === 'draft'
         ? 'Drafting'
-        : 'Card Room';
+        : settings.themeFamily === 'tide'
+          ? 'Tidepool'
+          : 'Card Room';
   const cycleFamily = () => {
     const i = FAMILY_CYCLE.indexOf(settings.themeFamily);
     settings.set({
@@ -296,9 +298,9 @@ export function DesktopNav() {
 
   // The decorative strip above the nameplate is family-voiced: Morning
   // Paper runs a broadsheet edition line, Drafting Room a drawing
-  // title block (sheet + scale · issue state · ISO date). CSS gates
-  // the strip to those two families × desktop, so these strings are
-  // inert in Card Room.
+  // title block (sheet + scale · issue state · ISO date), Tidepool a
+  // tide-table line. CSS gates the strip to those families × desktop,
+  // so these strings are inert in Card Room.
   const stripDark = resolved.endsWith('-dark');
   const strip =
     settings.themeFamily === 'draft'
@@ -307,11 +309,17 @@ export function DesktopNav() {
           mid: stripDark ? 'Night revision' : 'First issue',
           right: currentDateISO(),
         }
-      : {
-          left: `No. ${editionNo()}`,
-          mid: stripDark ? 'Late Night' : 'Morning Edition',
-          right: editionDate(),
-        };
+      : settings.themeFamily === 'tide'
+        ? {
+            left: `Chart No. ${editionNo()}`,
+            mid: stripDark ? 'Night tide' : 'Morning tide',
+            right: editionDate(),
+          }
+        : {
+            left: `No. ${editionNo()}`,
+            mid: stripDark ? 'Late Night' : 'Morning Edition',
+            right: editionDate(),
+          };
 
   return (
     <header

@@ -115,17 +115,17 @@ export function InvestWheel({
 
         <div className={styles.buttonRow}>
           <Button
-            variant="primary"
-            onClick={() => dispatch({ type: 'RESOLVE_CLUB_INVEST' })}
-          >
-            Continue
-          </Button>
-          <Button
             variant="secondary"
             disabled={deckRemaining < respins + 1}
             onClick={() => dispatch({ type: 'RESPIN_CLUB_INVEST' })}
           >
             Respin (Discard {respins + 1})
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => dispatch({ type: 'RESOLVE_CLUB_INVEST' })}
+          >
+            Continue
           </Button>
         </div>
       </div>

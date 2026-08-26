@@ -16,7 +16,7 @@ export type DockLayout =
 // Morning Paper) and the appearance (light/dark/system). Both looks
 // have both appearances; useApplyTheme resolves the pair to one of the
 // four data-theme token blocks.
-export type ThemeFamily = 'card-room' | 'paper' | 'draft';
+export type ThemeFamily = 'card-room' | 'paper' | 'draft' | 'tide';
 export type Appearance = 'light' | 'dark' | 'system';
 
 export interface Settings {

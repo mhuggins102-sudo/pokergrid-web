@@ -509,7 +509,9 @@
   :global(:root[data-theme='paper']) .editionStrip,
   :global(:root[data-theme='paper-dark']) .editionStrip,
   :global(:root[data-theme='draft']) .editionStrip,
-  :global(:root[data-theme='draft-dark']) .editionStrip {
+  :global(:root[data-theme='draft-dark']) .editionStrip,
+  :global(:root[data-theme='tide']) .editionStrip,
+  :global(:root[data-theme='tide-dark']) .editionStrip {
     display: flex;
     grid-column: 1 / -1;
     justify-content: space-between;
@@ -525,7 +527,9 @@
   :global(:root[data-theme='paper']) .dateline,
   :global(:root[data-theme='paper-dark']) .dateline,
   :global(:root[data-theme='draft']) .dateline,
-  :global(:root[data-theme='draft-dark']) .dateline {
+  :global(:root[data-theme='draft-dark']) .dateline,
+  :global(:root[data-theme='tide']) .dateline,
+  :global(:root[data-theme='tide-dark']) .dateline {
     display: none;
   }
 }
