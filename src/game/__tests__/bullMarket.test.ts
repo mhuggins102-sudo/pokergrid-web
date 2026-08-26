@@ -65,6 +65,66 @@ describe('Bull Market', () => {
     expect(resolved.perkSpent.length).toBe(atClub.perkSpent.length + 1);
   });
 
+  it('respin re-rolls the hand for an escalating discard cost', () => {
+    const rng = seededRng(11);
+    const s0 = newBullMarket(rng);
+    const spinning = step(
+      drawUntilClub(s0, rng),
+      { type: 'BEGIN_SUIT_ACTION' },
+      rng
+    );
+    if (spinning.phase.kind !== 'club-invest') throw new Error('phase');
+    expect(spinning.phase.respins).toBe(0);
+    const amount = spinning.phase.amount;
+
+    // First respin: 1 card off the deck head into the discards; the
+    // phase stays put, the amount never re-rolls.
+    const r1 = step(spinning, { type: 'RESPIN_CLUB_INVEST' }, rng);
+    if (r1.phase.kind !== 'club-invest') throw new Error('phase');
+    expect(r1.phase.respins).toBe(1);
+    expect(r1.phase.amount).toBe(amount);
+    expect(INVEST_HANDS).toContain(r1.phase.hand);
+    expect(r1.deck).toEqual(spinning.deck.slice(1));
+    expect(r1.discards).toEqual([...spinning.discards, spinning.deck[0]]);
+    expect(r1.history[r1.history.length - 1]).toBe(
+      'Respin (1 card discarded)'
+    );
+
+    // Second respin costs 2.
+    const r2 = step(r1, { type: 'RESPIN_CLUB_INVEST' }, rng);
+    if (r2.phase.kind !== 'club-invest') throw new Error('phase');
+    expect(r2.phase.respins).toBe(2);
+    expect(r2.deck).toEqual(r1.deck.slice(2));
+    expect(r2.discards).toEqual([...r1.discards, ...r1.deck.slice(0, 2)]);
+    expect(r2.history[r2.history.length - 1]).toBe(
+      'Respin (2 cards discarded)'
+    );
+
+    // Resolving applies the FINAL hand's boost.
+    const resolved = step(r2, { type: 'RESOLVE_CLUB_INVEST' }, rng);
+    expect(resolved.handBoost[r2.phase.hand]).toBe(amount);
+  });
+
+  it('respin is refused when the deck cannot cover the cost', () => {
+    const rng = seededRng(11);
+    const s0 = newBullMarket(rng);
+    const spinning = step(
+      drawUntilClub(s0, rng),
+      { type: 'BEGIN_SUIT_ACTION' },
+      rng
+    );
+    if (spinning.phase.kind !== 'club-invest') throw new Error('phase');
+    // Second respin would cost 2 — leave only 1 card so it's refused.
+    const r1 = step(spinning, { type: 'RESPIN_CLUB_INVEST' }, rng);
+    const short: GameState = { ...r1, deck: r1.deck.slice(0, 1) };
+    // Refusal returns the IDENTICAL object (rng purity: the stream must
+    // not advance on a rejected action).
+    expect(step(short, { type: 'RESPIN_CLUB_INVEST' }, rng)).toBe(short);
+    // And outside the phase it's a no-op too.
+    const idle = newBullMarket(seededRng(4));
+    expect(step(idle, { type: 'RESPIN_CLUB_INVEST' }, rng)).toBe(idle);
+  });
+
   it('handBoost raises a hand’s effective base in scoring', () => {
     const boost = { PAIR: 10 } as const;
     expect(effectiveHandBase('PAIR', boost)).toBe(15); // 5 base + 10

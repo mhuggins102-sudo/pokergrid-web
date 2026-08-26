@@ -1511,7 +1511,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       />
       <ReviveSheet open={ui.reviveOpen} />
       {ui.clubInvest && (
-        <InvestWheel hand={ui.clubInvest.hand} amount={ui.clubInvest.amount} />
+        // Keyed by respins: each re-roll remounts the wheel so its spin
+        // animation, click track, and landed state restart fresh.
+        <InvestWheel
+          key={ui.clubInvest.respins}
+          hand={ui.clubInvest.hand}
+          amount={ui.clubInvest.amount}
+          respins={ui.clubInvest.respins}
+          deckRemaining={state.deck.length}
+        />
       )}
     </>
   );

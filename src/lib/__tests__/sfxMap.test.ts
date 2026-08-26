@@ -27,6 +27,11 @@ describe('sfxForHistoryEntry', () => {
     expect(sfxForHistoryEntry('Flip (2 cards burned)')).toBe('flip');
   });
 
+  it('covers the Bull Market invest respin', () => {
+    expect(sfxForHistoryEntry('Respin (1 card discarded)')).toBe('riffle');
+    expect(sfxForHistoryEntry('Respin (2 cards discarded)')).toBe('riffle');
+  });
+
   it('stays silent for non-action entries', () => {
     expect(sfxForHistoryEntry('Discard')).toBeNull();
     expect(sfxForHistoryEntry('Game start')).toBeNull();

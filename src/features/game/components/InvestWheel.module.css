@@ -108,3 +108,10 @@
   color: var(--ink-3);
   font-size: 14px;
 }
+
+.buttonRow {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+}

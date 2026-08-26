@@ -18,14 +18,22 @@ const SPIN_S = 2.6; // spin duration
  * Bull Market ♣ invest reveal: a slot-machine reel spins the hand types
  * past a pointer and decelerates onto the one the reducer picked, with a
  * matching click track. When it stops it names the landed hand and the
- * boost; Continue applies it and draws the next card.
+ * boost; Continue applies it and draws the next card, or Respin abandons
+ * the result and re-rolls for an escalating deck cost (respins+1 cards
+ * discarded). The caller keys this component by `respins` so each
+ * re-roll REMOUNTS it — the spin animation, click track, and landed
+ * state all restart for the new result.
  */
 export function InvestWheel({
   hand,
   amount,
+  respins,
+  deckRemaining,
 }: {
   hand: HandRank;
   amount: number;
+  respins: number;
+  deckRemaining: number;
 }) {
   const { dispatch } = useGameSession();
   const sounds = useSettingsStore(s => s.sounds);
@@ -105,12 +113,21 @@ export function InvestWheel({
           )}
         </div>
 
-        <Button
-          variant="primary"
-          onClick={() => dispatch({ type: 'RESOLVE_CLUB_INVEST' })}
-        >
-          Continue
-        </Button>
+        <div className={styles.buttonRow}>
+          <Button
+            variant="primary"
+            onClick={() => dispatch({ type: 'RESOLVE_CLUB_INVEST' })}
+          >
+            Continue
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={deckRemaining < respins + 1}
+            onClick={() => dispatch({ type: 'RESPIN_CLUB_INVEST' })}
+          >
+            Respin (Discard {respins + 1})
+          </Button>
+        </div>
       </div>
     </Sheet>
   );
