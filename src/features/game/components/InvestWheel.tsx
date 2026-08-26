@@ -113,16 +113,19 @@ export function InvestWheel({
           )}
         </div>
 
+        {/* Both actions wait out the spin — a mid-spin Respin would
+            re-roll (and burn deck cards) before the reveal even lands. */}
         <div className={styles.buttonRow}>
           <Button
             variant="secondary"
-            disabled={deckRemaining < respins + 1}
+            disabled={!landed || deckRemaining < respins + 1}
             onClick={() => dispatch({ type: 'RESPIN_CLUB_INVEST' })}
           >
             Respin (Discard {respins + 1})
           </Button>
           <Button
             variant="primary"
+            disabled={!landed}
             onClick={() => dispatch({ type: 'RESOLVE_CLUB_INVEST' })}
           >
             Continue
