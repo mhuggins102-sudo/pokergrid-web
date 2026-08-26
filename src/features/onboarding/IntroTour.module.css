@@ -132,8 +132,8 @@
 
 .demo {
   /* One fixed frame height for every slide (fits the tallest demo:
-     the perk chips row over the full mini grid of real card faces). */
-  height: 186px;
+     the full mini grid of real card faces, 142px tall). */
+  height: 164px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -277,17 +277,18 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-/* -- Suit perks: chip row over a lived-in board; each perk acts on
-   the board during its chip's quarter of the shared 6s cycle. -- */
+/* -- Suit perks: chips flanking a lived-in board (♥/♠ left, ♦/♣
+   right); each perk acts on the board during its chip's quarter of
+   the shared 6s cycle. -- */
 .perksDemo {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 10px;
 }
 
-.perkRow {
+.perkCol {
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -315,15 +316,15 @@
   font-size: 14px;
 }
 
-/* Narrow phones: the four-chip row must fit inside the demo frame. */
+/* Narrow phones: chips + board + chips must fit inside the frame. */
 @media (max-width: 445px) {
-  .perkRow {
+  .perksDemo {
     gap: 6px;
   }
 
   .perkChip {
     gap: 4px;
-    padding: 3px 7px;
+    padding: 3px 6px;
     font-size: 11px;
   }
 
@@ -444,36 +445,70 @@
   }
 }
 
-/* ♣ Bonus (75-100%): a bonus chip pops in beside the grid — no board
-   card lights up, since the DRAWN club triggers the draw, not a
-   placed one. */
-.bonusPop {
+/* ♣ Bonus (75-100%): a mini of the real bonus-draw modal pops in
+   over the board, the way the game overlays it — no board card
+   lights up, since the DRAWN club triggers the draw, not a placed
+   one. */
+.bonusPopup {
   position: absolute;
-  left: calc(50% + 79px);
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--warn);
-  color: var(--warn);
-  background: color-mix(in srgb, var(--warn) 12%, var(--paper));
-  font-size: 10.5px;
-  font-weight: 700;
-  white-space: nowrap;
+  inset: 0;
+  margin: auto;
+  width: 112px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 7px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--hairline);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   animation: tour-bonus-pop 6s ease-in-out infinite;
 }
 
+.bonusPopupTitle {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.bonusPopupOpt {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--warn) 65%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--warn) 8%, var(--paper));
+  font-size: 9.5px;
+  color: var(--ink);
+}
+
+.bonusPopupOpt b {
+  font-weight: 700;
+}
+
+.bonusPopupOpt span {
+  font-weight: 700;
+  color: var(--warn);
+  font-variant-numeric: tabular-nums;
+}
+
 @keyframes tour-bonus-pop {
-  85%,
-  93% {
+  82%,
+  95% {
     opacity: 1;
+    transform: scale(1);
   }
   0%,
-  81%,
-  96%,
+  79%,
+  98%,
   100% {
     opacity: 0;
+    transform: scale(0.92);
   }
 }
 
