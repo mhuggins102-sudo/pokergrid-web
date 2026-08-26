@@ -127,7 +127,10 @@ export function useJokerArrivals(
   grid: Grid,
   /** True while the session sits at the opening deal (no moves yet):
    *  a joker the engine seated before first paint is an ARRIVAL too —
-   *  without this, the game-start joker misses its bloom. */
+   *  without this, the game-start joker misses its bloom. One-shot,
+   *  but not first-render-latched: with the intro tour up the flag
+   *  arrives false and flips true when the tour closes, and the bloom
+   *  seeds on that render instead. */
   openingDeal = false
 ): ReadonlySet<number> {
   const prevGridRef = useRef<Grid | null>(null);
@@ -140,7 +143,9 @@ export function useJokerArrivals(
     const c = grid[i];
     if (!(c && isJoker(c))) arrivedSlots.delete(i);
   }
-  if (prevGrid === null && openingDeal) {
+  const openingSeededRef = useRef(false);
+  if (openingDeal && !openingSeededRef.current) {
+    openingSeededRef.current = true;
     grid.forEach((c, i) => {
       if (c && isJoker(c)) arrivedSlots.add(i);
     });

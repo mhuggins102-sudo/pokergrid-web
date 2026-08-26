@@ -132,8 +132,8 @@
 
 .demo {
   /* One fixed frame height for every slide (fits the tallest demo:
-     the perk chips row over the full mini grid). */
-  height: 164px;
+     the perk chips row over the full mini grid of real card faces). */
+  height: 186px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,16 +244,17 @@
   animation: none !important;
 }
 
-/* -- Mini 5×5 grid (goal / spiral / perk demos) -- */
+/* -- Mini 5×5 grid (goal / spiral / perk / looks demos): 26px cells,
+   big enough for the real CardFace renderer to stay legible. -- */
 .miniGrid {
   display: grid;
-  grid-template-columns: repeat(5, 20px);
+  grid-template-columns: repeat(5, 26px);
   gap: 3px;
 }
 
 .miniCell {
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   border-radius: 3px;
   background: var(--paper-sunken);
   border: 1px solid var(--hairline);
@@ -351,20 +352,16 @@
   position: relative;
 }
 
-/* A seated mini card: rank + suit glyph. Its `--tone` is one of the
-   ON-FACE suit inks (--face-suit-*) — the UI --suit-* set lightens
-   spades for dark surfaces, which washes out on the paper-light card
-   face. 8.5px so the two-char '10' rank fits the cell. */
-.mc {
-  display: grid;
-  place-items: center;
-  background: var(--card-face);
-  border-color: var(--rule);
-  color: var(--tone);
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1;
+/* A seated cell hosting the real <CardFace/>: the face draws its own
+   paper, border and radius, so the cell goes transparent and just
+   sizes/clips it (the DisplayPreview cellFilled pattern). Animation
+   classes (seatNew ring, perk swap/slide/destroy) ride the cell. */
+.mcCard {
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
 }
 
 /* ♥ Swap (0-25%): K♥ and 2♦ trade cells and settle back. */
@@ -379,7 +376,7 @@
 @keyframes tour-swap-r {
   9%,
   16% {
-    transform: translateX(23px);
+    transform: translateX(29px);
   }
   0%,
   5%,
@@ -392,7 +389,7 @@
 @keyframes tour-swap-l {
   9%,
   16% {
-    transform: translateX(-23px);
+    transform: translateX(-29px);
   }
   0%,
   5%,
@@ -410,7 +407,7 @@
 @keyframes tour-slide-cell {
   35%,
   41% {
-    transform: translateX(-23px);
+    transform: translateX(-29px);
   }
   0%,
   30%,
@@ -452,7 +449,7 @@
    placed one. */
 .bonusPop {
   position: absolute;
-  left: calc(50% + 64px);
+  left: calc(50% + 79px);
   top: 50%;
   transform: translateY(-50%);
   padding: 2px 7px;
@@ -828,19 +825,15 @@
   align-items: stretch;
 }
 
-/* The customize scenes run a slightly larger board than the other
-   mini-grid demos. */
+/* The customize scene shares the 26px cell scale; the class remains
+   the hook for the scene's board-specific tweaks. */
 .lookBig .miniGrid {
-  grid-template-columns: repeat(5, 24px);
+  grid-template-columns: repeat(5, 26px);
 }
 
 .lookBig .miniCell {
-  width: 24px;
-  height: 24px;
-}
-
-.lookBig .mc {
-  font-size: 10px;
+  width: 26px;
+  height: 26px;
 }
 
 .railsRight {

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useTier } from '../../app/useTier';
-import { Card, Rank, Suit } from '../../game/cards';
+import { Card, Rank, RANKS, StandardCard, Suit, SUITS } from '../../game/cards';
 import { LIVE_CHALLENGES } from '../../game/challenges';
 import { freshShuffledDeck, shuffle } from '../../game/deck';
 import { SPIRAL_POSITION } from '../../game/grid';
 import { HandRank } from '../../game/hands';
 import { TARGET_BY_DIFFICULTY } from '../../game/rules';
-import { HAND_BASE_VALUE } from '../../game/scoring';
+import { HAND_BASE_VALUE, scoreGrid } from '../../game/scoring';
 import type { SuitKey } from '../../design/deckSkins';
 import { SKIN_CATALOG, skinName } from '../../design/skinCatalog';
 import { Difficulty, difficultyColors } from '../../design/tokens';
@@ -77,45 +77,21 @@ function useShuffleBag<T>(
   return cur;
 }
 
-const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', D: '♦', C: '♣' };
-
-// Mini cards live on `--card-face` (paper-light in EVERY theme), so
-// they use the on-face suit inks (`--face-suit-*`, the tokens
-// CardFace's four-color path uses) — the UI `--suit-*` set lightens
-// spades for dark surfaces and washes out on the cream face.
-const mcTone = (suit: Suit): CSSProperties =>
-  ({ '--tone': `var(--face-suit-${suit.toLowerCase()})` }) as CSSProperties;
-
-const mcFace = (card: Card): ReactNode =>
-  card.kind === 'standard' ? (
-    <>
-      {card.rank}
-      {SUIT_GLYPH[card.suit]}
-    </>
-  ) : (
-    '★'
-  );
-
-// A 5×5 of tiny cells, classed/styled/filled per index.
+// A 5×5 of tiny cells, classed/filled per index. Cells are divs so a
+// seated cell can host the real <CardFace/> (itself a div).
 function MiniGrid({
   cellClass,
-  cellStyle,
   cellContent,
 }: {
   cellClass: (idx: number) => string;
-  cellStyle?: (idx: number) => CSSProperties | undefined;
   cellContent?: (idx: number) => ReactNode;
 }) {
   return (
     <div className={styles.miniGrid} aria-hidden="true">
       {Array.from({ length: 25 }, (_, i) => (
-        <span
-          key={i}
-          className={`${styles.miniCell} ${cellClass(i)}`}
-          style={cellStyle?.(i)}
-        >
+        <div key={i} className={`${styles.miniCell} ${cellClass(i)}`}>
           {cellContent?.(i)}
-        </span>
+        </div>
       ))}
     </div>
   );
@@ -180,16 +156,10 @@ function SpiralDemo() {
       cellClass={i => {
         const p = SPIRAL_POSITION[i];
         if (p > seated) return '';
-        return `${styles.mc} ${p === seated && !still ? styles.seatNew : ''}`;
-      }}
-      cellStyle={i => {
-        const card = cardAt(i);
-        return SPIRAL_POSITION[i] <= seated && card.kind === 'standard'
-          ? mcTone(card.suit)
-          : undefined;
+        return `${styles.mcCard} ${p === seated && !still ? styles.seatNew : ''}`;
       }}
       cellContent={i =>
-        SPIRAL_POSITION[i] <= seated ? mcFace(cardAt(i)) : null
+        SPIRAL_POSITION[i] <= seated ? <CardFace card={cardAt(i)} /> : null
       }
     />
   );
@@ -204,16 +174,16 @@ const PERKS: Array<[string, string, string]> = [
 
 // The perk demo board: nine cards seated in the center 3×3 (the
 // spiral's first nine slots), keyed by grid index.
-const MINI_BOARD: Record<number, [Rank, Suit]> = {
-  6: ['7', 'S'],
-  7: ['K', 'H'],
-  8: ['2', 'D'],
-  11: ['J', 'C'],
-  12: ['A', 'S'],
-  13: ['9', 'H'],
-  16: ['4', 'D'],
-  17: ['Q', 'C'],
-  18: ['8', 'S'],
+const MINI_BOARD: Record<number, Card> = {
+  6: C('7', 'S'),
+  7: C('K', 'H'),
+  8: C('2', 'D'),
+  11: C('J', 'C'),
+  12: C('A', 'S'),
+  13: C('9', 'H'),
+  16: C('4', 'D'),
+  17: C('Q', 'C'),
+  18: C('8', 'S'),
 };
 
 // Each perk acts on its own cells in one window of the shared 6s
@@ -251,18 +221,10 @@ function PerksDemo() {
       <div className={styles.perkBoard}>
         <MiniGrid
           cellClass={i =>
-            MINI_BOARD[i] ? `${styles.mc} ${PERK_CELL[i] ?? ''}` : ''
-          }
-          cellStyle={i =>
-            MINI_BOARD[i] ? mcTone(MINI_BOARD[i][1]) : undefined
+            MINI_BOARD[i] ? `${styles.mcCard} ${PERK_CELL[i] ?? ''}` : ''
           }
           cellContent={i =>
-            MINI_BOARD[i] ? (
-              <>
-                {MINI_BOARD[i][0]}
-                {SUIT_GLYPH[MINI_BOARD[i][1]]}
-              </>
-            ) : null
+            MINI_BOARD[i] ? <CardFace card={MINI_BOARD[i]} /> : null
           }
         />
         <span className={styles.bonusPop}>+ bonus</span>
@@ -423,10 +385,152 @@ function ExploreDemo() {
   );
 }
 
-// Plausible rail totals for the line-rails scene (rows beside the
-// board, columns below it — the in-game arrangement).
-const ROW_TOTALS = ['15', '–', '40', '5', '–'];
-const COL_TOTALS = ['5', '30', '–', '12', '–'];
+// ── Slide 7's board is CONSTRUCTED, not just dealt ──
+// A purely random 25-card deal almost never shows off the scoring
+// range (measured: <1% hold four distinct hand types — pairs dominate).
+// So four of the five rows are BUILT as four different hand types
+// drawn from a shuffled deck, the fifth takes whatever's left, and
+// rows and cards shuffle so the board still reads dealt. scoreGrid
+// then prices every line for the rails; the rare build where a filler
+// pairs up and merges two rows into the same type re-rolls.
+
+const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+const removeCards = (pool: StandardCard[], cards: StandardCard[]): StandardCard[] =>
+  pool.filter(c => !cards.includes(c));
+
+// Ranks holding at least n copies in the pool, as card groups.
+const rankGroups = (pool: StandardCard[], n: number): StandardCard[][] => {
+  const by = new Map<Rank, StandardCard[]>();
+  for (const c of pool) by.set(c.rank, [...(by.get(c.rank) ?? []), c]);
+  return [...by.values()].filter(g => g.length >= n);
+};
+
+// n filler cards of ranks not yet in the row (and distinct from each
+// other), so a filler can't upgrade the built hand.
+const fillers = (
+  pool: StandardCard[],
+  n: number,
+  used: Set<Rank>
+): StandardCard[] | null => {
+  const out: StandardCard[] = [];
+  for (const c of pool) {
+    if (used.has(c.rank)) continue;
+    used.add(c.rank);
+    out.push(c);
+    if (out.length === n) return out;
+  }
+  return null;
+};
+
+const buildRow = (
+  want: HandRank,
+  pool: StandardCard[]
+): StandardCard[] | null => {
+  switch (want) {
+    case 'PAIR': {
+      const g = rankGroups(pool, 2);
+      if (!g.length) return null;
+      const pair = pick(g).slice(0, 2);
+      const fill = fillers(removeCards(pool, pair), 3, new Set([pair[0].rank]));
+      return fill && [...pair, ...fill];
+    }
+    case 'TWO_PAIR': {
+      const g = rankGroups(pool, 2);
+      if (g.length < 2) return null;
+      const [a, b] = shuffle(g);
+      const pairs = [...a.slice(0, 2), ...b.slice(0, 2)];
+      const fill = fillers(
+        removeCards(pool, pairs),
+        1,
+        new Set([a[0].rank, b[0].rank])
+      );
+      return fill && [...pairs, ...fill];
+    }
+    case 'THREE_OF_A_KIND': {
+      const g = rankGroups(pool, 3);
+      if (!g.length) return null;
+      const trips = pick(g).slice(0, 3);
+      const fill = fillers(removeCards(pool, trips), 2, new Set([trips[0].rank]));
+      return fill && [...trips, ...fill];
+    }
+    case 'FULL_HOUSE': {
+      const g3 = rankGroups(pool, 3);
+      if (!g3.length) return null;
+      const trips = pick(g3).slice(0, 3);
+      const g2 = rankGroups(removeCards(pool, trips), 2).filter(
+        g => g[0].rank !== trips[0].rank
+      );
+      return g2.length ? [...trips, ...pick(g2).slice(0, 2)] : null;
+    }
+    case 'FLUSH': {
+      for (const suit of shuffle(SUITS)) {
+        const cs = pool.filter(c => c.suit === suit);
+        if (cs.length >= 5) return cs.slice(0, 5);
+      }
+      return null;
+    }
+    case 'STRAIGHT': {
+      // Any 5-rank window of the RANKS order (A-low through 9-K).
+      const starts = shuffle(
+        Array.from({ length: RANKS.length - 4 }, (_, i) => i)
+      );
+      for (const start of starts) {
+        const run: StandardCard[] = [];
+        for (let k = 0; k < 5; k++) {
+          const c = pool.find(x => x.rank === RANKS[start + k]);
+          if (!c) break;
+          run.push(c);
+        }
+        if (run.length === 5) return run;
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+};
+
+const HAND_POOL: HandRank[] = [
+  'PAIR',
+  'TWO_PAIR',
+  'THREE_OF_A_KIND',
+  'STRAIGHT',
+  'FLUSH',
+  'FULL_HOUSE',
+];
+
+type ScoredBoard = { deal: Card[]; report: ReturnType<typeof scoreGrid> };
+
+// Exported for tests: the ≥4-distinct-hand-types guarantee is the
+// whole point of the construction.
+export const dealScoredBoard = (): ScoredBoard => {
+  let best: (ScoredBoard & { kinds: number }) | null = null;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    let pool = freshShuffledDeck(Math.random, 0).filter(
+      (c): c is StandardCard => c.kind === 'standard'
+    );
+    const rows: StandardCard[][] = [];
+    for (const want of shuffle(HAND_POOL)) {
+      if (rows.length === 4) break;
+      const row = buildRow(want, pool);
+      if (row) {
+        rows.push(shuffle(row));
+        pool = removeCards(pool, row);
+      }
+    }
+    if (rows.length < 4) continue;
+    rows.push(pool.slice(0, 5));
+    const deal: Card[] = shuffle(rows).flat();
+    const report = scoreGrid(deal, [], { ignoreIncompletePenalty: true });
+    const kinds = new Set(
+      report.lines.map(l => l.hand).filter(h => h && h !== 'HIGH_CARD')
+    ).size;
+    if (!best || kinds > best.kinds) best = { deal, report, kinds };
+    if (best.kinds >= 4) break;
+  }
+  return best!;
+};
 
 // A mini bonus card strip/column, mirroring BonusCardStrip's row (a
 // full-width band of three equal slots: gold-ringed held chip with a
@@ -615,7 +719,9 @@ function LookDemo() {
   // board with rails shown.
   const still = useStill();
   const [t, setT] = useState(0);
-  const [board] = useState<Card[]>(dealCards);
+  // Fresh scored board per viewing (the tour remounts the demo each
+  // time this page is opened).
+  const [{ deal: board, report }] = useState<ScoredBoard>(dealScoredBoard);
   useEffect(() => {
     if (still) return;
     const id = window.setInterval(() => setT(x => x + 1), 1400);
@@ -656,41 +762,52 @@ function LookDemo() {
       className={styles.lookRowScene}
       aria-hidden="true"
     >
-      <div className={`${styles.boardRails} ${styles.lookBig}`}>
+      <div
+        className={`${styles.boardRails} ${styles.lookBig}`}
+        // The real faces color through the on-face suit tokens, so the
+        // 2-color beat overrides them to the classic red/black split
+        // for every card at once (a no-op if the player already plays
+        // two-color — CardFace is then red/black regardless).
+        style={
+          fourColor
+            ? undefined
+            : ({
+                '--face-suit-h': 'var(--card-red)',
+                '--face-suit-d': 'var(--card-red)',
+                '--face-suit-c': 'var(--card-black)',
+                '--face-suit-s': 'var(--card-black)',
+              } as CSSProperties)
+        }
+      >
         <MiniGrid
-          cellClass={() => styles.mc}
-          cellStyle={i => {
-            const card = board[i];
-            if (card.kind !== 'standard') return undefined;
-            if (fourColor) return mcTone(card.suit);
-            const red = card.suit === 'H' || card.suit === 'D';
-            return {
-              '--tone': red ? 'var(--card-red)' : 'var(--card-black)',
-            } as CSSProperties;
-          }}
-          cellContent={i => mcFace(board[i])}
+          cellClass={() => styles.mcCard}
+          cellContent={i => <CardFace card={board[i]} />}
         />
         <span
           className={`${styles.railsRight} ${
             railsOn ? styles.railsShown : ''
           }`}
         >
-          {ROW_TOTALS.map((v, i) => (
-            <span key={i} className={styles.railChip}>
-              {v}
-            </span>
-          ))}
+          {report.lines
+            .filter(l => l.kind === 'row')
+            .map(l => (
+              <span key={l.index} className={styles.railChip}>
+                {l.total > 0 ? l.total : '–'}
+              </span>
+            ))}
         </span>
         <span
           className={`${styles.railsBelow} ${
             railsOn ? styles.railsShown : ''
           }`}
         >
-          {COL_TOTALS.map((v, i) => (
-            <span key={i} className={styles.railChip}>
-              {v}
-            </span>
-          ))}
+          {report.lines
+            .filter(l => l.kind === 'col')
+            .map(l => (
+              <span key={l.index} className={styles.railChip}>
+                {l.total > 0 ? l.total : '–'}
+              </span>
+            ))}
         </span>
       </div>
       <span className={styles.lookLabelCol}>

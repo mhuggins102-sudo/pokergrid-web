@@ -32,7 +32,11 @@ export const useGameSfx = (
   /** View-only rehydrated sessions (revisiting a completed daily) must
    *  be silent — the ~25 rehydrated placements would otherwise replay
    *  their ticks, and the win/lose sting + joker chime with them. */
-  muted = false
+  muted = false,
+  /** True DEFERS the whole voice (the intro tour is up): unlike muted,
+   *  nothing is tracked yet, so the first hold-free pass runs the
+   *  session-mount branch — the opening deal sounds when it lands. */
+  hold = false
 ): void => {
   const sounds = useSettingsStore(s => s.sounds);
   const prev = useRef<{
@@ -48,6 +52,9 @@ export const useGameSfx = (
   const openingTimers = useRef<number[]>([]);
 
   useEffect(() => {
+    // Held: don't even record the baseline — when hold lifts, the
+    // mount branch below must still see last === null.
+    if (hold) return;
     const cur = {
       historyLen: state.history.length,
       phase: state.phase.kind,
@@ -255,7 +262,7 @@ export const useGameSfx = (
       if (finalScore >= state.target) sfxWin();
       else sfxLose();
     }
-  }, [state, sounds, finalScore, muted]);
+  }, [state, sounds, finalScore, muted, hold]);
 
   // Cancel any pending opening-deal ticks on unmount (e.g. leaving mid
   // Gridlock deal) so they don't fire after the screen is gone.
