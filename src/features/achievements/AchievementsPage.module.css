@@ -330,6 +330,10 @@
     border: 1px solid var(--hairline);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    /* The expand auto-scroll (block:'start') leaves a sliver of air
+       above the card instead of pinning it to the viewport top. */
+    scroll-margin-top: 14px;
+    scroll-margin-bottom: 14px;
     padding: 14px 16px;
     /* Clear the sticky header when an opened card auto-scrolls up. */
     scroll-margin-top: 96px;

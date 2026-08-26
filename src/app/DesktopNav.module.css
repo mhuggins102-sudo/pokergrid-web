@@ -612,6 +612,11 @@
 
   .left {
     min-width: 0;
+    /* A hair of extra inset for the wordmark + page label: they LINE
+       UP with the content edge exactly, but the rounded corners of
+       the cards below make dead-flush read as too far left. Optical
+       correction, phone only. */
+    padding-left: 4px;
   }
 
   /* The center nav's links moved into the hamburger Drawer — the row

@@ -518,6 +518,9 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 24px 26px;
+  /* The stats-toggle auto-scroll (phone, block:'end') stops with a
+     sliver of air below the panel instead of flush to the edge. */
+  scroll-margin-bottom: 14px;
 }
 
 .detailHead {
