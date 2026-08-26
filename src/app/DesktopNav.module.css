@@ -612,11 +612,13 @@
 
   .left {
     min-width: 0;
-    /* A hair of extra inset for the wordmark + page label: they LINE
-       UP with the content edge exactly, but the rounded corners of
-       the cards below make dead-flush read as too far left. Optical
-       correction, phone only. */
-    padding-left: 4px;
+    /* Inset the wordmark + page label to MIRROR the right side: the
+       ☰ glyph's visible right edge sits 42px off the screen edge
+       (16px bar padding + button chrome + the icon's own inset), so
+       the title's left edge matches it — 16 + 26 = 42. The content
+       cards below stay at the bar padding; the title floating a
+       little deeper reads intentional against their rounded corners. */
+    padding-left: 26px;
   }
 
   /* The center nav's links moved into the hamburger Drawer — the row
