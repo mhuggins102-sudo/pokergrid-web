@@ -966,7 +966,7 @@ export const TOUR_PAGES: TourPage[] = [
   },
   {
     id: 'scoring',
-    title: 'Every line pays — or costs',
+    title: 'Every line pays or costs',
     body: 'Better hands score more: a pair earns 5, a straight 30, a flush 40, a royal flush 120, etc. Jokers are wild and help with creating the higher value hands. Any line left unfinished at game end costs 25.',
     demo: <ScoringDemo />,
   },
@@ -977,15 +977,15 @@ export const TOUR_PAGES: TourPage[] = [
     demo: <ExploreDemo />,
   },
   {
-    id: 'looks',
-    title: 'Customize your look',
-    body: "Visit Settings to set your in-game look. Options include the overall theme, light or dark mode, 2- or 4-color deck, deck design, line rails (keep each line's current score on display), dock type (the action interface), and more.",
-    demo: <LookDemo />,
-  },
-  {
     id: 'progress',
     title: 'Level up, unlock decks',
     body: 'Every game earns XP, and leveling up unlocks new deck designs. On phones, the ☰ menu in the top-right corner can be used to tweak the deck design and other settings mid-game.',
     demo: <XpDemo />,
+  },
+  {
+    id: 'looks',
+    title: 'Customize your look',
+    body: "Visit Settings to set your in-game look. Options include the overall theme, light or dark mode, 2- or 4-color deck, deck design, line rails (keep each line's current score on display), dock type (the action interface), and more.",
+    demo: <LookDemo />,
   },
 ];

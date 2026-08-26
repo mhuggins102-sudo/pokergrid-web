@@ -37,7 +37,7 @@ test('first game shows the tour; finishing it dismisses for good', async ({
     await next.click();
     await expect(tour).toContainText(`${i} / 8`);
   }
-  await expect(tour).toContainText('Level up, unlock decks');
+  await expect(tour).toContainText('Customize your look');
 
   // ◀ pages back too.
   await tour.getByRole('button', { name: 'Previous page' }).click();
