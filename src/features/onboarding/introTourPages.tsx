@@ -202,21 +202,23 @@ const PERK_CELL: Record<number, string> = {
 };
 
 function PerksDemo() {
+  // Chips flank the board — ♥/♠ left, ♦/♣ right — so the demo is no
+  // taller than the grid itself. `--d` keeps each chip's original
+  // quarter of the shared 6s cycle.
+  const chip = ([glyph, label, tone]: (typeof PERKS)[number], i: number) => (
+    <span
+      key={label}
+      className={styles.perkChip}
+      style={{ '--tone': `var(${tone})`, '--d': `${i * 1.5}s` } as CSSProperties}
+    >
+      <span className={styles.perkGlyph}>{glyph}</span>
+      {label}
+    </span>
+  );
   return (
     <div className={styles.perksDemo} aria-hidden="true">
-      <div className={styles.perkRow}>
-        {PERKS.map(([glyph, label, tone], i) => (
-          <span
-            key={label}
-            className={styles.perkChip}
-            style={
-              { '--tone': `var(${tone})`, '--d': `${i * 1.5}s` } as CSSProperties
-            }
-          >
-            <span className={styles.perkGlyph}>{glyph}</span>
-            {label}
-          </span>
-        ))}
+      <div className={styles.perkCol}>
+        {PERKS.slice(0, 2).map((p, i) => chip(p, i))}
       </div>
       <div className={styles.perkBoard}>
         <MiniGrid
@@ -227,7 +229,22 @@ function PerksDemo() {
             MINI_BOARD[i] ? <CardFace card={MINI_BOARD[i]} /> : null
           }
         />
-        <span className={styles.bonusPop}>+ bonus</span>
+        {/* The ♣ window overlays a mini of the real bonus-draw modal
+            (BonusDrawModal) over the board, the way the game does. */}
+        <span className={styles.bonusPopup}>
+          <span className={styles.bonusPopupTitle}>Draw a bonus card</span>
+          <span className={styles.bonusPopupOpt}>
+            <b>Straight</b>
+            <span>×2</span>
+          </span>
+          <span className={styles.bonusPopupOpt}>
+            <b>Flush</b>
+            <span>×1.5</span>
+          </span>
+        </span>
+      </div>
+      <div className={styles.perkCol}>
+        {PERKS.slice(2).map((p, i) => chip(p, i + 2))}
       </div>
     </div>
   );
