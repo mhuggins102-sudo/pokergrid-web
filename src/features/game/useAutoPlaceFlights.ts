@@ -59,7 +59,12 @@ export function useAutoPlaceFlights(
   state: GameState,
   /** True disables all staging — a re-hydrated finished board (the
    *  archive's view-only session) must render seated, not re-deal. */
-  disable = false
+  disable = false,
+  /** True DEFERS the opening deal (the intro tour is up): the seated
+   *  opening cards stay hidden and nothing is staged until the first
+   *  render where hold is false — then the normal relay plays, as if
+   *  the session had just mounted. */
+  hold = false
 ): AutoPlaceFlights {
   const queueRef = useRef<number[]>([]);
 
@@ -79,11 +84,15 @@ export function useAutoPlaceFlights(
   // scattered board (Gridlock) seats many cards at once; rather than
   // dumping them all via a CSS cascade, deal them one at a time too,
   // just rapid-fire (OPENING_RAPID_MS) so the burst stays snappy.
-  const cssDealRef = useRef<Set<number> | null>(null);
+  const cssDealRef = useRef<Set<number>>(new Set());
   const openingSeatsRef = useRef<Set<number>>(new Set());
-  if (cssDealRef.current === null) {
+  // One-shot, but hold-aware: while the intro tour holds the deal the
+  // queue stays unseeded, so the first hold-free render stages the
+  // opening exactly like a fresh mount would have.
+  const openingSeededRef = useRef(false);
+  if (!hold && !openingSeededRef.current) {
+    openingSeededRef.current = true;
     const seats = state.grid.flatMap((c, i) => (c ? [i] : []));
-    cssDealRef.current = new Set();
     if (!skip) {
       queueRef.current = seats.sort(
         (a, b) => SPIRAL_POSITION[a] - SPIRAL_POSITION[b]
@@ -178,8 +187,13 @@ export function useAutoPlaceFlights(
       cur !== null && shownCard
         ? { slot: cur, card: shownCard, layoutId: flightLayoutId(shownCard, cur) }
         : null,
-    hiddenSlots:
-      queueRef.current.length > 0 ? new Set(queueRef.current) : EMPTY,
+    // While holding, the un-staged opening seats must not flash on the
+    // grid — hide every occupied slot until the deal is released.
+    hiddenSlots: hold
+      ? new Set(state.grid.flatMap((c, i) => (c ? [i] : [])))
+      : queueRef.current.length > 0
+        ? new Set(queueRef.current)
+        : EMPTY,
     cssDeal,
   };
 }

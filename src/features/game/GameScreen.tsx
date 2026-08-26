@@ -854,7 +854,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
 
   // View-only archive revisits stay silent — no replayed place ticks,
   // no win/lose sting (revision item 17).
-  useGameSfx(state, liveReport.total, viewOnly);
+  useGameSfx(state, liveReport.total, viewOnly, tourOpen);
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
   const dockLayoutSetting = useSettingsStore(s => s.dockLayout);
   // Five Draw ignores the dock-layout setting on the phone: every
@@ -956,14 +956,17 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // the same commit a ♣-triggered joker auto-places in.
   const jokerArrivals = useJokerArrivals(
     state.grid,
-    state.past.length === 0 && !viewOnly
+    state.past.length === 0 && !viewOnly && !tourOpen
   );
   // Engine-placed cards (opening deal, auto-placed jokers) pose in the
   // well, then fly to their cell via the same FLIP a manual Place gets.
   // A re-hydrated archive view renders its finished board seated.
   const { flight, hiddenSlots, cssDeal } = useAutoPlaceFlights(
     state,
-    viewOnly
+    viewOnly,
+    // The intro tour holds the opening deal — the game visibly starts
+    // when it closes.
+    tourOpen
   );
   // Spiraling: a committed ♠ logs "Spiral a → b" — run the hop overlay
   // (the card visibly travels the spiral, one hop per space, ticking as

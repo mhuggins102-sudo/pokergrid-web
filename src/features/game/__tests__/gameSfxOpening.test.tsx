@@ -90,6 +90,23 @@ describe('useGameSfx opening deal', () => {
     expect(SFX.joker).not.toHaveBeenCalled();
   });
 
+  it('defers the opening voice while the intro tour holds it', () => {
+    window.matchMedia = noMotionPrefs as typeof window.matchMedia;
+    const { rerender } = renderHook(
+      ({ hold }) => useGameSfx(openingState(true), 0, false, hold),
+      { initialProps: { hold: true } }
+    );
+    // Held: total silence, and no baseline recorded.
+    act(() => vi.runAllTimers());
+    expect(SFX.place).not.toHaveBeenCalled();
+    expect(SFX.joker).not.toHaveBeenCalled();
+    // Tour closed: the mount branch runs as if freshly mounted.
+    rerender({ hold: false });
+    act(() => vi.runAllTimers());
+    expect(SFX.place).toHaveBeenCalledTimes(1);
+    expect(SFX.joker).toHaveBeenCalledTimes(1);
+  });
+
   it('layers the flourish on the single tick under reduced motion', () => {
     // Default test setup declares prefers-reduced-motion: everything
     // seats at once, so one tick stands in for the deal with the joker

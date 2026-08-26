@@ -23,6 +23,13 @@ test('first game shows the tour; finishing it dismisses for good', async ({
   await expect(tour).toContainText('1 / 8');
   await expect(tour).toContainText('Build 10 poker hands at once');
 
+  // The opening deal is HELD while the tour is up: every board cell
+  // still reads empty — the game visibly starts when the tour closes.
+  const seatedCells = page.locator(
+    '[aria-label="Game board"] [aria-label^="row "]:not([aria-label*="empty"])'
+  );
+  await expect(seatedCells).toHaveCount(0);
+
   // Page forward through all eight pages; ▶ gives way to the primary
   // "Start playing" CTA on the last one.
   const next = tour.getByRole('button', { name: 'Next page' });
@@ -42,8 +49,10 @@ test('first game shows the tour; finishing it dismisses for good', async ({
   await tour.getByRole('button', { name: 'Start playing' }).click();
   await expect(tour).toHaveCount(0);
 
-  // The game underneath is live.
+  // The game underneath is live — and the held opening deal now
+  // plays out onto the board.
   await expect(page.getByRole('grid', { name: 'Game board' })).toBeVisible();
+  await expect(seatedCells.first()).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Place', exact: true })
   ).toBeVisible();
