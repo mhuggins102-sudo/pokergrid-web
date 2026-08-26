@@ -15,6 +15,9 @@ import '@fontsource/ibm-plex-sans/700.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/600.css';
 import '@fontsource/ibm-plex-mono/700.css';
+// Tidepool's voice: rounded Quicksand display over a soft Nunito body.
+import '@fontsource-variable/quicksand/index.css';
+import '@fontsource-variable/nunito-sans/index.css';
 // Deck-skin display fonts (used only on skinned card faces).
 import '@fontsource/special-elite/index.css';
 import '@fontsource/press-start-2p/index.css';

@@ -602,10 +602,10 @@
  * "Tidepool" — the fourth family: coastal watercolor. Seafoam paper,
  * deep-sea felt, a teal accent with coral warmth in the hearts. Soft
  * water shapes: Card Room's rounded corner language and quiet
- * lowercase wordmark, not the broadsheet squares. Type inherits the
- * :root Fraunces/Inter pair for now (the family's own voice is a
- * follow-up round). Dark mode keeps the shared invariant: card faces
- * stay paper-light with the printed face inks; UI suits brighten.
+ * lowercase wordmark, not the broadsheet squares. Its type voice is
+ * rounded to match: Quicksand display over a Nunito Sans body. Dark
+ * mode keeps the shared invariant: card faces stay paper-light with
+ * the printed face inks; UI suits brighten.
  */
 [data-theme='tide'] {
   --paper: #eaf3ee;
@@ -670,6 +670,10 @@
   /* A faint sea-tinted basin behind the board cells. */
   --board-surface: color-mix(in srgb, var(--felt) 6%, var(--paper-sunken));
   --board-pad: 6px;
+
+  /* Tidepool type: rounded Quicksand display, soft Nunito body. */
+  --font-display: 'Quicksand Variable', 'Quicksand', system-ui, sans-serif;
+  --font-body: 'Nunito Sans Variable', 'Nunito Sans', system-ui, sans-serif;
 }
 
 /* Tidepool after dark: the abyss — bioluminescent aqua on deep water. */
@@ -736,4 +740,7 @@
 
   --board-surface: color-mix(in srgb, var(--felt) 40%, var(--paper-sunken));
   --board-pad: 6px;
+
+  --font-display: 'Quicksand Variable', 'Quicksand', system-ui, sans-serif;
+  --font-body: 'Nunito Sans Variable', 'Nunito Sans', system-ui, sans-serif;
 }
