@@ -613,12 +613,13 @@
   .left {
     min-width: 0;
     /* Inset the wordmark + page label to MIRROR the right side: the
-       ☰ glyph's visible right edge sits 42px off the screen edge
-       (16px bar padding + button chrome + the icon's own inset), so
-       the title's left edge matches it — 16 + 26 = 42. The content
-       cards below stay at the bar padding; the title floating a
-       little deeper reads intentional against their rounded corners. */
-    padding-left: 26px;
+       ☰ glyph's visible right edge sits ~27px off the screen edge
+       (16px bar padding + 3px button chrome + 5px icon centering +
+       3px stroke inset), so the title's left edge matches it —
+       16 + 11 = 27. The content cards below stay at the bar padding;
+       the title floating a little deeper reads intentional against
+       their rounded corners. */
+    padding-left: 11px;
   }
 
   /* The center nav's links moved into the hamburger Drawer — the row
