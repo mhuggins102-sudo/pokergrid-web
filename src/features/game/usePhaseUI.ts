@@ -78,8 +78,10 @@ export interface PhaseUI {
   /** Buttons for the dock. */
   actions: PhaseAction[];
   bonusDialog: BonusDialogUI | null;
-  /** Bull Market: the ♣ invest spin wheel — the hand + amount to reveal. */
-  clubInvest: { hand: HandRank; amount: number } | null;
+  /** Bull Market: the ♣ invest spin wheel — the hand + amount to
+   *  reveal, plus how many respins this activation has already paid
+   *  for (the next one discards respins+1 deck cards). */
+  clubInvest: { hand: HandRank; amount: number; respins: number } | null;
   /** Revive (special card): pick a card from the discard pile. */
   reviveOpen: boolean;
   /** Mixed Bag: ♣ asks which bonus slot to draw for — chips tappable. */
@@ -143,7 +145,9 @@ export function usePhaseUI(): PhaseUI {
       phaseKind: phase.kind,
       banner: null as string | null,
       bonusDialog: null as BonusDialogUI | null,
-      clubInvest: null as { hand: HandRank; amount: number } | null,
+      clubInvest: null as
+        | { hand: HandRank; amount: number; respins: number }
+        | null,
       reviveOpen: false,
       bonusSlotPick: false,
       canActivateSpecials: false,
@@ -719,7 +723,11 @@ export function usePhaseUI(): PhaseUI {
           ...base,
           ...fromSets(EMPTY_SET),
           isTappable: () => false,
-          clubInvest: { hand: phase.hand, amount: phase.amount },
+          clubInvest: {
+            hand: phase.hand,
+            amount: phase.amount,
+            respins: phase.respins,
+          },
         };
 
       case 'awaiting-bonus-slot-choice':

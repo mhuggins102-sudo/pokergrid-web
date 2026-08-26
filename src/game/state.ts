@@ -140,11 +140,14 @@ export type Phase =
   // Bull Market challenge: the ♣ perk "invests" the drawn club's value
   // into a randomly-chosen hand type. This phase holds the result while
   // the spin wheel reveals it; RESOLVE_CLUB_INVEST applies the boost and
-  // draws the next card.
+  // draws the next card. RESPIN_CLUB_INVEST abandons the result and
+  // re-rolls the hand for an escalating deck cost — `respins` counts
+  // the re-rolls this activation (next respin discards respins+1).
   | {
       kind: 'club-invest';
       hand: HandRank;
       amount: number;
+      respins: number;
       returnTo: TargetReturnTo;
     }
   // Three Tricks challenge — special-card activation phases. `cardIdx`
@@ -466,6 +469,9 @@ export type Action =
   | { type: 'BONUS_PICK_SLOT'; slot: number }
   // Bull Market: dismiss the invest wheel; applies the boost + draws next.
   | { type: 'RESOLVE_CLUB_INVEST' }
+  // Bull Market: abandon the wheel result and re-roll the hand, paying
+  // respins+1 cards off the top of the deck into the discards.
+  | { type: 'RESPIN_CLUB_INVEST' }
   | { type: 'CANCEL_ACTION' }
   // Three Tricks: activate a held special card. The current draw is NOT
   // spent — these are independent of the suit-perk flow.
@@ -1306,6 +1312,7 @@ const handleBeginSuitAction = (
             kind: 'club-invest',
             hand: pickInvestHand(rng),
             amount: clubInvestValue(drawn),
+            respins: 0,
             returnTo: 'awaiting-action',
           },
         };
@@ -1466,6 +1473,40 @@ const handleResolveClubInvest = (
       `Invest +${amount} into ${hand}`
     ),
     rng
+  );
+};
+
+// Bull Market respin: abandon the wheel's hand and re-roll, paying an
+// escalating deck cost — the (respins+1) top deck cards go to the
+// DISCARDS (not `burned`, which is Double Duty's achievement-counted
+// pile; nothing can farm these — Bull Market runs noBonusCards, so no
+// discard-reading bonus card exists in the mode). The amount is the
+// drawn club's value and is never re-rolled. No drawNext: the phase
+// stays put for the next spin, and the history entry names the count,
+// not the cards. Deliberately NOT a snapshot action — a priced re-roll
+// must not be walked back (the Short Circuit no-cancel invariant).
+const handleRespinClubInvest = (
+  s: GameState,
+  rng: () => number
+): GameState => {
+  if (s.phase.kind !== 'club-invest' || !s.drawn || isJoker(s.drawn)) return s;
+  const cost = s.phase.respins + 1;
+  if (s.deck.length < cost) return s;
+  const paid = s.deck.slice(0, cost);
+  const next = paid.reduce(
+    (acc, c) => pushDiscard(acc, c),
+    { ...s, deck: s.deck.slice(cost) }
+  );
+  return log(
+    {
+      ...next,
+      phase: {
+        ...s.phase,
+        hand: pickInvestHand(rng),
+        respins: s.phase.respins + 1,
+      },
+    },
+    `Respin (${cost} card${cost === 1 ? '' : 's'} discarded)`
   );
 };
 
@@ -2505,6 +2546,9 @@ export const step = (
       break;
     case 'RESOLVE_CLUB_INVEST':
       next = handleResolveClubInvest(state, rng);
+      break;
+    case 'RESPIN_CLUB_INVEST':
+      next = handleRespinClubInvest(state, rng);
       break;
     case 'CANCEL_ACTION':
       next = handleCancelAction(state);
