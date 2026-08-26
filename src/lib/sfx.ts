@@ -328,11 +328,10 @@ export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   // per-card sfxDeal flick on the reveal stagger instead. 'Stand pat'
   // stays silent on purpose.
   if (entry.startsWith('Rewind on')) return 'riffle';
-  // Bull Market invest respin — the discarded deck cards riffle away
-  // under the remounted wheel's own spin track.
-  if (entry.startsWith('Respin')) return 'riffle';
   if (entry.startsWith('Revive discard')) return 'revive';
   // Double Duty two-way card rotation (+ its unseen burn).
   if (entry.startsWith('Flip')) return 'flip';
-  return null; // 'Discard', 'Game start', …
+  // 'Respin' is deliberately silent: the remounted invest wheel's own
+  // spin track is the moment's voice.
+  return null; // 'Discard', 'Game start', 'Respin', …
 };

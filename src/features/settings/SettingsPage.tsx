@@ -255,15 +255,16 @@ export function SettingsPage() {
       <Section title="Appearance">
         <Row
           title="Theme"
-          hint="Card Room felt, Morning Paper editorial, or Drafting Room blueprint — light or dark."
+          hint="Card Room felt, Morning Paper editorial, Drafting Room blueprint, or Tidepool coast — light or dark."
         >
           {seg<ThemeFamily>(
-            // Short chip labels so all three fit beside the row title;
+            // Short chip labels so all four fit beside the row title;
             // the hint carries the full family names.
             [
               ['paper', 'Paper'],
               ['card-room', 'Card Room'],
               ['draft', 'Drafting'],
+              ['tide', 'Tidepool'],
             ],
             settings.themeFamily,
             themeFamily => patch({ themeFamily }),

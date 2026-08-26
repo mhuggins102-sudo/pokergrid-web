@@ -597,3 +597,143 @@
   --font-display: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
 }
+
+/*
+ * "Tidepool" — the fourth family: coastal watercolor. Seafoam paper,
+ * deep-sea felt, a teal accent with coral warmth in the hearts. Soft
+ * water shapes: Card Room's rounded corner language and quiet
+ * lowercase wordmark, not the broadsheet squares. Type inherits the
+ * :root Fraunces/Inter pair for now (the family's own voice is a
+ * follow-up round). Dark mode keeps the shared invariant: card faces
+ * stay paper-light with the printed face inks; UI suits brighten.
+ */
+[data-theme='tide'] {
+  --paper: #eaf3ee;
+  --paper-raised: #f6fbf8;
+  --paper-sunken: #dcebe2;
+  --felt: #175f66;
+
+  --ink: #1a3238;
+  --ink-2: #4f7076;
+  --ink-3: #6d8b90;
+  --hairline: rgba(26, 50, 56, 0.18);
+  --scrim: rgba(15, 36, 41, 0.5);
+  --rule: rgba(26, 50, 56, 0.34);
+
+  --card-face: #fdfffa;
+  --card-red: #c44f3c;
+  --card-black: #1e343a;
+  --card-back: #1a6b74;
+  --card-shadow: 0 1px 2px rgba(26, 50, 56, 0.14);
+
+  --suit-h: #c44f3c;
+  --suit-d: #2372a8;
+  --suit-c: #2c7d4e;
+  --suit-s: #1e343a;
+  --joker: #7c55a8;
+
+  --face-suit-h: #c44f3c;
+  --face-suit-d: #2372a8;
+  --face-suit-c: #2c7d4e;
+  --face-suit-s: #1e343a;
+
+  --accent: #17858c;
+  --on-accent: #ffffff;
+  --warn: #b06f2a;
+  --danger: #b03a2a;
+  --success: #2c7d4e;
+
+  --difficulty-easy: #2c7d4e;
+  --difficulty-medium: #b06f2a;
+  --difficulty-hard: #bd532c;
+  --difficulty-extreme: #a3243c;
+
+  --shadow-sm: 0 1px 2px rgba(26, 50, 56, 0.08);
+  --shadow-md: 0 2px 6px rgba(26, 50, 56, 0.1);
+  --shadow-lg: 0 6px 18px rgba(26, 50, 56, 0.14);
+
+  --wm-opacity: 0.05;
+
+  /* Water shapes: Card Room's rounded corner language. */
+  --radius-card: 6px;
+  --radius-button: 10px;
+  --radius-chip: var(--radius-pill);
+  --radius-panel: 12px;
+
+  /* Quiet coastal masthead — lowercase wordmark, sentence-case CTAs. */
+  --masthead-rule: 1px solid var(--rule);
+  --wordmark-transform: none;
+  --wordmark-tracking: -0.01em;
+  --btn-primary-transform: none;
+  --btn-primary-tracking: normal;
+
+  /* A faint sea-tinted basin behind the board cells. */
+  --board-surface: color-mix(in srgb, var(--felt) 6%, var(--paper-sunken));
+  --board-pad: 6px;
+}
+
+/* Tidepool after dark: the abyss — bioluminescent aqua on deep water. */
+[data-theme='tide-dark'] {
+  --paper: #0e2024;
+  --paper-raised: #142b30;
+  --paper-sunken: #081518;
+  --felt: #0a2e34;
+
+  --ink: #dcece7;
+  --ink-2: #9cbab4;
+  --ink-3: #7b9893;
+  --hairline: rgba(220, 236, 231, 0.16);
+  --scrim: rgba(3, 12, 14, 0.62);
+  --rule: rgba(220, 236, 231, 0.3);
+
+  /* Faces stay paper-light (the shared dark-theme invariant), so the
+     face inks keep their light-theme values below. */
+  --card-face: #f0f3e7;
+  --card-red: #c44f3c;
+  --card-black: #1e343a;
+  --card-back: #14555e;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  /* UI suit glyphs brighten for the deep water. */
+  --suit-h: #e8705a;
+  --suit-d: #64b2e2;
+  --suit-c: #5fc789;
+  --suit-s: #adc9c2;
+  --joker: #b08fd9;
+
+  --face-suit-h: #c44f3c;
+  --face-suit-d: #2372a8;
+  --face-suit-c: #2c7d4e;
+  --face-suit-s: #1e343a;
+
+  --accent: #4ecfc4;
+  --on-accent: #0e2024;
+  --warn: #d9a34e;
+  --danger: #e8705a;
+  --success: #5fc789;
+
+  --difficulty-easy: #52b989;
+  --difficulty-medium: #d9a34e;
+  --difficulty-hard: #e0794e;
+  --difficulty-extreme: #de5a66;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 22px rgba(0, 0, 0, 0.5);
+
+  --wm-opacity: 0.07;
+
+  --radius-card: 6px;
+  --radius-button: 10px;
+  --radius-chip: var(--radius-pill);
+  --radius-panel: 12px;
+
+  --masthead-rule: 1px solid var(--rule);
+  --wordmark-transform: none;
+  --wordmark-tracking: -0.01em;
+  --btn-primary-transform: none;
+  --btn-primary-tracking: normal;
+
+  --board-surface: color-mix(in srgb, var(--felt) 40%, var(--paper-sunken));
+  --board-pad: 6px;
+}
