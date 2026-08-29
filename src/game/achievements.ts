@@ -203,9 +203,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'dynamite',
     tier: 'hard-extreme',
     name: 'Dynamite',
-    description: 'Score 500+ with at least one row or column worth 300+.',
+    description: 'Score 500+ with at least one row or column worth 400+.',
     scoreTarget: 500,
-    conditionMet: ({ report }) => report.lines.some(l => l.total >= 300),
+    conditionMet: ({ report }) => report.lines.some(l => l.total >= 400),
   },
   {
     id: 'line-only',
