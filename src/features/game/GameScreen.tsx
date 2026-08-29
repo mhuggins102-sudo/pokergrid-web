@@ -1076,7 +1076,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       <Button
         key="sum"
         variant="primary"
-        className={btnClass}
+        className={`${btnClass} ${styles.summaryBtn}`}
         onClick={() => setResultOpen(true)}
       >
         Game Summary
@@ -1148,19 +1148,33 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           Home
         </Button>
       );
-    return grid ? (
+    // Column (Split + desk rail): Summary leads. Grid (the stacked
+    // phone docks) fills row-major with Summary top-RIGHT — daily:
+    // Leaderboard | Summary over Share | Archive; free play:
+    // Share | Summary over Home | Play Again.
+    if (!grid) {
+      return (
+        <>
+          {summary}
+          {second}
+          {share}
+          {last}
+        </>
+      );
+    }
+    return mode.kind === 'daily' ? (
       <>
+        {second}
         {summary}
         {share}
-        {second}
         {last}
       </>
     ) : (
       <>
-        {summary}
-        {second}
         {share}
+        {summary}
         {last}
+        {second}
       </>
     );
   };
