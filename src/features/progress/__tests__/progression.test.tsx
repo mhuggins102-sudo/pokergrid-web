@@ -79,9 +79,10 @@ describe('challenges', () => {
     // result dialog (verdict line + the ✦ challenge name).
     expect(screen.getByText('Challenge missed')).toBeInTheDocument();
     expect(screen.getByText(/Poker Purist/)).toBeInTheDocument();
+    // Both the dialog's primary and the dock behind it say Retry.
     expect(
-      screen.getByRole('button', { name: 'Retry challenge' })
-    ).toBeInTheDocument();
+      screen.getAllByRole('button', { name: 'Retry' }).length
+    ).toBeGreaterThan(0);
     expect(useStatsStore.getState().stats.challengesDone).toHaveLength(0);
   });
 

@@ -668,13 +668,20 @@ export function DesktopResultDialog({
               </Link>
             ) : isTargets ? (
               targetsPrimary
+            ) : isChallenge && won && tier === 'SS' ? (
+              // Gold in hand — nothing left to chase here; the primary
+              // moves the player on to the next challenge instead (and
+              // the quiet All-challenges link below drops as redundant).
+              <Link to="/challenges" className={styles.primaryBtn}>
+                Challenges
+              </Link>
             ) : (
               <button
                 type="button"
                 className={styles.primaryBtn}
                 onClick={onReplay}
               >
-                {isChallenge && !won ? 'Retry challenge' : 'Play Again'}
+                {isChallenge ? 'Retry' : 'Play Again'}
               </button>
             )}
             {!isTargets && (
@@ -694,7 +701,7 @@ export function DesktopResultDialog({
               View Grid
             </button>
           </div>
-          {(isChallenge || isTargets) && (
+          {((isChallenge && !(won && tier === 'SS')) || isTargets) && (
             <div className={styles.quietRow}>
               {isChallenge ? (
                 <Link to="/challenges" className={styles.quietLink}>

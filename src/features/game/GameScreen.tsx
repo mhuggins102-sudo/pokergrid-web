@@ -1065,12 +1065,25 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
     if (result.outcome === 'copied') toast('Link copied.', 'success');
     else if (result.outcome === 'failed') toast('Could not share.', 'danger');
   };
+  // Challenge runs: gold (SS) in hand ends the chase — the dock's
+  // Retry dims, and the last slot points at Challenges instead of Home.
+  const challengeGold =
+    mode.kind === 'challenge' &&
+    finished &&
+    activeReport.total >= state.target &&
+    tierForRun({
+      score: activeReport.total,
+      target: state.target,
+      won: true,
+      tierDeltas: twist?.tierDeltas,
+    }) === 'SS';
   // Game-over dock actions — one definition for the desk rail, the
   // stacked phone docks, and Split. Daily runs Summary / Leaderboard /
-  // Share / Archive; free play + challenges run Summary / Play Again /
-  // Share / Home. Column order is exactly that; the 2×2 grid variant
-  // fills row-major, seating Summary+Share on the top row. Targets-Up
-  // keeps its two-button flow (its reward CTA lives in the popup).
+  // Share / Archive; free play runs Summary / Play Again / Share /
+  // Home; challenges run Summary / Retry / Share / Challenges. Column
+  // order is exactly that; the 2×2 grid variant fills row-major with
+  // Summary top-right. Targets-Up keeps its two-button flow (its
+  // reward CTA lives in the popup).
   const finishedDockActions = (btnClass: string, grid = false) => {
     const summary = (
       <Button
@@ -1123,9 +1136,10 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           key="again"
           variant="secondary"
           className={btnClass}
+          disabled={challengeGold}
           onClick={onReplay}
         >
-          Play Again
+          {mode.kind === 'challenge' ? 'Retry' : 'Play Again'}
         </Button>
       );
     const last =
@@ -1137,6 +1151,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           onClick={() => navigate(`/daily/archive?d=${mode.dateISO}`)}
         >
           Daily Archive
+        </Button>
+      ) : mode.kind === 'challenge' ? (
+        <Button
+          key="chal"
+          variant="secondary"
+          className={btnClass}
+          onClick={() => navigate('/challenges')}
+        >
+          Challenges
         </Button>
       ) : (
         <Button
