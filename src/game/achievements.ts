@@ -17,7 +17,7 @@ import type { Difficulty } from './rules';
 //                      counters) — earnable from Challenge runs.
 //   - 'variant'      : single-run feats scoped to one specific twist
 //                      (variantId) — earnable from that Challenge run or
-//                      a Daily carrying the same twist.
+//                      a Daily carrying the same twist, on Hard only.
 //   - 'milestone'    : longer-term cumulative goals (wins across modes,
 //                      etc.) plus a couple of one-shot prowess
 //                      achievements that don't fit a single-difficulty
@@ -342,16 +342,18 @@ export const ACHIEVEMENTS: Achievement[] = [
 
   // ---------- Variants ----------
   // Single-run feats inside one specific twist — the Challenge run or a
-  // Daily whose recipe rolled the same twist (variantId gating).
+  // Daily whose recipe rolled the same twist (variantId gating). Hard
+  // only: Challenges always run the hard ruleset, and a twisted Daily
+  // counts just on its Hard board.
   {
     id: 'variant-bull-market',
     tier: 'variant',
     variantId: 'bull-market',
     name: 'Bull Run',
     description:
-      'Bull Market — score 500+ with 300+ points coming from ♣ investments.',
+      'Bull Market — score 500+ with 400+ points coming from ♣ investments.',
     scoreTarget: 500,
-    conditionMet: ({ state, report }) => investedPoints(state, report) >= 300,
+    conditionMet: ({ state, report }) => investedPoints(state, report) >= 400,
   },
   {
     id: 'variant-time-trial',
@@ -380,16 +382,16 @@ export const ACHIEVEMENTS: Achievement[] = [
     variantId: 'draw-poker',
     name: 'Backdoor Draw',
     description:
-      'Five Draw — score 500+ with under 150 points coming from rows.',
+      'Five Draw — score 500+ with under 100 points coming from rows.',
     scoreTarget: 500,
     // Rows are the hands the player drafts (and All Rows ×3 boosts
-    // them) — clearing the target while the rows pay under 150 means
+    // them) — clearing the target while the rows pay under 100 means
     // the columns carried the run. Per-line totals are pre-grid-
     // multiplier, matching what the rails display.
     conditionMet: ({ report }) =>
       report.lines
         .filter(l => l.kind === 'row')
-        .reduce((sum, l) => sum + l.total, 0) < 150,
+        .reduce((sum, l) => sum + l.total, 0) < 100,
   },
 
   // ---------- Milestones ----------
@@ -485,7 +487,9 @@ const modeAllowedFor = (
 // per-tier condition fires. Easy-Medium / Hard-Extreme tiers require a
 // matching difficulty plus a score floor; Challenges and Milestones run
 // the condition directly and ignore per-difficulty / score gating;
-// Variants add their own score floor on top of the twist match.
+// Variants require Hard plus their own score floor on top of the twist
+// match (Challenges always run Hard; a twisted Daily counts only on its
+// Hard board).
 export const achievementEarned = (
   ach: Achievement,
   ctx: AchievementCheckCtx
@@ -504,6 +508,9 @@ export const achievementEarned = (
     state.difficulty !== 'hard' &&
     state.difficulty !== 'extreme'
   ) {
+    return false;
+  }
+  if (ach.tier === 'variant' && state.difficulty !== 'hard') {
     return false;
   }
   if (ach.scoreTarget !== undefined && report.total < ach.scoreTarget) {
