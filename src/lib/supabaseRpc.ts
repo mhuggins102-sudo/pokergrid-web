@@ -144,7 +144,11 @@ export const submitDailyPlay = async (args: SubmitPlayArgs): Promise<void> => {
   const rpcCall = c.rpc('submit_daily_play', {
     p_device_id: args.deviceId,
     p_date: args.dateISO,
-    p_score: args.score,
+    // Floor at 0 to match scoreGrid's final-score clamp — and to heal
+    // queues that trapped a negative score before the clamp existed
+    // (the hosted RPC rejects sub-zero scores, so those entries would
+    // otherwise retry forever).
+    p_score: Math.max(0, args.score),
     p_won: args.won,
     p_recipe: args.recipe,
     p_used_undo: args.usedUndo,

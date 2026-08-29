@@ -54,11 +54,15 @@ describe('computeScoreBuild', () => {
       expect(flat).toBe(report.gridFlat);
 
       // The displayed chain reproduces the final score (timeAdjust is
-      // 0 outside Time Trial, but the identity includes it).
+      // 0 outside Time Trial, but the identity includes it) — through
+      // the final floor-at-0, which a heavily-unfinished run hits.
       expect(
-        Math.ceil(build.subtotal * report.gridMultiplier) +
-          report.gridFlat +
-          report.timeAdjust
+        Math.max(
+          0,
+          Math.ceil(build.subtotal * report.gridMultiplier) +
+            report.gridFlat +
+            report.timeAdjust
+        )
       ).toBe(build.total);
 
       // Gold rows only contain gold-category cards; purple rows purple.

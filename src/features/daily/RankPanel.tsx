@@ -32,6 +32,7 @@ import styles from './RankPanel.module.css';
 export function RankPanel({
   dateISO,
   placementOnly = false,
+  onOpenStats,
 }: {
   dateISO: string;
   /** End-of-game popup mode: render JUST the "rank / total" placement
@@ -39,6 +40,9 @@ export function RankPanel({
    *  the stats sheet — the old link read as clunky leftover chrome there.
    *  The full bar (date + Leaderboard sheet) is unchanged everywhere else. */
   placementOnly?: boolean;
+  /** placementOnly: makes the "Ranked N / total" text itself a button
+   *  that opens the caller's leaderboard sheet. */
+  onOpenStats?: () => void;
 }) {
   const rank = useDailyRank(dateISO);
   const pending = useQueueStore(s =>
@@ -64,10 +68,22 @@ export function RankPanel({
     return (
       <span className={styles.placement} aria-label="Daily standing">
         {rank.data ? (
-          <>
-            Ranked <b>{rank.data.rank}</b>
-            <span className={styles.sub}> / {rank.data.total}</span>
-          </>
+          onOpenStats ? (
+            <button
+              type="button"
+              className={styles.placementBtn}
+              onClick={onOpenStats}
+              aria-label={`Ranked ${rank.data.rank} of ${rank.data.total} — show leaderboard`}
+            >
+              Ranked <b>{rank.data.rank}</b>
+              <span className={styles.sub}> / {rank.data.total}</span>
+            </button>
+          ) : (
+            <>
+              Ranked <b>{rank.data.rank}</b>
+              <span className={styles.sub}> / {rank.data.total}</span>
+            </>
+          )
         ) : pending || rank.isError ? (
           <button
             type="button"

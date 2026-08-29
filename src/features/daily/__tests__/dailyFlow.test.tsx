@@ -124,7 +124,7 @@ describe('daily flow', () => {
     expect(
       screen.queryByRole('button', { name: 'Play this puzzle' })
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Show result' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Game Summary' }));
     expect(screen.getByTestId('final-score')).toHaveTextContent(score ?? '');
   });
 

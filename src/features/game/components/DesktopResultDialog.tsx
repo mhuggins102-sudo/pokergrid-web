@@ -23,7 +23,7 @@ import {
 } from '../../progress/usePlayerLevel';
 import { useTargetsResult } from '../useTargetsResult';
 import { recordDailyCompletion } from '../../daily/sync/sync';
-import { HandleEditor, RankPanel } from '../../daily/RankPanel';
+import { DayStatsSheet, HandleEditor, RankPanel } from '../../daily/RankPanel';
 import { useHandle } from '../../daily/sync/handleStore';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { prefersReducedMotion } from '../useAnimatedNumber';
@@ -153,6 +153,8 @@ export function DesktopResultDialog({
   // score/won record instead of the live before/after diff.
   const xpEarned = useXpEarned(viewOnly, { score: report.total, won });
   const [xpOpen, setXpOpen] = useState(false);
+  // Daily leaderboard sheet, opened from the standing / posted-as text.
+  const [lbOpen, setLbOpen] = useState(false);
   // Targets-Up ladder lifecycle — the hook shared with mobile's
   // ResultView; its module-level guard keeps the advance/clear commit
   // single-owner even if both surfaces mount across a resize.
@@ -355,65 +357,89 @@ export function DesktopResultDialog({
               Archive re-views (viewOnly) still show the recorded daily
               play's own XP and its standing — but not the live level
               bar, which tracks TODAY'S progress, not that run's. */}
-          {(!viewOnly || isDaily) && (
-            <div className={styles.metaRow}>
-              <div className={styles.metaXp}>
-                {earnedXp > 0 && (
-                  <button
-                    type="button"
-                    className={styles.xpGain}
-                    onClick={() => setXpOpen(true)}
-                    aria-label={`Earned ${earnedXp} XP this game — show breakdown`}
-                  >
-                    <span aria-hidden="true">✨</span> +{earnedXp} XP
-                    <span className={styles.xpHint} aria-hidden="true">
-                      ⓘ
-                    </span>
-                  </button>
-                )}
-                {!viewOnly && (
-                  <>
-                    <div className={styles.miniTrack}>
-                      {prePct > 0 && (
-                        <div
-                          className={styles.xpFillOld}
-                          style={{ width: `${prePct}%` }}
-                        />
-                      )}
-                      {gainPct > 0 && (
-                        <div
-                          className={styles.xpFillNew}
-                          style={{
-                            left: `${prePct}%`,
-                            width: xpSettled ? `${gainPct}%` : '0%',
-                          }}
-                        />
-                      )}
-                    </div>
-                    <span className={styles.miniCap}>
-                      {levelInfo.atMax
-                        ? `Level ${levelInfo.level} · Max level`
-                        : levelUp !== null
-                          ? `Level ${levelInfo.level} · ${levelInfo.xpIntoLevel.toLocaleString()} / ${span.toLocaleString()} XP`
-                          : `Level ${levelInfo.level} · ${(
-                              span - levelInfo.xpIntoLevel
-                            ).toLocaleString()} to Level ${levelInfo.level + 1}`}
-                    </span>
-                  </>
-                )}
-              </div>
-              {mode.kind === 'daily' && isBackendConfigured() && (
-                <div className={styles.metaRight}>
-                  <RankPanel dateISO={mode.dateISO} placementOnly />
-                  {savedHandle && (
-                    <span className={styles.postedLine}>
-                      <span aria-hidden="true">✓</span> Posted as {savedHandle}
+          {(!viewOnly || isDaily) &&
+            (() => {
+              // The whole XP/Level block is the breakdown opener when
+              // there's XP to break down — not just the small ⓘ line.
+              const xpBody = (
+                <>
+                  {earnedXp > 0 && (
+                    <span className={styles.xpGain}>
+                      <span aria-hidden="true">✨</span> +{earnedXp} XP
+                      <span className={styles.xpHint} aria-hidden="true">
+                        ⓘ
+                      </span>
                     </span>
                   )}
+                  {!viewOnly && (
+                    <>
+                      <div className={styles.miniTrack}>
+                        {prePct > 0 && (
+                          <div
+                            className={styles.xpFillOld}
+                            style={{ width: `${prePct}%` }}
+                          />
+                        )}
+                        {gainPct > 0 && (
+                          <div
+                            className={styles.xpFillNew}
+                            style={{
+                              left: `${prePct}%`,
+                              width: xpSettled ? `${gainPct}%` : '0%',
+                            }}
+                          />
+                        )}
+                      </div>
+                      <span className={styles.miniCap}>
+                        {levelInfo.atMax
+                          ? `Level ${levelInfo.level} · Max level`
+                          : levelUp !== null
+                            ? `Level ${levelInfo.level} · ${levelInfo.xpIntoLevel.toLocaleString()} / ${span.toLocaleString()} XP`
+                            : `Level ${levelInfo.level} · ${(
+                                span - levelInfo.xpIntoLevel
+                              ).toLocaleString()} to Level ${levelInfo.level + 1}`}
+                      </span>
+                    </>
+                  )}
+                </>
+              );
+              return (
+                <div className={styles.metaRow}>
+                  {earnedXp > 0 ? (
+                    <button
+                      type="button"
+                      className={`${styles.metaXp} ${styles.metaTapBtn}`}
+                      onClick={() => setXpOpen(true)}
+                      aria-label={`Earned ${earnedXp} XP this game — show breakdown`}
+                    >
+                      {xpBody}
+                    </button>
+                  ) : (
+                    <div className={styles.metaXp}>{xpBody}</div>
+                  )}
+                  {mode.kind === 'daily' && isBackendConfigured() && (
+                    <div className={styles.metaRight}>
+                      <RankPanel
+                        dateISO={mode.dateISO}
+                        placementOnly
+                        onOpenStats={() => setLbOpen(true)}
+                      />
+                      {savedHandle && (
+                        <button
+                          type="button"
+                          className={`${styles.postedLine} ${styles.metaTapBtn}`}
+                          onClick={() => setLbOpen(true)}
+                          aria-label={`Posted as ${savedHandle} — show leaderboard`}
+                        >
+                          <span aria-hidden="true">✓</span> Posted as{' '}
+                          {savedHandle}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+              );
+            })()}
 
           {/* Next-deck teaser — everyday desk games only (a level-up's
               celebration below shows the new deck instead; mobile stays
@@ -715,6 +741,14 @@ export function DesktopResultDialog({
           </div>
         )}
       </Sheet>
+      {mode.kind === 'daily' && (
+        <DayStatsSheet
+          dateISO={mode.dateISO}
+          open={lbOpen}
+          onClose={() => setLbOpen(false)}
+          ownScore={report.total}
+        />
+      )}
       {targetsFlow.rewardsSheet}
     </div>
   );

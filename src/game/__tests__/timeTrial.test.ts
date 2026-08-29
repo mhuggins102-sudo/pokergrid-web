@@ -126,16 +126,22 @@ describe('Time Trial — CLOCK_TICK reducer', () => {
 
 describe('Time Trial — scoring integration', () => {
   it('the adjustment is a flat term outside the grid multiplier', () => {
+    // On the unclamped live path (ignoreIncompletePenalty) so the
+    // flat-term identity is visible on this fresh (empty-ish) grid —
+    // the final path floors sub-zero totals at 0.
     const s = timeTrialGame();
     const base = scoreGrid(s.grid, s.bonusCards, {
       deckRemaining: s.deck.length,
+      ignoreIncompletePenalty: true,
     });
     const fast = scoreGrid(s.grid, s.bonusCards, {
       deckRemaining: s.deck.length,
+      ignoreIncompletePenalty: true,
       timeAdjust: 80,
     });
     const slow = scoreGrid(s.grid, s.bonusCards, {
       deckRemaining: s.deck.length,
+      ignoreIncompletePenalty: true,
       timeAdjust: -45,
     });
     expect(base.timeAdjust).toBe(0);

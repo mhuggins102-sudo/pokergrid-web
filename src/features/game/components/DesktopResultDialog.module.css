@@ -209,6 +209,26 @@
   color: var(--accent);
 }
 
+/* Button reset for the meta row's tap targets (the XP/Level block and
+   the posted-as line double as sheet openers): keep the styled look,
+   add only the affordance. */
+.metaTapBtn {
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.metaTapBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 /* Next-deck teaser — everyday games' stand-in for the celebration: a
    real (dimmed) face of the deck waiting at the next level. */
 .teaser {
