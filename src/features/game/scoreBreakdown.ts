@@ -13,8 +13,11 @@ import { categoryOf } from '../../lib/bonusCardCategory';
 // and what the purple (grid-level) cards multiplied it by. Exact by
 // construction against scoring.ts's pipeline:
 //
-//   ceil((base + goldAdd) × gridMultiplier) + gridFlat + timeAdjust
+//   max(0, ceil((base + goldAdd) × gridMultiplier) + gridFlat + timeAdjust)
 //     === report.total
+//
+// (the outer floor is scoring.ts's final-score clamp — sub-zero finals
+// display and post as 0).
 export interface ScoreBreakdownData {
   // Pure-poker score: the grid scored with NO bonus cards. Bull
   // Market's handBoost stays in — it changes hand values rather than
@@ -51,7 +54,11 @@ export const computeScoreBreakdown = (
     // letting it into the base would skew goldAdd (subtotal − base).
     timeAdjust: 0,
   });
-  const base = baseReport.total;
+  // The no-bonus report has multiplier 1 / flat 0 / timeAdjust 0, so
+  // its raw total IS its subtotal — read that, not .total, which
+  // floors at 0 and would smear the clamp into goldAdd on a
+  // heavily-unfinished board.
+  const base = baseReport.subtotal;
   const goldAdd = report.subtotal - base;
   return {
     base,

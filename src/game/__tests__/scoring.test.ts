@@ -31,8 +31,12 @@ const findCard = (id: string): BonusCard => {
 
 describe('scoring (no bonus cards)', () => {
   test('empty grid penalizes all 10 lines as incomplete', () => {
-    const { total } = scoreGrid(emptyGrid(), []);
-    expect(total).toBe(-250); // 10 lines × -25
+    // 10 lines × -25 land in the subtotal, but the FINAL total floors
+    // at 0 — sub-zero finals never post.
+    const report = scoreGrid(emptyGrid(), []);
+    expect(report.subtotal).toBe(-250);
+    expect(report.incompletePenalty).toBe(-250);
+    expect(report.total).toBe(0);
   });
 
   test('base values reflect HAND_BASE_VALUE', () => {
@@ -503,24 +507,30 @@ describe('live-score ignore-penalty option', () => {
     const empty = emptyGrid();
     const live = scoreGrid(empty, [], { ignoreIncompletePenalty: true });
     expect(live.total).toBe(0);
+    // The final path takes the penalties in the subtotal, then floors
+    // the total at 0.
     const final = scoreGrid(empty, []);
-    expect(final.total).toBe(-250);
+    expect(final.subtotal).toBe(-250);
+    expect(final.total).toBe(0);
   });
 
   test('Patience cancels the incomplete-line penalty without needing the option', () => {
     const patience = findCard('patience-no-penalty');
     const empty = emptyGrid();
-    // Without Patience: 10 lines × -25 = -250.
-    expect(scoreGrid(empty, []).total).toBe(-250);
+    // Without Patience: 10 lines × -25 = -250 in the subtotal (the
+    // total itself floors at 0).
+    expect(scoreGrid(empty, []).subtotal).toBe(-250);
     // With Patience: penalty is gone.
     expect(scoreGrid(empty, [patience]).total).toBe(0);
 
     // Partial grid: 4 cards in row 0 only. Other 9 lines still incomplete,
     // plus row 0 itself (4 cards < 5) → 10 penalty lines without Patience.
+    // Compared on the SUBTOTAL — both totals floor at 0 here, which
+    // would hide the cancellation.
     const g = emptyGrid();
     g[0] = C('A','H'); g[1] = C('A','C'); g[2] = C('5','D'); g[3] = C('8','S');
-    const withoutPatience = scoreGrid(g, []).total;
-    const withPatience = scoreGrid(g, [patience]).total;
+    const withoutPatience = scoreGrid(g, []).subtotal;
+    const withPatience = scoreGrid(g, [patience]).subtotal;
     expect(withPatience).toBeGreaterThan(withoutPatience);
     expect(withPatience).toBe(withoutPatience + 250);
   });

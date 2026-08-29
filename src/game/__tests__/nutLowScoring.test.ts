@@ -81,14 +81,18 @@ describe('scoreGrid under the lowball option', () => {
   });
 
   it("unfinished lines cost the mode's own -50", () => {
+    // 10 unfinished lines × -50 in the subtotal; the final total still
+    // floors at 0 like every mode's.
     const empty = emptyGrid();
-    expect(scoreGrid(empty, [], { lowball: true }).total).toBe(-500);
+    const report = scoreGrid(empty, [], { lowball: true });
+    expect(report.subtotal).toBe(-500);
+    expect(report.total).toBe(0);
     expect(
       scoreGrid(empty, [], { lowball: true, ignoreIncompletePenalty: true })
         .total
     ).toBe(0);
-    // ...while the high game keeps its -25.
-    expect(scoreGrid(empty, []).total).toBe(-250);
+    // ...while the high game keeps its -25 per line in the subtotal.
+    expect(scoreGrid(empty, []).subtotal).toBe(-250);
     // Incomplete lines carry lowHand: null (not undefined) in lowball.
     const { lines } = scoreGrid(empty, [], { lowball: true });
     for (const l of lines) expect(l.lowHand).toBeNull();

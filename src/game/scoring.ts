@@ -245,7 +245,14 @@ export const scoreGrid = (
     bonusCards
   );
   const timeAdjust = options.timeAdjust ?? 0;
-  const total = Math.ceil(subtotal * gridMultiplier) + gridFlat + timeAdjust;
+  const raw = Math.ceil(subtotal * gridMultiplier) + gridFlat + timeAdjust;
+  // FINAL scores floor at 0: stacked incomplete-line penalties (or a
+  // Time Trial clock, or Nut Low busts) can push the raw total negative,
+  // and a sub-zero final is noise — the daily leaderboard's hosted
+  // submit rejects it outright. The live preview path (ignorePenalty)
+  // stays unclamped so Nut Low's busted lines keep an honest running
+  // total mid-game.
+  const total = ignorePenalty ? raw : Math.max(0, raw);
   return {
     lines: scored,
     subtotal,

@@ -657,6 +657,15 @@ button.drawDeckPeek:focus-visible {
   height: 100%;
 }
 
+/* Four-action variant (daily / free play): a 2×2 grid — row-major fill
+   seats Game Summary + Share on the top row, Leaderboard|Play Again +
+   Daily Archive|Home below. Targets keeps the two-button column. */
+.finishedDockGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: center;
+}
+
 @media (min-width: 640px) {
   .layout {
     max-width: 560px;

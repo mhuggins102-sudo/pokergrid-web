@@ -28,6 +28,9 @@ import { spiralHopPath } from '../../game/actions';
 import { Card } from '../../game/cards';
 import { canPreviewDeck } from '../../game/state';
 import { targetsUpReached, tierForRun } from '../../lib/stats';
+import { buildShareUrl, shareUrl } from '../../lib/share';
+import { isBackendConfigured } from '../../lib/supabaseRpc';
+import { DayStatsSheet } from '../daily/RankPanel';
 import { sfxSpiralLand, sfxSpiralTick } from '../../lib/sfx';
 import {
   Button,
@@ -269,7 +272,7 @@ function MaybeRails({
  * re-seats the same pieces into the three-panel spread.
  */
 export function GameScreen({ onReplay, coach }: GameScreenProps) {
-  const { state, dispatch, mode, setup, canUndo, maxUndos, viewOnly } =
+  const { state, dispatch, mode, setup, seed, canUndo, maxUndos, viewOnly } =
     useGameSession();
   const ui = usePhaseUI();
   const familyRaw = useGameFamily();
@@ -1032,6 +1035,135 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
   // gating applies unchanged). Tapping any other empty cell nudges — a
   // first-run rescue for the universal "tap the board" instinct.
   const { toast } = useToast();
+  // Game-over dock: the daily Leaderboard button's sheet.
+  const [dockLbOpen, setDockLbOpen] = useState(false);
+  // Share the finished run from the dock — same URL + toast contract
+  // as the result popup's own Share.
+  const shareRun = async () => {
+    const url = buildShareUrl({
+      score: activeReport.total,
+      mode:
+        mode.kind === 'targets'
+          ? 'targets-up'
+          : mode.kind === 'challenge'
+            ? 'challenge'
+            : mode.kind === 'daily'
+              ? 'daily'
+              : 'free',
+      difficulty: state.difficulty,
+      tier: tierForRun({
+        score: activeReport.total,
+        target: state.target,
+        won: activeReport.total >= state.target,
+        tierDeltas: twist?.tierDeltas,
+      }),
+      variant: setup.challenge?.name,
+      dateISO: mode.kind === 'daily' ? mode.dateISO : undefined,
+      seed: mode.kind === 'free' ? seed : undefined,
+    });
+    const result = await shareUrl(url);
+    if (result.outcome === 'copied') toast('Link copied.', 'success');
+    else if (result.outcome === 'failed') toast('Could not share.', 'danger');
+  };
+  // Game-over dock actions — one definition for the desk rail, the
+  // stacked phone docks, and Split. Daily runs Summary / Leaderboard /
+  // Share / Archive; free play + challenges run Summary / Play Again /
+  // Share / Home. Column order is exactly that; the 2×2 grid variant
+  // fills row-major, seating Summary+Share on the top row. Targets-Up
+  // keeps its two-button flow (its reward CTA lives in the popup).
+  const finishedDockActions = (btnClass: string, grid = false) => {
+    const summary = (
+      <Button
+        key="sum"
+        variant="primary"
+        className={btnClass}
+        onClick={() => setResultOpen(true)}
+      >
+        Game Summary
+      </Button>
+    );
+    if (mode.kind === 'targets') {
+      return (
+        <>
+          {summary}
+          {activeReport.total < state.target && (
+            <Button variant="secondary" className={btnClass} onClick={onReplay}>
+              Play Again
+            </Button>
+          )}
+        </>
+      );
+    }
+    const share = (
+      <Button
+        key="share"
+        variant="secondary"
+        className={btnClass}
+        onClick={shareRun}
+      >
+        Share
+      </Button>
+    );
+    const second =
+      mode.kind === 'daily' ? (
+        // Backendless builds have no leaderboard to open — the slot
+        // simply drops (three buttons).
+        isBackendConfigured() ? (
+          <Button
+            key="lb"
+            variant="secondary"
+            className={btnClass}
+            onClick={() => setDockLbOpen(true)}
+          >
+            Leaderboard
+          </Button>
+        ) : null
+      ) : (
+        <Button
+          key="again"
+          variant="secondary"
+          className={btnClass}
+          onClick={onReplay}
+        >
+          Play Again
+        </Button>
+      );
+    const last =
+      mode.kind === 'daily' ? (
+        <Button
+          key="arch"
+          variant="secondary"
+          className={btnClass}
+          onClick={() => navigate(`/daily/archive?d=${mode.dateISO}`)}
+        >
+          Daily Archive
+        </Button>
+      ) : (
+        <Button
+          key="home"
+          variant="secondary"
+          className={btnClass}
+          onClick={() => navigate('/')}
+        >
+          Home
+        </Button>
+      );
+    return grid ? (
+      <>
+        {summary}
+        {share}
+        {second}
+        {last}
+      </>
+    ) : (
+      <>
+        {summary}
+        {second}
+        {share}
+        {last}
+      </>
+    );
+  };
   const lastNudgeRef = useRef(0);
   // A board tap that closed an open pill/Hands/Scoring popover (outside
   // pointerdown) also lands here as a cell tap — consult the dismiss stamp
@@ -1472,6 +1604,15 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
       {/* The intro tour, over everything (both layout forks render
           this shared overlays node). The game idles underneath. */}
       {tourOpen && <IntroTour onClose={() => setTourOpen(false)} />}
+      {/* Game-over dock: the daily Leaderboard button's sheet. */}
+      {mode.kind === 'daily' && finished && (
+        <DayStatsSheet
+          dateISO={mode.dateISO}
+          open={dockLbOpen}
+          onClose={() => setDockLbOpen(false)}
+          ownScore={activeReport.total}
+        />
+      )}
       {/* Five Draw: the offered bonus chip's tap-to-read sheet. */}
       <DetailSheet
         detail={
@@ -1627,10 +1768,6 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
         : 'dim';
     };
     const endgame = computeEndgameRows(state.bonusCards, purpleInputs);
-    const playAgain = () =>
-      mode.kind === 'daily'
-        ? navigate(`/daily/archive?d=${mode.dateISO}`)
-        : onReplay();
     const deskBoard = board({
       // No completion sweep on desktop (revision item 11).
       sweepSlots: NO_SWEEP,
@@ -1755,23 +1892,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   // restart.
                   <div className={styles.deskDockStage}>
                     <div className={styles.deskActions}>
-                      <Button
-                        variant="primary"
-                        className={styles.deskStackBtn}
-                        onClick={() => setResultOpen(true)}
-                      >
-                        Show result
-                      </Button>
-                      {(mode.kind !== 'targets' ||
-                        activeReport.total < state.target) && (
-                        <Button
-                          variant="secondary"
-                          className={styles.deskStackBtn}
-                          onClick={playAgain}
-                        >
-                          {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
-                        </Button>
-                      )}
+                      {finishedDockActions(styles.deskStackBtn)}
                     </div>
                   </div>
                 ) : (
@@ -2073,27 +2194,14 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
               // stays, the dialog overlays, and the dock offers only the
               // way back into the result + the replay — the phone twin of
               // the desk finished-dock.
-              <div className={styles.finishedDock}>
-                <Button
-                  variant="primary"
-                  className={styles.commitButton}
-                  onClick={() => setResultOpen(true)}
-                >
-                  Show result
-                </Button>
-                {(mode.kind !== 'targets' ||
-                  activeReport.total < state.target) && (
-                  <Button
-                    variant="secondary"
-                    className={styles.commitButton}
-                    onClick={() =>
-                      mode.kind === 'daily'
-                        ? navigate(`/daily/archive?d=${mode.dateISO}`)
-                        : onReplay()
-                    }
-                  >
-                    {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
-                  </Button>
+              <div
+                className={`${styles.finishedDock} ${
+                  mode.kind !== 'targets' ? styles.finishedDockGrid : ''
+                }`}
+              >
+                {finishedDockActions(
+                  styles.commitButton,
+                  mode.kind !== 'targets'
                 )}
               </div>
             ) : ui.hand || ui.bonusOffer ? (
@@ -2450,27 +2558,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                 {finished ? (
                   <div className={styles.dtStage}>
                     <div className={styles.dtActions}>
-                      <Button
-                        variant="primary"
-                        className={styles.dtStackBtn}
-                        onClick={() => setResultOpen(true)}
-                      >
-                        Show result
-                      </Button>
-                      {(mode.kind !== 'targets' ||
-                        activeReport.total < state.target) && (
-                        <Button
-                          variant="secondary"
-                          className={styles.dtStackBtn}
-                          onClick={() =>
-                            mode.kind === 'daily'
-                              ? navigate(`/daily/archive?d=${mode.dateISO}`)
-                              : onReplay()
-                          }
-                        >
-                          {mode.kind === 'daily' ? 'Daily Archive' : 'Play Again'}
-                        </Button>
-                      )}
+                      {finishedDockActions(styles.dtStackBtn)}
                     </div>
                   </div>
                 ) : (
