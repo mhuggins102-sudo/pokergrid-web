@@ -657,13 +657,22 @@ button.drawDeckPeek:focus-visible {
   height: 100%;
 }
 
-/* Four-action variant (daily / free play): a 2×2 grid — row-major fill
-   seats Game Summary + Share on the top row, Leaderboard|Play Again +
-   Daily Archive|Home below. Targets keeps the two-button column. */
+/* Four-action variant (daily / free play): a 2×2 grid — Game Summary
+   rides top-RIGHT with Leaderboard (daily) / Share (free play) beside
+   it; Share+Archive / Home+Play Again below. Targets keeps the
+   two-button column. */
 .finishedDockGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-content: center;
+}
+
+/* The primary Game Summary keeps sentence case even in themes whose
+   primary CTAs run tracked capitals — four tracked-caps words don't
+   fit the dock button. */
+.summaryBtn {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 @media (min-width: 640px) {
