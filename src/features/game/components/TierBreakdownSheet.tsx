@@ -18,8 +18,8 @@ export const TIER_RULES: ReadonlyArray<{
   { tier: 'SS', label: 'Perfect', ratio: 1.6, won: true },
   { tier: 'S', label: 'Strong win', ratio: 1.3, won: true },
   { tier: 'A', label: 'Win', ratio: 1.0, won: true },
-  { tier: 'B', label: 'Close', ratio: 0.85, won: false },
-  { tier: 'C', label: 'Missed', ratio: 0.5, won: false },
+  { tier: 'B', label: 'Close', ratio: 0.8, won: false },
+  { tier: 'C', label: 'Missed', ratio: 0.6, won: false },
   { tier: 'D', label: 'Far miss', ratio: 0, won: false },
 ];
 
@@ -51,7 +51,7 @@ export const requirementFor = (
   target: number,
   deltas?: TierDeltas
 ): string => {
-  if (rule.ratio === 0) return `below ${Math.ceil(target * 0.5)}`;
+  if (rule.ratio === 0) return `below ${Math.ceil(target * 0.6)}`;
   return `${thresholdFor(rule, target, deltas)}+`;
 };
 
