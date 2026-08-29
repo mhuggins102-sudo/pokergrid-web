@@ -55,7 +55,7 @@ const TIER_META: Array<{
   {
     tier: 'variant',
     label: "Dealer's Choice",
-    note: 'Earned when variants are active',
+    note: 'Earned when variants are active · Hard only',
   },
   {
     tier: 'milestone',

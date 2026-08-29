@@ -243,6 +243,23 @@ describe('Variant tier gating', () => {
       })
     ).toBe(false);
   });
+
+  it('requires Hard — a twisted Easy/Medium daily does not count', () => {
+    (['easy', 'medium'] as const).forEach(difficulty => {
+      expect(
+        earn('variant-time-trial', {
+          mode: 'daily',
+          activeVariant: 'time-trial',
+          state: stateWith({
+            difficulty,
+            timeTrial: true,
+            elapsedMs: 89_000,
+          }),
+          report: reportWith(510),
+        })
+      ).toBe(false);
+    });
+  });
 });
 
 describe('Lightning Round (Time Trial under 1:30)', () => {
@@ -279,7 +296,7 @@ describe('Flipping Out (Double Duty, 10+ flips)', () => {
   });
 });
 
-describe('Backdoor Draw (Five Draw, under 150 points from rows)', () => {
+describe('Backdoor Draw (Five Draw, under 100 points from rows)', () => {
   // Fabricated report with typed row/col lines — the shared reportWith
   // helper carries no kind/index, and this condition reads both.
   const rowColReport = (
@@ -316,8 +333,8 @@ describe('Backdoor Draw (Five Draw, under 150 points from rows)', () => {
     });
 
   it('sums ROW totals only — columns carry the run', () => {
-    expect(withRows([30, 30, 30, 30, 29])).toBe(true); // 149 from rows
-    expect(withRows([30, 30, 30, 30, 30])).toBe(false); // 150 from rows
+    expect(withRows([20, 20, 20, 20, 19])).toBe(true); // 99 from rows
+    expect(withRows([20, 20, 20, 20, 20])).toBe(false); // 100 from rows
   });
 
   it('still demands the 500 floor', () => {
@@ -332,7 +349,7 @@ describe('Backdoor Draw (Five Draw, under 150 points from rows)', () => {
   });
 });
 
-describe('Bull Run (Bull Market, 300+ invested points)', () => {
+describe('Bull Run (Bull Market, 400+ invested points)', () => {
   // Row 0 is a pair of Kings; the junk fill gives each column four of a
   // kind, so the un-boosted board already clears the 500 floor once the
   // PAIR boost lands on top.
@@ -356,7 +373,7 @@ describe('Bull Run (Bull Market, 300+ invested points)', () => {
   };
 
   it('measures the invested contribution against a boost-free re-score', () => {
-    const { state, report } = withBoost(300);
+    const { state, report } = withBoost(400);
     // Sanity: the boosted board clears the achievement's 500 floor.
     expect(report.total).toBeGreaterThanOrEqual(500);
     expect(
@@ -369,8 +386,8 @@ describe('Bull Run (Bull Market, 300+ invested points)', () => {
     ).toBe(true);
   });
 
-  it('299 invested points are not enough', () => {
-    const { state, report } = withBoost(299);
+  it('399 invested points are not enough', () => {
+    const { state, report } = withBoost(399);
     expect(report.total).toBeGreaterThanOrEqual(500);
     expect(
       earn('variant-bull-market', {
