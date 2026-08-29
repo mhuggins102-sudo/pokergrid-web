@@ -107,8 +107,8 @@ export const tierForRun = (
     if (ratio >= 1.3) return 'S';
     return 'A';
   }
-  if (ratio >= 0.85) return 'B';
-  if (ratio >= 0.5) return 'C';
+  if (ratio >= 0.8) return 'B';
+  if (ratio >= 0.6) return 'C';
   return 'D';
 };
 

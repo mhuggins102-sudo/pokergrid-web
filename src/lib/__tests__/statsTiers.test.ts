@@ -25,10 +25,10 @@ describe('tierForRun', () => {
   });
 
   it('classifies losing ratios into B / C / D', () => {
-    expect(tierForRun(run('easy', 255, 300, false))).toBe('B'); // 0.85
-    expect(tierForRun(run('easy', 254, 300, false))).toBe('C'); // 0.847
-    expect(tierForRun(run('easy', 150, 300, false))).toBe('C'); // 0.5
-    expect(tierForRun(run('easy', 149, 300, false))).toBe('D'); // 0.497
+    expect(tierForRun(run('easy', 240, 300, false))).toBe('B'); // 0.8
+    expect(tierForRun(run('easy', 239, 300, false))).toBe('C'); // 0.797
+    expect(tierForRun(run('easy', 180, 300, false))).toBe('C'); // 0.6
+    expect(tierForRun(run('easy', 179, 300, false))).toBe('D'); // 0.597
     expect(tierForRun(run('easy', 0, 300, false))).toBe('D');
   });
 
