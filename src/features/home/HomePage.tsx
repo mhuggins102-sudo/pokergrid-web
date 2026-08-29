@@ -100,7 +100,12 @@ export function HomePage() {
     return raw ? { score: raw.score, won: raw.won } : null;
   });
   const todayTier = todayResult
-    ? tierForRun({ score: todayResult.score, target, won: todayResult.won })
+    ? tierForRun({
+        score: todayResult.score,
+        target,
+        won: todayResult.won,
+        tierDeltas: twist?.tierDeltas,
+      })
     : null;
   const diffTone = difficultyColors[recipe.difficulty];
   const isPhone = useTier() === 'phone';

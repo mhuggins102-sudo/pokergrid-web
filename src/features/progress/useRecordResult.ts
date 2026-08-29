@@ -67,7 +67,14 @@ export function useRecordResult(
 ): RecordedResult {
   const { state, mode, setup, viewOnly } = useGameSession();
   const won = report.total >= state.target;
-  const tier = tierForRun({ score: report.total, target: state.target, won });
+  // A twist's flat S/SS ladder (challenge or twisted daily — setup
+  // carries the challenge entry for both) replaces the ratio bands.
+  const tier = tierForRun({
+    score: report.total,
+    target: state.target,
+    won,
+    tierDeltas: setup.challenge?.tierDeltas,
+  });
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
   const [challengeTrophy, setChallengeTrophy] =
     useState<ChallengeTrophy | null>(null);

@@ -31,6 +31,37 @@ describe('tierForRun', () => {
     expect(tierForRun(run('easy', 149, 300, false))).toBe('D'); // 0.497
     expect(tierForRun(run('easy', 0, 300, false))).toBe('D');
   });
+
+  it('flat tierDeltas replace the win ratios (no-multiplier twists)', () => {
+    // Bull Market's ladder: target+100 → S, target+200 → SS.
+    const d = { S: 100, SS: 200 };
+    const at = (score: number, target: number) =>
+      tierForRun({ ...run('hard', score, target, true), tierDeltas: d });
+    expect(at(650, 450)).toBe('SS');
+    expect(at(649, 450)).toBe('S');
+    expect(at(550, 450)).toBe('S');
+    expect(at(549, 450)).toBe('A');
+    expect(at(450, 450)).toBe('A');
+    // The same deltas ride a daily's easier target: 400 → 500/600.
+    expect(at(600, 400)).toBe('SS');
+    expect(at(500, 400)).toBe('S');
+    expect(at(499, 400)).toBe('A');
+    // Poker Purist's ladder: 350 → 425/500.
+    const p = { S: 75, SS: 150 };
+    expect(
+      tierForRun({ ...run('hard', 500, 350, true), tierDeltas: p })
+    ).toBe('SS');
+    expect(
+      tierForRun({ ...run('hard', 425, 350, true), tierDeltas: p })
+    ).toBe('S');
+    expect(
+      tierForRun({ ...run('hard', 424, 350, true), tierDeltas: p })
+    ).toBe('A');
+    // Loss shades stay ratio-based even with deltas present.
+    expect(
+      tierForRun({ ...run('hard', 400, 450, false), tierDeltas: d })
+    ).toBe('B'); // 0.89
+  });
 });
 
 describe('recordRun → tierCounts', () => {

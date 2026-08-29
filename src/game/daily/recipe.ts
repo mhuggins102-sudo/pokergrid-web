@@ -174,13 +174,19 @@ export const recipeFor = (
 // The difficulty's toolkit (jokers / undos / discards) still modifies
 // how hard it FEELS within the mode. Nut Low is multiplier-free for the
 // same reason, and its lowball values live on their own scale anyway.
-const FIXED_TWIST_TARGET: Partial<Record<ChallengeId, number>> = {
+const FIXED_TWIST_TARGET: Partial<
+  Record<ChallengeId, number | Partial<Record<Difficulty, number>>>
+> = {
   'poker-purist': 350,
   'nut-low': 400,
   // Flat 500 on every difficulty: Easy/Medium's assists (deck peek,
   // the extra joker) are far stronger in Five Draw than elsewhere, so
   // the easier tiers don't also get a discounted target.
   'draw-poker': 500,
+  // No-multiplier scoring runs a tighter band than the base 400/450/500
+  // (the challenge itself plays at 450 = the hard entry). Extreme never
+  // draws a twist; the value is defensive.
+  'bull-market': { easy: 400, medium: 425, hard: 450, extreme: 425 },
 };
 
 // Delta applied to the difficulty's base target when a twist is active.
@@ -200,7 +206,10 @@ export const dailyTargetFor = (
 ): number => {
   if (!twist) return TARGET_BY_DIFFICULTY[difficulty];
   const fixed = FIXED_TWIST_TARGET[twist];
-  if (fixed !== undefined) return fixed;
+  if (typeof fixed === 'number') return fixed;
+  if (fixed !== undefined) {
+    return fixed[difficulty] ?? TARGET_BY_DIFFICULTY[difficulty];
+  }
   const delta = TWIST_DELTA_OVERRIDE[twist] ?? DEFAULT_TWIST_DELTA;
   return TARGET_BY_DIFFICULTY[difficulty] + delta;
 };

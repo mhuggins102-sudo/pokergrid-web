@@ -5,6 +5,7 @@
 // src/features/progress/usePlayerLevel.ts for the reactive binding.
 
 import { dailyTargetFor } from '../game/daily/recipe';
+import { tierDeltasFor } from '../game/challenges';
 import { Difficulty } from '../game/rules';
 import { Stats, Tier, tierForRun } from './stats';
 import type { ChallengeId } from '../game/challenges';
@@ -199,7 +200,12 @@ export const xpBuckets = (
     if (p.won) {
       b.daily += DAILY_BEAT_XP;
       const target = dailyTargetFor(p.difficulty, p.twist);
-      const tier = tierForRun({ score: p.score, target, won: true });
+      const tier = tierForRun({
+        score: p.score,
+        target,
+        won: true,
+        tierDeltas: tierDeltasFor(p.twist),
+      });
       if (tier === 'SS' || tier === 'S') {
         b[`tier-${tier}`] += TIER_WIN_BONUS[tier];
       }
@@ -225,7 +231,12 @@ export const dailyPlayXpBuckets = (
   };
   if (play.won) {
     const target = dailyTargetFor(play.difficulty, play.twist);
-    const tier = tierForRun({ score: play.score, target, won: true });
+    const tier = tierForRun({
+      score: play.score,
+      target,
+      won: true,
+      tierDeltas: tierDeltasFor(play.twist),
+    });
     if (tier === 'SS' || tier === 'S') {
       out[`tier-${tier}`] = TIER_WIN_BONUS[tier];
     }

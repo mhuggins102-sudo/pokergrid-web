@@ -39,6 +39,16 @@ export type ChallengeId =
   | 'nut-low'
   | 'draw-poker';
 
+// Flat point steps from the target up to the S / SS win tiers, for
+// modes whose scores don't scale multiplicatively (no bonus-card
+// multipliers): the global 1.3×/1.6× ratio ladder lands in the
+// unreachable tail there, so these twists ride target+S / target+SS
+// instead — at every difficulty a daily serves them at.
+export interface TierDeltas {
+  S: number;
+  SS: number;
+}
+
 export interface Challenge {
   id: ChallengeId;
   name: string;
@@ -51,6 +61,9 @@ export interface Challenge {
   goal: string;
   // Total score that must be reached.
   scoreTarget: number;
+  // Optional flat S/SS ladder (see TierDeltas). Absent = the global
+  // ratio ladder in lib/stats.ts tierForRun.
+  tierDeltas?: TierDeltas;
   // True if the structural condition is met by the final state + report.
   conditionMet: (state: GameState, report: ScoreReport) => boolean;
   // Optional: override the deck size at game start. Used by short-deck.
@@ -79,6 +92,9 @@ export const CHALLENGES: Challenge[] = [
     synopsis: 'Twist: No bonus cards',
     goal: 'Score 350+ points with no bonus cards available. Just pure rows and columns scoring as 5-card poker hands.',
     scoreTarget: 350,
+    // No multipliers → additive scoring: S/SS step linearly (425/500)
+    // instead of the ratio ladder's out-of-reach 455/560.
+    tierDeltas: { S: 75, SS: 150 },
     // Enforced at newGame: bonusCards and bonusDeck are both empty,
     // which naturally disables ♣ (canDrawBonus returns false) and
     // hides the bonus card strip in the UI.
@@ -166,8 +182,11 @@ export const CHALLENGES: Challenge[] = [
     id: 'bull-market',
     name: 'Bull Market',
     synopsis: 'Twist: ♣ invests in hand values',
-    goal: 'Score 500+ points with no bonus cards. Instead, spending a club on its perk increases the base value of a random hand type by double its blackjack value (2–9 = face, 10–K = 10, A = 11). Don’t like the spin? Respin by discarding cards off the top of the deck — 1 for the first respin, 2 for the next, and so on.',
-    scoreTarget: 500,
+    goal: 'Score 450+ points with no bonus cards. Instead, spending a club on its perk increases the base value of a random hand type by double its blackjack value (2–9 = face, 10–K = 10, A = 11). Don’t like the spin? Respin by discarding cards off the top of the deck — 1 for the first respin, 2 for the next, and so on.',
+    scoreTarget: 450,
+    // Same additive-scoring reasoning as Poker Purist: 550/650 at the
+    // challenge's 450, and target+100/+200 at the daily difficulties.
+    tierDeltas: { S: 100, SS: 200 },
     // Enforced at newGame: noBonusCards strips the bonus deck and
     // investHands repurposes the ♣ perk to boost a random hand's base.
     conditionMet: () => true,
@@ -237,6 +256,13 @@ export const findChallenge = (id: ChallengeId): Challenge => {
   if (!c) throw new Error(`Unknown challenge: ${id}`);
   return c;
 };
+
+// The flat S/SS ladder for a twist, or undefined for the global ratio
+// ladder. Tolerates stale ids persisted from removed challenges.
+export const tierDeltasFor = (
+  twist: ChallengeId | null | undefined
+): TierDeltas | undefined =>
+  twist ? CHALLENGES.find(c => c.id === twist)?.tierDeltas : undefined;
 
 export const challengeWon = (
   challenge: Challenge,

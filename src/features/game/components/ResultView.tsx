@@ -522,6 +522,7 @@ export function ResultView({ onReplay }: ResultViewProps) {
         target={state.target}
         showRewards={mode.kind === 'targets'}
         score={report.total}
+        tierDeltas={setup.challenge?.tierDeltas}
       />
 
       <ScoreDetailsSheet
