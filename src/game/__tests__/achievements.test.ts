@@ -191,6 +191,28 @@ describe('Triple Crown (750+ with 3+ straight/royal flushes)', () => {
   });
 });
 
+describe('Dynamite (500+ with a single line worth 400+)', () => {
+  // The shared reportWith helper zeroes every line total, so fabricate
+  // lines with real totals here.
+  const withLineTotals = (totals: number[]): boolean =>
+    earn('dynamite', {
+      state: stateWith({ difficulty: 'hard' }),
+      report: {
+        total: 520,
+        lines: totals.map(total => ({
+          hand: 'FLUSH',
+          total,
+          incomplete: false,
+        })),
+      } as unknown as ScoreReport,
+    });
+
+  it('needs one line worth 400+', () => {
+    expect(withLineTotals([400, 30, 30, 30, 30])).toBe(true);
+    expect(withLineTotals([399, 121, 0, 0, 0])).toBe(false);
+  });
+});
+
 describe('Variant tier gating', () => {
   const timeTrialState = stateWith({
     difficulty: 'hard',
