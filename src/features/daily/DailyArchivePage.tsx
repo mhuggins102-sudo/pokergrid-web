@@ -4,6 +4,7 @@ import { currentDateISO } from '../../game/daily/seed';
 import { dailyTargetFor, recipeFor } from '../../game/daily/recipe';
 import { findChallenge } from '../../game/challenges';
 import { Tier, tierForRun } from '../../lib/stats';
+import { tierDeltasFor } from '../../game/challenges';
 import { difficultyColors } from '../../design/tokens';
 import { isBackendConfigured, type TopScoreEntry } from '../../lib/supabaseRpc';
 import {
@@ -198,7 +199,12 @@ export function DailyArchivePage() {
   const selRecipe = recipeFor(sel);
   const selTarget = dailyTargetFor(selRecipe.difficulty, selRecipe.twist);
   const selTier = selPlay
-    ? tierForRun({ score: selPlay.score, target: selTarget, won: selPlay.won })
+    ? tierForRun({
+        score: selPlay.score,
+        target: selTarget,
+        won: selPlay.won,
+        tierDeltas: tierDeltasFor(selRecipe.twist),
+      })
     : null;
 
   // Mockup's list-height sync: the scroll area never runs past the
@@ -586,7 +592,12 @@ export function DailyArchivePage() {
                     recipe.twist
                   );
                   const tier = play
-                    ? tierForRun({ score: play.score, target, won: play.won })
+                    ? tierForRun({
+                        score: play.score,
+                        target,
+                        won: play.won,
+                        tierDeltas: tierDeltasFor(recipe.twist),
+                      })
                     : null;
                   const on = iso === sel;
                   return (
@@ -654,7 +665,12 @@ export function DailyArchivePage() {
               const twist = recipe.twist ? findChallenge(recipe.twist) : null;
               const target = dailyTargetFor(recipe.difficulty, recipe.twist);
               const tier = play
-                ? tierForRun({ score: play.score, target, won: play.won })
+                ? tierForRun({
+                    score: play.score,
+                    target,
+                    won: play.won,
+                    tierDeltas: twist?.tierDeltas,
+                  })
                 : null;
               const on = iso === sel;
               return (

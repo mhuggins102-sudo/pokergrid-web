@@ -9,7 +9,7 @@ import { isJoker } from '../cards';
 // paired with noBonusCards = true like the real challenge).
 const newBullMarket = (rng: () => number) =>
   newGame('hard', rng, {
-    targetOverride: 500,
+    targetOverride: 450,
     noBonusCards: true,
     investHands: true,
   });

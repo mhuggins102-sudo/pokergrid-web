@@ -477,6 +477,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           score: navScore,
           target: state.target,
           won: navScore >= state.target,
+          tierDeltas: twist?.tierDeltas,
         })
       : null;
     // Value formats are kept identical to the Free Play difficulty table
@@ -677,7 +678,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
                   <span>
                     {rule.tier} · {rule.label}
                   </span>
-                  <b>{requirementFor(rule, state.target)}</b>
+                  <b>{requirementFor(rule, state.target, twist?.tierDeltas)}</b>
                 </div>
               ))}
             </div>

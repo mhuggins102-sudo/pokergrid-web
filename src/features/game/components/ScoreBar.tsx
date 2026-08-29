@@ -23,7 +23,7 @@ export interface ScoreBarProps {
  * and a polite live region announces the new score to screen readers.
  */
 export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
-  const { state, dispatch, mode, canUndo, maxUndos } = useGameSession();
+  const { state, dispatch, mode, setup, canUndo, maxUndos } = useGameSession();
   const [tiersOpen, setTiersOpen] = useState(false);
   const reduceMotion = useSettingsStore(s => s.reduceMotion);
 
@@ -127,6 +127,7 @@ export function ScoreBar({ onShowHandValues, onShowLines }: ScoreBarProps) {
         onClose={() => setTiersOpen(false)}
         target={state.target}
         showRewards={mode.kind === 'targets'}
+        tierDeltas={setup.challenge?.tierDeltas}
       />
     </div>
   );

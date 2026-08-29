@@ -1,6 +1,6 @@
 import type { AchievementId } from '../game/achievements';
 import { CHALLENGES } from '../game/challenges';
-import type { ChallengeId } from '../game/challenges';
+import type { ChallengeId, TierDeltas } from '../game/challenges';
 import type { Difficulty } from '../game/rules';
 
 // Pure stats logic ported from the original repo's src/ui/stats.ts —
@@ -85,9 +85,24 @@ export type TrophyKind = 'gold' | 'silver' | 'bronze';
 export const trophyForTier = (t: Tier): TrophyKind | null =>
   t === 'SS' ? 'gold' : t === 'S' ? 'silver' : t === 'A' ? 'bronze' : null;
 
-export const tierForRun = (run: Pick<RunRecord, 'score' | 'target' | 'won'>): Tier => {
+export const tierForRun = (
+  run: Pick<RunRecord, 'score' | 'target' | 'won'> & {
+    /** Flat S/SS steps for no-multiplier twists (Challenge.tierDeltas):
+     *  additive scoring compresses the winning tail, so those modes
+     *  ride target+S / target+SS instead of the 1.3×/1.6× ratios.
+     *  Loss shades stay ratio-based either way — below the target the
+     *  distribution isn't multiplier-stretched in any mode. */
+    tierDeltas?: TierDeltas;
+  }
+): Tier => {
   const ratio = run.score / Math.max(1, run.target);
   if (run.won) {
+    const d = run.tierDeltas;
+    if (d) {
+      if (run.score >= run.target + d.SS) return 'SS';
+      if (run.score >= run.target + d.S) return 'S';
+      return 'A';
+    }
     if (ratio >= 1.6) return 'SS';
     if (ratio >= 1.3) return 'S';
     return 'A';

@@ -1,12 +1,14 @@
 import { Fragment } from 'react';
 import { ArrowRight, Sheet } from '../../../design/primitives';
+import type { TierDeltas } from '../../../game/challenges';
 import { Tier } from '../../../lib/stats';
 import styles from './TierBreakdownSheet.module.css';
 
 // Tier rules — mirrors tierForRun() in lib/stats.ts: win bands use
-// score / target ratio, loss bands compare to the same target. Port of
-// the original TierBreakdownModal. Exported so the desktop result
-// dialog can print the tier's label under its big letter.
+// score / target ratio (or a twist's flat tierDeltas ladder), loss
+// bands compare to the same target. Port of the original
+// TierBreakdownModal. Exported so the desktop result dialog can print
+// the tier's label under its big letter.
 export const TIER_RULES: ReadonlyArray<{
   tier: Tier;
   label: string;
@@ -30,16 +32,27 @@ const TU_REWARDS: Partial<Record<Tier, string>> = {
 
 const thresholdFor = (
   rule: (typeof TIER_RULES)[number],
-  target: number
-): number => (rule.ratio === 0 ? 0 : Math.ceil(target * rule.ratio));
+  target: number,
+  deltas?: TierDeltas
+): number => {
+  if (deltas && rule.won) {
+    return rule.tier === 'SS'
+      ? target + deltas.SS
+      : rule.tier === 'S'
+        ? target + deltas.S
+        : target;
+  }
+  return rule.ratio === 0 ? 0 : Math.ceil(target * rule.ratio);
+};
 
 // Exported for the nav score pill's tier-threshold hover menu.
 export const requirementFor = (
   rule: (typeof TIER_RULES)[number],
-  target: number
+  target: number,
+  deltas?: TierDeltas
 ): string => {
   if (rule.ratio === 0) return `below ${Math.ceil(target * 0.5)}`;
-  return `${thresholdFor(rule, target)}+`;
+  return `${thresholdFor(rule, target, deltas)}+`;
 };
 
 export interface TierBreakdownSheetProps {
@@ -51,6 +64,9 @@ export interface TierBreakdownSheetProps {
   /** Result screens: slot a "your score" row between the tiers it
    *  landed between, so the distance to the next band is visible. */
   score?: number;
+  /** The active twist's flat S/SS ladder (Challenge.tierDeltas), if
+   *  any — the thresholds shown must match how tierForRun awards. */
+  tierDeltas?: TierDeltas;
 }
 
 /**
@@ -63,12 +79,15 @@ export function TierBreakdownSheet({
   target,
   showRewards = false,
   score,
+  tierDeltas,
 }: TierBreakdownSheetProps) {
   // Your-score row goes above the first tier whose threshold you met.
   const scoreRowBefore =
     score === undefined
       ? -1
-      : TIER_RULES.findIndex(rule => thresholdFor(rule, target) <= score);
+      : TIER_RULES.findIndex(
+          rule => thresholdFor(rule, target, tierDeltas) <= score
+        );
 
   const yourRow =
     score !== undefined ? (
@@ -96,7 +115,9 @@ export function TierBreakdownSheet({
             >
               <span className={styles.tier}>{rule.tier}</span>
               <span className={styles.label}>{rule.label}</span>
-              <span className={styles.req}>{requirementFor(rule, target)}</span>
+              <span className={styles.req}>
+                {requirementFor(rule, target, tierDeltas)}
+              </span>
               {showRewards && (
                 <span className={styles.reward}>
                   {TU_REWARDS[rule.tier] ?? '—'}

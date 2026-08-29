@@ -8,7 +8,10 @@ import { ChallengePlayPage } from '../../challenges/ChallengePlayPage';
 // Place-spam tops out around ~110 points, far below any real challenge
 // target — so drop the target to 40 to reach the WIN path for real:
 // challengeWon fires, the tier records, and the popup shows the trophy
-// callout. Everything else about the module stays live.
+// callout. Purist's flat tierDeltas ladder is stripped along with the
+// target (this test exercises the trophy FLOW on the generic ratio
+// path; the ladder itself is covered in statsTiers.test.ts).
+// Everything else about the module stays live.
 vi.mock('../../../game/challenges', async importOriginal => {
   const real =
     await importOriginal<typeof import('../../../game/challenges')>();
@@ -17,6 +20,7 @@ vi.mock('../../../game/challenges', async importOriginal => {
     findChallenge: (id: Parameters<typeof real.findChallenge>[0]) => ({
       ...real.findChallenge(id),
       scoreTarget: 40,
+      tierDeltas: undefined,
     }),
   };
 });

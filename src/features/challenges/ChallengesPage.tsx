@@ -125,7 +125,7 @@ export function ChallengesPage() {
                 <Trophy kind="gold" size={14} />
               </span>
               <span>
-                <b>Gold</b> — SS win: 1.6× the target or better
+                <b>Gold</b> — an SS-tier win
               </span>
             </div>
             <div className={styles.medalInfoRow}>
@@ -133,7 +133,7 @@ export function ChallengesPage() {
                 <Trophy kind="silver" size={14} />
               </span>
               <span>
-                <b>Silver</b> — S win: 1.3× the target
+                <b>Silver</b> — an S-tier win
               </span>
             </div>
             <div className={styles.medalInfoRow}>

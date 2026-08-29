@@ -14,12 +14,16 @@ describe('dailyTargetFor', () => {
   });
 
   describe('every twist keeps the full base target — except the fixed ones', () => {
-    // Poker Purist and Nut Low run multiplier-free (no bonus cards),
-    // and Five Draw's Easy/Medium assists (deck peek, extra joker) are
-    // outsized there — all three carry flat targets instead of the
-    // difficulty schedule.
+    // Poker Purist, Nut Low, and Bull Market run multiplier-free (no
+    // bonus cards) so they carry their own tighter targets, and Five
+    // Draw's Easy/Medium assists (deck peek, extra joker) are outsized
+    // there — all four skip the base difficulty schedule.
     const FULL_BASE_TWISTS = CHALLENGES.map(c => c.id).filter(
-      id => id !== 'poker-purist' && id !== 'nut-low' && id !== 'draw-poker'
+      id =>
+        id !== 'poker-purist' &&
+        id !== 'nut-low' &&
+        id !== 'draw-poker' &&
+        id !== 'bull-market'
     );
     it.each([
       ['easy', 400],
@@ -50,6 +54,12 @@ describe('dailyTargetFor', () => {
       expect(dailyTargetFor('medium', 'draw-poker')).toBe(500);
       expect(dailyTargetFor('hard', 'draw-poker')).toBe(500);
     });
+
+    it('bull-market runs its own tighter per-difficulty schedule', () => {
+      expect(dailyTargetFor('easy', 'bull-market')).toBe(400);
+      expect(dailyTargetFor('medium', 'bull-market')).toBe(425);
+      expect(dailyTargetFor('hard', 'bull-market')).toBe(450);
+    });
   });
 
   it('every challenge target equals its hard-daily value', () => {
@@ -64,5 +74,6 @@ describe('dailyTargetFor', () => {
     expect(dailyTargetFor('extreme', 'no-discards')).toBe(450); // base, delta 0
     expect(dailyTargetFor('extreme', 'poker-purist')).toBe(350); // fixed
     expect(dailyTargetFor('extreme', 'three-tricks')).toBe(450); // base, delta 0
+    expect(dailyTargetFor('extreme', 'bull-market')).toBe(425); // defensive entry
   });
 });
