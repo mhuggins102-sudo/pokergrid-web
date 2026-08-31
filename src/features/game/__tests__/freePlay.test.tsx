@@ -56,6 +56,9 @@ describe('free play', () => {
     expect(screen.getByText(/Target cleared|Just short/i)).toBeInTheDocument();
     expect(screen.queryByText(/of 10 lines scored/i)).toBeNull();
     expect(screen.getByRole('button', { name: 'View Grid' })).toBeInTheDocument();
+    // Free play only: the quiet "Bot score" opener (the bot replays
+    // this deal — the sheet itself is covered by bot.test.ts).
+    expect(screen.getByRole('button', { name: 'Bot score' })).toBeInTheDocument();
   });
 
   it('is deterministic for a fixed seed', () => {

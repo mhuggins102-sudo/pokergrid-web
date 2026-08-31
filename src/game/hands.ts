@@ -122,6 +122,26 @@ const evalWithJokers = (
   return best;
 };
 
+// Joker-line memo. The substitution search is the one expensive path
+// (52 evals for one joker, 2704 for two) and hands are orderless, so a
+// canonical sorted key caches each distinct line's verdict. Matters
+// most to the bot's Monte-Carlo projections, which score thousands of
+// joker-bearing lines per decision; the live game benefits for free.
+// Cleared wholesale on overflow — simplest bound, and re-warming is
+// cheap relative to the searches it saves.
+const JOKER_MEMO_MAX = 100_000;
+const jokerMemo = new Map<string, HandRank>();
+const jokerLineKey = (cards: StandardCard[], jokers: number): string =>
+  cards
+    .map(
+      c =>
+        `${c.rank}${c.suit}${
+          c.supercharge === 'double' ? 'D' : c.supercharge === 'wild' ? 'W' : ''
+        }`
+    )
+    .sort()
+    .join('|') + `|~${jokers}`;
+
 // Evaluate any 5-card line. Returns null if any slot is empty.
 export const evaluateLine = (line: (Card | null)[]): HandRank | null => {
   if (line.length !== 5) throw new Error('Line must have exactly 5 slots');
@@ -130,7 +150,13 @@ export const evaluateLine = (line: (Card | null)[]): HandRank | null => {
   const jokers = cards.filter(isJoker).length;
   if (jokers === 0) return evalStandardFive(cards as StandardCard[]);
   const standards = cards.filter(c => !isJoker(c)) as StandardCard[];
-  return evalWithJokers(standards, jokers);
+  const key = jokerLineKey(standards, jokers);
+  const hit = jokerMemo.get(key);
+  if (hit !== undefined) return hit;
+  const result = evalWithJokers(standards, jokers);
+  if (jokerMemo.size >= JOKER_MEMO_MAX) jokerMemo.clear();
+  jokerMemo.set(key, result);
+  return result;
 };
 
 /**
