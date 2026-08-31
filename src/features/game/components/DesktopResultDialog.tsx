@@ -29,6 +29,7 @@ import { useSettingsStore } from '../../settings/settingsStore';
 import { prefersReducedMotion } from '../useAnimatedNumber';
 import { formatClock } from '../useGameClock';
 import { skinFace } from './skinFace';
+import { BotScoreSheet } from './BotScoreSheet';
 import { TIER_RULES } from './TierBreakdownSheet';
 import styles from './DesktopResultDialog.module.css';
 
@@ -155,6 +156,8 @@ export function DesktopResultDialog({
   const [xpOpen, setXpOpen] = useState(false);
   // Daily leaderboard sheet, opened from the standing / posted-as text.
   const [lbOpen, setLbOpen] = useState(false);
+  // Free play: the "Bot score" sheet — the bot replays this exact deal.
+  const [botOpen, setBotOpen] = useState(false);
   // Targets-Up ladder lifecycle — the hook shared with mobile's
   // ResultView; its module-level guard keeps the advance/clear commit
   // single-owner even if both surfaces mount across a resize.
@@ -723,6 +726,19 @@ export function DesktopResultDialog({
               )}
             </div>
           )}
+          {/* Free play: the bot replays this exact deal (same seed,
+              same rules, no deck-order peeking) and reports its score. */}
+          {mode.kind === 'free' && seed !== undefined && (
+            <div className={styles.quietRow}>
+              <button
+                type="button"
+                className={styles.quietLink}
+                onClick={() => setBotOpen(true)}
+              >
+                Bot score
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <Sheet
@@ -754,6 +770,15 @@ export function DesktopResultDialog({
           open={lbOpen}
           onClose={() => setLbOpen(false)}
           ownScore={report.total}
+        />
+      )}
+      {mode.kind === 'free' && seed !== undefined && (
+        <BotScoreSheet
+          open={botOpen}
+          onClose={() => setBotOpen(false)}
+          difficulty={state.difficulty}
+          seed={seed}
+          playerScore={report.total}
         />
       )}
       {targetsFlow.rewardsSheet}
