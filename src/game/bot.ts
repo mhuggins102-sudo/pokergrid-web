@@ -361,6 +361,44 @@ const deckHeadroom = (s: GameState): number => {
   return s.deck.length - empty;
 };
 
+/** How many hidden offers to sample when pricing a ♣ take. */
+const OFFER_PAIR_SAMPLES = 3;
+
+// Expected end-score of spending this ♣ on a below-cap bonus draw. The
+// offer is hidden, so sample it honestly: the remaining offer deck's
+// MULTISET is player-deducible (the pool is public and every offered
+// card has been seen), its order is not — canonical-sort then shuffle
+// with the bot's private rng, and evaluate a few pairs, crediting each
+// pair's better card (the same argmax the resolving step really runs).
+// Marginal value is projected JOINTLY with the held hand, so a card
+// that fights the current hand (a kicker beside a full-house boost)
+// prices low and the ♣ gets placed or discarded instead.
+const expectedBonusTake = (
+  ctx: EvalCtx,
+  rng: () => number,
+  spent: EvalOpts
+): number => {
+  const s = ctx.s;
+  const pool = shuffle(
+    [...s.bonusDeck].sort((a, b) =>
+      a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+    ),
+    rng
+  );
+  let sum = 0;
+  let n = 0;
+  for (let p = 0; p < pool.length && n < OFFER_PAIR_SAMPLES; p += 2) {
+    const a = projectScore(s.grid, [...s.bonusCards, pool[p]], ctx, spent);
+    const b =
+      p + 1 < pool.length
+        ? projectScore(s.grid, [...s.bonusCards, pool[p + 1]], ctx, spent)
+        : -Infinity;
+    sum += Math.max(a, b);
+    n++;
+  }
+  return n > 0 ? sum / n : -Infinity;
+};
+
 // The move that justified a BEGIN_SUIT_ACTION, carried into the
 // awaiting-target phase so the bot executes exactly what it ranked —
 // no duplicate search, no fresh-sample second-guessing.
@@ -387,35 +425,31 @@ export const createBot = (
         const drawn = s.drawn;
         if (!drawn || isJoker(drawn)) return { type: 'PLACE' };
 
-        // ♣ → take the bonus draw if we can. Below the cap it's a free
-        // upgrade in expectation; the pick step below decides which
-        // offered card to keep once the offer is visible.
-        if (drawn.suit === 'C' && s.bonusDeck.length > 0) {
-          if (s.bonusCards.length < BONUS_HAND_LIMIT) {
+        // ♣ AT the bonus cap: Easy/Medium still allow taking the draw
+        // to swap a held card out. The offer is hidden, so gate on
+        // what we can see: if the least-valuable held card contributes
+        // ~nothing to the projection, swapping it is pure upside
+        // (bonus cards never score negative) — even Medium's forced
+        // swap risks at most the dead card's sliver.
+        if (
+          drawn.suit === 'C' &&
+          s.bonusDeck.length > 0 &&
+          s.bonusCards.length >= BONUS_HAND_LIMIT &&
+          s.bonusSwapAtCap !== 'off'
+        ) {
+          const capCtx = decisionCtx(s, rng, samples);
+          const full = projectScore(s.grid, s.bonusCards, capCtx);
+          let deadDelta = Infinity;
+          for (let i = 0; i < s.bonusCards.length; i++) {
+            const without = s.bonusCards.filter((_, j) => j !== i);
+            deadDelta = Math.min(
+              deadDelta,
+              full - projectScore(s.grid, without, capCtx)
+            );
+          }
+          if (deadDelta <= DEAD_CARD_EPS) {
             planned = null;
             return { type: 'BEGIN_SUIT_ACTION' };
-          }
-          // AT the cap, Easy/Medium still allow taking ♣ to swap a held
-          // card out. The offer is hidden, so gate on what we can see:
-          // if the least-valuable held card contributes ~nothing to the
-          // projection, swapping it is pure upside (bonus cards never
-          // score negative) — even Medium's forced swap risks at most
-          // the dead card's sliver. Otherwise keep the hand.
-          if (s.bonusSwapAtCap !== 'off') {
-            const capCtx = decisionCtx(s, rng, samples);
-            const full = projectScore(s.grid, s.bonusCards, capCtx);
-            let deadDelta = Infinity;
-            for (let i = 0; i < s.bonusCards.length; i++) {
-              const without = s.bonusCards.filter((_, j) => j !== i);
-              deadDelta = Math.min(
-                deadDelta,
-                full - projectScore(s.grid, without, capCtx)
-              );
-            }
-            if (deadDelta <= DEAD_CARD_EPS) {
-              planned = null;
-              return { type: 'BEGIN_SUIT_ACTION' };
-            }
           }
         }
 
@@ -447,7 +481,23 @@ export const createBot = (
         const spent: EvalOpts = {
           perkSpent: [...s.perkSpent, activeHalf(drawn)],
         };
-        if (drawn.suit === 'H') {
+        if (drawn.suit === 'C') {
+          // Below-cap bonus draw: no longer taken on sight — the
+          // sampled expected value of the hidden offer must beat
+          // placing or discarding this ♣ like any other candidate.
+          // Passing keeps the slot open for an offer that fits the
+          // hand (slots are forever on Hard/Extreme, no swap at cap).
+          if (
+            s.bonusDeck.length > 0 &&
+            s.bonusCards.length < BONUS_HAND_LIMIT
+          ) {
+            const take = expectedBonusTake(ctx, rng, spent);
+            if (take > bestScore) {
+              bestAction = { type: 'BEGIN_SUIT_ACTION' };
+              bestScore = take;
+            }
+          }
+        } else if (drawn.suit === 'H') {
           const hop = bestHop(ctx, spent);
           if (hop && hop.score > bestScore) {
             bestAction = { type: 'BEGIN_SUIT_ACTION' };
