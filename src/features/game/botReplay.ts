@@ -40,7 +40,7 @@ const cardPart = (c: Card | null | undefined): CaptionPart =>
   !c
     ? { text: '?' }
     : c.kind === 'joker'
-      ? { text: 'the joker', joker: true }
+      ? { text: '★', joker: true }
       : { text: `${c.rank}${SUIT_GLYPH[c.suit]}`, suit: c.suit };
 
 // Caption for the action taken FROM `prev`. Null = a silent step (phase

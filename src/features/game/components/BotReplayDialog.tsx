@@ -40,32 +40,34 @@ export function BotReplayDialog({
   seed,
   actions,
 }: BotReplayDialogProps) {
-  // Frames are cheap to rebuild (~80 pure reducer steps) and only
-  // needed while open.
+  // Frames are cheap to build (~80 pure reducer steps) and stable for
+  // the life of this run, so build once — not per open, which would
+  // let a stale frame paint before an on-open reset effect ran.
   const frames = useMemo(
-    () => (open ? buildReplayFrames(difficulty, seed, actions) : null),
-    [open, difficulty, seed, actions]
+    () => buildReplayFrames(difficulty, seed, actions),
+    [difficulty, seed, actions]
   );
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
-  // 2-color decks tint ♦ like ♥ and ♣ like ♠ — the caption follows.
+  // 2-color decks tint ♦ like ♥ and ♠ like ♣ — the caption follows.
   const twoColorDeck = useSettingsStore(s => s.twoColorDeck);
 
-  // Every open starts back on the deal, paused — the viewer chooses to
-  // play or step.
+  // Reset while CLOSED so every reopen paints move 0 on its first
+  // frame — resetting on open flashed the previous position for one
+  // paint before the effect ran.
   useEffect(() => {
-    if (open) {
+    if (!open) {
       setIdx(0);
       setPlaying(false);
     }
   }, [open]);
 
-  const last = frames ? frames.length - 1 : 0;
+  const last = frames.length - 1;
   const atEnd = idx >= last;
 
   useEffect(() => {
-    if (!open || !playing || frames === null) return;
+    if (!open || !playing) return;
     if (idx >= frames.length - 1) {
       setPlaying(false);
       return;
@@ -77,7 +79,7 @@ export function BotReplayDialog({
     return () => window.clearTimeout(t);
   }, [open, playing, idx, speed, frames]);
 
-  const frame = frames?.[idx] ?? null;
+  const frame = frames[idx] ?? null;
   const score = useMemo(
     () => (frame ? frameScore(frame.state) : 0),
     [frame]
@@ -155,7 +157,7 @@ export function BotReplayDialog({
                 const c = frame.state.bonusCards[i];
                 return c ? (
                   <span key={c.id} className={styles.chip} title={c.name}>
-                    {c.title}
+                    {c.title} {c.mult.replace(/\s*\(each\)/, '')}
                   </span>
                 ) : (
                   <span key={`empty-${i}`} className={styles.chipEmpty}>
@@ -166,8 +168,7 @@ export function BotReplayDialog({
             </div>
             <div className={styles.rightCol}>
               <div className={styles.nextRow}>
-                <span className={styles.nextLabel}>Up next</span>
-                <span className={styles.nextCard}>
+                <span className={styles.nextCard} aria-label="Up next">
                   {frame.state.drawn &&
                   frame.state.phase.kind !== 'game-over' ? (
                     <CardFace card={frame.state.drawn} />
