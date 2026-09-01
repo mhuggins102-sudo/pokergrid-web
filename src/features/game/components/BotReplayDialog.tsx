@@ -156,7 +156,13 @@ export function BotReplayDialog({
               {Array.from({ length: CHIP_SLOTS }, (_, i) => {
                 const c = frame.state.bonusCards[i];
                 return c ? (
-                  <span key={c.id} className={styles.chip} title={c.name}>
+                  <span
+                    key={c.id}
+                    className={`${styles.chip} ${
+                      frame.newChip === i ? styles.chipNew : ''
+                    }`}
+                    title={c.name}
+                  >
                     {c.title} {c.mult.replace(/\s*\(each\)/, '')}
                   </span>
                 ) : (
