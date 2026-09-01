@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createBot, playBotGame, runBotGame } from '../bot';
+import { createBot, playBotGame, projectFill, runBotGame } from '../bot';
+import { Card, Rank, StandardCard, Suit } from '../cards';
 import { seededRng } from '../deck';
+import { Grid, emptyGrid } from '../grid';
 import { Difficulty } from '../rules';
 import { GameState, newGame, step } from '../state';
 
@@ -41,6 +43,65 @@ describe('bot honesty — order-blindness', () => {
     }
     // The walk must have exercised real decisions, not vacuously passed.
     expect(decisionsChecked).toBeGreaterThan(5);
+  });
+});
+
+describe('slack-aware rollout (projectFill)', () => {
+  const C = (rank: Rank, suit: Suit): StandardCard => ({
+    kind: 'standard',
+    rank,
+    suit,
+  });
+
+  // A board with ONE empty slot (2 — row 0, col 2). Row 0 carries a
+  // pair of kings; nothing anywhere ranks '2', so a dealt 2♦ is junk
+  // at the open slot while a K♦ pairs up.
+  const oneOpenSlot = (): Grid => {
+    const g = emptyGrid();
+    const row0 = [C('K', 'H'), C('K', 'C'), null, C('9', 'S'), C('8', 'H')];
+    for (let i = 0; i < 5; i++) g[i] = row0[i];
+    const fillers: Rank[] = ['3', '4', '5', '6', '7'];
+    for (let i = 5; i < 25; i++) {
+      g[i] = C(fillers[i % 5], (['H', 'S', 'C', 'D'] as Suit[])[i % 4]);
+    }
+    g[2] = null;
+    return g;
+  };
+
+  it('discards junk while budget remains, landing the fitting card', () => {
+    // Spare = 3 cards − 1 slot = 2 → skip budget 1: enough to pass on
+    // the junk 2♦ and land the pairing K♦.
+    const { grid, deckRem } = projectFill(
+      oneOpenSlot(),
+      [C('2', 'D'), C('K', 'D'), C('3', 'D')],
+      true
+    );
+    expect(grid[2]).toEqual(C('K', 'D'));
+    expect(deckRem).toBe(1); // skipped 2♦ consumed; 3♦ never dealt
+  });
+
+  it('budgets only HALF the spare — spare 1 means no skips', () => {
+    const { grid } = projectFill(
+      oneOpenSlot(),
+      [C('2', 'D'), C('K', 'D')],
+      true
+    );
+    expect(grid[2]).toEqual(C('2', 'D'));
+  });
+
+  it('places the junk card once slack is exhausted', () => {
+    const { grid } = projectFill(oneOpenSlot(), [C('2', 'D')], true);
+    expect(grid[2]).toEqual(C('2', 'D'));
+  });
+
+  it('never skips a joker, and plain fill never skips at all', () => {
+    const joker: Card = { kind: 'joker' };
+    expect(projectFill(oneOpenSlot(), [joker, C('K', 'D')], true).grid[2]).toEqual(
+      joker
+    );
+    expect(
+      projectFill(oneOpenSlot(), [C('2', 'D'), C('K', 'D')], false).grid[2]
+    ).toEqual(C('2', 'D'));
   });
 });
 

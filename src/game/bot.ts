@@ -12,9 +12,16 @@
  *   On every decision the bot enumerates each legal alternative
  *   (place / discard / the drawn suit's perk with every target, or
  *   which bonus card to keep), and for each one projects the run to
- *   its end by dealing out a SHUFFLED copy of the remaining cards
- *   ("always place" from here on), scoring the projected final grid
- *   with the full end-of-run rules (incomplete-line penalty included).
+ *   its end by dealing out a SHUFFLED copy of the remaining cards,
+ *   scoring the projected final grid with the full end-of-run rules
+ *   (incomplete-line penalty included). The projected future self is
+ *   slack-aware, not place-everything: while more cards remain than
+ *   empty slots, it discards a dealt card that matches nothing in its
+ *   target row/column (never jokers or supercharged cards; disabled
+ *   where discards are illegal). Deck depth beyond the grid's needs is
+ *   therefore worth points in every projection — states that keep that
+ *   flexibility open evaluate higher, and filling the last slot with a
+ *   dead card no longer looks free.
  *   Projections average over `samples` shuffles, and the same shuffles
  *   are reused for every candidate at one decision point (common
  *   random numbers — paired comparison kills most of the variance).
@@ -46,9 +53,16 @@ import {
   validSlideSources,
 } from './actions';
 import { BONUS_HAND_LIMIT, BonusCard } from './bonusCards';
-import { Card, activeHalf, isJoker } from './cards';
+import { Card, StandardCard, activeHalf, isJoker } from './cards';
 import { seededRng, shuffle } from './deck';
-import { Direction, Grid, isFull, placeAtSpiralNext } from './grid';
+import {
+  Direction,
+  Grid,
+  SPIRAL_ORDER,
+  colOf,
+  placeAtSpiralNext,
+  rowOf,
+} from './grid';
 import { Difficulty } from './rules';
 import { ScoreReport, scoreGrid } from './scoring';
 import { Action, GameState, newGame, step } from './state';
@@ -128,20 +142,78 @@ const decisionCtx = (
   };
 };
 
-// Place every card from `deck` onto `start` in sequence until the deck
-// is empty or the grid is full — the grid the run would end on if the
-// bot just placed everything from this point forward.
-const projectFill = (
+// Would `card` land dead at `slot`? Dead = the slot's row and column
+// already hold cards (≥2 across both — an empty neighborhood is no
+// signal) and NONE of them pairs with it (a joker in line pairs with
+// anything). Deliberately rank-only: cheap enough to run on every
+// projected deal, and pair-class hands dominate line scores.
+const junkAt = (g: Grid, slot: number, card: StandardCard): boolean => {
+  const r0 = rowOf(slot) * 5;
+  const c0 = colOf(slot);
+  let occupied = 0;
+  for (let k = 0; k < 5; k++) {
+    const inRow = g[r0 + k];
+    if (inRow !== null) {
+      occupied++;
+      if (inRow.kind === 'joker' || inRow.rank === card.rank) return false;
+    }
+    const inCol = g[c0 + 5 * k];
+    if (inCol !== null) {
+      occupied++;
+      if (inCol.kind === 'joker' || inCol.rank === card.rank) return false;
+    }
+  }
+  return occupied >= 2;
+};
+
+/**
+ * Deal `ordering` onto `start` in spiral order until the grid is full
+ * or the cards run out — the board the run would end on from here.
+ * With `skipJunk`, the projected future self is slack-aware: while
+ * MORE cards remain than empty slots, it discards a card that matches
+ * nothing in its target row/column instead of placing it (jokers and
+ * supercharged cards always place). Exported for the rollout-policy
+ * tests; the bot calls it through projectScore.
+ */
+export const projectFill = (
   start: Grid,
-  deck: ReadonlyArray<Card>
+  ordering: ReadonlyArray<Card>,
+  skipJunk: boolean
 ): { grid: Grid; deckRem: number } => {
-  let g = start;
+  const g = start.slice();
+  const slots: number[] = [];
+  for (const slot of SPIRAL_ORDER) {
+    if (g[slot] === null) slots.push(slot);
+  }
+  // Skip budget: HALF the spare deck, floor. An unbounded skipper
+  // cherry-picks every slot, which made slot-opening moves (destroys,
+  // discards, perk spending) look better than reality and the bot
+  // drained its deck chasing that mirage — the real future self spends
+  // slack on perks and ♣ draws too, so only part of it is available
+  // for redraws.
+  let budget = Math.max(0, Math.floor((ordering.length - slots.length) / 2));
+  let si = 0;
   let i = 0;
-  while (i < deck.length && !isFull(g)) {
-    g = placeAtSpiralNext(g, deck[i]);
+  while (si < slots.length && i < ordering.length) {
+    const card = ordering[i];
+    const spareAfter = ordering.length - i - 1 - (slots.length - si);
+    if (
+      skipJunk &&
+      budget > 0 &&
+      spareAfter >= 0 &&
+      card.kind === 'standard' &&
+      card.supercharge === undefined &&
+      junkAt(g, slots[si], card)
+    ) {
+      budget--;
+      i++; // rollout discard — slack pays for a better card later
+      continue;
+    }
+    g[slots[si]] = card;
+    si++;
     i++;
   }
-  return { grid: g, deckRem: deck.length - i };
+  return { grid: g, deckRem: ordering.length - i };
 };
 
 // Per-candidate knobs: a discard candidate's pile includes the drawn
@@ -166,9 +238,13 @@ const projectScore = (
   const orderings = opts.orderings ?? ctx.orderings;
   const discards = opts.discards ?? ctx.s.discards;
   const perkSpent = opts.perkSpent ?? ctx.s.perkSpent;
+  // Slack-aware rollouts only where the real future self could also
+  // discard; lowball keeps the plain fill (its junk logic inverts —
+  // pairing up is the bad outcome there).
+  const skipJunk = !ctx.s.noDiscards && !ctx.s.lowball;
   let sum = 0;
   for (const ordering of orderings) {
-    const { grid, deckRem } = projectFill(candidateGrid, ordering);
+    const { grid, deckRem } = projectFill(candidateGrid, ordering, skipJunk);
     sum += scoreGrid(grid, candidateBonusCards, {
       deckRemaining: deckRem,
       ignoreIncompletePenalty: false,
