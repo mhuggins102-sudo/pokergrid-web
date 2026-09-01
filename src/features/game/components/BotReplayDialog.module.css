@@ -1,7 +1,10 @@
-/* Keep the panel snug around the 5×5 board on every tier. */
+/* Snug around the 5×5 board, and re-centered: the app's global
+   `* { margin: 0 }` reset strips the UA's `margin: auto` that centers
+   modal dialogs, so restore it explicitly. */
 .dialog {
   width: fit-content;
   max-width: calc(100vw - 24px);
+  margin: auto;
 }
 
 .wrap {
@@ -61,12 +64,101 @@
   box-shadow: 0 0 0 1.5px var(--accent);
 }
 
-.underRow {
+/* Bonus hand stacked left; up-next / deck count / move caption right.
+   Every element keeps its slot (empty chips, the — up-next box), so
+   the panel's size is identical on every frame. */
+.infoRow {
+  display: flex;
+  gap: 12px;
+  width: 276px; /* match the board: 5×52 + 4×4 */
+}
+
+.chipCol {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 118px;
+  flex: none;
+}
+
+.chip,
+.chipEmpty {
+  display: block;
+  height: 26px;
+  line-height: 24px;
+  padding: 0 9px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip {
+  color: var(--ink-2);
+  background: var(--paper-sunken);
+  border: 1px solid var(--hairline);
+}
+
+.chipEmpty {
+  color: var(--ink-3);
+  border: 1px dashed var(--hairline);
+  opacity: 0.7;
+}
+
+.rightCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.nextRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 40px;
+  gap: 6px;
+}
+
+.nextLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.nextCard {
+  position: relative;
+  overflow: hidden;
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  flex: none;
+}
+
+.nextNone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--paper-sunken);
+  border: 1px dashed var(--hairline);
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.deckCount {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .caption {
@@ -74,45 +166,29 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
+  line-height: 1.3;
+  min-height: 36px; /* two lines' room — no reflow on long captions */
 }
 
-.next {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex: none;
+/* Caption card tokens tinted like the deck (2-color folds ♦→♥, ♣→♠). */
+.suitH {
+  color: var(--suit-h);
 }
 
-.nextLabel {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+.suitS {
+  color: var(--suit-s);
 }
 
-.nextCard {
-  position: relative;
-  overflow: hidden;
-  width: 38px;
-  height: 38px;
-  border-radius: 5px;
+.suitC {
+  color: var(--suit-c);
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.suitD {
+  color: var(--suit-d);
 }
 
-.chip {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--ink-2);
-  background: var(--paper-sunken);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-pill);
-  padding: 3px 9px;
+.suitJoker {
+  color: var(--joker);
 }
 
 .controls {

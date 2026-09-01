@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Dialog } from '../../../design/primitives';
+import type { Suit } from '../../../game/cards';
 import type { Difficulty } from '../../../game/rules';
 import type { Action } from '../../../game/state';
+import { useSettingsStore } from '../../settings/settingsStore';
 import { buildReplayFrames, frameScore } from '../botReplay';
+import type { CaptionPart } from '../botReplay';
 import { CardFace } from './CardFace';
 import styles from './BotReplayDialog.module.css';
 
@@ -16,13 +19,19 @@ export interface BotReplayDialogProps {
 }
 
 const SPEEDS = [1, 2, 4] as const;
+/** ms per move at ×1. */
+const BASE_INTERVAL = 1900;
+/** The game's bonus-hand cap — three chip slots stay reserved so the
+ *  panel never resizes as the bot collects cards. */
+const CHIP_SLOTS = 3;
 
 /**
  * "Watch the bot's game" — a step-through player over the bot's action
- * trace. Auto-plays from the opening deal; the board updates move by
- * move with the acted-on cells highlighted, the move caption underneath,
- * and transport controls (restart / step / play-pause / speed).
- * Stacked above the BotScoreSheet as its own top-layer dialog.
+ * trace. Opens paused on the deal; play or step through move by move.
+ * The board highlights the acted-on cells; below it, the bot's bonus
+ * hand stacks on the left while the up-next card, deck count, and the
+ * move caption (card tokens tinted by suit) sit on the right. Stacked
+ * above the BotScoreSheet as its own top-layer dialog.
  */
 export function BotReplayDialog({
   open,
@@ -38,14 +47,17 @@ export function BotReplayDialog({
     [open, difficulty, seed, actions]
   );
   const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
+  // 2-color decks tint ♦ like ♥ and ♣ like ♠ — the caption follows.
+  const twoColorDeck = useSettingsStore(s => s.twoColorDeck);
 
-  // Every open starts from the deal, rolling.
+  // Every open starts back on the deal, paused — the viewer chooses to
+  // play or step.
   useEffect(() => {
     if (open) {
       setIdx(0);
-      setPlaying(true);
+      setPlaying(false);
     }
   }, [open]);
 
@@ -60,7 +72,7 @@ export function BotReplayDialog({
     }
     const t = window.setTimeout(
       () => setIdx(i => Math.min(i + 1, frames.length - 1)),
-      950 / speed
+      BASE_INTERVAL / speed
     );
     return () => window.clearTimeout(t);
   }, [open, playing, idx, speed, frames]);
@@ -69,6 +81,29 @@ export function BotReplayDialog({
   const score = useMemo(
     () => (frame ? frameScore(frame.state) : 0),
     [frame]
+  );
+
+  const suitClass = (suit: Suit): string =>
+    twoColorDeck
+      ? suit === 'H' || suit === 'D'
+        ? styles.suitH
+        : styles.suitS
+      : {
+          H: styles.suitH,
+          S: styles.suitS,
+          C: styles.suitC,
+          D: styles.suitD,
+        }[suit];
+
+  const partSpan = (p: CaptionPart, i: number) => (
+    <span
+      key={i}
+      className={
+        p.suit ? suitClass(p.suit) : p.joker ? styles.suitJoker : undefined
+      }
+    >
+      {p.text}
+    </span>
   );
 
   const togglePlay = () => {
@@ -114,28 +149,43 @@ export function BotReplayDialog({
               </div>
             ))}
           </div>
-          <div className={styles.underRow}>
-            <p className={styles.caption} role="status">
-              {frame.caption}
-            </p>
-            {frame.state.drawn && frame.state.phase.kind !== 'game-over' && (
-              <span className={styles.next}>
+          <div className={styles.infoRow}>
+            <div className={styles.chipCol} aria-label="Bot's bonus cards">
+              {Array.from({ length: CHIP_SLOTS }, (_, i) => {
+                const c = frame.state.bonusCards[i];
+                return c ? (
+                  <span key={c.id} className={styles.chip} title={c.name}>
+                    {c.title}
+                  </span>
+                ) : (
+                  <span key={`empty-${i}`} className={styles.chipEmpty}>
+                    empty
+                  </span>
+                );
+              })}
+            </div>
+            <div className={styles.rightCol}>
+              <div className={styles.nextRow}>
                 <span className={styles.nextLabel}>Up next</span>
                 <span className={styles.nextCard}>
-                  <CardFace card={frame.state.drawn} />
+                  {frame.state.drawn &&
+                  frame.state.phase.kind !== 'game-over' ? (
+                    <CardFace card={frame.state.drawn} />
+                  ) : (
+                    <span className={styles.nextNone} aria-hidden="true">
+                      —
+                    </span>
+                  )}
                 </span>
-              </span>
-            )}
-          </div>
-          {frame.state.bonusCards.length > 0 && (
-            <div className={styles.chips}>
-              {frame.state.bonusCards.map(c => (
-                <span key={c.id} className={styles.chip}>
-                  {c.name}
+                <span className={styles.deckCount}>
+                  Deck {frame.state.deck.length}
                 </span>
-              ))}
+              </div>
+              <p className={styles.caption} role="status">
+                {frame.parts.map(partSpan)}
+              </p>
             </div>
-          )}
+          </div>
           <div className={styles.controls}>
             <button
               type="button"

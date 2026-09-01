@@ -55,19 +55,22 @@ import { Action, GameState, newGame, step } from './state';
 
 /** Shuffles per decision. Fixed so a run's bot score is reproducible
  *  everywhere; raising it makes the bot stronger and slower. */
-export const BOT_DEFAULT_SAMPLES = 24;
+export const BOT_DEFAULT_SAMPLES = 32;
 
 /** How many projected points a discard or perk must beat plain
  *  placement by before the bot spends it. The bar absorbs residual
  *  sampling noise (winner's curse over many candidates) and prices in
- *  that every spent card shrinks the deck. */
-const ACT_MARGIN = 15;
+ *  that every spent card shrinks the deck. Tuned against the sim: 15
+ *  suppressed too many genuinely good perk plays (the paired-sample
+ *  noise at 32 shuffles is well under that); 8 keeps the discipline
+ *  without benching the perks. */
+const ACT_MARGIN = 8;
 
 /** Candidate shortlisting: rank all targets on this many shared
  *  orderings first… */
-const STAGE1_ORDERINGS = 2;
+const STAGE1_ORDERINGS = 3;
 /** …then re-score only the leaders on the full sample set. */
-const SHORTLIST = 3;
+const SHORTLIST = 4;
 
 const MAX_STEPS = 600;
 

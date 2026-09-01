@@ -16,47 +16,79 @@ import { Difficulty } from '../../game/rules';
 import { scoreGrid } from '../../game/scoring';
 import { Action, GameState, newGame, step } from '../../game/state';
 
+/** One run of caption text. Card tokens carry their suit (or joker
+ *  flag) so the viewer can tint them to match the deck's colors. */
+export interface CaptionPart {
+  text: string;
+  suit?: Suit;
+  joker?: boolean;
+}
+
 export interface ReplayFrame {
   state: GameState;
+  /** Plain-text caption (aria labels, tests). */
   caption: string;
+  /** The caption split into runs for suit-tinted rendering. */
+  parts: CaptionPart[];
   /** Grid slots that changed vs the previous frame (for highlights). */
   changed: number[];
 }
 
 const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', C: '♣', D: '♦' };
 
-const cardName = (c: Card | null | undefined): string =>
-  !c ? '?' : c.kind === 'joker' ? 'the joker' : `${c.rank}${SUIT_GLYPH[c.suit]}`;
+const cardPart = (c: Card | null | undefined): CaptionPart =>
+  !c
+    ? { text: '?' }
+    : c.kind === 'joker'
+      ? { text: 'the joker', joker: true }
+      : { text: `${c.rank}${SUIT_GLYPH[c.suit]}`, suit: c.suit };
 
 // Caption for the action taken FROM `prev`. Null = a silent step (phase
 // bookkeeping) whose effect the next visible frame narrates instead.
-const captionFor = (prev: GameState, action: Action): string | null => {
+const captionFor = (prev: GameState, action: Action): CaptionPart[] | null => {
   switch (action.type) {
     case 'PLACE':
-      return `Places ${cardName(prev.drawn)}`;
+      return [{ text: 'Places ' }, cardPart(prev.drawn)];
     case 'DISCARD_NONE':
-      return `Discards ${cardName(prev.drawn)}`;
+      return [{ text: 'Discards ' }, cardPart(prev.drawn)];
     case 'RESOLVE_HOP':
-      return `Swaps ${cardName(prev.grid[action.i])} ↔ ${cardName(
-        prev.grid[action.j]
-      )}`;
+      return [
+        { text: 'Swaps ' },
+        cardPart(prev.grid[action.i]),
+        { text: ' ↔ ' },
+        cardPart(prev.grid[action.j]),
+      ];
     case 'RESOLVE_SLIDE': {
       const dist = action.distance > 1 ? ` ${action.distance}` : '';
-      return `Slides ${cardName(prev.grid[action.from])} ${action.direction}${dist}`;
+      return [
+        { text: 'Slides ' },
+        cardPart(prev.grid[action.from]),
+        { text: ` ${action.direction}${dist}` },
+      ];
     }
     case 'RESOLVE_DESTROY':
-      return `Destroys ${cardName(prev.grid[action.slot])}`;
+      return [{ text: 'Destroys ' }, cardPart(prev.grid[action.slot])];
     case 'BONUS_KEEP':
     case 'BONUS_SELECT_NEW':
-      return prev.phase.kind === 'bonus-card-resolving'
-        ? `Keeps ${prev.phase.drawn[action.idx].name}`
-        : 'Keeps a bonus card';
+      return [
+        {
+          text:
+            prev.phase.kind === 'bonus-card-resolving'
+              ? `Keeps ${prev.phase.drawn[action.idx].name}`
+              : 'Keeps a bonus card',
+        },
+      ];
     case 'BONUS_REPLACE':
-      return prev.phase.kind === 'bonus-card-replacing'
-        ? `Swaps in ${prev.phase.drawn[prev.phase.pickedNew].name}`
-        : 'Swaps a bonus card';
+      return [
+        {
+          text:
+            prev.phase.kind === 'bonus-card-replacing'
+              ? `Swaps in ${prev.phase.drawn[prev.phase.pickedNew].name}`
+              : 'Swaps a bonus card',
+        },
+      ];
     case 'BONUS_DECLINE':
-      return 'Declines the bonus draw';
+      return [{ text: 'Declines the bonus draw' }];
     default:
       return null;
   }
@@ -74,7 +106,12 @@ export const buildReplayFrames = (
 ): ReplayFrame[] => {
   let s = newGame(difficulty, seededRng(seed));
   const frames: ReplayFrame[] = [
-    { state: s, caption: 'Opening deal', changed: [] },
+    {
+      state: s,
+      caption: 'Opening deal',
+      parts: [{ text: 'Opening deal' }],
+      changed: [],
+    },
   ];
   for (const action of actions) {
     const prev = s;
@@ -89,9 +126,11 @@ export const buildReplayFrames = (
       prev.bonusCards !== s.bonusCards ||
       s.phase.kind === 'game-over';
     if (!visible) continue;
+    const parts = captionFor(prev, action) ?? [{ text: '…' }];
     frames.push({
       state: s,
-      caption: captionFor(prev, action) ?? '…',
+      caption: parts.map(p => p.text).join(''),
+      parts,
       changed,
     });
   }
