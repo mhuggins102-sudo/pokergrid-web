@@ -726,6 +726,24 @@
   border-radius: var(--radius-sm);
 }
 
+/* Bot score opener: no underline / press highlight. Touch taps leave
+   :hover stuck on the button after the sheet opens, so the underline
+   read as a pressed state — keep the desktop hover color lift only. */
+.quietLinkPlain {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quietLinkPlain:hover,
+.quietLinkPlain:active {
+  text-decoration: none;
+}
+
+@media (hover: none) {
+  .quietLinkPlain:hover {
+    color: var(--ink-3);
+  }
+}
+
 /* Phone (<768): the streamlined column game reuses this dialog for game
    over, so it must fit a 390 viewport. Tighten the scrim inset, let the
    card span the width, and step the header / score / button type down.

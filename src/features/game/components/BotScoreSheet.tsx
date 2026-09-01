@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Sheet } from '../../../design/primitives';
 import type { Difficulty } from '../../../game/rules';
 import type { BotWorkerRequest, BotWorkerResult } from '../botWorker';
+import { BotReplayDialog } from './BotReplayDialog';
 import styles from './BotScoreSheet.module.css';
 
 export interface BotScoreSheetProps {
@@ -31,6 +32,7 @@ export function BotScoreSheet({
 }: BotScoreSheetProps) {
   const [result, setResult] = useState<BotWorkerResult | null>(null);
   const [failed, setFailed] = useState(false);
+  const [replayOpen, setReplayOpen] = useState(false);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -41,11 +43,12 @@ export function BotScoreSheet({
       // on the main thread — same bot, same deterministic score.
       import('../../../game/bot')
         .then(({ runBotGame }) => {
-          const { report, state } = runBotGame(difficulty, seed);
+          const { report, state, actions } = runBotGame(difficulty, seed);
           setResult({
             score: report.total,
             target: state.target,
             won: report.total >= state.target,
+            actions,
           });
         })
         .catch(() => setFailed(true));
@@ -112,6 +115,13 @@ export function BotScoreSheet({
                   : 'Dead heat — you tied the bot.'}
               <span className={styles.compareOwn}> (You scored {playerScore}.)</span>
             </p>
+            <button
+              type="button"
+              className={styles.watchBtn}
+              onClick={() => setReplayOpen(true)}
+            >
+              ▶ Watch the bot&apos;s game
+            </button>
             <p className={styles.note}>
               The bot replayed your exact deal under the same rules. It
               counts cards, but never sees the deck&apos;s order or what
@@ -120,6 +130,15 @@ export function BotScoreSheet({
           </>
         )}
       </div>
+      {result !== null && (
+        <BotReplayDialog
+          open={replayOpen}
+          onClose={() => setReplayOpen(false)}
+          difficulty={difficulty}
+          seed={seed}
+          actions={result.actions}
+        />
+      )}
     </Sheet>
   );
 }

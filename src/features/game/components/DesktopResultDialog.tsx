@@ -732,7 +732,7 @@ export function DesktopResultDialog({
             <div className={styles.quietRow}>
               <button
                 type="button"
-                className={styles.quietLink}
+                className={`${styles.quietLink} ${styles.quietLinkPlain}`}
                 onClick={() => setBotOpen(true)}
               >
                 Bot score
