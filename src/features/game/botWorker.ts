@@ -6,6 +6,7 @@
  */
 import { runBotGame } from '../../game/bot';
 import type { Difficulty } from '../../game/rules';
+import type { Action } from '../../game/state';
 
 export interface BotWorkerRequest {
   difficulty: Difficulty;
@@ -16,6 +17,9 @@ export interface BotWorkerResult {
   score: number;
   target: number;
   won: boolean;
+  /** The bot's full action trace — replayable through the pure reducer
+   *  for the "watch its game" viewer. Plain data. */
+  actions: Action[];
 }
 
 // `self` is typed as Window under the app's DOM lib; narrow to the two
@@ -27,10 +31,11 @@ const ctx = self as unknown as {
 
 ctx.onmessage = e => {
   const { difficulty, seed } = e.data;
-  const { report, state } = runBotGame(difficulty, seed);
+  const { report, state, actions } = runBotGame(difficulty, seed);
   ctx.postMessage({
     score: report.total,
     target: state.target,
     won: report.total >= state.target,
+    actions,
   });
 };
