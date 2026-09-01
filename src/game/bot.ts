@@ -72,6 +72,11 @@ const STAGE1_ORDERINGS = 3;
 /** …then re-score only the leaders on the full sample set. */
 const SHORTLIST = 4;
 
+/** A held bonus card whose removal costs at most this many projected
+ *  points is dead weight — worth spending a ♣ at the cap to swap out
+ *  (Easy/Medium), since replacing a do-nothing card is pure upside. */
+const DEAD_CARD_EPS = 3;
+
 const MAX_STEPS = 600;
 
 export interface BotOptions {
@@ -306,16 +311,36 @@ export const createBot = (
         const drawn = s.drawn;
         if (!drawn || isJoker(drawn)) return { type: 'PLACE' };
 
-        // ♣ → take the bonus draw if we can. Free upgrade in
-        // expectation; the pick step below decides which offered card
-        // to keep once the offer is visible.
-        if (
-          drawn.suit === 'C' &&
-          s.bonusDeck.length > 0 &&
-          s.bonusCards.length < BONUS_HAND_LIMIT
-        ) {
-          planned = null;
-          return { type: 'BEGIN_SUIT_ACTION' };
+        // ♣ → take the bonus draw if we can. Below the cap it's a free
+        // upgrade in expectation; the pick step below decides which
+        // offered card to keep once the offer is visible.
+        if (drawn.suit === 'C' && s.bonusDeck.length > 0) {
+          if (s.bonusCards.length < BONUS_HAND_LIMIT) {
+            planned = null;
+            return { type: 'BEGIN_SUIT_ACTION' };
+          }
+          // AT the cap, Easy/Medium still allow taking ♣ to swap a held
+          // card out. The offer is hidden, so gate on what we can see:
+          // if the least-valuable held card contributes ~nothing to the
+          // projection, swapping it is pure upside (bonus cards never
+          // score negative) — even Medium's forced swap risks at most
+          // the dead card's sliver. Otherwise keep the hand.
+          if (s.bonusSwapAtCap !== 'off') {
+            const capCtx = decisionCtx(s, rng, samples);
+            const full = projectScore(s.grid, s.bonusCards, capCtx);
+            let deadDelta = Infinity;
+            for (let i = 0; i < s.bonusCards.length; i++) {
+              const without = s.bonusCards.filter((_, j) => j !== i);
+              deadDelta = Math.min(
+                deadDelta,
+                full - projectScore(s.grid, without, capCtx)
+              );
+            }
+            if (deadDelta <= DEAD_CARD_EPS) {
+              planned = null;
+              return { type: 'BEGIN_SUIT_ACTION' };
+            }
+          }
         }
 
         const ctx = decisionCtx(s, rng, samples);
@@ -455,18 +480,39 @@ export const createBot = (
         // hidden information is consumed here.
         const drawn = s.phase.drawn;
         const ctx = decisionCtx(s, rng, samples);
+        if (s.bonusCards.length < BONUS_HAND_LIMIT) {
+          let bestIdx = 0;
+          let bestSc = -Infinity;
+          for (let i = 0; i < drawn.length; i++) {
+            const hypothetical = [...s.bonusCards, drawn[i]];
+            const sc = projectScore(s.grid, hypothetical, ctx);
+            if (sc > bestSc) {
+              bestSc = sc;
+              bestIdx = i;
+            }
+          }
+          return { type: 'BONUS_KEEP', idx: bestIdx };
+        }
+        // At the cap the kept card must REPLACE a held one, so value
+        // each offer by its best single replacement; when declining is
+        // allowed (Easy) and no replacement beats the current hand,
+        // walk away instead.
+        const current = projectScore(s.grid, s.bonusCards, ctx);
         let bestIdx = 0;
         let bestSc = -Infinity;
         for (let i = 0; i < drawn.length; i++) {
-          const hypothetical = [...s.bonusCards, drawn[i]];
-          const sc = projectScore(s.grid, hypothetical, ctx);
-          if (sc > bestSc) {
-            bestSc = sc;
-            bestIdx = i;
+          for (let j = 0; j < s.bonusCards.length; j++) {
+            const hand = s.bonusCards.slice();
+            hand[j] = drawn[i];
+            const sc = projectScore(s.grid, hand, ctx);
+            if (sc > bestSc) {
+              bestSc = sc;
+              bestIdx = i;
+            }
           }
         }
-        if (s.bonusCards.length < BONUS_HAND_LIMIT) {
-          return { type: 'BONUS_KEEP', idx: bestIdx };
+        if (s.bonusDeclineAllowed && bestSc <= current) {
+          return { type: 'BONUS_DECLINE' };
         }
         return { type: 'BONUS_SELECT_NEW', idx: bestIdx };
       }

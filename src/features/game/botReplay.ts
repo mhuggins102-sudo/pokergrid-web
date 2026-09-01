@@ -32,6 +32,9 @@ export interface ReplayFrame {
   parts: CaptionPart[];
   /** Grid slots that changed vs the previous frame (for highlights). */
   changed: number[];
+  /** Index (into state.bonusCards) of a chip added this move — the
+   *  viewer highlights it, standing in for a long "Keeps X" caption. */
+  newChip?: number;
 }
 
 const SUIT_GLYPH: Record<Suit, string> = { H: '♥', S: '♠', C: '♣', D: '♦' };
@@ -52,43 +55,33 @@ const captionFor = (prev: GameState, action: Action): CaptionPart[] | null => {
     case 'DISCARD_NONE':
       return [{ text: 'Discards ' }, cardPart(prev.drawn)];
     case 'RESOLVE_HOP':
+      // Tight around the arrow — the caption must hold one line.
       return [
         { text: 'Swaps ' },
         cardPart(prev.grid[action.i]),
-        { text: ' ↔ ' },
+        { text: '↔' },
         cardPart(prev.grid[action.j]),
       ];
     case 'RESOLVE_SLIDE': {
-      const dist = action.distance > 1 ? ` ${action.distance}` : '';
+      const arrow = { up: '↑', down: '↓', left: '←', right: '→' }[
+        action.direction
+      ];
+      const dist = action.distance > 1 ? `${action.distance}` : '';
       return [
         { text: 'Slides ' },
         cardPart(prev.grid[action.from]),
-        { text: ` ${action.direction}${dist}` },
+        { text: ` ${arrow}${dist}` },
       ];
     }
     case 'RESOLVE_DESTROY':
       return [{ text: 'Destroys ' }, cardPart(prev.grid[action.slot])];
     case 'BONUS_KEEP':
     case 'BONUS_SELECT_NEW':
-      return [
-        {
-          text:
-            prev.phase.kind === 'bonus-card-resolving'
-              ? `Keeps ${prev.phase.drawn[action.idx].name}`
-              : 'Keeps a bonus card',
-        },
-      ];
     case 'BONUS_REPLACE':
-      return [
-        {
-          text:
-            prev.phase.kind === 'bonus-card-replacing'
-              ? `Swaps in ${prev.phase.drawn[prev.phase.pickedNew].name}`
-              : 'Swaps a bonus card',
-        },
-      ];
+      // The highlighted chip carries the specifics — names run long.
+      return [{ text: '+Bonus card' }];
     case 'BONUS_DECLINE':
-      return [{ text: 'Declines the bonus draw' }];
+      return [{ text: 'Declines bonus' }];
     default:
       return null;
   }
@@ -127,11 +120,17 @@ export const buildReplayFrames = (
       s.phase.kind === 'game-over';
     if (!visible) continue;
     const parts = captionFor(prev, action) ?? [{ text: '…' }];
+    // A chip that wasn't held before this move gets the highlight.
+    const newChip =
+      prev.bonusCards === s.bonusCards
+        ? undefined
+        : s.bonusCards.findIndex(c => !prev.bonusCards.includes(c));
     frames.push({
       state: s,
       caption: parts.map(p => p.text).join(''),
       parts,
       changed,
+      ...(newChip !== undefined && newChip >= 0 ? { newChip } : {}),
     });
   }
   return frames;
