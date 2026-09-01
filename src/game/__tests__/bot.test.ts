@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createBot, playBotGame, projectFill, runBotGame } from '../bot';
+import {
+  createBot,
+  fitAt,
+  heuristicMults,
+  playBotGame,
+  projectFill,
+  runBotGame,
+} from '../bot';
 import { Card, Rank, StandardCard, Suit } from '../cards';
 import { seededRng } from '../deck';
 import { Grid, emptyGrid } from '../grid';
@@ -52,10 +59,15 @@ describe('slack-aware rollout (projectFill)', () => {
     rank,
     suit,
   });
+  // A rollout player with no held bonus cards and a zero bar: it
+  // passes on any card that lowers its lines' outlook while a spare
+  // card remains, and places everything else.
+  const policy = { skip: true, scale: 0, mults: heuristicMults([]) };
+  const plain = { ...policy, skip: false };
 
   // A board with ONE empty slot (2 — row 0, col 2). Row 0 carries a
-  // pair of kings; nothing anywhere ranks '2', so a dealt 2♦ is junk
-  // at the open slot while a K♦ pairs up.
+  // pair of kings; a dealt K♦ makes trips there while a 2♦ only kills
+  // the row's two-pair / trips draw.
   const oneOpenSlot = (): Grid => {
     const g = emptyGrid();
     const row0 = [C('K', 'H'), C('K', 'C'), null, C('9', 'S'), C('8', 'H')];
@@ -68,39 +80,43 @@ describe('slack-aware rollout (projectFill)', () => {
     return g;
   };
 
-  it('discards junk while budget remains, landing the fitting card', () => {
-    // Spare = 3 cards − 1 slot = 2 → skip budget 1: enough to pass on
-    // the junk 2♦ and land the pairing K♦.
+  it('scores a pairing card as a better fit than a dead one', () => {
+    const g = oneOpenSlot();
+    expect(fitAt(g, 2, C('K', 'D'))).toBeGreaterThan(fitAt(g, 2, C('2', 'D')));
+  });
+
+  it('weighs fits by the held hand-type multipliers', () => {
+    const g = oneOpenSlot();
+    const tripsBoost = heuristicMults([
+      { id: 'hand-three_of_a_kind-x3', multValue: 3 } as never,
+    ]);
+    expect(fitAt(g, 2, C('K', 'D'), tripsBoost)).toBeGreaterThan(
+      fitAt(g, 2, C('K', 'D'))
+    );
+  });
+
+  it('passes on a harmful card while a spare remains, landing the fitting one', () => {
     const { grid, deckRem } = projectFill(
       oneOpenSlot(),
       [C('2', 'D'), C('K', 'D'), C('3', 'D')],
-      true
+      policy
     );
     expect(grid[2]).toEqual(C('K', 'D'));
     expect(deckRem).toBe(1); // skipped 2♦ consumed; 3♦ never dealt
   });
 
-  it('budgets only HALF the spare — spare 1 means no skips', () => {
-    const { grid } = projectFill(
-      oneOpenSlot(),
-      [C('2', 'D'), C('K', 'D')],
-      true
-    );
-    expect(grid[2]).toEqual(C('2', 'D'));
-  });
-
-  it('places the junk card once slack is exhausted', () => {
-    const { grid } = projectFill(oneOpenSlot(), [C('2', 'D')], true);
+  it('never passes when the deck could no longer refill the grid', () => {
+    const { grid } = projectFill(oneOpenSlot(), [C('2', 'D')], policy);
     expect(grid[2]).toEqual(C('2', 'D'));
   });
 
   it('never skips a joker, and plain fill never skips at all', () => {
     const joker: Card = { kind: 'joker' };
-    expect(projectFill(oneOpenSlot(), [joker, C('K', 'D')], true).grid[2]).toEqual(
-      joker
-    );
     expect(
-      projectFill(oneOpenSlot(), [C('2', 'D'), C('K', 'D')], false).grid[2]
+      projectFill(oneOpenSlot(), [joker, C('K', 'D')], policy).grid[2]
+    ).toEqual(joker);
+    expect(
+      projectFill(oneOpenSlot(), [C('2', 'D'), C('K', 'D')], plain).grid[2]
     ).toEqual(C('2', 'D'));
   });
 });

@@ -129,18 +129,39 @@ const evalWithJokers = (
 // joker-bearing lines per decision; the live game benefits for free.
 // Cleared wholesale on overflow — simplest bound, and re-warming is
 // cheap relative to the searches it saves.
-const JOKER_MEMO_MAX = 100_000;
-const jokerMemo = new Map<string, HandRank>();
-const jokerLineKey = (cards: StandardCard[], jokers: number): string =>
-  cards
-    .map(
-      c =>
-        `${c.rank}${c.suit}${
-          c.supercharge === 'double' ? 'D' : c.supercharge === 'wild' ? 'W' : ''
-        }`
-    )
-    .sort()
-    .join('|') + `|~${jokers}`;
+const JOKER_MEMO_MAX = 200_000;
+const jokerMemo = new Map<number, HandRank>();
+// Numeric key: each standard card packs to 6 bits (rank 0-12, suit
+// 0-3, supercharge 0-2 → < 64 after mixing), the ≤4 codes are sorted
+// so the key is order-free, then concatenated with the joker count.
+// Stays inside 2^31 for 4 cards, and avoids the per-call string
+// building that dominated joker-heavy (Easy) projections.
+const SUIT_CODE: Record<Suit, number> = { H: 0, S: 1, C: 2, D: 3 };
+const keyScratch = [0, 0, 0, 0];
+const jokerLineKey = (cards: StandardCard[], jokers: number): number => {
+  const n = cards.length;
+  for (let i = 0; i < n; i++) {
+    const c = cards[i];
+    keyScratch[i] =
+      1 +
+      (rankIndex(c.rank) - 2) * 4 +
+      SUIT_CODE[c.suit] +
+      (c.supercharge === 'double' ? 52 : c.supercharge === 'wild' ? 104 : 0);
+  }
+  // Insertion sort of at most 4 codes.
+  for (let i = 1; i < n; i++) {
+    const v = keyScratch[i];
+    let j = i - 1;
+    while (j >= 0 && keyScratch[j] > v) {
+      keyScratch[j + 1] = keyScratch[j];
+      j--;
+    }
+    keyScratch[j + 1] = v;
+  }
+  let key = jokers;
+  for (let i = 0; i < n; i++) key = key * 157 + keyScratch[i];
+  return key;
+};
 
 // Evaluate any 5-card line. Returns null if any slot is empty.
 export const evaluateLine = (line: (Card | null)[]): HandRank | null => {
