@@ -779,6 +779,8 @@ export function DesktopResultDialog({
           difficulty={state.difficulty}
           seed={seed}
           playerScore={report.total}
+          state={state}
+          report={report}
         />
       )}
       {targetsFlow.rewardsSheet}

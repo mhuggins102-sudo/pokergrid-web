@@ -58,6 +58,17 @@
   color: var(--ink-2);
 }
 
+.achievement {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--hairline);
+  background: var(--paper-raised);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
 .watchBtn {
   align-self: flex-start;
   padding: 9px 16px;

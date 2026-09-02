@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sheet } from '../../../design/primitives';
+import { Achievement, botAchievementsEarned } from '../../../game/achievements';
 import type { Difficulty } from '../../../game/rules';
+import type { ScoreReport } from '../../../game/scoring';
+import type { GameState } from '../../../game/state';
+import { useStatsStore } from '../../progress/statsStore';
 import type { BotWorkerRequest, BotWorkerResult } from '../botWorker';
 import { BotReplayDialog } from './BotReplayDialog';
 import styles from './BotScoreSheet.module.css';
@@ -13,6 +17,10 @@ export interface BotScoreSheetProps {
   seed: number;
   /** The player's final score, for the head-to-head line. */
   playerScore: number;
+  /** The finished run itself — the bot-comparison achievements (Bot
+   *  Buster) are judged against it once the bot's score is known. */
+  state: GameState;
+  report: ScoreReport;
 }
 
 /**
@@ -29,11 +37,29 @@ export function BotScoreSheet({
   difficulty,
   seed,
   playerScore,
+  state,
+  report,
 }: BotScoreSheetProps) {
   const [result, setResult] = useState<BotWorkerResult | null>(null);
   const [failed, setFailed] = useState(false);
   const [replayOpen, setReplayOpen] = useState(false);
+  const [earned, setEarned] = useState<Achievement[]>([]);
   const startedRef = useRef(false);
+  const judgedRef = useRef(false);
+
+  // The run was recorded when the result screen opened; the bot's
+  // score arrives later, so the achievements that need it are judged
+  // (and persisted) here, once per run.
+  useEffect(() => {
+    if (result === null || judgedRef.current) return;
+    judgedRef.current = true;
+    const store = useStatsStore.getState();
+    const fresh = botAchievementsEarned(state, report, result.score).filter(
+      a => !store.stats.achievementsDone.includes(a.id)
+    );
+    for (const a of fresh) store.recordAchievement(a.id);
+    if (fresh.length > 0) setEarned(fresh);
+  }, [result, state, report]);
 
   useEffect(() => {
     if (!open || startedRef.current) return;
@@ -115,6 +141,16 @@ export function BotScoreSheet({
                   : 'Dead heat — you tied the bot.'}
               <span className={styles.compareOwn}> (You scored {playerScore}.)</span>
             </p>
+            {earned.map(a => (
+              <p
+                key={a.id}
+                className={styles.achievement}
+                role="status"
+                data-testid="bot-achievement"
+              >
+                🏆 Achievement earned: <strong>{a.name}</strong> — {a.description}
+              </p>
+            ))}
             <button
               type="button"
               className={styles.watchBtn}
