@@ -4,6 +4,7 @@ import {
   AchievementId,
   MilestoneInputs,
   achievementEarned,
+  botAchievementsEarned,
   findAchievement,
 } from '../achievements';
 import { Card, Rank, StandardCard, Suit } from '../cards';
@@ -419,5 +420,51 @@ describe('Bull Run (Bull Market, 400+ invested points)', () => {
         report,
       })
     ).toBe(false);
+  });
+});
+
+describe('Bot Buster (beat the bot by 200+, free play only)', () => {
+  const hard = stateWith({ difficulty: 'hard' });
+
+  it('fires from the bot-score pass at the margin, on Hard and Extreme', () => {
+    expect(
+      botAchievementsEarned(hard, reportWith(700), 500).map(a => a.id)
+    ).toEqual(['beat-the-bot']);
+    expect(
+      botAchievementsEarned(
+        stateWith({ difficulty: 'extreme' }),
+        reportWith(650),
+        450
+      ).map(a => a.id)
+    ).toEqual(['beat-the-bot']);
+    expect(botAchievementsEarned(hard, reportWith(699), 500)).toEqual([]);
+  });
+
+  it('needs no score floor — only the margin over the bot', () => {
+    expect(
+      botAchievementsEarned(hard, reportWith(300), 100).map(a => a.id)
+    ).toEqual(['beat-the-bot']);
+  });
+
+  it('is a High Stakes feat: Easy / Medium runs never earn it', () => {
+    expect(
+      botAchievementsEarned(stateWith({ difficulty: 'medium' }), reportWith(900), 100)
+    ).toEqual([]);
+  });
+
+  it('never fires from the result-screen pass, where the bot score is unknown', () => {
+    expect(earn('beat-the-bot', { state: hard, report: reportWith(900) })).toBe(false);
+    // …and even with a bot score in hand, only free play counts.
+    expect(
+      earn('beat-the-bot', {
+        state: hard,
+        report: reportWith(900),
+        botScore: 100,
+        mode: 'daily',
+      })
+    ).toBe(false);
+    expect(
+      earn('beat-the-bot', { state: hard, report: reportWith(900), botScore: 100 })
+    ).toBe(true);
   });
 });

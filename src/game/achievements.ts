@@ -65,6 +65,7 @@ export type AchievementId =
   | 'high-hands'
   | 'gaps-and-glory'
   | 'full-spectrum'
+  | 'beat-the-bot'
   | 'easy-grand'
   | 'easy-waste-not'
   | 'easy-triple-crown'
@@ -134,6 +135,11 @@ export interface AchievementCheckCtx {
   // Challenge run, the recipe twist on a twisted Daily. Null on Free
   // Play and twist-free Dailies.
   activeVariant: ChallengeId | null;
+  // The bot's score on this exact deal, once the player has asked for
+  // it (the Bot Score sheet computes it on demand, after the run is
+  // recorded). Undefined on the result-screen pass, so Bot Buster can
+  // only fire from the sheet — via botAchievementsEarned below.
+  botScore?: number;
 }
 
 export interface Achievement {
@@ -167,6 +173,9 @@ const investedPoints = (state: GameState, report: ScoreReport): number => {
   });
   return report.total - without.total;
 };
+
+// How far ahead of the bot a free-play run must finish for Bot Buster.
+export const BEAT_THE_BOT_MARGIN = 200;
 
 export const ACHIEVEMENTS: Achievement[] = [
   // ---------- Easy / Medium tier ----------
@@ -275,6 +284,20 @@ export const ACHIEVEMENTS: Achievement[] = [
           .map(l => l.hand)
           .filter((h): h is HandRank => h !== null && h !== 'HIGH_CARD')
       ).size >= 8,
+  },
+  {
+    // Free play only: the bot replays free-play deals only, and its
+    // score exists only once the player opens the Bot Score sheet —
+    // so this is awarded from that sheet (botAchievementsEarned), not
+    // by the result screen's per-run pass, where botScore is absent.
+    id: 'beat-the-bot',
+    tier: 'hard-extreme',
+    name: 'Bot Buster',
+    description: `Beat the bot by ${BEAT_THE_BOT_MARGIN}+ points (free play only).`,
+    conditionMet: ({ report, botScore, mode }) =>
+      mode === 'free' &&
+      botScore !== undefined &&
+      report.total - botScore >= BEAT_THE_BOT_MARGIN,
   },
 
   // ---------- Daily puzzles ----------
@@ -441,6 +464,48 @@ export const ACHIEVEMENTS: Achievement[] = [
 
 export const findAchievement = (id: AchievementId): Achievement | undefined =>
   ACHIEVEMENTS.find(a => a.id === id);
+
+// The achievements a bot comparison can award, evaluated when the Bot
+// Score sheet learns the bot's score — after the run itself was
+// recorded. Runs the same tier gating as the per-run engine (Hard /
+// Extreme, free play, no twist) with the bot score in the context;
+// only achievements that read ctx.botScore can fire here, and the
+// caller skips ids already earned.
+export const botAchievementsEarned = (
+  state: GameState,
+  report: ScoreReport,
+  botScore: number
+): Achievement[] => {
+  const ctx: AchievementCheckCtx = {
+    state,
+    report,
+    milestone: EMPTY_MILESTONE,
+    mode: 'free',
+    activeVariant: null,
+    botScore,
+  };
+  return ACHIEVEMENTS.filter(
+    a => BOT_ACHIEVEMENTS.has(a.id) && achievementEarned(a, ctx)
+  );
+};
+
+const BOT_ACHIEVEMENTS: ReadonlySet<AchievementId> = new Set<AchievementId>([
+  'beat-the-bot',
+]);
+
+const EMPTY_MILESTONE: MilestoneInputs = {
+  winsByDifficulty: { easy: 0, medium: 0, hard: 0, extreme: 0 },
+  ssByDifficulty: { easy: 0, medium: 0, hard: 0, extreme: 0 },
+  totalWins: 0,
+  challengesCompleted: 0,
+  totalChallenges: LIVE_CHALLENGES.length,
+  challengeSilverPlus: 0,
+  challengeGold: 0,
+  runBonusShapley: [],
+  runWasFreePlay: true,
+  uniqueBonusCardsScored: 0,
+  totalBonusCardsInPool: 0,
+};
 
 // Size of the LIVE Challenge catalog (hidden entries don't count),
 // exposed for milestone bookkeeping so callers don't need to import
