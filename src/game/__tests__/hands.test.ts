@@ -1,5 +1,10 @@
-import { Card, Rank, StandardCard, Suit } from '../cards';
-import { evaluateLine, HandRank } from '../hands';
+import { Card, RANKS, Rank, StandardCard, SUITS, Suit } from '../cards';
+import {
+  evalWithJokersBruteForce,
+  evalWithJokersFast,
+  evaluateLine,
+  HandRank,
+} from '../hands';
 
 const C = (rank: Rank, suit: Suit): StandardCard => ({ kind: 'standard', rank, suit });
 const JK: Card = { kind: 'joker' };
@@ -162,5 +167,49 @@ describe('hand evaluation — joker wild', () => {
       [C('2', 'H'), C('5', 'C'), C('8', 'D'), C('J', 'S'), JK],
       'PAIR'
     );
+  });
+});
+
+describe('closed-form joker evaluation matches the brute-force search', () => {
+  const allStandards: StandardCard[] = [];
+  for (const suit of SUITS) {
+    for (const rank of RANKS) allStandards.push({ kind: 'standard', rank, suit });
+  }
+
+  it('a random sample of 3-card lines with two jokers', () => {
+    let x = 777;
+    const next = () => (x = (x * 1103515245 + 12345) >>> 0) % 52;
+    for (let i = 0; i < 1200; i++) {
+      const picked = new Set<number>();
+      while (picked.size < 3) picked.add(next());
+      const line = [...picked].map(k => allStandards[k]);
+      expect(evalWithJokersFast(line, 2)).toBe(
+        evalWithJokersBruteForce(line, 2)
+      );
+    }
+  }, 60_000);
+
+  it('a large random sample of 4-card lines with one joker', () => {
+    // Deterministic LCG so the sample is stable.
+    let x = 12345;
+    const next = () => (x = (x * 1103515245 + 12345) >>> 0) % 52;
+    for (let i = 0; i < 20000; i++) {
+      const picked = new Set<number>();
+      while (picked.size < 4) picked.add(next());
+      const line = [...picked].map(k => allStandards[k]);
+      expect(evalWithJokersFast(line, 1)).toBe(
+        evalWithJokersBruteForce(line, 1)
+      );
+    }
+  }, 30_000);
+
+  it('declines supercharged lines so the search handles them', () => {
+    const line: StandardCard[] = [
+      { kind: 'standard', rank: 'K', suit: 'H', supercharge: 'double' },
+      { kind: 'standard', rank: '2', suit: 'S' },
+      { kind: 'standard', rank: '7', suit: 'D' },
+      { kind: 'standard', rank: '9', suit: 'C' },
+    ];
+    expect(evalWithJokersFast(line, 1)).toBeNull();
   });
 });

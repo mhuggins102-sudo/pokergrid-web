@@ -104,9 +104,12 @@ const evalStandardFive = (cards: StandardCard[]): HandRank => {
 // Recursive joker substitution — tries every rank+suit combination for
 // each joker in the line, returning the best resulting hand rank. Up to
 // 2 jokers per line is the realistic upper bound (Easy difficulty ships
-// 2 jokers in the deck), so worst case 52^2 = 2704 evaluations per line
-// — fast enough to run on every score recomputation.
-const evalWithJokers = (
+// 2 jokers in the deck), so worst case 52^2 = 2704 evaluations per line.
+// Kept as the reference evaluator (and the fallback for supercharged
+// lines); the closed-form evalWithJokersFast below matches it exactly
+// on plain cards and is what the hot paths use. Exported for the
+// equivalence test.
+export const evalWithJokersBruteForce = (
   standards: StandardCard[],
   jokerCount: number
 ): HandRank => {
@@ -115,11 +118,76 @@ const evalWithJokers = (
   for (const suit of SUITS) {
     for (const rank of RANKS) {
       const sub: StandardCard = { kind: 'standard', rank, suit };
-      const result = evalWithJokers([...standards, sub], jokerCount - 1);
+      const result = evalWithJokersBruteForce([...standards, sub], jokerCount - 1);
       if (HAND_TIER[result] > HAND_TIER[best]) best = result;
     }
   }
   return best;
+};
+
+// Closed-form best hand for 1–2 jokers beside plain (un-supercharged)
+// standard cards — the jokers always complete the highest-tier shape
+// the standards allow, so no search is needed. Returns null for the
+// cases it doesn't cover (supercharges, 3+ jokers), which take the
+// brute-force route. This is the evaluator the bot's projections lean
+// on: with two jokers in an Easy deck nearly every rollout scores
+// joker lines that no memo has seen before.
+const fastCounts = new Int8Array(15);
+export const evalWithJokersFast = (
+  standards: StandardCard[],
+  jokers: number
+): HandRank | null => {
+  if (jokers < 1 || jokers > 2) return null;
+  const n = standards.length;
+  if (n + jokers !== 5) return null;
+  fastCounts.fill(0);
+  let suited = true;
+  let lo = 99;
+  let hi = 0;
+  let top = 0;
+  let second = 0;
+  let distinct = 0;
+  for (let i = 0; i < n; i++) {
+    const c = standards[i];
+    if (c.supercharge !== undefined) return null;
+    if (c.suit !== standards[0].suit) suited = false;
+    const r = rankIndex(c.rank);
+    if (fastCounts[r] === 0) {
+      distinct++;
+      if (r < lo) lo = r;
+      if (r > hi) hi = r;
+    }
+    fastCounts[r]++;
+  }
+  for (let r = 2; r <= 14; r++) {
+    const c = fastCounts[r];
+    if (c > top) {
+      second = top;
+      top = c;
+    } else if (c > second) {
+      second = c;
+    }
+  }
+  // All ranks distinct and inside one 5-wide window (ace high, or low
+  // when every other rank sits at 5 or under) — the jokers fill the
+  // gaps into a straight.
+  let straight = false;
+  if (distinct === n) {
+    straight = hi - lo <= 4;
+    if (!straight && hi === 14) {
+      let hi2 = 0;
+      for (let r = 2; r <= 13; r++) if (fastCounts[r] > 0) hi2 = r;
+      straight = hi2 <= 5;
+    }
+  }
+  if (top + jokers >= 5) return 'FIVE_OF_A_KIND';
+  if (suited && straight) return lo >= 10 ? 'ROYAL_FLUSH' : 'STRAIGHT_FLUSH';
+  if (top + jokers >= 4) return 'FOUR_OF_A_KIND';
+  if (jokers === 1 && top === 2 && second === 2) return 'FULL_HOUSE';
+  if (suited) return 'FLUSH';
+  if (straight) return 'STRAIGHT';
+  if (top + jokers >= 3) return 'THREE_OF_A_KIND';
+  return 'PAIR';
 };
 
 // Joker-line memo. The substitution search is the one expensive path
@@ -171,10 +239,12 @@ export const evaluateLine = (line: (Card | null)[]): HandRank | null => {
   const jokers = cards.filter(isJoker).length;
   if (jokers === 0) return evalStandardFive(cards as StandardCard[]);
   const standards = cards.filter(c => !isJoker(c)) as StandardCard[];
+  const fast = evalWithJokersFast(standards, jokers);
+  if (fast !== null) return fast;
   const key = jokerLineKey(standards, jokers);
   const hit = jokerMemo.get(key);
   if (hit !== undefined) return hit;
-  const result = evalWithJokers(standards, jokers);
+  const result = evalWithJokersBruteForce(standards, jokers);
   if (jokerMemo.size >= JOKER_MEMO_MAX) jokerMemo.clear();
   jokerMemo.set(key, result);
   return result;
