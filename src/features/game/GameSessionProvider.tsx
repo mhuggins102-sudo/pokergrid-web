@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
@@ -10,6 +11,7 @@ import {
 import { seededRng } from '../../game/deck';
 import { Action, GameState, step } from '../../game/state';
 import { useRegisterActiveGame } from '../../app/gameActiveStore';
+import { prefetchBotRun } from './botRun';
 import { GameMode, ModeSetup, setupForMode } from './modes';
 
 export interface GameSession {
@@ -94,6 +96,17 @@ export function GameSessionProvider({
   // would drop this in-memory board. View-only (rehydrated) sessions
   // carry no unsaved progress, so they don't register.
   useRegisterActiveGame(!viewOnly);
+
+  // Free play: set the bot replaying this exact deal in a worker as the
+  // run starts, so its score is ready when the player finishes — the
+  // result screen judges Bot Buster against it, and the Bot Score
+  // sheet opens on the number. Live sessions only; a re-hydrated
+  // stored run was judged when it was played.
+  const difficulty = state.difficulty;
+  useEffect(() => {
+    if (viewOnly || mode.kind !== 'free' || seed === undefined) return;
+    prefetchBotRun(difficulty, seed);
+  }, [viewOnly, mode.kind, seed, difficulty]);
 
   const session = useMemo<GameSession>(
     () => ({ state, dispatch, mode, setup, maxUndos, canUndo, seed, viewOnly }),

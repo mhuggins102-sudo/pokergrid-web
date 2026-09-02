@@ -19,6 +19,7 @@ import {
   trophyForTier,
 } from '../../lib/stats';
 import { usePlaysStore } from '../daily/sync/playsStore';
+import { peekBotRun } from '../game/botRun';
 import { useGameSession } from '../game/GameSessionProvider';
 import {
   cumulativeInputsFrom,
@@ -65,7 +66,7 @@ export function useRecordResult(
   report: ScoreReport,
   shapley: number[]
 ): RecordedResult {
-  const { state, mode, setup, viewOnly } = useGameSession();
+  const { state, mode, setup, seed, viewOnly } = useGameSession();
   const won = report.total >= state.target;
   // A twist's flat S/SS ladder (challenge or twisted daily — setup
   // carries the challenge entry for both) replaces the ratio bands.
@@ -87,6 +88,14 @@ export function useRecordResult(
     if (ranRef.current || recordedStates.has(state)) return;
     ranRef.current = true;
     recordedStates.add(state);
+    // Set once this component is gone: a late bot result must not set
+    // state on an unmounted surface (the achievement still persists —
+    // whichever result surface is mounted then won't re-announce it,
+    // but the Achievements page has it).
+    let cancelled = false;
+    const cleanup = () => {
+      cancelled = true;
+    };
     // The tutorial's rigged deal must not touch stats or achievements.
     if (mode.kind === 'tutorial') return;
 
@@ -235,7 +244,38 @@ export function useRecordResult(
       ...earned,
     ];
     if (announced.length > 0) setNewAchievements(announced);
-  }, [mode, setup, state, report, shapley, won, viewOnly]);
+
+    // Free play: the bot has been replaying this deal since the run
+    // started (GameSessionProvider). Its score usually waits already;
+    // either way, judge the bot-comparison achievements (Bot Buster)
+    // once it lands and add them to the same callout. Without a
+    // started run (no Worker) there is nothing to judge here — the Bot
+    // Score sheet judges on demand in that case.
+    const botRun =
+      mode.kind === 'free' && seed !== undefined
+        ? peekBotRun(state.difficulty, seed)
+        : undefined;
+    if (!botRun) return;
+    void botRun.then(
+      bot => {
+        if (cancelled) return;
+        const done = useStatsStore.getState().stats.achievementsDone;
+        const fromBot = ACHIEVEMENTS.filter(
+          a =>
+            !done.includes(a.id) &&
+            !announced.some(x => x.id === a.id) &&
+            achievementEarned(a, { ...ctx, botScore: bot.score })
+        );
+        if (fromBot.length === 0) return;
+        for (const a of fromBot) useStatsStore.getState().recordAchievement(a.id);
+        setNewAchievements(prev => [...prev, ...fromBot]);
+      },
+      () => {
+        /* the bot couldn't finish — nothing to judge */
+      }
+    );
+    return cleanup;
+  }, [mode, setup, state, report, shapley, won, viewOnly, seed]);
 
   return { won, tier, newAchievements, challengeTrophy };
 }

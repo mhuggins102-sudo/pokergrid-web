@@ -5,7 +5,8 @@ import type { Difficulty } from '../../../game/rules';
 import type { ScoreReport } from '../../../game/scoring';
 import type { GameState } from '../../../game/state';
 import { useStatsStore } from '../../progress/statsStore';
-import type { BotWorkerRequest, BotWorkerResult } from '../botWorker';
+import { requestBotRun } from '../botRun';
+import type { BotWorkerResult } from '../botWorker';
 import { BotReplayDialog } from './BotReplayDialog';
 import styles from './BotScoreSheet.module.css';
 
@@ -47,9 +48,11 @@ export function BotScoreSheet({
   const startedRef = useRef(false);
   const judgedRef = useRef(false);
 
-  // The run was recorded when the result screen opened; the bot's
-  // score arrives later, so the achievements that need it are judged
-  // (and persisted) here, once per run.
+  // The result screen judges the bot-comparison achievements itself
+  // when a prefetched run exists (useRecordResult). This is the
+  // fallback for a run started only on demand (no Worker — the
+  // prefetch is skipped there): judge here, once, when the score
+  // lands. Idempotent against the stats store either way.
   useEffect(() => {
     if (result === null || judgedRef.current) return;
     judgedRef.current = true;
@@ -64,35 +67,22 @@ export function BotScoreSheet({
   useEffect(() => {
     if (!open || startedRef.current) return;
     startedRef.current = true;
-    if (typeof Worker === 'undefined') {
-      // No Worker (jsdom, ancient embeds): compute in a deferred chunk
-      // on the main thread — same bot, same deterministic score.
-      import('../../../game/bot')
-        .then(({ runBotGame }) => {
-          const { report, state, actions } = runBotGame(difficulty, seed);
-          setResult({
-            score: report.total,
-            target: state.target,
-            won: report.total >= state.target,
-            actions,
-          });
-        })
-        .catch(() => setFailed(true));
-      return;
-    }
-    const worker = new Worker(new URL('../botWorker.ts', import.meta.url), {
-      type: 'module',
-    });
-    worker.onmessage = (e: MessageEvent<BotWorkerResult>) => {
-      setResult(e.data);
-      worker.terminate();
+    // Usually already computed: the session started the bot on this
+    // deal when the game began (botRun.ts), so this resolves at once.
+    // Otherwise it starts the run now — worker where possible, else a
+    // deferred main-thread chunk.
+    let cancelled = false;
+    requestBotRun(difficulty, seed).then(
+      r => {
+        if (!cancelled) setResult(r);
+      },
+      () => {
+        if (!cancelled) setFailed(true);
+      }
+    );
+    return () => {
+      cancelled = true;
     };
-    worker.onerror = () => {
-      setFailed(true);
-      worker.terminate();
-    };
-    const req: BotWorkerRequest = { difficulty, seed };
-    worker.postMessage(req);
   }, [open, difficulty, seed]);
 
   const diff = result === null ? 0 : playerScore - result.score;

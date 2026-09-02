@@ -135,10 +135,10 @@ export interface AchievementCheckCtx {
   // Challenge run, the recipe twist on a twisted Daily. Null on Free
   // Play and twist-free Dailies.
   activeVariant: ChallengeId | null;
-  // The bot's score on this exact deal, once the player has asked for
-  // it (the Bot Score sheet computes it on demand, after the run is
-  // recorded). Undefined on the result-screen pass, so Bot Buster can
-  // only fire from the sheet — via botAchievementsEarned below.
+  // The bot's score on this exact deal (a free-play session has the
+  // bot replaying it in a worker from the first card). Undefined on the
+  // result screen's synchronous pass; the bot-comparison achievements
+  // are judged with it filled in once the run resolves.
   botScore?: number;
 }
 
@@ -286,10 +286,12 @@ export const ACHIEVEMENTS: Achievement[] = [
       ).size >= 8,
   },
   {
-    // Free play only: the bot replays free-play deals only, and its
-    // score exists only once the player opens the Bot Score sheet —
-    // so this is awarded from that sheet (botAchievementsEarned), not
-    // by the result screen's per-run pass, where botScore is absent.
+    // Free play only (the bot replays free-play deals only). The
+    // session starts the bot on the deal as the game begins, and the
+    // result screen judges this one against that run's score (ctx
+    // .botScore) as it lands — usually already there. Where no run was
+    // prefetched (no Worker), the Bot Score sheet judges on demand via
+    // botAchievementsEarned.
     id: 'beat-the-bot',
     tier: 'hard-extreme',
     name: 'Bot Buster',
@@ -465,12 +467,12 @@ export const ACHIEVEMENTS: Achievement[] = [
 export const findAchievement = (id: AchievementId): Achievement | undefined =>
   ACHIEVEMENTS.find(a => a.id === id);
 
-// The achievements a bot comparison can award, evaluated when the Bot
-// Score sheet learns the bot's score — after the run itself was
-// recorded. Runs the same tier gating as the per-run engine (Hard /
-// Extreme, free play, no twist) with the bot score in the context;
-// only achievements that read ctx.botScore can fire here, and the
-// caller skips ids already earned.
+// The achievements a bot comparison can award, for a caller that only
+// has the bot's score (the Bot Score sheet's on-demand fallback). Runs
+// the same tier gating as the per-run engine (Hard / Extreme, free
+// play, no twist) with the bot score in the context; only achievements
+// that read ctx.botScore can fire here, and the caller skips ids
+// already earned.
 export const botAchievementsEarned = (
   state: GameState,
   report: ScoreReport,
