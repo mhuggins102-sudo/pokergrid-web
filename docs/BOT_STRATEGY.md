@@ -216,7 +216,7 @@ wins.
 | B13 | On Extreme the rollout still passes on harmful cards (the real self can spend a perk); discards are never emitted. |
 | C14–C16 | Every legal hop / slide / destroy is ranked by a deterministic board heuristic, and the leaders are projected on the full sample set. Slides' new spiral target falls out of the projection. |
 | C17 | The ♣ offer is sampled from the sorted-then-shuffled unseen pool, crediting each pair's better card; weak offers are declined below the cap on Hard / Extreme; at the cap on Easy / Medium the draw is taken only when a held card is dead. |
-| C18–C19 | Place, discard and the perk compete on the same projection; the bar is `max(2, 1.25 × paired standard error)`. |
+| C18–C19 | Place, discard and the perk compete on the same projection; a challenger must beat PLACE by `max(2, 3 × paired standard error)`, and the winner is re-scored against PLACE on a fresh set of shuffles before it is played (the best of several noisy estimates is biased upward). The bar is deliberately stiff: strength on the fixed-seed benchmark climbs steeply from a 0.6-sigma bar to 3 and is flat from 3 to 6. |
 | D20–D24 | Offers are valued jointly with the hand and board, with Spotlight's eviction rule applied to hypotheticals. |
 | E25–E27 | Exact in the terminal score. |
 | F28–F29 | Excluded by design. |
@@ -236,3 +236,18 @@ Known limits, in order of likely cost:
 harness (random deals). For tuning, compare paired on fixed seeds — the
 same `(difficulty, seed)` for old and new — since game-to-game variance
 is several hundred points.
+
+Mean score over seeds 1001–1040 (`runBotGame(difficulty, seed)`, default
+samples), previous bot versus this one:
+
+| | Easy (400) | Medium (450) | Hard (500) | Extreme (450) |
+|---|---|---|---|---|
+| Previous bot | 420 | 330 | 352 | 301 |
+| This bot | 574 | 476 | 474 | 355 |
+| Stranded lines per game | 1.0 → 0 | 0.5 → 0 | 0.1 → 0 | 0 → 0 |
+
+The previous bot's worst Easy deal in that set scored 6 after spending
+35 cards on perks and discards and running the deck dry with six lines
+unfilled; the slack guards make that impossible now. A game takes about
+2 s in Node at the default 48 samples (Easy was 3–5 s before the joker
+evaluator fix; it is no longer the slow difficulty).

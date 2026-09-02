@@ -15,12 +15,13 @@
  * per decision (default 8 here; the shipped bot uses
  * BOT_DEFAULT_SAMPLES). More samples = stronger and slower.
  *
- * Reference distribution at SIM_SAMPLES=24, N=30 (2026-08): means
- * easy 410 / medium 316 / hard 332 / extreme 235 — at or above the
- * old clairvoyant bot on everything but Extreme. The NUT LOW block
- * below is much weaker than the clairvoyant was there (random
- * projections bust nearly every low line, so its decisions go blind);
- * treat its numbers as a floor, not a calibration.
+ * Reference (2026-09, the fit-based rollout player, default 48
+ * samples, fixed seeds 1001–1040 via runBotGame): means easy 574 /
+ * medium 476 / hard 474 / extreme 355 — see docs/BOT_STRATEGY.md.
+ * Lower SIM_SAMPLES here trades strength for speed. The NUT LOW block
+ * below is much weaker than free play (random projections bust nearly
+ * every low line, so its decisions go blind); treat its numbers as a
+ * floor, not a calibration.
  */
 import { playBotGame } from '../bot';
 import { findChallenge } from '../challenges';

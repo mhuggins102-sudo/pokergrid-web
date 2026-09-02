@@ -32,9 +32,10 @@
  *   are reused for every candidate at one decision point (common
  *   random numbers), so alternatives are compared PAIRED on identical
  *   futures. PLACE is the default: a discard or perk has to beat it by
- *   a margin scaled to the paired-difference standard error, which
- *   absorbs the winner's curse of picking the best of many noisy
- *   candidates without a blunt fixed bar.
+ *   a margin scaled to the paired-difference standard error, and the
+ *   winning challenger is then re-scored against PLACE on a FRESH set
+ *   of shuffles — the best of several noisy estimates is biased
+ *   upward, and the independent re-score is the honest test.
  *
  *   Slack is accounted for on every non-placement action: a discard
  *   or perk costs one deck card, a destroy costs two (the card and the
@@ -85,10 +86,16 @@ export const BOT_DEFAULT_SAMPLES = 48;
  *  projected points, whatever the noise says — every spent card also
  *  shrinks the deck in ways the projection only partly sees. */
 const MIN_MARGIN = 2;
-/** …and by this many paired standard errors. With common random
- *  numbers the paired difference is far less noisy than either mean,
- *  so a real edge clears the bar while sampling flukes don't. */
-const MARGIN_Z = 1.25;
+/** …and by this many paired standard errors, both when it wins its
+ *  decision and again when it is re-scored on fresh orderings. With
+ *  common random numbers the paired difference is far less noisy than
+ *  either mean, so a real edge clears the bar while sampling flukes
+ *  don't. Tuned on the fixed-seed benchmark: strength climbs steeply
+ *  from 0.6 to 3 and is flat from 3 to 6 — the rollout player never
+ *  spends perks itself, so it under-prices the card a perk costs, and
+ *  the bar is what keeps the bot from burning its deck on marginal
+ *  perks and discards. */
+const MARGIN_Z = 3;
 
 /** Candidate shortlisting: how many heuristic-ranked perk targets get
  *  the full sampled projection. */
@@ -535,8 +542,7 @@ const projectScore = (
  */
 const beats = (
   challenger: Float64Array,
-  baseline: Float64Array,
-  extraMargin = 0
+  baseline: Float64Array
 ): boolean => {
   const n = challenger.length;
   if (n === 0) return false;
@@ -550,7 +556,7 @@ const beats = (
   const avg = sum / n;
   const variance = n > 1 ? Math.max(0, sumSq / n - avg * avg) * (n / (n - 1)) : 0;
   const se = Math.sqrt(variance / n);
-  return avg > Math.max(MIN_MARGIN, MARGIN_Z * se) + extraMargin;
+  return avg > Math.max(MIN_MARGIN, MARGIN_Z * se);
 };
 
 // Argmax over perk targets in two stages: a deterministic heuristic
@@ -776,29 +782,26 @@ export const createBot = (
         const placedGrid = placeAtSpiralNext(s.grid, drawn);
         const placeVec = projectVec(placedGrid, s.bonusCards, ctx);
 
-        let bestAction: Action = { type: 'PLACE' };
-        let bestVec = placeVec;
-        let bestIsPlace = true;
-        planned = null;
-        // A challenger must beat PLACE; a later challenger must beat
-        // the standing best by the same rule.
-        const consider = (vec: Float64Array | null, action: Action) => {
-          if (!vec) return false;
-          if (!beats(vec, placeVec)) return false;
-          if (!bestIsPlace && !beats(vec, bestVec, -MIN_MARGIN)) return false;
-          bestAction = action;
-          bestVec = vec;
-          bestIsPlace = false;
-          return true;
-        };
+        // Every alternative is an action plus a way to project it on any
+        // ordering set, so the stage-1 winner can be re-scored on fresh
+        // orderings (below) — the candidate that won the first set may
+        // have won it on sampling luck.
+        interface Challenger {
+          action: Action;
+          plan: PlannedMove | null;
+          evalOn: (c: EvalCtx) => Float64Array | null;
+        }
+        const challengers: Challenger[] = [];
 
         // DISCARD — only when discards are legal AND the deck can still
         // refill the grid afterwards.
         if (!s.noDiscards && headroom >= 1) {
-          const discardVec = projectVec(s.grid, s.bonusCards, ctx, {
-            discards: [...s.discards, activeHalf(drawn)],
+          const discards = [...s.discards, activeHalf(drawn)];
+          challengers.push({
+            action: { type: 'DISCARD_NONE' },
+            plan: null,
+            evalOn: c => projectVec(s.grid, s.bonusCards, c, { discards }),
           });
-          consider(discardVec, { type: 'DISCARD_NONE' });
         }
 
         // Suit perks — best outcome of the drawn card's perk only (the
@@ -820,39 +823,73 @@ export const createBot = (
               s.bonusDeck.length > 0 &&
               s.bonusCards.length < BONUS_HAND_LIMIT
             ) {
-              consider(expectedBonusTake(ctx, rng, spent), {
-                type: 'BEGIN_SUIT_ACTION',
+              challengers.push({
+                action: { type: 'BEGIN_SUIT_ACTION' },
+                plan: null,
+                evalOn: c => expectedBonusTake(c, rng, spent),
               });
             }
           } else if (drawn.suit === 'H') {
             const hop = bestHop(ctx, spent);
-            if (hop && consider(hop.vec, { type: 'BEGIN_SUIT_ACTION' })) {
-              planned = { kind: 'hop', i: hop.i, j: hop.j };
+            if (hop) {
+              const g = s.grid.slice();
+              [g[hop.i], g[hop.j]] = [g[hop.j], g[hop.i]];
+              challengers.push({
+                action: { type: 'BEGIN_SUIT_ACTION' },
+                plan: { kind: 'hop', i: hop.i, j: hop.j },
+                evalOn: c => (c === ctx ? hop.vec : projectVec(g, s.bonusCards, c, spent)),
+              });
             }
           } else if (drawn.suit === 'S') {
             const slide = bestSlide(ctx, spent);
-            if (slide && consider(slide.vec, { type: 'BEGIN_SUIT_ACTION' })) {
-              planned = {
-                kind: 'slide',
-                move: {
-                  from: slide.from,
-                  direction: slide.direction,
-                  distance: slide.distance,
-                },
+            if (slide) {
+              const move = {
+                from: slide.from,
+                direction: slide.direction,
+                distance: slide.distance,
               };
+              const g = executeSlide(s.grid, move.from, move.direction, move.distance);
+              challengers.push({
+                action: { type: 'BEGIN_SUIT_ACTION' },
+                plan: { kind: 'slide', move },
+                evalOn: c => (c === ctx ? slide.vec : projectVec(g, s.bonusCards, c, spent)),
+              });
             }
           } else if (drawn.suit === 'D' && headroom >= 2) {
             const destroy = bestDestroy(ctx, spent);
-            if (
-              destroy &&
-              consider(destroy.vec, { type: 'BEGIN_SUIT_ACTION' })
-            ) {
-              planned = { kind: 'destroy', slot: destroy.slot };
+            if (destroy) {
+              const g = s.grid.slice();
+              g[destroy.slot] = null;
+              challengers.push({
+                action: { type: 'BEGIN_SUIT_ACTION' },
+                plan: { kind: 'destroy', slot: destroy.slot },
+                evalOn: c => (c === ctx ? destroy.vec : projectVec(g, s.bonusCards, c, spent)),
+              });
             }
           }
         }
 
-        return bestAction;
+        // Stage 1: the challenger with the best paired projection, if
+        // it clears PLACE by the margin.
+        let best: { ch: Challenger; score: number } | null = null;
+        for (const ch of challengers) {
+          const vec = ch.evalOn(ctx);
+          if (!vec || !beats(vec, placeVec)) continue;
+          const score = mean(vec);
+          if (best === null || score > best.score) best = { ch, score };
+        }
+        planned = null;
+        if (best === null) return { type: 'PLACE' };
+        // Stage 2: validate the winner on FRESH orderings against PLACE.
+        // The stage-1 pick is the best of several noisy estimates, so
+        // its own estimate is biased upward; an independent re-score
+        // is the honest test.
+        const ctx2 = decisionCtx(s, rng, samples);
+        const placeVec2 = projectVec(placedGrid, s.bonusCards, ctx2);
+        const vec2 = best.ch.evalOn(ctx2);
+        if (!vec2 || !beats(vec2, placeVec2)) return { type: 'PLACE' };
+        planned = best.ch.plan;
+        return best.ch.action;
       }
       case 'awaiting-target-hop': {
         if (planned?.kind === 'hop') {
