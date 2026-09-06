@@ -8,6 +8,7 @@ describe('sfxForHistoryEntry', () => {
     expect(sfxForHistoryEntry('Slide left × 2')).toBe('slide'); // ♠
     expect(sfxForHistoryEntry('Destroy slot 12')).toBe('destroy'); // ♦
     expect(sfxForHistoryEntry('Bonus draw resolved')).toBe('chime'); // ♣
+    expect(sfxForHistoryEntry('Trade at slot 12')).toBe('trade'); // ♣ (Trading Post)
   });
 
   it('covers every green one-time action card', () => {
