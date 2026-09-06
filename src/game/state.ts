@@ -108,8 +108,8 @@ export type Phase =
   | { kind: 'awaiting-target-trade'; targets: number[]; returnTo: TargetReturnTo }
   // …then the reveal: the top two deck cards are drawn and one MUST be
   // seated at `slot` (no cancel — the peek commits the perk, the Short
-  // Circuit invariant). The passed-over card shuffles back into the
-  // deck; the removed board card is trashed to discards.
+  // Circuit invariant). The passed-over card AND the removed board card
+  // are both trashed to discards.
   | { kind: 'trade-pick'; slot: number; drawn: Card[]; returnTo: TargetReturnTo }
   // Spiraling: ♠ moves one card outward along the spiral by `steps`
   // (the played spade's pip value). Targets are the movable cards; the
@@ -1514,9 +1514,10 @@ const handleTradeSelectSlot = (s: GameState, slot: number): GameState => {
 };
 
 // Trading Post ♣, step 2: seat the chosen draw at the slot. The
-// passed-over draw shuffles back into the deck at a random position;
-// the removed board card is trashed to DISCARDS (like a ♦ Destroy
-// target — Trash Joker can see it). The spent club logs as a perk.
+// passed-over draw and the removed board card are BOTH trashed to
+// DISCARDS (like ♦ Destroy targets — Trash Joker can see them), joining
+// the spent club (perkSpent) as the trade's full cost. Nothing returns
+// to the deck.
 const handleResolveTrade = (
   s: GameState,
   idx: number,
@@ -1527,18 +1528,12 @@ const handleResolveTrade = (
   if (idx !== 0 && idx !== 1) return s;
   const { slot, drawn } = s.phase;
   const chosen = drawn[idx];
-  const returned = drawn[1 - idx];
+  const passed = drawn[1 - idx];
   const old = s.grid[slot];
-  if (!old || chosen === undefined || returned === undefined) return s;
+  if (!old || chosen === undefined || passed === undefined) return s;
   const grid = s.grid.slice();
   grid[slot] = activeHalf(chosen);
-  const insertAt = Math.floor(rng() * (s.deck.length + 1));
-  const deck = [
-    ...s.deck.slice(0, insertAt),
-    returned,
-    ...s.deck.slice(insertAt),
-  ];
-  const afterTrade = pushDiscard({ ...s, grid, deck }, old);
+  const afterTrade = pushDiscard(pushDiscard({ ...s, grid }, old), passed);
   return drawNext(
     log(pushPerkSpent(afterTrade, s.drawn), `Trade at slot ${slot}`),
     rng

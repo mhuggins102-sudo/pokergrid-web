@@ -103,21 +103,22 @@ describe('Trading Post — the ♣ Trade flow', () => {
     expect(after.phase).toBe(pick.phase);
   });
 
-  it('resolving seats the chosen card, trashes the old one, and shuffles the other back', () => {
+  it('resolving seats the chosen card and trashes both the old one and the pass', () => {
     const { start, slot, pick } = toPick();
     if (pick.phase.kind !== 'trade-pick') throw new Error();
     const [passed, chosen] = pick.phase.drawn;
     const old = start.grid[slot]!;
     const done = step(pick, { type: 'RESOLVE_TRADE', idx: 1 });
     expect(done.grid[slot]).toEqual(chosen);
-    // Old board card is trashed to discards (Trash Joker territory)…
+    // Both the old board card AND the passed-over draw are trashed to
+    // discards (Trash Joker territory) — nothing returns to the deck…
     expect(done.discards).toContain(old);
-    // …the passed-over card is back in the deck somewhere…
-    expect(done.deck).toContain(passed);
+    expect(done.discards).toContain(passed);
+    expect(done.deck).not.toContain(passed);
     // …the spent club logs as a perk, and the next card has drawn.
     expect(done.perkSpent).toContain(CLUB);
-    // Net deck cost of a trade turn: the seated card plus the next draw.
-    expect(done.deck).toHaveLength(start.deck.length - 2);
+    // Net deck cost of a trade turn: both revealed cards + the next draw.
+    expect(done.deck).toHaveLength(start.deck.length - 3);
   });
 
   it('undo rewinds the whole trade', () => {
