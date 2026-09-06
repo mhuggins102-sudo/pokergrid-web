@@ -37,6 +37,7 @@ const baseState = (overrides: Partial<GameState>): GameState => ({
   scatter: false,
   scatterSlot: null,
   investHands: false,
+  tradingPost: false,
   handBoost: {},
   doubleDuty: false,
   flippedDrawn: false,

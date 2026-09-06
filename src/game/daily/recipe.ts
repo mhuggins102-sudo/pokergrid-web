@@ -69,6 +69,10 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // 1, append 'nut-low' to ALL_TWISTS above, and update
   // dailyRecipe.test.ts's local twist list + 1/N share bounds.
   'nut-low': 0,
+  // Not in the daily rotation yet — Trading Post ships challenge-only
+  // for playtesting (same rollout as Five Draw had). Same entry steps
+  // as nut-low above to bring it in.
+  'trading-post': 0,
   // In the rotation at the standard share; the target is fixed at 500
   // on every difficulty (FIXED_TWIST_TARGET below) — deck peek and the
   // extra joker are worth more here than in any other twist.
