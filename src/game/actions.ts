@@ -648,7 +648,11 @@ export const suitActionAvailable = (
   slotDrawable: boolean | null = null,
   // Spiraling: ♠ moves a card outward along the spiral by the drawn
   // spade's pip value instead of sliding.
-  spiraling: boolean = false
+  spiraling: boolean = false,
+  // Trading Post: ♣ trades a board card for one of two deck draws —
+  // needs 2 cards left in the deck (deckSize) and a card on board.
+  tradingPost: boolean = false,
+  deckSize: number = 0
 ): boolean => {
   if (!drawn || isJoker(drawn)) return false;
   switch (drawn.suit) {
@@ -661,6 +665,9 @@ export const suitActionAvailable = (
     case 'D':
       return canDestroy(grid);
     case 'C':
+      if (tradingPost) {
+        return deckSize >= 2 && grid.some(c => c !== null);
+      }
       if (investHands) return true;
       if (slotDrawable !== null) {
         return canDrawBonus(bonusDeckSize) && slotDrawable;

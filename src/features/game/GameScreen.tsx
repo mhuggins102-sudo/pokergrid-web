@@ -94,6 +94,7 @@ import {
   ScoringPanel,
 } from './components/DesktopRails';
 import { InvestWheel } from './components/InvestWheel';
+import { TradePick } from './components/TradePick';
 import {
   DeskHandValuesPanel,
   DockHandBoostsPanel,
@@ -1703,6 +1704,7 @@ export function GameScreen({ onReplay, coach }: GameScreenProps) {
           deckRemaining={state.deck.length}
         />
       )}
+      {ui.tradePick && <TradePick drawn={ui.tradePick.drawn} />}
     </>
   );
 

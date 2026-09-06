@@ -75,6 +75,10 @@ const captionFor = (prev: GameState, action: Action): CaptionPart[] | null => {
     }
     case 'RESOLVE_DESTROY':
       return [{ text: 'Destroys ' }, cardPart(prev.grid[action.slot])];
+    case 'RESOLVE_TRADE':
+      return prev.phase.kind === 'trade-pick'
+        ? [{ text: 'Trades in ' }, cardPart(prev.phase.drawn[action.idx])]
+        : [{ text: 'Trades' }];
     case 'BONUS_KEEP':
     case 'BONUS_SELECT_NEW':
     case 'BONUS_REPLACE':

@@ -1027,6 +1027,25 @@ export const createBot = (
         }
         return { type: 'BONUS_REPLACE', oldIdx: bestIdx };
       }
+      case 'trade-pick': {
+        // Trading Post's reveal (challenge-only, but keep it sound):
+        // seat whichever candidate projects better at the traded slot.
+        const ctx = decisionCtx(s, rng, samples);
+        const { slot, drawn: candidates } = s.phase;
+        let bestIdx = 0;
+        let bestSc = -Infinity;
+        for (let i = 0; i < candidates.length; i++) {
+          const g = s.grid.slice();
+          g[slot] = candidates[i];
+          const sc = projectScore(g, s.bonusCards, ctx);
+          if (sc > bestSc) {
+            bestSc = sc;
+            bestIdx = i;
+          }
+        }
+        return { type: 'RESOLVE_TRADE', idx: bestIdx };
+      }
+      case 'awaiting-target-trade':
       case 'awaiting-special-power-swap-source':
       case 'awaiting-special-power-swap-dest':
       case 'awaiting-special-doubler':

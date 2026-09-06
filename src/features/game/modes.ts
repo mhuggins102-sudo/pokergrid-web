@@ -5,6 +5,7 @@ import {
   SPECIAL_DECK_POOL,
   SPOTLIGHT_ID,
 } from '../../game/bonusCards';
+import { categoryOf } from '../../lib/bonusCardCategory';
 import { Card } from '../../game/cards';
 import { seededRng, shuffle } from '../../game/deck';
 import {
@@ -71,6 +72,24 @@ const drawPokerBonusSetup = (rng: () => number) => {
   };
 };
 
+// Trading Post's dealt trio: 2 gold in-game cards + 1 purple end-game
+// card, random per game and locked for the run (no ♣ draws, no swaps —
+// the perk trades BOARD cards instead). Gold = pays during the run
+// (hand / line / suit / conditional); purple = pays at game end (grid
+// achievements + deck management). Spotlight sits out — its exclusive-
+// in-hand rule contradicts a locked three-card hand (the same reason
+// Five Draw benches it).
+const GOLD_CATEGORIES = new Set(['hand', 'line', 'suit', 'conditional']);
+const tradingPostTrio = (rng: () => number): BonusCard[] => {
+  const pool = shuffle(
+    BONUS_DECK_POOL.filter(c => c.id !== SPOTLIGHT_ID),
+    rng
+  );
+  const gold = pool.filter(c => GOLD_CATEGORIES.has(categoryOf(c)));
+  const purple = pool.filter(c => !GOLD_CATEGORIES.has(categoryOf(c)));
+  return [...gold.slice(0, 2), ...purple.slice(0, 1)];
+};
+
 /**
  * Translate a play mode into the newGame() configuration. Mirrors the
  * original App.tsx context helpers: challenges run on the Hard ruleset
@@ -122,6 +141,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             noBonusCards:
               mode.id === 'poker-purist' ||
               mode.id === 'three-tricks' ||
+              mode.id === 'trading-post' ||
               mode.id === 'bull-market' ||
               mode.id === 'nut-low' ||
               mode.id === 'draw-poker',
@@ -134,6 +154,9 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             // the shuffled pool remainder feeds the offer deck.
             drawPoker: mode.id === 'draw-poker',
             ...(mode.id === 'draw-poker' ? drawPokerBonusSetup(rng) : {}),
+            ...(mode.id === 'trading-post'
+              ? { initialBonusCards: tradingPostTrio(rng) }
+              : {}),
             ...(mode.id === 'three-tricks'
               ? {
                   initialBonusCards: shuffle(SPECIAL_DECK_POOL, rng).slice(
@@ -149,6 +172,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             randomGridFill: mode.id === 'gridlock' ? 15 : 0,
             scatter: mode.id === 'scatter',
             investHands: mode.id === 'bull-market',
+            tradingPost: mode.id === 'trading-post',
             doubleDuty: mode.id === 'double-duty',
             spiraling: mode.id === 'spiraling',
             timeTrial: mode.id === 'time-trial',

@@ -29,6 +29,7 @@ export type ChallengeId =
   | 'short-circuit'
   | 'poker-purist'
   | 'three-tricks'
+  | 'trading-post'
   | 'mixed-bag'
   | 'gridlock'
   | 'scatter'
@@ -176,6 +177,17 @@ export const CHALLENGES: Challenge[] = [
     // Enforced at newGame: noBonusCards strips the regular bonus deck,
     // and initialBonusCards seeds the hand with three random specials.
     // App.tsx wires the seeding via contextInitialBonusCards.
+    conditionMet: () => true,
+  },
+  {
+    id: 'trading-post',
+    name: 'Trading Post',
+    synopsis: 'Twist: ♣ trades a board card for a fresh draw',
+    goal: 'Score 500+ points with a fixed bonus hand: you start holding two yellow in-game cards and one purple end-game card, dealt at random and locked for the whole run. The ♣ perk becomes Trade — pick a card on the board, draw the top two cards of the deck, and seat the one you like in its place. The card you pass on shuffles back into the deck; the card you removed is trashed. Trading needs at least 2 cards left in the deck.',
+    scoreTarget: 500,
+    // Enforced at newGame: tradingPost reroutes ♣ into the trade flow,
+    // noBonusCards strips the bonus deck (nothing to draw or swap), and
+    // initialBonusCards seeds the dealt 2-gold + 1-purple trio.
     conditionMet: () => true,
   },
   {
@@ -355,7 +367,10 @@ export const runSentenceFor = (
     twistId === 'poker-purist' ||
     twistId === 'nut-low' ||
     twistId === 'bull-market';
-  const heldTrio = twistId === 'draw-poker' || twistId === 'three-tricks';
+  const heldTrio =
+    twistId === 'draw-poker' ||
+    twistId === 'three-tricks' ||
+    twistId === 'trading-post';
   const bonusClauses = noBonusAtAll
     ? ['no bonus cards']
     : heldTrio

@@ -103,6 +103,14 @@ export type Phase =
       returnTo: TargetReturnTo;
     }
   | { kind: 'awaiting-target-destroy'; targets: number[]; returnTo: TargetReturnTo }
+  // Trading Post: ♣ trades a board card for one of two fresh deck
+  // draws. First pick the card to trade away (cancellable)…
+  | { kind: 'awaiting-target-trade'; targets: number[]; returnTo: TargetReturnTo }
+  // …then the reveal: the top two deck cards are drawn and one MUST be
+  // seated at `slot` (no cancel — the peek commits the perk, the Short
+  // Circuit invariant). The passed-over card shuffles back into the
+  // deck; the removed board card is trashed to discards.
+  | { kind: 'trade-pick'; slot: number; drawn: Card[]; returnTo: TargetReturnTo }
   // Spiraling: ♠ moves one card outward along the spiral by `steps`
   // (the played spade's pip value). Targets are the movable cards; the
   // preview/confirm step lives UI-side (usePhaseUI), the reducer only
@@ -412,6 +420,10 @@ export interface GameState {
   // Bull Market challenge: the ♣ perk invests the drawn club's value
   // into a random hand type instead of drawing a bonus card.
   investHands: boolean;
+  // Trading Post challenge: the ♣ perk trades a board card for one of
+  // two deck draws instead of drawing a bonus card. The bonus hand is
+  // a fixed dealt trio (2 in-game + 1 end-game) locked for the run.
+  tradingPost: boolean;
   // Accumulated per-hand base-value boosts from invest perks.
   handBoost: Partial<Record<HandRank, number>>;
   // Double Duty challenge: every standard card carries a second identity
@@ -449,6 +461,10 @@ export type Action =
   // active; the next TWO deck cards are burned unseen as the cost.
   | { type: 'FLIP_CARD' }
   | { type: 'BEGIN_SUIT_ACTION'; forSuit?: Suit }
+  // Trading Post ♣: pick the board card to trade away, then seat one
+  // of the two revealed deck cards in its place.
+  | { type: 'TRADE_SELECT_SLOT'; slot: number }
+  | { type: 'RESOLVE_TRADE'; idx: number }
   | { type: 'RESOLVE_HOP'; i: number; j: number }
   | { type: 'SLIDE_SELECT_SOURCE'; slot: number }
   | { type: 'RESOLVE_SLIDE'; from: number; direction: Direction; distance: number }
@@ -617,6 +633,9 @@ export interface NewGameOptions {
   // Bull Market challenge: ♣ invests the drawn club's value into a
   // random hand type (paired with noBonusCards = true).
   investHands?: boolean;
+  // Trading Post challenge: ♣ trades a board card for one of two deck
+  // draws (paired with noBonusCards + a dealt initialBonusCards trio).
+  tradingPost?: boolean;
   // Double Duty challenge: every standard card gets a dual (bottom-half)
   // identity — a derangement of the 52 ranks+suits — and FLIP_CARD
   // becomes available on the drawn card.
@@ -659,6 +678,7 @@ export const newGame = (
     randomGridFill = 0,
     scatter = false,
     investHands = false,
+    tradingPost = false,
     doubleDuty = false,
     lowball = false,
     noJokers = false,
@@ -844,6 +864,7 @@ export const newGame = (
     scatter,
     scatterSlot: null,
     investHands,
+    tradingPost,
     handBoost: {},
     doubleDuty,
     flippedDrawn: false,
@@ -1303,6 +1324,21 @@ const handleBeginSuitAction = (
       };
     }
     case 'C': {
+      // Trading Post: ♣ trades a board card for one of two deck draws.
+      // Needs two cards to draw from and at least one card on board.
+      if (s.tradingPost) {
+        if (s.deck.length < 2) return s;
+        const targets = occupiedSlots(s.grid);
+        if (targets.length === 0) return s;
+        return {
+          ...s,
+          phase: {
+            kind: 'awaiting-target-trade',
+            targets,
+            returnTo: 'awaiting-action',
+          },
+        };
+      }
       // Bull Market: ♣ invests the drawn club's value into a random hand
       // type. Spin the wheel (in the new phase); RESOLVE applies it.
       if (s.investHands) {
@@ -1453,6 +1489,58 @@ const handleResolveDestroy = (
   const afterTarget = pushDiscard({ ...s, grid }, removed);
   return drawNext(
     log(pushPerkSpent(afterTarget, s.drawn), `Destroy slot ${slot}`),
+    rng
+  );
+};
+
+// Trading Post ♣, step 1: lock in the board card to trade away and
+// reveal the top two deck cards as its replacement candidates. The
+// reveal commits the perk — CANCEL_ACTION is rejected from trade-pick
+// (the Short Circuit invariant: seen information is never free).
+const handleTradeSelectSlot = (s: GameState, slot: number): GameState => {
+  if (s.phase.kind !== 'awaiting-target-trade') return s;
+  if (!s.phase.targets.includes(slot)) return s;
+  if (s.deck.length < 2) return s;
+  return {
+    ...s,
+    deck: s.deck.slice(2),
+    phase: {
+      kind: 'trade-pick',
+      slot,
+      drawn: s.deck.slice(0, 2),
+      returnTo: s.phase.returnTo,
+    },
+  };
+};
+
+// Trading Post ♣, step 2: seat the chosen draw at the slot. The
+// passed-over draw shuffles back into the deck at a random position;
+// the removed board card is trashed to DISCARDS (like a ♦ Destroy
+// target — Trash Joker can see it). The spent club logs as a perk.
+const handleResolveTrade = (
+  s: GameState,
+  idx: number,
+  rng: () => number
+): GameState => {
+  if (s.phase.kind !== 'trade-pick') return s;
+  if (!s.drawn || isJoker(s.drawn)) return s;
+  if (idx !== 0 && idx !== 1) return s;
+  const { slot, drawn } = s.phase;
+  const chosen = drawn[idx];
+  const returned = drawn[1 - idx];
+  const old = s.grid[slot];
+  if (!old || chosen === undefined || returned === undefined) return s;
+  const grid = s.grid.slice();
+  grid[slot] = activeHalf(chosen);
+  const insertAt = Math.floor(rng() * (s.deck.length + 1));
+  const deck = [
+    ...s.deck.slice(0, insertAt),
+    returned,
+    ...s.deck.slice(insertAt),
+  ];
+  const afterTrade = pushDiscard({ ...s, grid, deck }, old);
+  return drawNext(
+    log(pushPerkSpent(afterTrade, s.drawn), `Trade at slot ${slot}`),
     rng
   );
 };
@@ -2372,9 +2460,14 @@ const handleCancelAction = (s: GameState): GameState => {
           returnTo: s.phase.returnTo,
         },
       };
+    case 'trade-pick':
+      // The two trade candidates are revealed — the pick must resolve
+      // (backing out would make the reveal a free deck peek).
+      return s;
     case 'awaiting-target-hop':
     case 'awaiting-target-slide-source':
     case 'awaiting-target-destroy':
+    case 'awaiting-target-trade':
     case 'awaiting-target-spiral':
     case 'bonus-card-resolving':
     case 'awaiting-bonus-slot-choice':
@@ -2425,6 +2518,7 @@ const SNAP_ACTIONS = new Set<Action['type']>([
   'RESOLVE_HOP',
   'RESOLVE_SLIDE',
   'RESOLVE_DESTROY',
+  'RESOLVE_TRADE',
   'RESOLVE_SPIRAL',
   'BONUS_KEEP',
   'BONUS_REPLACE',
@@ -2519,6 +2613,12 @@ export const step = (
       break;
     case 'RESOLVE_DESTROY':
       next = handleResolveDestroy(state, action.slot, rng);
+      break;
+    case 'TRADE_SELECT_SLOT':
+      next = handleTradeSelectSlot(state, action.slot);
+      break;
+    case 'RESOLVE_TRADE':
+      next = handleResolveTrade(state, action.idx, rng);
       break;
     case 'RESOLVE_SPIRAL':
       next = handleResolveSpiral(state, action.slot, rng);

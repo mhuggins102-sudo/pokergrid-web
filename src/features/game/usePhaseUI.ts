@@ -82,6 +82,9 @@ export interface PhaseUI {
    *  reveal, plus how many respins this activation has already paid
    *  for (the next one discards respins+1 deck cards). */
   clubInvest: { hand: HandRank; amount: number; respins: number } | null;
+  /** Trading Post: the ♣ trade reveal — the two drawn candidates for
+   *  the picked slot. One must be chosen (no cancel). */
+  tradePick: { slot: number; drawn: Card[] } | null;
   /** Revive (special card): pick a card from the discard pile. */
   reviveOpen: boolean;
   /** Mixed Bag: ♣ asks which bonus slot to draw for — chips tappable. */
@@ -148,6 +151,7 @@ export function usePhaseUI(): PhaseUI {
       clubInvest: null as
         | { hand: HandRank; amount: number; respins: number }
         | null,
+      tradePick: null as { slot: number; drawn: Card[] } | null,
       reviveOpen: false,
       bonusSlotPick: false,
       canActivateSpecials: false,
@@ -275,18 +279,22 @@ export function usePhaseUI(): PhaseUI {
                           state.bonusDeck.some(c => cardMatchesSlot(c, kind))
                       )
                     : null,
-                  state.spiraling
+                  state.spiraling,
+                  state.tradingPost,
+                  state.deck.length
                 );
             const perkLabel = state.randomPerks
               ? '? Perk'
               : state.investHands && drawn.suit === 'C'
                 ? '♣ Invest'
-                : state.spiraling && drawn.suit === 'S'
-                  ? '♠ Spiral'
-                  : // Double Duty included — the docks all give the perk a
-                    // full-width slot now, so the suit glyph fits and the
-                    // button reads the same as in standard games.
-                    SUIT_PERK_LABEL[drawn.suit];
+                : state.tradingPost && drawn.suit === 'C'
+                  ? '♣ Trade'
+                  : state.spiraling && drawn.suit === 'S'
+                    ? '♠ Spiral'
+                    : // Double Duty included — the docks all give the perk a
+                      // full-width slot now, so the suit glyph fits and the
+                      // button reads the same as in standard games.
+                      SUIT_PERK_LABEL[drawn.suit];
             actions.push({
               id: 'perk',
               label: perkLabel,
@@ -618,6 +626,25 @@ export function usePhaseUI(): PhaseUI {
         );
         return { ...ui, actions: lockedPerkActions(ui.actions) };
       }
+
+      case 'awaiting-target-trade':
+        return tapPhase(
+          '♣ Trade — tap the card to trade away',
+          phase.targets,
+          idx => dispatch({ type: 'TRADE_SELECT_SLOT', slot: idx })
+        );
+
+      case 'trade-pick':
+        // The two candidates render in the TradePick sheet; the traded
+        // slot stays highlighted so the player sees where the chosen
+        // card will land. No dock actions — the pick is the only exit.
+        return {
+          ...base,
+          banner: '♣ Trade — pick the new card',
+          ...fromSets(EMPTY_SET, new Set([phase.slot])),
+          isTappable: () => false,
+          tradePick: { slot: phase.slot, drawn: phase.drawn },
+        };
 
       case 'awaiting-target-spiral': {
         // Spiraling's ♠: tap a card to PREVIEW where it travels (its
