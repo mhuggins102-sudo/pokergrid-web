@@ -1,13 +1,111 @@
-.body {
+/* Trading Post ♣ Trade reveal — the same fixed-overlay pattern (and
+   board-peek dim) as BonusDrawModal, sized down to two card faces. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  padding: 24px;
+  animation: trade-fadein 160ms ease;
+  transition: opacity 200ms ease;
+}
+
+/* Desktop board-peek: pointer on the overlay but off the card (and no
+   keyboard focus inside) fades everything down so the board reads
+   through. Armed only after the pointer has entered the card once
+   (.scrimDimmable) so the overlay always OPENS solid. */
+@media (hover: hover) {
+  .scrim.scrimDimmable:hover:not(:focus-within):not(:has(.card:hover)) {
+    opacity: 0.15;
+  }
+}
+
+/* Touch board-peek: a tap on the scrim outside the card fades the
+   overlay; the card goes inert so the next tap anywhere restores it —
+   nothing behind the overlay is ever reachable. */
+.scrim.scrimPeek {
+  opacity: 0.15;
+}
+
+.scrim.scrimPeek .card {
+  pointer-events: none;
+}
+
+@keyframes trade-fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.card {
+  width: 340px;
+  max-width: 100%;
+  background: var(--paper-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 22px 24px 24px;
+  animation: trade-in 220ms ease;
+}
+
+@keyframes trade-in {
+  from {
+    transform: translateY(14px) scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .card {
+    animation: none;
+  }
+}
+
+.headRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  color: var(--ink);
+}
+
+.spent {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+.sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink-2);
 }
 
 .cards {
   display: flex;
   justify-content: center;
   gap: 18px;
+  margin-top: 16px;
 }
 
 .cardBtn {
@@ -15,16 +113,23 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px 10px;
+  padding: 12px 20px 10px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--hairline);
+  border: 1.5px solid var(--hairline);
   background: var(--paper-sunken);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
 }
 
-.cardBtn:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .cardBtn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
+  }
 }
 
 .cardBtn:focus-visible {
@@ -46,4 +151,18 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+@media (max-width: 767px) {
+  .scrim {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 18px 18px 20px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
 }

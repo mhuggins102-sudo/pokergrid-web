@@ -134,9 +134,11 @@ export function HomePage() {
       <Link to="/challenges" className={styles.modeCard}>
         <span className={styles.modeTitle}>Challenges</span>
         <span className={styles.modeBlurb}>
+          {/* No count in the copy — the catalog keeps growing and the
+              modeLink line below already carries the live number. */}
           {isPhone
-            ? 'Eleven twisted rule sets — No Discards, Short Deck, Poker Purist, etc.'
-            : 'Eleven twisted rule sets — No Discards, Short Deck, Poker Purist and more. Beat them all for the sweep.'}
+            ? 'Twisted rule sets — No Discards, Short Deck, Poker Purist, etc.'
+            : 'Twisted rule sets — No Discards, Short Deck, Poker Purist and more. Beat them all for the sweep.'}
         </span>
         <span className={styles.modeLink}>
           {LIVE_CHALLENGES.length} modes to beat <ArrowRight size={13} />

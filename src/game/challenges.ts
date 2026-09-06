@@ -183,7 +183,7 @@ export const CHALLENGES: Challenge[] = [
     id: 'trading-post',
     name: 'Trading Post',
     synopsis: 'Twist: ♣ trades a board card for a fresh draw',
-    goal: 'Score 500+ points with a fixed bonus hand: you start holding two yellow in-game cards and one purple end-game card, dealt at random and locked for the whole run. The ♣ perk becomes Trade — pick a card on the board, draw the top two cards of the deck, and seat the one you like in its place. The card you pass on shuffles back into the deck; the card you removed is trashed. Trading needs at least 2 cards left in the deck.',
+    goal: 'Score 500+ points with a fixed bonus hand: you start holding two yellow in-game cards and one purple end-game card, dealt at random and locked for the whole run. The ♣ perk becomes Trade — pick a card on the board, draw the top two cards of the deck, and seat the one you like in its place. The card you pass on and the card you removed are both trashed. Trading needs at least 2 cards left in the deck.',
     scoreTarget: 500,
     // Enforced at newGame: tradingPost reroutes ♣ into the trade flow,
     // noBonusCards strips the bonus deck (nothing to draw or swap), and
