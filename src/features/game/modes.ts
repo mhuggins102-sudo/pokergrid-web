@@ -223,6 +223,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             noBonusCards:
               twist === 'poker-purist' ||
               twist === 'three-tricks' ||
+              twist === 'trading-post' ||
               twist === 'bull-market' ||
               twist === 'nut-low' ||
               twist === 'draw-poker',
@@ -251,6 +252,16 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
                   ).slice(0, 3),
                 }
               : {}),
+            // Trading Post dailies: the locked 2-gold + 1-purple trio,
+            // date-salted like the Three Tricks trio so it's globally
+            // identical without sharing the deck's rng stream.
+            ...(twist === 'trading-post'
+              ? {
+                  initialBonusCards: tradingPostTrio(
+                    seededRng(seedForInitialSpecials(mode.dateISO))
+                  ),
+                }
+              : {}),
             slotCategories:
               twist === 'mixed-bag'
                 ? ['special', 'in-game', 'end-game']
@@ -258,6 +269,7 @@ export const setupForMode = (mode: GameMode): ModeSetup => {
             randomGridFill: twist === 'gridlock' ? 15 : 0,
             scatter: twist === 'scatter',
             investHands: twist === 'bull-market',
+            tradingPost: twist === 'trading-post',
             // Dual pairing draws from the same seeded rng inside newGame,
             // so a Double Duty daily is globally identical for free.
             doubleDuty: twist === 'double-duty',

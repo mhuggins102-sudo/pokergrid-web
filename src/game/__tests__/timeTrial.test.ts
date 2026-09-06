@@ -171,7 +171,7 @@ describe('Time Trial — challenge catalog', () => {
   });
 
   it('appears in the daily rotation, and its dailies get the clock', () => {
-    // Sweep years of recipes until the twist channel picks it (1/11 of
+    // Sweep years of recipes until the twist channel picks it (1/13 of
     // twisted days under the flat weights; a decade is plenty), then
     // confirm the daily setup wires the reducer flag.
     let hit: string | null = null;

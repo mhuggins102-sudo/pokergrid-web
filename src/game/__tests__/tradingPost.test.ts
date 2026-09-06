@@ -3,6 +3,8 @@ import { categoryOf } from '../../lib/bonusCardCategory';
 import { setupForMode } from '../../features/game/modes';
 import { SPOTLIGHT_ID } from '../bonusCards';
 import { StandardCard } from '../cards';
+import { recipeFor } from '../daily/recipe';
+import { currentDateISO } from '../daily/seed';
 import { seededRng } from '../deck';
 import { GameState, step } from '../state';
 
@@ -38,6 +40,36 @@ describe('Trading Post — construction', () => {
     const ids = (seed: number) => newTradingPost(seed).bonusCards.map(c => c.id);
     expect(ids(7)).toEqual(ids(7));
     expect(ids(7)).not.toEqual(ids(8));
+  });
+});
+
+describe('Trading Post dailies', () => {
+  it('is in the rotation, wires the flag, and deals a globally-identical trio', () => {
+    // Sweep years of recipes until the twist channel picks it (1/13 of
+    // twisted days under the flat weights; a decade is plenty).
+    let hit: string | null = null;
+    const start = new Date(Date.UTC(2026, 0, 1));
+    for (let i = 0; i < 3650 && !hit; i++) {
+      const d = new Date(start.getTime() + i * 86400_000);
+      const iso = currentDateISO(d);
+      if (recipeFor(iso).twist === 'trading-post') hit = iso;
+    }
+    expect(hit).not.toBeNull();
+    const setup = setupForMode({
+      kind: 'daily',
+      dateISO: hit!,
+      recipe: recipeFor(hit!),
+    });
+    // The trio is date-salted, so two players' deals (different deck
+    // rngs) still hold the identical locked hand.
+    const a = setup.start(seededRng(1));
+    const b = setup.start(seededRng(2));
+    expect(a.tradingPost).toBe(true);
+    expect(a.bonusDeck).toHaveLength(0);
+    expect(a.bonusCards.map(c => c.id)).toEqual(b.bonusCards.map(c => c.id));
+    const cats = a.bonusCards.map(categoryOf);
+    expect(cats.filter(c => GOLD.has(c))).toHaveLength(2);
+    expect(cats.filter(c => !GOLD.has(c))).toHaveLength(1);
   });
 });
 
