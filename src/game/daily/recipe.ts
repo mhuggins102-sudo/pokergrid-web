@@ -43,10 +43,11 @@ const ALL_TWISTS: ChallengeId[] = [
   'double-duty',
   'time-trial',
   'draw-poker',
+  'trading-post',
 ];
 
 // Relative odds of each twist when a day is twisted — flat since g2:
-// every live twist is equally likely (1/12). The weighted-bag shape
+// every live twist is equally likely (1/13). The weighted-bag shape
 // stays so a future rebalance is a per-twist one-line edit.
 const TWIST_WEIGHT: Record<ChallengeId, number> = {
   'short-deck': 1,
@@ -69,10 +70,10 @@ const TWIST_WEIGHT: Record<ChallengeId, number> = {
   // 1, append 'nut-low' to ALL_TWISTS above, and update
   // dailyRecipe.test.ts's local twist list + 1/N share bounds.
   'nut-low': 0,
-  // Not in the daily rotation yet — Trading Post ships challenge-only
-  // for playtesting (same rollout as Five Draw had). Same entry steps
-  // as nut-low above to bring it in.
-  'trading-post': 0,
+  // In the rotation at the standard share; targets stay at the plain
+  // per-difficulty defaults. The dealt trio is date-salted in modes.ts
+  // so every player's day holds the same three cards.
+  'trading-post': 1,
   // In the rotation at the standard share; the target is fixed at 500
   // on every difficulty (FIXED_TWIST_TARGET below) — deck peek and the
   // extra joker are worth more here than in any other twist.
