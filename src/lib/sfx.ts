@@ -83,6 +83,18 @@ export const sfxDestroy = (): void => {
   tone(90, 0.02, 0.16, 0.06, 'sine', 50);
 };
 
+/** Trading Post ♣ Trade — out with the old, in with the new: a soft
+ *  low drop as the traded card is trashed (destroy's cousin, one size
+ *  softer), then an upward flick settling into a place-style tick as
+ *  the replacement seats. */
+export const sfxTrade = (): void => {
+  tone(300, 0, 0.1, 0.06, 'triangle', 150);
+  tone(130, 0.03, 0.13, 0.05, 'sine', 75);
+  tone(392, 0.17, 0.08, 0.05, 'triangle', 622.25);
+  tone(660, 0.26, 0.07, 0.07, 'triangle');
+  tone(330, 0.27, 0.09, 0.045, 'sine');
+};
+
 /** Doubler / Wildcard / Plus-Minus — an enchantment sparkle. */
 export const sfxEnchant = (): void => {
   [880, 1108.73, 1318.51].forEach((f, i) => tone(f, i * 0.05, 0.1, 0.045));
@@ -277,6 +289,7 @@ export type SfxName =
   | 'swap'
   | 'slide'
   | 'destroy'
+  | 'trade'
   | 'enchant'
   | 'riffle'
   | 'revive'
@@ -289,6 +302,7 @@ export const SFX: Record<SfxName, () => void> = {
   swap: sfxSwap,
   slide: sfxSlide,
   destroy: sfxDestroy,
+  trade: sfxTrade,
   enchant: sfxEnchant,
   riffle: sfxRiffle,
   revive: sfxRevive,
@@ -312,6 +326,9 @@ export const sfxForHistoryEntry = (entry: string): SfxName | null => {
   if (entry.startsWith('Hop ')) return 'swap'; // ♥
   if (entry.startsWith('Slide ')) return 'slide'; // ♠
   if (entry.startsWith('Destroy slot')) return 'destroy'; // ♦
+  // Trading Post's ♣ — fires on RESOLVE_TRADE, as the old card leaves
+  // and the replacement seats.
+  if (entry.startsWith('Trade at slot')) return 'trade';
   if (entry.startsWith('Bonus draw resolved')) return 'chime'; // ♣ kept/declined
   // Five Draw's between-hands offer taken; 'Bonus passed' stays silent.
   if (entry.startsWith('Bonus kept')) return 'chime';
