@@ -34,15 +34,16 @@ const play = (
 
 describe('daily finish surfaces cumulative achievements (end-to-end)', () => {
   it('shows the 🏆 callout for a streak completed by an archive fill-in', () => {
-    // The reported scenario, shifted onto real archive dates: 03-01 and
-    // 03-03 are won, 03-05 was lost; winning 03-02 retroactively
-    // completes the 1-2-3 run and must toast "On a Roll" on the result
-    // screen (2026-03-02 rolls no twist, so the run is Place-only).
+    // The reported scenario, shifted onto real archive dates: 03-02 and
+    // 03-04 are won, 03-06 was lost; winning 03-03 retroactively
+    // completes the 2-3-4 run and must toast "On a Roll" on the result
+    // screen (2026-03-03 rolls no twist under the g3 cycle, so the run
+    // is Place-only).
     usePlaysStore.setState({
       plays: {
-        '2026-03-01': play('2026-03-01', true),
-        '2026-03-03': play('2026-03-03', true),
-        '2026-03-05': play('2026-03-05', false),
+        '2026-03-02': play('2026-03-02', true),
+        '2026-03-04': play('2026-03-04', true),
+        '2026-03-06': play('2026-03-06', false),
       },
     });
     useStatsStore.setState({
@@ -52,7 +53,7 @@ describe('daily finish surfaces cumulative achievements (end-to-end)', () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
         <ToastProvider>
-          <MemoryRouter initialEntries={['/daily/2026-03-02']}>
+          <MemoryRouter initialEntries={['/daily/2026-03-03']}>
             <Routes>
               <Route path="/daily/:date" element={<DailyDatePage />} />
             </Routes>
@@ -74,7 +75,7 @@ describe('daily finish surfaces cumulative achievements (end-to-end)', () => {
 
     // The run finished and won against the pinned target...
     expect(screen.getByTestId('final-score')).toBeInTheDocument();
-    expect(usePlaysStore.getState().plays['2026-03-02']?.won).toBe(true);
+    expect(usePlaysStore.getState().plays['2026-03-03']?.won).toBe(true);
 
     // ...and the LIVE result dialog is still up (the entry-time snapshot
     // keeps DailyDay from re-hydrating a view-only session mid-look) with

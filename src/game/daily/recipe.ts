@@ -1,36 +1,41 @@
 // Daily Grid recipe — pure function from dateISO → {difficulty, twist?}.
 //
 // Every player worldwide gets the same recipe on the same UTC day
-// because the function is deterministic from the date string. Twists
-// land on most non-Extreme days (see RECIPE_CONFIG.twistProbability).
+// because the function is deterministic from the date string.
+//
+// Since g3 the recipes come from a BALANCED 40-DAY CYCLE, not
+// independent per-day rolls. Each cycle (aligned to the daily launch,
+// 2026-03-01) holds exactly:
+//   -  4 Extreme days (never twisted)
+//   - 10 twist-free days — 3 Easy, 3 Medium, 4 Hard
+//   - 26 twisted days — every live twist exactly TWICE, at two
+//     DIFFERENT difficulties; twisted totals 7 Easy / 9 Medium /
+//     10 Hard (per cycle, 3 twists pair Easy+Medium, 4 Easy+Hard,
+//     6 Medium+Hard — the grouping reshuffles every cycle)
+// and the cycle's order is a seeded shuffle constrained so no two
+// consecutive days share an identity — the same twist never repeats
+// back-to-back, and twist-free days (Extreme included) never cluster —
+// including across cycle boundaries. The mix stays close to the old
+// weights (Extreme 10%, twist-free 25%, each twist 1/13 of twisted
+// days) but with exact counts and guaranteed variety instead of
+// long-run averages.
 
 import type { Difficulty } from '../rules';
 import { TARGET_BY_DIFFICULTY } from '../rules';
 import type { ChallengeId } from '../challenges';
-import { DAILY_GENERATION, fnv1a } from './seed';
+import { seededRng, shuffle } from '../deck';
+import { DAILY_GENERATION, fnv1a, parseDateISO } from './seed';
 
 export interface DailyRecipe {
   difficulty: Difficulty;
   twist?: ChallengeId;
 }
 
-// Weighted difficulty distribution:
-//   Easy 25% / Medium 30% / Hard 35% / Extreme 10%.
-// Anything that adds up cleanly works; the weighted-bag picker
-// normalizes against the sum.
-export interface RecipeConfig {
-  difficultyWeights: Record<Difficulty, number>;
-  twistProbability: number;        // 0..1
-  // Per-difficulty twist eligibility. Extreme always empty so twists
-  // never compound with the hardest baseline (locked decision). Other
-  // tiers can host any twist; Phase 3 may narrow these once playtesting
-  // reveals which combos feel unfair.
-  twistEligibility: Record<Difficulty, ChallengeId[]>;
-}
-
-// The full twist rotation. Order is stable so the weighted pick below is
-// deterministic. Extreme never gets a twist (empty eligibility).
-const ALL_TWISTS: ChallengeId[] = [
+// The live twist rotation — every entry appears exactly twice per
+// cycle. Spiraling (benched) and Nut Low (challenge-only while its
+// target calibrates) sit out; adding a twist here changes the cycle
+// composition, so revisit the 26-day math when the list grows.
+export const ALL_TWISTS: ChallengeId[] = [
   'short-circuit',
   'no-discards',
   'gridlock',
@@ -46,62 +51,18 @@ const ALL_TWISTS: ChallengeId[] = [
   'trading-post',
 ];
 
-// Relative odds of each twist when a day is twisted — flat since g2:
-// every live twist is equally likely (1/13). The weighted-bag shape
-// stays so a future rebalance is a per-twist one-line edit.
-const TWIST_WEIGHT: Record<ChallengeId, number> = {
-  'short-deck': 1,
-  'poker-purist': 1,
-  'mixed-bag': 1,
-  'three-tricks': 1,
-  'no-discards': 1,
-  'short-circuit': 1,
-  scatter: 1,
-  gridlock: 1,
-  'bull-market': 1,
-  'double-duty': 1,
-  'time-trial': 1,
-  // Not in the daily rotation — Spiraling is benched while its
-  // mechanic is tuned. Also absent from ALL_TWISTS above, so the zero
-  // weight is belt-and-braces for the Record type.
-  spiraling: 0,
-  // Not in the daily rotation yet — Nut Low ships challenge-only while
-  // its score target is calibrated. To enter the rotation: flip this to
-  // 1, append 'nut-low' to ALL_TWISTS above, and update
-  // dailyRecipe.test.ts's local twist list + 1/N share bounds.
-  'nut-low': 0,
-  // In the rotation at the standard share; targets stay at the plain
-  // per-difficulty defaults. The dealt trio is date-salted in modes.ts
-  // so every player's day holds the same three cards.
-  'trading-post': 1,
-  // In the rotation at the standard share; the target is fixed at 500
-  // on every difficulty (FIXED_TWIST_TARGET below) — deck peek and the
-  // extra joker are worth more here than in any other twist.
-  'draw-poker': 1,
-};
+export const CYCLE_LENGTH = 40;
 
-export const RECIPE_CONFIG: RecipeConfig = {
-  difficultyWeights: { easy: 25, medium: 30, hard: 35, extreme: 10 },
-  // Twists land on three-quarters of non-Extreme days. Suppressed on
-  // Extreme so the hardest baseline doesn't compound with a structural
-  // handicap.
-  twistProbability: 0.75,
-  twistEligibility: {
-    easy: ALL_TWISTS,
-    medium: ALL_TWISTS,
-    hard: ALL_TWISTS,
-    extreme: [],
-  },
-};
+// Cycle day 0 — the first daily ever published. Keep in sync with
+// DAILY_LAUNCH_ISO (src/features/daily/dailyDates.ts); duplicated here
+// because the game layer doesn't import from features.
+export const CYCLE_EPOCH_ISO = '2026-03-01';
+const CYCLE_EPOCH_MS = Date.UTC(2026, 2, 1);
+const DAY_MS = 86_400_000;
 
-// Mulberry32-style integer scramble. FNV-1a is fast but its avalanche
-// behavior for inputs that differ by only their final byte (which is
-// exactly the case here — only the day-of-month character changes
-// across a month) is poor enough that sequential dates clustered on
-// the same difficulty outcome (29 straight Easy days in May 2026,
-// observed during playtest). Running each FNV output through this
-// scrambler before bucketing fixes the within-month uniformity
-// without breaking the long-run distribution the tests verify.
+// Mulberry32-style integer scramble — fixes FNV-1a's weak avalanche
+// for near-identical inputs (consecutive cycle indices differ by one
+// character) before the value seeds a cycle's rng.
 const scramble32 = (h: number): number => {
   let t = h >>> 0;
   t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -109,68 +70,124 @@ const scramble32 = (h: number): number => {
   return (t ^ (t >>> 14)) >>> 0;
 };
 
-// Three independent channels — separate FNV-1a hashes per channel
-// (different salt prefixes) so difficulty / twist-probability /
-// twist-index don't share entropy. Each gets a scramble32 pass on
-// top to fix FNV-1a's weak avalanche for similar consecutive inputs.
-// DAILY_GENERATION rides every salt so a bump re-rolls the recipes
-// together with the deals.
-const channelsFor = (dateISO: string): { difficultyRoll: number; twistRoll: number; twistIndexRoll: number } => {
-  const hDiff      = scramble32(fnv1a(`pokergrid-recipe-difficulty-g${DAILY_GENERATION}::${dateISO}`));
-  const hTwist     = scramble32(fnv1a(`pokergrid-recipe-twist-g${DAILY_GENERATION}::${dateISO}`));
-  const hTwistIdx  = scramble32(fnv1a(`pokergrid-recipe-twist-index-g${DAILY_GENERATION}::${dateISO}`));
-  return {
-    difficultyRoll: hDiff / 0x100000000,    // [0, 1) using all 32 bits
-    twistRoll: hTwist / 0x100000000,        // [0, 1)
-    twistIndexRoll: hTwistIdx / 0x100000000, // [0, 1) — drives the weighted bag
-  };
+// Days since the epoch (negative before it — the archive never goes
+// there, but the function stays total). Invalid strings hash to a
+// stable pseudo-day instead of NaN-poisoning the math.
+const dayNumberFor = (dateISO: string): number => {
+  const d = parseDateISO(dateISO);
+  if (!d) return scramble32(fnv1a(dateISO)) % 100_000;
+  return Math.floor((d.getTime() - CYCLE_EPOCH_MS) / DAY_MS);
 };
 
-// Weighted pick from `eligible` (fixed order) using a [0, 1) roll.
-const pickTwist = (
-  eligible: ChallengeId[],
-  roll: number
-): ChallengeId => {
-  const total = eligible.reduce((sum, t) => sum + TWIST_WEIGHT[t], 0);
-  const target = roll * total;
-  let acc = 0;
-  for (const t of eligible) {
-    acc += TWIST_WEIGHT[t];
-    if (target < acc) return t;
+// Two adjacent days conflict when they share an identity: the same
+// twist back-to-back, or two twist-free days in a row (Extreme counts
+// as twist-free — a "no twist" cluster reads samey regardless of the
+// difficulty underneath).
+const conflicts = (a: DailyRecipe, b: DailyRecipe): boolean =>
+  (a.twist ?? 'none') === (b.twist ?? 'none');
+
+// One seeded attempt at a cycle layout. Null = the shuffle violated a
+// constraint; the caller retries with the next nonce.
+const tryBuildCycle = (rng: () => number): DailyRecipe[] | null => {
+  // 1. Pair each twist with two DIFFERENT difficulties. The grouping
+  //    (3× Easy+Medium, 4× Easy+Hard, 6× Medium+Hard) is the unique
+  //    integer solution to the 7/9/10 twisted-difficulty totals; WHICH
+  //    twist lands in which group reshuffles per cycle.
+  const order = shuffle(ALL_TWISTS, rng);
+  const twisted: DailyRecipe[] = [];
+  order.forEach((twist, i) => {
+    const pair: [Difficulty, Difficulty] =
+      i < 3 ? ['easy', 'medium'] : i < 7 ? ['easy', 'hard'] : ['medium', 'hard'];
+    twisted.push({ difficulty: pair[0], twist }, { difficulty: pair[1], twist });
+  });
+
+  // 2. Sequence the 26 twisted days. Twins must never end up adjacent —
+  //    conservative (a twist-free day might separate them later), which
+  //    only costs retries.
+  const seq = shuffle(twisted, rng);
+  for (let i = 1; i < seq.length; i++) {
+    if (seq[i].twist === seq[i - 1].twist) return null;
   }
-  return eligible[eligible.length - 1];
+
+  // 3. The 14 twist-free days (Extreme included), shuffled…
+  const frees = shuffle<DailyRecipe>(
+    [
+      { difficulty: 'easy' },
+      { difficulty: 'easy' },
+      { difficulty: 'easy' },
+      { difficulty: 'medium' },
+      { difficulty: 'medium' },
+      { difficulty: 'medium' },
+      { difficulty: 'hard' },
+      { difficulty: 'hard' },
+      { difficulty: 'hard' },
+      { difficulty: 'hard' },
+      { difficulty: 'extreme' },
+      { difficulty: 'extreme' },
+      { difficulty: 'extreme' },
+      { difficulty: 'extreme' },
+    ],
+    rng
+  );
+
+  // 4. …dealt into 14 DISTINCT gaps of the 27 around the twisted
+  //    sequence (before / between / after) — at most one per gap, so
+  //    twist-free days can never cluster.
+  const gapSet = new Set(
+    shuffle(
+      Array.from({ length: seq.length + 1 }, (_, i) => i),
+      rng
+    ).slice(0, frees.length)
+  );
+
+  // 5. Weave.
+  const days: DailyRecipe[] = [];
+  let f = 0;
+  for (let g = 0; g <= seq.length; g++) {
+    if (gapSet.has(g)) days.push(frees[f++]);
+    if (g < seq.length) days.push(seq[g]);
+  }
+  return days;
 };
 
-const pickDifficulty = (
-  roll: number,
-  weights: Record<Difficulty, number>
-): Difficulty => {
-  const order: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
-  const total = order.reduce((acc, d) => acc + weights[d], 0);
-  let cumulative = 0;
-  const r = roll * total;
-  for (const d of order) {
-    cumulative += weights[d];
-    if (r < cumulative) return d;
+// Build (and memoize) cycle k's 40 recipes. Continuity chains back to
+// the epoch cycle: each cycle's first day must not conflict with the
+// previous cycle's last, so building cycle k builds any missing
+// ancestors first — cheap (a handful of 40-item shuffles per cycle,
+// ~9 cycles a year).
+const cycleMemo = new Map<number, DailyRecipe[]>();
+
+const scheduleFor = (k: number): DailyRecipe[] => {
+  const hit = cycleMemo.get(k);
+  if (hit) return hit;
+  const prevLast = k > 0 ? scheduleFor(k - 1)[CYCLE_LENGTH - 1] : null;
+  let fallback: DailyRecipe[] | null = null;
+  let built: DailyRecipe[] | null = null;
+  for (let nonce = 0; nonce < 300 && !built; nonce++) {
+    const rng = seededRng(
+      scramble32(
+        fnv1a(`pokergrid-cycle-g${DAILY_GENERATION}::${k}::${nonce}`)
+      )
+    );
+    const attempt = tryBuildCycle(rng);
+    if (!attempt) continue;
+    fallback = fallback ?? attempt;
+    if (prevLast && conflicts(prevLast, attempt[0])) continue;
+    built = attempt;
   }
-  return 'hard'; // fallback (shouldn't reach in practice)
+  // 300 seeded attempts virtually never all fail (each clears its
+  // constraints ~1 time in 3); if they somehow do, a valid-but-
+  // boundary-imperfect cycle beats crashing the daily.
+  const result = built ?? fallback;
+  if (!result) throw new Error(`daily cycle ${k} failed to build`);
+  cycleMemo.set(k, result);
+  return result;
 };
 
-export const recipeFor = (
-  dateISO: string,
-  config: RecipeConfig = RECIPE_CONFIG
-): DailyRecipe => {
-  const { difficultyRoll, twistRoll, twistIndexRoll } = channelsFor(dateISO);
-  const difficulty = pickDifficulty(difficultyRoll, config.difficultyWeights);
-  const eligibleTwists = config.twistEligibility[difficulty];
-  if (
-    eligibleTwists.length === 0 ||
-    twistRoll >= config.twistProbability
-  ) {
-    return { difficulty };
-  }
-  const twist = pickTwist(eligibleTwists, twistIndexRoll);
-  return { difficulty, twist };
+export const recipeFor = (dateISO: string): DailyRecipe => {
+  const day = dayNumberFor(dateISO);
+  const k = Math.floor(day / CYCLE_LENGTH);
+  return scheduleFor(k)[day - k * CYCLE_LENGTH];
 };
 
 // Twists that ignore the per-difficulty target and use a fixed value.

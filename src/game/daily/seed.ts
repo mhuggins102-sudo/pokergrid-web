@@ -48,7 +48,10 @@ export const fnv1a = (s: string): number => {
 // g2: July 2026 — twist odds flattened to uniform and a full
 // regeneration (covering the whole archive, back through March 1)
 // requested during playtest.
-export const DAILY_GENERATION = 2;
+// g3: September 2026 — recipes moved from independent per-day rolls to
+// the balanced 40-day cycle (recipe.ts), regenerated from March 1
+// alongside a leaderboard/plays wipe.
+export const DAILY_GENERATION = 3;
 
 // Seed for the Mulberry32 deck RNG. Salted so different daily channels
 // (deck vs. initial-specials below vs. future hypothetical bonus-deck)
