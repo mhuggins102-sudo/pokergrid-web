@@ -1,125 +1,79 @@
 import type { Difficulty } from '../rules';
 import {
+  ALL_TWISTS,
+  CYCLE_EPOCH_ISO,
+  CYCLE_LENGTH,
   recipeFor,
-  RECIPE_CONFIG,
 } from '../daily/recipe';
 import { currentDateISO } from '../daily/seed';
 
-describe('daily recipe', () => {
-  it('is deterministic for the same date', () => {
-    const a = recipeFor('2026-06-05');
-    const b = recipeFor('2026-06-05');
-    expect(a).toEqual(b);
+const EPOCH_MS = Date.UTC(2026, 2, 1); // = CYCLE_EPOCH_ISO
+const isoAt = (day: number): string =>
+  currentDateISO(new Date(EPOCH_MS + day * 86_400_000));
+
+// One cycle's 40 recipes, epoch-aligned.
+const cycleAt = (k: number) =>
+  Array.from({ length: CYCLE_LENGTH }, (_, i) =>
+    recipeFor(isoAt(k * CYCLE_LENGTH + i))
+  );
+
+describe('daily recipe — balanced 40-day cycle', () => {
+  it('is deterministic for the same date, and epoch-aligned', () => {
+    expect(recipeFor('2026-06-05')).toEqual(recipeFor('2026-06-05'));
+    expect(currentDateISO(new Date(EPOCH_MS))).toBe(CYCLE_EPOCH_ISO);
   });
 
-  it('returns one of the four difficulties', () => {
-    const valid: Difficulty[] = ['easy', 'medium', 'hard', 'extreme'];
-    const r = recipeFor('2026-06-05');
-    expect(valid).toContain(r.difficulty);
-  });
+  it('every cycle holds the exact composition', () => {
+    for (let k = 0; k < 10; k++) {
+      const days = cycleAt(k);
+      expect(days).toHaveLength(40);
 
-  it('never pairs a twist with Extreme', () => {
-    const start = new Date(Date.UTC(2026, 0, 1));
-    for (let i = 0; i < 3650; i++) {
-      const d = new Date(start.getTime() + i * 86400_000);
-      const r = recipeFor(currentDateISO(d));
-      if (r.difficulty === 'extreme') {
-        expect(r.twist).toBeUndefined();
+      // 4 Extreme days, never twisted.
+      const extreme = days.filter(d => d.difficulty === 'extreme');
+      expect(extreme).toHaveLength(4);
+      for (const d of extreme) expect(d.twist).toBeUndefined();
+
+      // 10 twist-free non-Extreme days: 3 Easy, 3 Medium, 4 Hard.
+      const plain = days.filter(d => !d.twist && d.difficulty !== 'extreme');
+      expect(plain).toHaveLength(10);
+      expect(plain.filter(d => d.difficulty === 'easy')).toHaveLength(3);
+      expect(plain.filter(d => d.difficulty === 'medium')).toHaveLength(3);
+      expect(plain.filter(d => d.difficulty === 'hard')).toHaveLength(4);
+
+      // 26 twisted days: every live twist exactly twice, at two
+      // DIFFERENT difficulties; totals 7 Easy / 9 Medium / 10 Hard.
+      const twisted = days.filter(d => d.twist);
+      expect(twisted).toHaveLength(26);
+      const byDiff: Record<Difficulty, number> = {
+        easy: 0,
+        medium: 0,
+        hard: 0,
+        extreme: 0,
+      };
+      for (const d of twisted) byDiff[d.difficulty] += 1;
+      expect(byDiff).toEqual({ easy: 7, medium: 9, hard: 10, extreme: 0 });
+      for (const t of ALL_TWISTS) {
+        const copies = twisted.filter(d => d.twist === t);
+        expect(copies).toHaveLength(2);
+        // The "no exact repeat variant/difficulty combo" guarantee.
+        expect(copies[0].difficulty).not.toBe(copies[1].difficulty);
       }
     }
   });
 
-  it('twist rate roughly matches RECIPE_CONFIG.twistProbability', () => {
-    const start = new Date(Date.UTC(2026, 0, 1));
-    const TOTAL = 3650;
-    let twistCount = 0;
-    let nonExtremeCount = 0;
-    for (let i = 0; i < TOTAL; i++) {
-      const d = new Date(start.getTime() + i * 86400_000);
-      const r = recipeFor(currentDateISO(d));
-      if (r.difficulty !== 'extreme') {
-        nonExtremeCount += 1;
-        if (r.twist) twistCount += 1;
-      }
-    }
-    // Expected rate among non-Extreme days = twistProbability.
-    const observed = twistCount / nonExtremeCount;
-    const expected = RECIPE_CONFIG.twistProbability;
-    expect(observed).toBeGreaterThan(expected - 0.04);
-    expect(observed).toBeLessThan(expected + 0.04);
-  });
-
-  it('difficulty distribution matches weights over 10 years of samples', () => {
-    const counts: Record<Difficulty, number> = { easy: 0, medium: 0, hard: 0, extreme: 0 };
-    const start = new Date(Date.UTC(2026, 0, 1));
-    const TOTAL = 3650;
-    for (let i = 0; i < TOTAL; i++) {
-      const d = new Date(start.getTime() + i * 86400_000);
-      counts[recipeFor(currentDateISO(d)).difficulty] += 1;
-    }
-    // Expected ratios per RECIPE_CONFIG: easy 25%, medium 30%, hard 35%, extreme 10%.
-    // Allow ±3% absolute tolerance per bucket — over 10 years of
-    // samples the binomial std-dev for a 25% bucket is ~0.72%, so 3%
-    // is ~4σ. Tight enough to catch real regressions in the hash /
-    // distribution, loose enough that the test isn't flaky.
-    expect(counts.easy / TOTAL).toBeGreaterThan(0.22);
-    expect(counts.easy / TOTAL).toBeLessThan(0.28);
-    expect(counts.medium / TOTAL).toBeGreaterThan(0.27);
-    expect(counts.medium / TOTAL).toBeLessThan(0.33);
-    expect(counts.hard / TOTAL).toBeGreaterThan(0.32);
-    expect(counts.hard / TOTAL).toBeLessThan(0.38);
-    expect(counts.extreme / TOTAL).toBeGreaterThan(0.07);
-    expect(counts.extreme / TOTAL).toBeLessThan(0.13);
-  });
-
-  it('twist odds are uniform across the live rotation', () => {
-    const start = new Date(Date.UTC(2026, 0, 1));
-    const TOTAL = 3650;
-    const counts: Record<string, number> = {};
-    let twisted = 0;
-    for (let i = 0; i < TOTAL; i++) {
-      const d = new Date(start.getTime() + i * 86400_000);
-      const { twist } = recipeFor(currentDateISO(d));
-      if (twist) {
-        counts[twist] = (counts[twist] ?? 0) + 1;
-        twisted += 1;
-      }
-    }
-
-    // All thirteen twists appear, and only those thirteen.
-    const ALL = [
-      'short-circuit',
-      'no-discards',
-      'gridlock',
-      'short-deck',
-      'poker-purist',
-      'mixed-bag',
-      'three-tricks',
-      'scatter',
-      'bull-market',
-      'double-duty',
-      'time-trial',
-      'draw-poker',
-      'trading-post',
-    ];
-    for (const t of ALL) expect(counts[t] ?? 0).toBeGreaterThan(0);
-    expect(Object.keys(counts).sort()).toEqual([...ALL].sort());
-
-    // Flat weights since g2: every twist lands 1/13 of twisted days.
-    // ±0.03 absolute tolerance — over ~2400 twisted samples the
-    // binomial std-dev for a 1/13 bucket is ~0.5%, so this is ~5σ.
-    for (const t of ALL) {
-      const share = (counts[t] ?? 0) / twisted;
-      expect(share).toBeGreaterThan(1 / 13 - 0.03);
-      expect(share).toBeLessThan(1 / 13 + 0.03);
+  it('no identity repeats on consecutive days — twists or twist-free, boundaries included', () => {
+    // 20 cycles = 800 days, spanning 19 cycle boundaries.
+    let prev = recipeFor(isoAt(0));
+    for (let day = 1; day < 20 * CYCLE_LENGTH; day++) {
+      const cur = recipeFor(isoAt(day));
+      expect(cur.twist ?? 'none').not.toBe(prev.twist ?? 'none');
+      prev = cur;
     }
   });
 
-  it('snapshots — locked recipes for known dates', () => {
-    // Pin a few specific dates so a future refactor to the hash function
-    // or distribution would surface the regression loudly.
+  it('handles dates before the epoch and junk input without throwing', () => {
     expect(recipeFor('2026-01-01').difficulty).toBeDefined();
-    expect(recipeFor('2026-06-05').difficulty).toBeDefined();
-    expect(recipeFor('2026-12-31').difficulty).toBeDefined();
+    expect(recipeFor('2020-12-31').difficulty).toBeDefined();
+    expect(recipeFor('not-a-date').difficulty).toBeDefined();
   });
 });
